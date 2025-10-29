@@ -2,9 +2,14 @@
 // URLについてはidで変動するものがあり、静的ではない気がするが
 // 暫定としてまとめる
 
-// routes.js など（JS版の最小）
+// route.js 
 
 // 画面側(Route)が使う“テンプレート”
+export const BASEURL = "http://127.0.0.1:8000/"
+export const SCHEMAURL = BASEURL + "schema/"
+
+
+
 export const routes = {
   HOME: "/",
   RESULT: "/result/",
