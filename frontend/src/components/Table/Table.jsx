@@ -1,6 +1,5 @@
 // src/components/Table.jsx
 import { useEffect, useState } from "react";
-import { BASEURL, SCHEMAURL } from "../../route";
 
 // fetchのresponse→OpenAPI仕様（specification）をjsonで取得
 async function loadSchemaColumns(schemaUrl, schemaName) {
@@ -35,7 +34,7 @@ async function loadSchemaColumns(schemaUrl, schemaName) {
   }));
 }
 
-export default function Table() {
+export default function Table({config:{schemaUrl, schemaName, dataUrl}}) {
   const [columns, setColumns] = useState([]);
   const [rows, setRows] = useState([]);
   const [err, setErr] = useState(null);
@@ -44,11 +43,11 @@ export default function Table() {
     (async () => {
       try {
         //スキーマから列を自動生成
-        const columns = await loadSchemaColumns(SCHEMAURL, "Document");
+        const columns = await loadSchemaColumns(schemaUrl, schemaName);
         setColumns(columns);
 
         //データ本体を取得
-        const res = await fetch(`${BASEURL}/documents/`,
+        const res = await fetch(dataUrl,
                     {headers: { Accept: "application/json" }}); 
         const json = await res.json();
         setRows(Array.isArray(json) ? json : [json]); //カラの時のハンドリングを兼ねる

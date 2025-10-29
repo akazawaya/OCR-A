@@ -8,7 +8,23 @@
 export const BASEURL = "http://127.0.0.1:8000/"
 export const SCHEMAURL = BASEURL + "schema/"
 
+export const documentSchemaConfig = {
+  schemaUrl: SCHEMAURL,
+  schemaName: "Document",
+  dataUrl: BASEURL + "documents/",
+};
 
+export const pageSchemaConfig = {
+  schemaUrl: SCHEMAURL,
+  schemaName: "Page",
+  dataUrl: BASEURL + "pages/",
+};
+
+export const wordSchemaConfig = {
+  schemaUrl: SCHEMAURL,
+  schemaName: "Word",
+  dataUrl: BASEURL + "words/",
+};
 
 export const routes = {
   HOME: "/",
