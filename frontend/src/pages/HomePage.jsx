@@ -1,13 +1,15 @@
+import FileUploader from "../components/FileUploader/FileUploader"
 import Table from "../components/Table/Table"
-import { documentSchemaConfig, pageSchemaConfig, wordSchemaConfig } from "../route"
+import { analyzeDocumentSchemaConfig, documentSchemaConfig, pageSchemaConfig, wordSchemaConfig } from "../route"
 
   const Home = () =>{
     return (
       <>
       <p>home</p>
-      <Table config={documentSchemaConfig}></Table>
-      <Table config={pageSchemaConfig}></Table>
-      <Table config={wordSchemaConfig}></Table>
+      <FileUploader config={analyzeDocumentSchemaConfig}/>
+      <Table config={documentSchemaConfig}/>
+      <Table config={pageSchemaConfig}/>
+      <Table config={wordSchemaConfig}/>
       </>
     )
   }

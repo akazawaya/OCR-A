@@ -26,6 +26,10 @@ export const wordSchemaConfig = {
   dataUrl: BASEURL + "words/",
 };
 
+export const analyzeDocumentSchemaConfig = {
+  analyzeUrl: BASEURL + "documents/analyze/",
+};
+
 export const routes = {
   HOME: "/",
   RESULT: "/result/",
