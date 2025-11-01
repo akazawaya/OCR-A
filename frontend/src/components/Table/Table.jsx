@@ -1,5 +1,6 @@
 // src/components/Table.jsx
 import { useEffect, useState } from "react";
+import DeleteButton from "../DeleteButton/DeleteButton";
 
 // fetchのresponse→OpenAPI仕様（specification）をjsonで取得
 async function loadSchemaColumns(schemaUrl, schemaName) {
@@ -75,7 +76,7 @@ export default function Table({config:{schemaUrl, schemaName, dataUrl}}) {
           <tr key={row.id}>
             {columns.map(c => (
             	<td key={c.key}>{row[c.key]}</td>
-          	))}
+          	))}<td><DeleteButton deleteByIdUrl={`${dataUrl}${row.id}/`} /></td>
           </tr>
         ))}
       </tbody>
