@@ -7,25 +7,25 @@ from django.contrib.auth.models import User
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
-        fields = ['url', 'id', 'username']
+        fields = ['id', 'url',  'username']
 
 class DocumentSerializer(serializers.HyperlinkedModelSerializer):
     state_display = serializers.CharField(source="get_state_display", read_only=True)
     file_type_display = serializers.CharField(source="get_file_type_display", read_only=True)
     class Meta:
         model = Document
-        fields = ['state', 'state_display', 'created', 'file', 'file_name', 'file_type', 'file_type_display', 'total_pages']
+        fields = ['id', 'state', 'state_display', 'created', 'file', 'file_name', 'file_type', 'file_type_display', 'total_pages']
 
 class PageSerializer(serializers.HyperlinkedModelSerializer):
     state_display = serializers.CharField(source="get_state_display", read_only=True)
     doc = serializers.PrimaryKeyRelatedField(queryset=Document.objects.all()) #これがないとID の保存時にURL形式を求めてくる
     class Meta:
         model = Page
-        fields = ['doc', 'image', 'state', 'state_display', 'page_number', 'width_px', 'height_px']
+        fields = ['id', 'doc', 'image', 'state', 'state_display', 'page_number', 'width_px', 'height_px']
 
 class WordSerializer(serializers.HyperlinkedModelSerializer):
     direction_display = serializers.CharField(source="get_direction_display", read_only=True)
     page = serializers.PrimaryKeyRelatedField(queryset=Page.objects.all())
     class Meta:
         model = Word
-        fields = ['page', 'bbox', 'content', 'direction', 'direction_display', 'rec_score', 'det_score']
+        fields = ['id', 'page', 'bbox', 'content', 'direction', 'direction_display', 'rec_score', 'det_score']
