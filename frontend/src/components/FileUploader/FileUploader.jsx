@@ -1,31 +1,27 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { requestApi } from "../../api/requestApi";
+
 
 async function analyzeDocument(analyzeUrl, file) {
   const fd = new FormData();
   fd.append("file", file); 
-
-  const res = await fetch(analyzeUrl, {
+  // async 関数は 明示的に returnしなければpromise(中身はvoid)になる
+  const {res, data} = await requestApi(analyzeUrl, {
     method: "POST",
-    headers: { Accept: "application/json" },
-    body: fd,
+    body: fd
   });
-  if (!res.ok) throw new Error(`${res.status} ${await res.text().catch(()=> "")}`);
-  return res.json();
+  return { res, data };
 }
 
 export default function FileUploader({ config: { analyzeUrl } }) {
+  const [result,  setResult]  = useState(null);
   const inputRef = useRef(null);
 
   const handleClick = async () => {
     const f = inputRef.current?.files?.[0];
     if (!f) { alert("ファイルを選択してください"); return;}
-    try {
-      const data = await analyzeDocument(analyzeUrl, f);
-      console.log("analyze result:", data); 
-    } catch (e) {
-      console.error(e);
-      alert(String(e)); 
-    }
+      const { res, data } = await analyzeDocument(analyzeUrl, f);
+    if (res?.ok) setResult(data);
   };
 
   return (

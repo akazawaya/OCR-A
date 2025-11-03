@@ -1,24 +1,15 @@
 // src/components/Table.jsx
 import { useEffect, useState } from "react";
 import DeleteButton from "../DeleteButton/DeleteButton";
+import { requestApi } from "../../api/requestApi";
 
 // fetchのresponse→OpenAPI仕様（specification）をjsonで取得
 async function loadSchemaColumns(schemaUrl, schemaName) {
-  const res = await fetch(schemaUrl,
-                    {headers: { Accept: "application/json" }});
-  if (!res.ok) throw new Error(`schema HTTP ${res.status}`);
-  const spec = await res.json(); //ここからプロパティ参照できるようになる
-
-	//間に?を挟むとerror等の例外処理を回避（undefinedを返す)ので安全にエラーハンドリングが可能
-  const schema = spec?.components?.schemas?.[schemaName];//変数は角括弧記法でないといけない
-	if (!schema?.properties) {
-  	const reason =
-    	spec?.components?.schemas == null
-      	? "components.schemas not found"
-      	: `${schemaName} schema not found or has no properties`;
- 		 throw new Error(reason);
-	}
-
+  const { res, data } = await requestApi(schemaUrl);
+  if (!res?.ok) return [];
+  const schema = data?.components?.schemas?.[schemaName];
+  if (!schema?.properties) return [];
+  
   const props = schema.properties;
   const required = Array.isArray(schema.required) ? schema.required : [];
 	// requiredのバリデーションは配列か否かを確認するのが良いらしい
