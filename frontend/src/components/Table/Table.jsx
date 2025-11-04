@@ -25,22 +25,22 @@ async function loadSchemaColumns(schemaUrl, schemaName) {
   }));
 }
 
-export default function Table({config:{schemaUrl, schemaName, dataUrl}}) {
+export default function Table({config:{schemaUrl, schemaName, dataUrl}, refresh}) {
   const [columns, setColumns] = useState([]);
   const [rows, setRows] = useState([]);
 
 
   useEffect(() => {
     (async () => {
-        //スキーマから列を自動生成
-        const columns = await loadSchemaColumns(schemaUrl, schemaName);
-        setColumns(columns);
+      //スキーマから列を自動生成
+      const columns = await loadSchemaColumns(schemaUrl, schemaName);
+      setColumns(columns);
 
         //データ本体を取得
-        const { data }  = await requestApi(dataUrl); 
-        setRows(Array.isArray(data) ? data : []); //カラの時のハンドリングを兼ねる
+      const { data }  = await requestApi(dataUrl); 
+      setRows(Array.isArray(data) ? data : []); //カラの時のハンドリングを兼ねる
     })();
-  }, []);
+  }, [refresh]);
 
   if (!columns.length) return <div>Loading…</div>;
 	

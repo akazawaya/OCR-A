@@ -1,4 +1,5 @@
 import { requestApi } from "../../api/requestApi";
+import { useRefresh } from "../../contexts/refreshContext";
 
 const deleteData = async(deleteByIdUrl) =>{
 	const { res, data } = await requestApi(
@@ -6,13 +7,14 @@ const deleteData = async(deleteByIdUrl) =>{
 	return { res, data };
 };
 
-export default function DeleteButton({deleteByIdUrl, onSuccess}) {
+export default function DeleteButton({deleteByIdUrl}) {
 	// onResultのonはonClickのようなイベントハンドラという意味合い
-
+	const onRefresh = useRefresh();
 	const handleDelete = async () => {
   	const { res, data } = await deleteData(deleteByIdUrl);
     if (res?.ok) 
-      onSuccess?.(data);
+		onRefresh();
+      
   };
 
   return (
