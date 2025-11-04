@@ -14,7 +14,6 @@ async function loadSchemaColumns(schemaUrl, schemaName) {
   const required = Array.isArray(schema.required) ? schema.required : [];
 	// requiredのバリデーションは配列か否かを確認するのが良いらしい
 	// →Parameter Object の required: true/false（真偽値）も存在するため
-
   // 並び：必須→その他（元の出現順がわからなければ名前順）
   const allKeys = Object.keys(props);
   const others = allKeys.filter(k => !required.includes(k)).sort();
@@ -29,28 +28,20 @@ async function loadSchemaColumns(schemaUrl, schemaName) {
 export default function Table({config:{schemaUrl, schemaName, dataUrl}}) {
   const [columns, setColumns] = useState([]);
   const [rows, setRows] = useState([]);
-  const [err, setErr] = useState(null);
+
 
   useEffect(() => {
     (async () => {
-      try {
         //スキーマから列を自動生成
         const columns = await loadSchemaColumns(schemaUrl, schemaName);
         setColumns(columns);
 
         //データ本体を取得
-        const res = await fetch(dataUrl,
-                    {headers: { Accept: "application/json" }}); 
-        const json = await res.json();
-        setRows(Array.isArray(json) ? json : [json]); //カラの時のハンドリングを兼ねる
-				
-      } catch (e) {
-        setErr(e.message);
-      }
+        const { data }  = await requestApi(dataUrl); 
+        setRows(Array.isArray(data) ? data : []); //カラの時のハンドリングを兼ねる
     })();
   }, []);
 
-  if (err) return <div role="alert">{err}</div>;
   if (!columns.length) return <div>Loading…</div>;
 	
   return (
