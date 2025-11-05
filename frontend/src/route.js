@@ -30,7 +30,12 @@ export const analyzeDocumentSchemaConfig = {
   analyzeUrl: BASEURL + "documents/analyze/",
 };
 
-export const routes = {
-  HOME: "/",
-  RESULT: "/result/",
-}  
+
+
+// 実URL生成器
+export const routeTo = Object.freeze({
+  docs: () => "/documents",
+  docPages: (docId) => `/documents/${encodeURIComponent(docId)}`,
+  docPageWords: (docId, pageNo) =>
+    `/documents/${encodeURIComponent(docId)}/pages/${encodeURIComponent(pageNo)}`,
+});

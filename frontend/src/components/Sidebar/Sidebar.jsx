@@ -1,7 +1,7 @@
 import { Drawer } from "@mui/material";
 import styles from "./Sidebar.module.css";
 import { Link } from "react-router-dom";
-import { routes } from "../../route";
+import { routeTo } from "../../route";
 const drawerWidth = 240;
 const Sidebar = () => {
     return (
@@ -13,8 +13,9 @@ const Sidebar = () => {
                 "& .MuiDrawer-paper": { width: drawerWidth, boxSizing: "border-box" },
             }}
         >
-            <Link to ={routes.HOME} >Home</Link>
-            <Link to ={routes.RESULT} >結果一覧</Link>
+            <Link to ={routeTo.docs} >Home</Link>
+            <Link to ={routeTo.docPages} >結果</Link>
+            <Link to ={routeTo.docPageWords} >結果一覧</Link>
         </Drawer>
     );
 

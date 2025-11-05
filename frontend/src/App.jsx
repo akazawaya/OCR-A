@@ -1,10 +1,11 @@
 import './App.css'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
-import Home from './pages/HomePage'
-import Result from './pages/ResultPage'
 import { Box } from "@mui/material";
 import Sidebar from './components/Sidebar/Sidebar';
-import { routes } from './route';
+import DocumentsPage from './pages/DocumentsPage';
+import DocumentPagesPage from './pages/DocumentPagesPage';
+import DocumentPageWordsPage from './pages/DocumentPageWordsPage';
+
 const drawerWidth = 240;
 function App() {
   return (
@@ -13,8 +14,10 @@ function App() {
         <Sidebar/>
         <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
           <Routes>
-            <Route path={routes.HOME} element={<Home />} />
-            <Route path={routes.RESULT} element={<Result />} />
+            <Route path="/" element={<DocumentsPage />} />    
+            <Route path="documents" element={<DocumentsPage />} />
+            <Route path="documents/:docId" element={<DocumentPagesPage />} />
+            <Route path="documents/:docId/pages/:pageNo" element={<DocumentPageWordsPage />} />
           </Routes>
         </Box>
       </Box>

@@ -4,11 +4,11 @@ import Table from "../components/Table/Table"
 import { analyzeDocumentSchemaConfig, documentSchemaConfig, pageSchemaConfig, wordSchemaConfig } from "../route"
 import { RefreshContext } from "../contexts/refreshContext"
 
-  const Home = () =>{
+  const DocumentsPage = () =>{
     const [refresh, onRefresh] = useReducer(n => n + 1, 0);
     return (
       <RefreshContext.Provider value={onRefresh}>
-      <p>home</p>
+      <p>DocumentsPage</p>
       <FileUploader config={analyzeDocumentSchemaConfig} />
       <Table config={documentSchemaConfig} refresh={refresh}/>
       <Table config={pageSchemaConfig} refresh={refresh}/>
@@ -16,4 +16,4 @@ import { RefreshContext } from "../contexts/refreshContext"
       </RefreshContext.Provider>
     )
   }
-  export default Home
+  export default DocumentsPage
