@@ -10,7 +10,7 @@ import { RefreshContext } from "../contexts/refreshContext"
       <RefreshContext.Provider value={onRefresh}>
       <p>DocumentsPage</p>
       <FileUploader config={analyzeDocumentSchemaConfig} />
-      <Table config={documentSchemaConfig} refresh={refresh}/>
+      <Table config={documentSchemaConfig} refresh={refresh} showDeleteButton={true}/>
       <Table config={pageSchemaConfig} refresh={refresh}/>
       <Table config={wordSchemaConfig} refresh={refresh}/>
       </RefreshContext.Provider>

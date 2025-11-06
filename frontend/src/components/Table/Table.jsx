@@ -25,7 +25,10 @@ async function loadSchemaColumns(schemaUrl, schemaName) {
   }));
 }
 
-export default function Table({config:{schemaUrl, schemaName, dataUrl}, refresh}) {
+export default function Table({config:{schemaUrl, schemaName, dataUrl},
+                              refresh,
+                              showDeleteButton = false
+                            }) {
   const [columns, setColumns] = useState([]);
   const [rows, setRows] = useState([]);
 
@@ -58,12 +61,20 @@ export default function Table({config:{schemaUrl, schemaName, dataUrl}, refresh}
           <tr key={row.id}>
             {columns.map(c => (
             	<td key={c.key}>{row[c.key]}</td>
-          	))}<td><DeleteButton deleteByIdUrl={`${dataUrl}${row.id}/`} /></td>
+          	))}
+            
+            {showDeleteButton && (
+              <td key="__actions">
+                <DeleteButton deleteByIdUrl={`${dataUrl}${row.id}/`} />
+              </td>
+            )}
           </tr>
         ))}
       </tbody>
     </table>
   );
 }
-// まだ実体験が伴わないが、reactはkeyでノード関係を識別するため
-// 要素の差分更新をする際には必須らしい
+// &&は||の逆で、左オペラント自身がTrueの時に右辺を返す
+// <td key="__actions">はただの識別キーに過ぎない
+// idは同じ親の直下に並ぶ兄弟内でユニークであればいいので、
+// DeleteButtonのidは変数でなくて良い

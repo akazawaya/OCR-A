@@ -9,10 +9,7 @@ import { RefreshContext } from "../contexts/refreshContext"
     return (
       <RefreshContext.Provider value={onRefresh}>
       <p>DocumentPagesPage</p>
-      <FileUploader config={analyzeDocumentSchemaConfig} />
-      <Table config={documentSchemaConfig} refresh={refresh}/>
       <Table config={pageSchemaConfig} refresh={refresh}/>
-      <Table config={wordSchemaConfig} refresh={refresh}/>
       </RefreshContext.Provider>
     )
   }
