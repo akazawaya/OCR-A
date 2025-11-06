@@ -1,15 +1,19 @@
 import { useReducer } from "react"
-import FileUploader from "../components/FileUploader/FileUploader"
 import Table from "../components/Table/Table"
-import { analyzeDocumentSchemaConfig, documentSchemaConfig, pageSchemaConfig, wordSchemaConfig } from "../route"
+import { pageSchemaConfig, routeTo } from "../route"
 import { RefreshContext } from "../contexts/refreshContext"
+import { useNavigate } from "react-router-dom";
+
 
   const DocumentPagesPage = () =>{
+    const navigate = useNavigate();
     const [refresh, onRefresh] = useReducer(n => n + 1, 0);
     return (
       <RefreshContext.Provider value={onRefresh}>
       <p>DocumentPagesPage</p>
-      <Table config={pageSchemaConfig} refresh={refresh}/>
+      <Table config={pageSchemaConfig} refresh={refresh} 
+                      onRowClick={(row) => navigate(routeTo.docPageWords(row.doc, row.id))}
+                     />
       </RefreshContext.Provider>
     )
   }

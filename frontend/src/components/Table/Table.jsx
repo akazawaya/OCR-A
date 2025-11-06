@@ -27,11 +27,11 @@ async function loadSchemaColumns(schemaUrl, schemaName) {
 
 export default function Table({config:{schemaUrl, schemaName, dataUrl},
                               refresh,
-                              showDeleteButton = false
+                              showDeleteButton = false,
+                              onRowClick = null
                             }) {
   const [columns, setColumns] = useState([]);
   const [rows, setRows] = useState([]);
-
 
   useEffect(() => {
     (async () => {
@@ -58,23 +58,22 @@ export default function Table({config:{schemaUrl, schemaName, dataUrl},
       </thead>
       <tbody>
         {rows.map(row => (
-          <tr key={row.id}>
+          <tr key={row.id} onClick={onRowClick && (() => onRowClick(row))} >
             {columns.map(c => (
             	<td key={c.key}>{row[c.key]}</td>
           	))}
-            
             {showDeleteButton && (
-              <td key="__actions">
+              <td key="__delete">
                 <DeleteButton deleteByIdUrl={`${dataUrl}${row.id}/`} />
               </td>
             )}
           </tr>
         ))}
       </tbody>
-    </table>
+    </table>  
   );
 }
 // &&は||の逆で、左オペラント自身がTrueの時に右辺を返す
-// <td key="__actions">はただの識別キーに過ぎない
+// <td key="__">はただの識別キーに過ぎない
 // idは同じ親の直下に並ぶ兄弟内でユニークであればいいので、
 // DeleteButtonのidは変数でなくて良い

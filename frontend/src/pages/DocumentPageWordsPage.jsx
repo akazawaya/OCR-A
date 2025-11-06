@@ -1,7 +1,6 @@
 import { useReducer } from "react"
-import FileUploader from "../components/FileUploader/FileUploader"
 import Table from "../components/Table/Table"
-import { analyzeDocumentSchemaConfig, documentSchemaConfig, pageSchemaConfig, wordSchemaConfig } from "../route"
+import { wordSchemaConfig } from "../route"
 import { RefreshContext } from "../contexts/refreshContext"
 
   const DocumentPageWordsPage = () =>{
