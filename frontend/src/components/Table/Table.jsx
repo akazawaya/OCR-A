@@ -27,6 +27,7 @@ async function loadSchemaColumns(schemaUrl, schemaName) {
 
 export default function Table({config:{schemaUrl, schemaName, dataUrl},
                               refresh,
+                              rowFilter,
                               showDeleteButton = false,
                               onRowClick = null
                             }) {
@@ -38,10 +39,12 @@ export default function Table({config:{schemaUrl, schemaName, dataUrl},
       //スキーマから列を自動生成
       const columns = await loadSchemaColumns(schemaUrl, schemaName);
       setColumns(columns);
-
         //データ本体を取得
       const { data }  = await requestApi(dataUrl); 
-      setRows(Array.isArray(data) ? data : []); //カラの時のハンドリングを兼ねる
+      const arr = Array.isArray(data) ? data : [];  
+      const filtered = rowFilter ? arr.filter(rowFilter) : arr;
+      setRows(filtered); //カラの時のハンドリングを兼ねる
+
     })();
   }, [refresh]);
 

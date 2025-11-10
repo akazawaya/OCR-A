@@ -14,7 +14,8 @@ import { useNavigate } from "react-router-dom";
       <FileUploader config={analyzeDocumentSchemaConfig} />
       <Table config={documentSchemaConfig} refresh={refresh} 
                                        showDeleteButton={true}
-                                       onRowClick={(row) => navigate(routeTo.docPages(row.id))}/>
+                                       onRowClick={(row) => navigate(routeTo.docPages(row.id)
+                                       )}/>
       </RefreshContext.Provider>
     )
   }
