@@ -11,7 +11,9 @@ import { useParams } from "react-router-dom"
       <RefreshContext.Provider value={onRefresh}>
       <p>DocumentPageWordsPage</p>
       <Table config={wordSchemaConfig} refresh={refresh}
-                    rowFilter={(row) => row.page === Number(primaryKey)}/>
+                    rowFilter={primaryKey !== "undefined" ?
+                      (row) => row.page === Number(primaryKey)
+                      : undefined}/>
       </RefreshContext.Provider>
     )
   }

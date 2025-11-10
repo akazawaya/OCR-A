@@ -11,12 +11,15 @@ import { useParams } from "react-router-dom";
     const navigate = useNavigate();
     const [refresh, onRefresh] = useReducer(n => n + 1, 0);
     const { primaryKey } = useParams();
+
     return (
       <RefreshContext.Provider value={onRefresh}>
       <p>DocumentPagesPage</p>
       <Table config={pageSchemaConfig} refresh={refresh} 
                       onRowClick={(row) => navigate(routeTo.docPageWords(row.doc, row.id))}
-                      rowFilter={(row) => row.doc === Number(primaryKey)}
+                      rowFilter={primaryKey !== "undefined"  ?
+                        (row) => row.doc === Number(primaryKey)
+                        : undefined}
                      />
       </RefreshContext.Provider>
     )
