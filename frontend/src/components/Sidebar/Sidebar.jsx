@@ -13,9 +13,9 @@ const Sidebar = () => {
                 "& .MuiDrawer-paper": { width: drawerWidth, boxSizing: "border-box" },
             }}
         >
-            <Link to ={routeTo.docs} >Home</Link>
-            <Link to ={routeTo.docPages} >結果</Link>
-            <Link to ={routeTo.docPageWords} >結果一覧</Link>
+            <Link to ={routeTo.docs()} >Home</Link>
+            <Link to ={routeTo.docPages()} >出力一覧_ページごと</Link>
+            <Link to ={routeTo.docPageWords()} >出力一覧_OCR一覧</Link>
         </Drawer>
     );
 
