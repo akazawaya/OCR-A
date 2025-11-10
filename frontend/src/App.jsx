@@ -16,8 +16,8 @@ function App() {
           <Routes>
             <Route path="/" element={<DocumentsPage />} />    
             <Route path="documents" element={<DocumentsPage />} />
-            <Route path="documents/:docId" element={<DocumentPagesPage />} />
-            <Route path="documents/:docId/pages/:pageNo" element={<DocumentPageWordsPage />} />
+            <Route path="documents/:primaryKey" element={<DocumentPagesPage />} />
+            <Route path="documents/:foreignKey/pages/:primaryKey" element={<DocumentPageWordsPage />} />
           </Routes>
         </Box>
       </Box>

@@ -35,7 +35,8 @@ export const analyzeDocumentSchemaConfig = {
 // 実URL生成器
 export const routeTo = Object.freeze({
   docs: () => "/documents",
-  docPages: (docId) => `/documents/${encodeURIComponent(docId)}`,
-  docPageWords: (docId, pageNo) =>
-    `/documents/${encodeURIComponent(docId)}/pages/${encodeURIComponent(pageNo)}`,
+  docPages: (primaryKey) => `/documents/${encodeURIComponent(primaryKey)}`,
+  docPageWords: (foreignKey, primaryKey) =>
+    `/documents/${encodeURIComponent(foreignKey)}/pages/${encodeURIComponent(primaryKey)}`,
 });
+//　useParams で:〇〇 の部分をオブジェクトとして受け取ることができる
