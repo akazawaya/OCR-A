@@ -15,11 +15,11 @@ from app_ocr.etc.e_yomitoku import test_ocr
 
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.db import transaction
-from pathlib import Path
 
-"""
-http -f POST http://127.0.0.1:8000/documents/analyze/ file@/mnt/q/N-106.pdf
-"""
+from django_filters.rest_framework import DjangoFilterBackend
+from app_ocr.filters import DocumentFilter
+from rest_framework.filters import OrderingFilter
+
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -28,6 +28,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
     queryset = Document.objects.all()
     serializer_class = DocumentSerializer
     parser_classes = [MultiPartParser, FormParser]
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_class = DocumentFilter
 
     @action(detail=False, methods=['post'])
     def analyze(self, request):
@@ -56,7 +58,9 @@ class DocumentViewSet(viewsets.ModelViewSet):
 class PageViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Page.objects.all()
     serializer_class = PageSerializer
+    filter_backends = [OrderingFilter]
 
 class WordViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Word.objects.all()
     serializer_class = WordSerializer
+    filter_backends = [OrderingFilter]
