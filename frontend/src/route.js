@@ -8,23 +8,27 @@
 export const BASEURL = "http://127.0.0.1:8000/"
 export const SCHEMAURL = BASEURL + "schema/"
 
-export const documentSchemaConfig = {
-  schemaUrl: SCHEMAURL,
-  schemaName: "Document",
-  dataUrl: BASEURL + "documents/",
+// parameter取得時のクエリの変数は　new URL(dataUrl).pathnameで自動生成できるらしいが
+// エンドポイント情報はここにまとめておきたい
+
+const makeConfig = (schemaName, dataName) =>{
+  const dataPath = `/${dataName}/`;
+  return{
+    schemaUrl: SCHEMAURL,
+    schemaName,
+    dataName,
+    dataPath,
+    dataUrl: BASEURL + dataName + "/"
+ }
 };
 
-export const pageSchemaConfig = {
-  schemaUrl: SCHEMAURL,
-  schemaName: "Page",
-  dataUrl: BASEURL + "pages/",
-};
+export const documentSchemaConfig = makeConfig("Document", "documents");
 
-export const wordSchemaConfig = {
-  schemaUrl: SCHEMAURL,
-  schemaName: "Word",
-  dataUrl: BASEURL + "words/",
-};
+export const pageSchemaConfig = makeConfig("Page", "pages");
+
+
+export const wordSchemaConfig = makeConfig("Word", "words");
+
 
 export const analyzeDocumentSchemaConfig = {
   analyzeUrl: BASEURL + "documents/analyze/",
