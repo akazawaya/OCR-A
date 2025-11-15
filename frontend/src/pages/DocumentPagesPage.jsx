@@ -1,6 +1,6 @@
 import { useReducer } from "react"
 import Table from "../components/Table/Table"
-import { pageSchemaConfig, routeTo } from "../route"
+import { pageApiConfig, routeTo } from "../route"
 import { RefreshContext } from "../contexts/refreshContext"
 import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
@@ -15,7 +15,7 @@ import { useParams } from "react-router-dom";
     return (
       <RefreshContext.Provider value={onRefresh}>
       <p>DocumentPagesPage</p>
-      <Table config={pageSchemaConfig} refresh={refresh} 
+      <Table config={pageApiConfig} refresh={refresh} 
                       onRowClick={(row) => navigate(routeTo.docPageWords(row.doc, row.id))}
                       rowFilter={primaryKey !== "undefined"  ?
                         (row) => row.doc === Number(primaryKey)

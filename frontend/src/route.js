@@ -22,15 +22,15 @@ const makeConfig = (schemaName, dataName) =>{
  }
 };
 
-export const documentSchemaConfig = makeConfig("Document", "documents");
+export const documentApiConfig = makeConfig("Document", "documents");
 
-export const pageSchemaConfig = makeConfig("Page", "pages");
-
-
-export const wordSchemaConfig = makeConfig("Word", "words");
+export const pageApiConfig = makeConfig("Page", "pages");
 
 
-export const analyzeDocumentSchemaConfig = {
+export const wordApiConfig = makeConfig("Word", "words");
+
+
+export const analyzeDocumentApiConfig = {
   analyzeUrl: BASEURL + "documents/analyze/",
 };
 

@@ -1,6 +1,6 @@
 import { useReducer } from "react"
 import Table from "../components/Table/Table"
-import { wordSchemaConfig } from "../route"
+import { wordApiConfig } from "../route"
 import { RefreshContext } from "../contexts/refreshContext"
 import { useParams } from "react-router-dom"
 
@@ -10,7 +10,7 @@ import { useParams } from "react-router-dom"
     return (
       <RefreshContext.Provider value={onRefresh}>
       <p>DocumentPageWordsPage</p>
-      <Table config={wordSchemaConfig} refresh={refresh}
+      <Table config={wordApiConfig} refresh={refresh}
                     rowFilter={primaryKey !== "undefined" ?
                       (row) => row.page === Number(primaryKey)
                       : undefined}/>
