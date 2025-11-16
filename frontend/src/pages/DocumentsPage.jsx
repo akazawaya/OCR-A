@@ -4,15 +4,16 @@ import Table from "../components/Table/Table"
 import { analyzeDocumentApiConfig, documentApiConfig, routeTo } from "../route"
 import { RefreshContext } from "../contexts/refreshContext"
 import { useNavigate } from "react-router-dom";
-import { SearchButton } from "../components/SearchButton/SearchButton"
+import { FilterButton } from "../components/FilterButton/FilterButton"
 
   const DocumentsPage = () =>{
     const navigate = useNavigate();
     const [refresh, onRefresh] = useReducer(n => n + 1, 0);
+
     return (
       <RefreshContext.Provider value={onRefresh}>
-      <SearchButton />
       <p>DocumentsPage</p>
+      <FilterButton config={documentApiConfig} />
       <FileUploader config={analyzeDocumentApiConfig} />
       <Table config={documentApiConfig} refresh={refresh} 
                                        showDeleteButton={true}
