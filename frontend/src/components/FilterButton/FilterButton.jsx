@@ -1,8 +1,5 @@
-// search機能をテストするコンポーネント
-// 理想はSearchButton→Dialogによるpopup→filterによるsearch命令をbackendと連携→既存Tableの内容を更新
 //　検索機能はクエリパラメータ(URL末尾の?以降)をクエリに付け足すことで実行可能（backendでの許可が前提）
 // よって、fetchのGETリクエストの延長として実装できる
-
 
 // 2.実際にfetchのreqを送信し、resを受け取る
 // 3.既存Tableに反映
@@ -20,16 +17,12 @@ const getFilterConfig = async ({ schemaUrl, dataPath }) => {
       // new Map() はキー付きの箱（辞書） []は順番つきのリスト(配列) 今回はキーに従い組を格納するのでMapを使う
       // m.set("key", {a:b,c:d})で入力 m.get("key")で出力
       // Mapインスタンスの操作はメソッドで行うのでドット記法等は使えない if文には.hasを使おう
-      
       for (const p of parameters) {// pythonでいうin のfor文はofで作成(inもkey列挙用に使う時もある)
         
         const name = p.name; 
-        // 不本意だが、①ソート用のDjangoFilterBackendで"ordering"が紛れ込むのを無視
-        // ②OpneAPIの使用でexactがlookupから省略されるのをハンドリングする　フロント部で行う（まだ）
+        // ①ソート用のDjangoFilterBackendで"ordering"が紛れ込むのを無視
+        // OpneAPIの仕様でexactがlookupから省略されるのをハンドリングするのはバックエンドで行うこととした
         if (name === "ordering") continue;
-
-        
-
         const idx = name.lastIndexOf("__"); //"__"が最後に出現した位置のインデックスを返す  -1→（"__" が無い）
         // "file_name__icontains"なら9　"_"ではなく"__" のインデックスなのに注意 
 
@@ -43,13 +36,40 @@ const getFilterConfig = async ({ schemaUrl, dataPath }) => {
         if(!lookup.lookups.includes(lookUp)){
           lookup.lookups.push(lookUp);
         }}   
+
       const filters = Array.from(group.values()); // mapで繰り返しができるように配列に変換
   return filters;
 };
 
 
-//1.2 UIの組み立て 対象フィールド名ごとにinputを生成、　ルックアップはプルダウンで選択式
-const FilterMenu = ({ filters }) => {
+// UI(簡易版)　仮でpages__words__contentに対し　icontainsで検索を実行(固定)
+
+const FilterMenu = ({ dataUrl }) => {
+  const [conditions, setConditions] = useState([
+    {fieldName: "pages__words__content", lookup: "icontains",value: ""},
+  ]);  
+  const onRefresh = useRefresh()
+
+  const handleSearch = async () => {
+    const searchUrl = makeSearchUrl({ dataUrl, conditions }) 
+    const { res } = await requestApi(searchUrl);
+    if (res?.ok) {
+      console.log(res);
+		  onRefresh();
+  }};
+  return (
+    <div>
+      <input type="text" value={conditions[0].value} 
+        onChange={e => 
+          setConditions(prev => [{
+                                      ...prev[0],value: e.target.value, }])} />
+      <button  onClick={handleSearch} >検索実行</button>
+    </div>
+  );
+};
+
+// UI(詳細版) 対象フィールド名ごとにinputを生成、ルックアップはプルダウンで選択式()
+const DetailFilterMenu = ({ filters }) => {
   return (
     <div>
       {filters.map(f => (
@@ -67,17 +87,36 @@ const FilterMenu = ({ filters }) => {
           </select>
         </div>
       ))}
+      <button>検索実行</button>
     </div>
   );
 };
 
-export function FilterButton({ config }) {
+// 検索用Url　http://127.0.0.1:8000/documents/?file_name__exact=%E3%81%82& .... を作る
+const makeSearchUrl = ({ dataUrl, conditions }) => {
+  const queryParams = new URLSearchParams(); // URLSearchParamsを使うとエンコードや&=の取付を自動化してくれるらしい
+
+  for (const c of conditions) { //　conditionsが複数の場合に対応するためfor文とする（そうする予定はないが）
+    if (!c.value) continue;
+    // key：${fieldName}__${lookup}  value：${value} の二つに分けて作成
+    const key = c.lookup === "exact" ? c.fieldName :`${c.fieldName}__${c.lookup}`;
+    queryParams.append(key, c.value);
+    }
+
+  const queryString = queryParams.toString();
+  const searchUrl =  queryString ? `${dataUrl}?${queryString}` : dataUrl;
+  return searchUrl
+};
+
+
+
+export function FilterButton({config:{schemaUrl, dataPath, dataUrl}}) {
   const [open, setOpen] = useState(false);
-  const [filters, setFilters] = useState([]); //バックエンドから取ってきたフィルター定義の保持
+  const [filters, setFilters] = useState([]); //バックエンドから取ってきたフィルター定義の保持(未使用)
 
   const handleFilter = async () => {
     if (filters.length === 0) {
-      const result = await getFilterConfig(config);
+      const result = await getFilterConfig({ schemaUrl, dataPath });
       setFilters(result);
     }
     setOpen(prev => !prev);
@@ -90,9 +129,8 @@ export function FilterButton({ config }) {
       </button>
 
       <div style={{ display: open ? "block" : "none" }}>
-        <FilterMenu filters={filters} />
+        <FilterMenu dataUrl={dataUrl}/>
       </div>
     </div>
   );
 }
-
