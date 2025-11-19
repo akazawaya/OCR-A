@@ -27,6 +27,7 @@ async function loadSchemaColumns(schemaUrl, schemaName) {
 
 export default function Table({config:{schemaUrl, schemaName, dataUrl},
                               refresh,
+                              searchDataUrl,
                               rowFilter,
                               showDeleteButton = false,
                               onRowClick = null
@@ -40,13 +41,14 @@ export default function Table({config:{schemaUrl, schemaName, dataUrl},
       const columns = await loadSchemaColumns(schemaUrl, schemaName);
       setColumns(columns);
         //データ本体を取得
-      const { data }  = await requestApi(dataUrl); 
+      const url = searchDataUrl ?? dataUrl
+      const { data }  = await requestApi(url); 
       const arr = Array.isArray(data) ? data : [];  
       const filtered = rowFilter ? arr.filter(rowFilter) : arr;
       setRows(filtered); //カラの時のハンドリングを兼ねる
 
     })();
-  }, [refresh]);
+  }, [searchDataUrl, refresh]);
 
   if (!columns.length) return <div>Loading…</div>;
 	

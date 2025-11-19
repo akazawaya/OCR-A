@@ -1,13 +1,10 @@
 //　検索機能はクエリパラメータ(URL末尾の?以降)をクエリに付け足すことで実行可能（backendでの許可が前提）
 // よって、fetchのGETリクエストの延長として実装できる
-
-// 2.実際にfetchのreqを送信し、resを受け取る
-// 3.既存Tableに反映
 import { useState } from "react";
 import { requestApi } from "../../api/requestApi";
+import { useLocation, useNavigate } from "react-router-dom";
 
-// 1.backendを読み取って、filterで許可されているフィールドを動的に取得　UIとして組み立てる
-// 1.1 filterの情報を所得
+// 1.backendを読み取って、filterで許可されているフィールドを動的に取得　UIとして組み立てる(未使用) とりあえず残しておく
 // parametersとは,openAPI的にクライアントが渡してよい入力値を示す
 const getFilterConfig = async ({ schemaUrl, dataPath }) => {
       const { data } = await requestApi(schemaUrl);
@@ -41,76 +38,48 @@ const getFilterConfig = async ({ schemaUrl, dataPath }) => {
   return filters;
 };
 
-
 // UI(簡易版)　仮でpages__words__contentに対し　icontainsで検索を実行(固定)
+// 将来的に複数条件を扱えるようにconditionは配列にしているが、需要がないかもしれない　
+const FilterMenu = () => {
+  const { search: queryString } = useLocation();
+  const navigate = useNavigate();
 
-const FilterMenu = ({ dataUrl }) => {
   const [conditions, setConditions] = useState([
     {fieldName: "pages__words__content", lookup: "icontains",value: ""},
   ]);  
-  const onRefresh = useRefresh()
+    // ③ 入力が変わったら state を更新
+    // eはブラウザのイベントオブジェクト(event.target.valueで値が読めるのはDOM標準仕様！！)　それをreactがラップして参照可能にしている
+    // いままでのonCilckでもeは参照可能だったが、無視して省略していた
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setConditions(prev => [
+      { ...prev[0], value },
+    ]);
+  };
 
-  const handleSearch = async () => {
-    const searchUrl = makeSearchUrl({ dataUrl, conditions }) 
-    const { res } = await requestApi(searchUrl);
-    if (res?.ok) {
-      console.log(res);
-		  onRefresh();
-  }};
+  const handleSearch = () => {
+    const queryParams = new URLSearchParams(queryString); // URLSearchParamsを使うとエンコードや&=の取付を自動化してくれるらしい
+    const c = conditions[0]; // condition配列の最初のみを暫定的に対象とする
+    
+    const key = c.lookup === "exact" ? c.fieldName: `${c.fieldName}__${c.lookup}`;
+    if (c.value) {queryParams.set(key, c.value);
+   } else {queryParams.delete(key)};
+
+    const nextQueryString = queryParams.toString();
+    navigate({search: nextQueryString ? `?${nextQueryString}` : "",});
+    // ここで location.search が変わる → DocumentsPage で searchDataUrl 更新
+  };
+
   return (
     <div>
       <input type="text" value={conditions[0].value} 
-        onChange={e => 
-          setConditions(prev => [{
-                                      ...prev[0],value: e.target.value, }])} />
+        onChange={handleChange} />
       <button  onClick={handleSearch} >検索実行</button>
     </div>
   );
 };
 
-// UI(詳細版) 対象フィールド名ごとにinputを生成、ルックアップはプルダウンで選択式()
-const DetailFilterMenu = ({ filters }) => {
-  return (
-    <div>
-      {filters.map(f => (
-        <div key={f.fieldName}>
-          <label>{f.fieldName}</label>
-
-          <input type="text" />
-
-          <select defaultValue={f.lookups[0]}>
-            {f.lookups.map(lk => (
-              <option key={lk} value={lk}>
-                {lk}
-              </option>
-            ))}
-          </select>
-        </div>
-      ))}
-      <button>検索実行</button>
-    </div>
-  );
-};
-
-// 検索用Url　http://127.0.0.1:8000/documents/?file_name__exact=%E3%81%82& .... を作る
-const makeSearchUrl = ({ dataUrl, conditions }) => {
-  const queryParams = new URLSearchParams(); // URLSearchParamsを使うとエンコードや&=の取付を自動化してくれるらしい
-
-  for (const c of conditions) { //　conditionsが複数の場合に対応するためfor文とする（そうする予定はないが）
-    if (!c.value) continue;
-    // key：${fieldName}__${lookup}  value：${value} の二つに分けて作成
-    const key = c.lookup === "exact" ? c.fieldName :`${c.fieldName}__${c.lookup}`;
-    queryParams.append(key, c.value);
-    }
-
-  const queryString = queryParams.toString();
-  const searchUrl =  queryString ? `${dataUrl}?${queryString}` : dataUrl;
-  return searchUrl
-};
-
-
-
-export function FilterButton({config:{schemaUrl, dataPath, dataUrl}}) {
+export function FilterButton({config:{schemaUrl, dataPath }}) {
   const [open, setOpen] = useState(false);
   const [filters, setFilters] = useState([]); //バックエンドから取ってきたフィルター定義の保持(未使用)
 
@@ -129,8 +98,9 @@ export function FilterButton({config:{schemaUrl, dataPath, dataUrl}}) {
       </button>
 
       <div style={{ display: open ? "block" : "none" }}>
-        <FilterMenu dataUrl={dataUrl}/>
+        <FilterMenu />
       </div>
     </div>
   );
 }
+
