@@ -2,7 +2,7 @@
 // よって、fetchのGETリクエストの延長として実装できる
 import { useState } from "react";
 import { requestApi } from "../../api/requestApi";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 // 1.backendを読み取って、filterで許可されているフィールドを動的に取得　UIとして組み立てる(未使用) とりあえず残しておく
 // parametersとは,openAPI的にクライアントが渡してよい入力値を示す
@@ -39,11 +39,9 @@ const getFilterConfig = async ({ schemaUrl, dataPath }) => {
 };
 
 // UI(簡易版)　仮でpages__words__contentに対し　icontainsで検索を実行(固定)
-// 将来的に複数条件を扱えるようにconditionは配列にしているが、需要がないかもしれない　
-const FilterMenu = () => {
-  const { search: queryString } = useLocation();
-  const navigate = useNavigate();
-
+// 将来的に複数条件を扱えるようにconditionは配列にしているが、需要がないかもしれない
+// onSearch propを使って親（page)にURLを渡す
+const FilterMenu = ({currentQueryString, onSearch }) => {
   const [conditions, setConditions] = useState([
     {fieldName: "pages__words__content", lookup: "icontains",value: ""},
   ]);  
@@ -52,34 +50,37 @@ const FilterMenu = () => {
     // いままでのonCilckでもeは参照可能だったが、無視して省略していた
   const handleChange = (e) => {
     const value = e.target.value;
-    setConditions(prev => [
-      { ...prev[0], value },
-    ]);
+    setConditions(prev => [{ ...prev[0], value },]);
   };
-
-  const handleSearch = () => {
-    const queryParams = new URLSearchParams(queryString); // URLSearchParamsを使うとエンコードや&=の取付を自動化してくれるらしい
+  
+  const handleClick = () => {
+    const queryParams = new URLSearchParams(currentQueryString); // URLSearchParamsを使うとエンコードや&=の取付を自動化してくれるらしい
     const c = conditions[0]; // condition配列の最初のみを暫定的に対象とする
     
     const key = c.lookup === "exact" ? c.fieldName: `${c.fieldName}__${c.lookup}`;
-    if (c.value) {queryParams.set(key, c.value);
-   } else {queryParams.delete(key)};
+    if (c.value) {
+      queryParams.set(key, c.value);
+   } else {
+    queryParams.delete(key)};
 
     const nextQueryString = queryParams.toString();
-    navigate({search: nextQueryString ? `?${nextQueryString}` : "",});
+    const nextSearch = nextQueryString ? `?${nextQueryString}` : "";
     // ここで location.search が変わる → DocumentsPage で searchDataUrl 更新
+    onSearch?.(nextSearch) // ← 暫定的にPageに次のsearchだけ渡す
   };
 
   return (
     <div>
       <input type="text" value={conditions[0].value} 
         onChange={handleChange} />
-      <button  onClick={handleSearch} >検索実行</button>
+      <button  onClick={handleClick} >検索実行</button>
     </div>
   );
 };
 
-export function FilterButton({config:{schemaUrl, dataPath }}) {
+
+export function FilterButton({config:{schemaUrl, dataPath },
+                              currentQueryString, onSearch}) {
   const [open, setOpen] = useState(false);
   const [filters, setFilters] = useState([]); //バックエンドから取ってきたフィルター定義の保持(未使用)
 
@@ -98,7 +99,7 @@ export function FilterButton({config:{schemaUrl, dataPath }}) {
       </button>
 
       <div style={{ display: open ? "block" : "none" }}>
-        <FilterMenu />
+      <FilterMenu currentQueryString={currentQueryString} onSearch={onSearch}/>
       </div>
     </div>
   );
