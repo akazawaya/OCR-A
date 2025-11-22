@@ -21,6 +21,7 @@ import { FilterButton } from "../components/FilterButton/FilterButton"
       <Table config={documentApiConfig} currentQueryString={queryString}
             refresh={refresh} 
             showDeleteButton={true}
+            onSearch={(nextSearch) => { navigate({ search: nextSearch }) }}
             onRowClick={(row) => navigate(routeTo.docPages(row.id))}
         />
       </RefreshContext.Provider>

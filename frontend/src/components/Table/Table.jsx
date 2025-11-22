@@ -3,6 +3,37 @@ import { useEffect, useState } from "react";
 import DeleteButton from "../DeleteButton/DeleteButton";
 import { requestApi } from "../../api/requestApi";
 
+const onColumnClick = ({ field, currentQueryString, onSearch }) => {
+// URLSearchParamsでcurrentQueryStringを受け取る
+
+  const queryParams = new URLSearchParams(currentQueryString || "");
+  // "?ordering=file_name&page=2"に対してgetするとfile_nameが帰ってくる]
+  // params.set("ordering", "-file_name"); すると書き込みが行われる
+  // params.delete("ordering"); 全部消える
+  const current = queryParams.get("ordering");
+
+  // currentを　なし→　+　→　-　→　解除の流れで記入
+  // 
+  let next;
+  if (current === field) {
+    next = `-${field}`; 
+  } else if (current === `-${field}`) {
+    next = ""; 
+  } else {
+    next = field;   // なしor別フィールド → 昇順開始
+  }
+
+  //params.set deleteを設定（nextが存在するならそれに変更する）
+  if (next) queryParams.set("ordering", next);
+  else queryParams.delete("ordering");
+
+  const qs = queryParams.toString();
+  const nextSearch = qs ? `?${qs}` : "";
+  onSearch(nextSearch);
+};
+
+
+
 // fetchのresponse→OpenAPI仕様（specification）をjsonで取得
 async function loadSchemaColumns(schemaUrl, schemaName) {
   const { res, data } = await requestApi(schemaUrl);
@@ -27,6 +58,7 @@ async function loadSchemaColumns(schemaUrl, schemaName) {
 
 export default function Table({config:{schemaUrl, schemaName, dataUrl},
                               refresh,
+                              onSearch,
                               currentQueryString,
                               rowFilter,
                               showDeleteButton = false,
@@ -57,7 +89,8 @@ export default function Table({config:{schemaUrl, schemaName, dataUrl},
       <thead>
         <tr>
           {columns.map(c => (
-            <th key={c.key}>{c.label}</th>
+            <th key={c.key} onClick={() => onColumnClick({
+                        currentQueryString, field:c.label, onSearch })}>{c.label} </th>
           ))}
         </tr>
       </thead>
