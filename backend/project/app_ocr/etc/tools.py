@@ -1,6 +1,6 @@
 from pathlib import Path
 import pypdfium2
-
+import numpy as np
 import cv2
 
 # (.venv/lib64/python3.13/site-packages/yomitoku/constants.py)
@@ -35,13 +35,16 @@ def analyze_pdf(file, type=".png", dpi=300):
     return images, len(images)
 
 def analyze_img(file, type=".png"):
-    ok, imgs = cv2.imreadmulti(str(file), flags=cv2.IMREAD_UNCHANGED) # 複数枚tiff想定
-    if ok and imgs: 
-        return [cv2.imencode(type, i)[1].tobytes() for i in imgs], len(imgs)
-    img = cv2.imread(str(file), cv2.IMREAD_UNCHANGED)  # png/jpeg/単体tiff想定
-    if img is None:
-        raise ValueError("failed to read image")
-    return [cv2.imencode(type, img)[1].tobytes()], 1
+    # cv2.imreadmulti(str(file)) だと、Djangoではfileが不確定なケースがあるため seekでバイナリを読む
+    # FieldFile（保存済み）、TemporaryUploadedFilefile.temporary_file_path() が取れることがある（実在パス）
+    # InMemoryUploadedFile（アップロード直後・小さめ)実在パスが存在しない の三種類がある
+    images = []
+    file.seek(0)
+    blob = file.read() # blobはbinary large objectの意
+    array = np.frombuffer(blob, np.uint8)
+    img = cv2.imdecode(arr, cv2.IMREAD_UNCHANGED)
+    images.append(cv2.imencode(type, img)[1].tobytes())
+    return images, 1
 
 def exchange_ext(ext):
     """
