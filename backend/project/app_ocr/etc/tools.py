@@ -2,6 +2,9 @@ from pathlib import Path
 import pypdfium2
 import numpy as np
 import cv2
+import io
+import tifffile
+
 
 # (.venv/lib64/python3.13/site-packages/yomitoku/constants.py)
 # models.pyの定義に合わせる　modelsとtoolsで拡張子定義が個別なのを後で修正したい
@@ -21,9 +24,12 @@ def validate_and_analyze(file):
             f"Unsupported file format. Supported formats are {SUPPORT_INPUT_FORMAT}")
     if ext == 'pdf':
        image_list, total_pages = analyze_pdf(file)
+    elif ext in ["tif", "tiff"]:
+        image_list, total_pages = analyze_tif(file)
     else:
         image_list, total_pages = analyze_img(file)
     return image_list, ext, total_pages
+
 
 def analyze_pdf(file, type=".png", dpi=300):
     scale = dpi / 72 
@@ -34,16 +40,35 @@ def analyze_pdf(file, type=".png", dpi=300):
         images.append(cv2.imencode(type, array)[1].tobytes())
     return images, len(images)
 
+
+def analyze_tif(file, type=".png"):
+    file.seek(0)
+    blob = file.read()
+    images = []
+
+    with tifffile.TiffFile(io.BytesIO(blob)) as tf:
+        for s in tf.series:
+            tif = s.asarray()
+        # tifが複数枚の場合は(N, H, W) と要素が３つに増える
+        if tif.ndim >= 3:
+            tif_list = list(tif)
+        else:
+            tif_list = [tif]
+
+    for img in tif_list:
+        images.append(cv2.imencode(type, img)[1].tobytes())
+    return images, len(images)
+
+
 def analyze_img(file, type=".png"):
     # cv2.imreadmulti(str(file)) だと、Djangoではfileが不確定なケースがあるため seekでバイナリを読む
     # FieldFile（保存済み）、TemporaryUploadedFilefile.temporary_file_path() が取れることがある（実在パス）
     # InMemoryUploadedFile（アップロード直後・小さめ)実在パスが存在しない の三種類がある
-    images = []
     file.seek(0)
     blob = file.read() # blobはbinary large objectの意
     array = np.frombuffer(blob, np.uint8)
-    img = cv2.imdecode(arr, cv2.IMREAD_UNCHANGED)
-    images.append(cv2.imencode(type, img)[1].tobytes())
+    img = cv2.imdecode(array, cv2.IMREAD_UNCHANGED)
+    images = [cv2.imencode(type, img)[1].tobytes()]
     return images, 1
 
 def exchange_ext(ext):
