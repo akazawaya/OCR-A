@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import DeleteButton from "../DeleteButton/DeleteButton";
 import { requestApi } from "../../api/requestApi";
 
-const onColumnClick = ({ field, currentQueryString, onSearch }) => {
-// URLSearchParamsでcurrentQueryStringを受け取る
+const onColumnClick = ({ field, query, onSearch }) => {
+// URLSearchParamsでqueryを受け取る
 
-  const queryParams = new URLSearchParams(currentQueryString || "");
+  const queryParams = new URLSearchParams(query || "");
   // "?ordering=file_name&page=2"に対してgetするとfile_nameが帰ってくる]
   // params.set("ordering", "-file_name"); すると書き込みが行われる
   // params.delete("ordering"); 全部消える
@@ -56,13 +56,11 @@ async function loadSchemaColumns(schemaUrl, schemaName) {
   }));
 }
 
-export default function Table({config:{schemaUrl, schemaName, dataUrl},
-                              refresh,
-                              onSearch,
-                              currentQueryString,
-                              rowFilter,
-                              showDeleteButton = false,
-                              onRowClick = null
+export default function Table({
+    fetchBase:{schemaUrl, schemaName, dataUrl},
+    fetchFlow:{refresh, query},
+    navigation:{onRowClick = null, onSearch},
+    options:{showDeleteButton = false, rowSelector}
                             }) {
   const [columns, setColumns] = useState([]);
   const [rows, setRows] = useState([]);
@@ -73,14 +71,14 @@ export default function Table({config:{schemaUrl, schemaName, dataUrl},
       const columns = await loadSchemaColumns(schemaUrl, schemaName);
       setColumns(columns);
         //データ本体を取得
-      const url = currentQueryString ? `${dataUrl}${currentQueryString}` : dataUrl
+      const url = query ? `${dataUrl}${query}` : dataUrl
       const { data }  = await requestApi(url); 
       const arr = Array.isArray(data) ? data : [];  
-      const filtered = rowFilter ? arr.filter(rowFilter) : arr;
+      const filtered = rowSelector ? arr.filter(rowSelector) : arr;
       setRows(filtered); //カラの時のハンドリングを兼ねる
 
     })();
-  }, [currentQueryString, refresh]);
+  }, [query, refresh]);
 
   if (!columns.length) return <div>Loading…</div>;
 	
@@ -90,7 +88,7 @@ export default function Table({config:{schemaUrl, schemaName, dataUrl},
         <tr>
           {columns.map(c => (
             <th key={c.key} onClick={() => onColumnClick({
-                        currentQueryString, field:c.label, onSearch })}>{c.label} </th>
+                        query, field:c.label, onSearch })}>{c.label} </th>
           ))}
         </tr>
       </thead>

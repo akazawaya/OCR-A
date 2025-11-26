@@ -13,11 +13,18 @@ import { useLocation, useNavigate, useParams } from "react-router-dom"
     return (
       <RefreshContext.Provider value={onRefresh}>
       <p>DocumentPageWordsPage</p>
-      <Table config={wordApiConfig} refresh={refresh} currentQueryString={queryString}
-                    onSearch={(nextSearch) => { navigate({ search: nextSearch }) }}
-                    rowFilter={primaryKey !== "undefined" ?
-                      (row) => row.page === Number(primaryKey)
-                      : undefined}/>
+      
+      <Table 
+        fetchBase={wordApiConfig} 
+        fetchFlow={{ refresh: refresh, query: queryString }}
+        navigation={{
+          onSearch:(nextSearch) => { navigate({ search: nextSearch }) }
+        }}
+        options={{
+          rowSelector:
+            primaryKey !== "undefined"  ?(row) => row.page === Number(primaryKey) : undefined
+        }}
+      />
       </RefreshContext.Provider>
     )
   }

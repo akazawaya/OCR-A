@@ -15,13 +15,19 @@ import { useParams } from "react-router-dom";
     return (
       <RefreshContext.Provider value={onRefresh}>
       <p>DocumentPagesPage</p>
-      <Table config={pageApiConfig} refresh={refresh} currentQueryString={queryString}
-                      onSearch={(nextSearch) => { navigate({ search: nextSearch }) }}
-                      onRowClick={(row) => navigate(routeTo.docPageWords(row.doc, row.id))}
-                      rowFilter={primaryKey !== "undefined"  ?
-                        (row) => row.doc === Number(primaryKey)
-                        : undefined}
-                     />
+
+      <Table 
+        fetchBase={pageApiConfig} 
+        fetchFlow={{ refresh: refresh, query: queryString }}
+        navigation={{
+          onSearch:(nextSearch) => navigate({ search: nextSearch }),
+          onRowClick:(row) => navigate(routeTo.docPageWords(row.doc, row.id))
+        }}
+        options={{
+          rowSelector:
+            primaryKey !== "undefined"  ?(row) => row.doc === Number(primaryKey) : undefined
+        }}
+      />
       </RefreshContext.Provider>
     )
   }

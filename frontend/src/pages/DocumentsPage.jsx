@@ -18,11 +18,15 @@ import { FilterButton } from "../components/FilterButton/FilterButton"
       <FilterButton config={documentApiConfig} currentQueryString={queryString} 
                     onSearch={(nextSearch) => { navigate({ search: nextSearch }) }} />
       <FileUploader config={analyzeDocumentApiConfig} />
-      <Table config={documentApiConfig} currentQueryString={queryString}
-            refresh={refresh} 
-            showDeleteButton={true}
-            onSearch={(nextSearch) => { navigate({ search: nextSearch }) }}
-            onRowClick={(row) => navigate(routeTo.docPages(row.id))}
+
+      <Table 
+        fetchBase={documentApiConfig} 
+        fetchFlow={{refresh:refresh, query:queryString}}
+        navigation={{
+          onSearch:(nextSearch) => { navigate({ search: nextSearch })},
+          onRowClick:(row) => navigate(routeTo.docPages(row.id))
+        }}
+        options={{showDeleteButton:true}}
         />
       </RefreshContext.Provider>
     )
