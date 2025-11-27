@@ -13,7 +13,7 @@ async function analyzeDocument(analyzeUrl, file) {
   return { res, data };
 }
 
-export default function FileUploader({ config: { analyzeUrl }}) {
+export default function FileUploader({ fetchBase: { analyzeUrl }}) {
   const inputRef = useRef(null);
   const onRefresh = useRefresh();
 

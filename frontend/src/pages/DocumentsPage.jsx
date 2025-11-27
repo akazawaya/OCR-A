@@ -15,9 +15,13 @@ import { FilterButton } from "../components/FilterButton/FilterButton"
     return (
       <RefreshContext.Provider value={onRefresh}>
       <p>DocumentsPage</p>
-      <FilterButton config={documentApiConfig} currentQueryString={queryString} 
-                    onSearch={(nextSearch) => { navigate({ search: nextSearch }) }} />
-      <FileUploader config={analyzeDocumentApiConfig} />
+      <FilterButton fetchBase={documentApiConfig} 
+                    fetchFlow={{query:queryString}}
+                    navigation={{
+                      onSearch:(nextSearch) => { navigate({ search: nextSearch })}
+                    }}
+                      />
+      <FileUploader fetchBase={analyzeDocumentApiConfig} />
 
       <Table 
         fetchBase={documentApiConfig} 

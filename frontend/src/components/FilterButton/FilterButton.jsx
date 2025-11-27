@@ -2,7 +2,6 @@
 // よって、fetchのGETリクエストの延長として実装できる
 import { useState } from "react";
 import { requestApi } from "../../api/requestApi";
-import { useLocation } from "react-router-dom";
 
 // 1.backendを読み取って、filterで許可されているフィールドを動的に取得　UIとして組み立てる(未使用) とりあえず残しておく
 // parametersとは,openAPI的にクライアントが渡してよい入力値を示す
@@ -41,7 +40,7 @@ const getFilterConfig = async ({ schemaUrl, dataPath }) => {
 // UI(簡易版)　仮でpages__words__contentに対し　icontainsで検索を実行(固定)
 // 将来的に複数条件を扱えるようにconditionは配列にしているが、需要がないかもしれない
 // onSearch propを使って親（page)にURLを渡す
-const FilterMenu = ({currentQueryString, onSearch }) => {
+const FilterMenu = ({queryString, onSearch }) => {
   const [conditions, setConditions] = useState([
     {fieldName: "pages__words__content", lookup: "icontains",value: ""},
   ]);  
@@ -54,7 +53,7 @@ const FilterMenu = ({currentQueryString, onSearch }) => {
   };
   
   const handleClick = () => {
-    const queryParams = new URLSearchParams(currentQueryString); // URLSearchParamsを使うとエンコードや&=の取付を自動化してくれるらしい
+    const queryParams = new URLSearchParams(queryString); // URLSearchParamsを使うとエンコードや&=の取付を自動化してくれるらしい
     const c = conditions[0]; // condition配列の最初のみを暫定的に対象とする
     
     const key = c.lookup === "exact" ? c.fieldName: `${c.fieldName}__${c.lookup}`;
@@ -79,8 +78,9 @@ const FilterMenu = ({currentQueryString, onSearch }) => {
 };
 
 
-export function FilterButton({config:{schemaUrl, dataPath },
-                              currentQueryString, onSearch}) {
+export function FilterButton({fetchBase:{schemaUrl, dataPath},
+                              fetchBase:{query},
+                              navigation:{onSearch}}) {
   const [open, setOpen] = useState(false);
   const [filters, setFilters] = useState([]); //バックエンドから取ってきたフィルター定義の保持(未使用)
 
@@ -99,7 +99,7 @@ export function FilterButton({config:{schemaUrl, dataPath },
       </button>
 
       <div style={{ display: open ? "block" : "none" }}>
-      <FilterMenu currentQueryString={currentQueryString} onSearch={onSearch}/>
+      <FilterMenu query={query} onSearch={onSearch}/>
       </div>
     </div>
   );
