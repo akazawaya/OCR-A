@@ -72,7 +72,7 @@ export default function Table({
       setColumns(columns);
         //データ本体を取得
       const url = query ? `${dataUrl}${query}` : dataUrl
-      const { data }  = await requestApi(url); 
+      const {data}  = await requestApi(url); 
       const arr = Array.isArray(data) ? data : [];  
       const filtered = rowSelector ? arr.filter(rowSelector) : arr;
       setRows(filtered); //カラの時のハンドリングを兼ねる
@@ -99,7 +99,7 @@ export default function Table({
             	<td key={c.key}>{row[c.key]}</td>
           	))}
             {showDeleteButton && (
-              <td key="__delete">
+              <td key="__delete" onClick={(e) => {e.stopPropagation()}}> 
                 <DeleteButton deleteByIdUrl={`${dataUrl}${row.id}/`} />
               </td>
             )}
@@ -113,3 +113,6 @@ export default function Table({
 // <td key="__">はただの識別キーに過ぎない
 // idは同じ親の直下に並ぶ兄弟内でユニークであればいいので、
 // DeleteButtonのidは変数でなくて良い
+
+// stopPropagation は伝搬を止めるという意味で、この場合　e.type → "click"を対象とし、
+// tdのさらに親のtrにclickが伝搬されなくなる
