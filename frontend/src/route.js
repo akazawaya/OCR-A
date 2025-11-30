@@ -23,23 +23,19 @@ const makeConfig = (schemaName, dataName) =>{
 };
 
 export const documentApiConfig = makeConfig("Document", "documents");
-
 export const pageApiConfig = makeConfig("Page", "pages");
-
-
 export const wordApiConfig = makeConfig("Word", "words");
-
 
 export const analyzeDocumentApiConfig = {
   analyzeUrl: BASEURL + "documents/analyze/",
 };
 
 
-
 // 実URL生成器
 export const routeTo = Object.freeze({
   docs: () => "/documents",
   docPages: (primaryKey) => `/documents/${encodeURIComponent(primaryKey)}`,
+  ocr: (primaryKey) => `/documents/${encodeURIComponent(primaryKey)}/ocr`,
   docPageWords: (foreignKey, primaryKey) =>
     `/documents/${encodeURIComponent(foreignKey)}/pages/${encodeURIComponent(primaryKey)}`,
 });

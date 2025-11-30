@@ -28,7 +28,7 @@ import { FilterButton } from "../components/FilterButton/FilterButton"
         fetchFlow={{refresh:refresh, query:queryString}}
         navigation={{
           onSearch:(nextSearch) => { navigate({ search: nextSearch })},
-          onRowClick:(row) => navigate(routeTo.docPages(row.id))
+          onRowClick:(row) => navigate(routeTo.ocr(row.id))
         }}
         options={{showDeleteButton:true}}
         />
