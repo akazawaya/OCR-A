@@ -1,5 +1,5 @@
 import cv2
-from pathlib import Path
+import numpy as np
 from yomitoku.ocr import OCR
 
 def init_engine():
@@ -7,10 +7,11 @@ def init_engine():
     return OCR(visualize=False, device="auto")
 
 # 1ページずつ処理する方針
-def test_ocr(img_path):
+def test_ocr(img_bytes):
     words = []
     ocr = init_engine()
-    arr_bgr = cv2.imread(str(img_path), cv2.IMREAD_COLOR)
+    arr = np.frombuffer(img_bytes, dtype=np.uint8)
+    arr_bgr = cv2.imdecode(arr, cv2.IMREAD_COLOR)
     if arr_bgr is None:
         raise ValueError(f"failed to read")
     img_rgb = cv2.cvtColor(arr_bgr, cv2.COLOR_BGR2RGB) # yomitokuはrgb入力想定    

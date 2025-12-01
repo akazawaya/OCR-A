@@ -40,14 +40,12 @@ class DocumentViewSet(viewsets.ModelViewSet):
             if doc.is_valid(raise_exception=True):
                 doc.save() #　modelインスタンスでないとidを受取れない　doc.instanceでモデルにアクセス可能
                 for p, img in enumerate(images):
+                    words = test_ocr(img)
                     img_file = ContentFile(img, name=f"{p}.png")
                     page = PageSerializer(data={"doc":doc.instance.pk, "image":img_file, "page_number":total_pages})
                     if page.is_valid(raise_exception=True):
                         page.save()
-                        # 全体のdirはPath(page.instance.image.name).parent.as_posix()でアクセス可能
-                        page_paths = page.instance.image.name
                         # breakpoint() 
-                        words = test_ocr(page_paths)
                         for w in words:
                             word = WordSerializer(data={"page":page.instance.pk, "bbox":w["points"], "content":w["content"], "direction":Direction.label_to_value(w["direction"]), "rec_score":w["rec_score"], "det_score":w["det_score"]})
                             if word.is_valid(raise_exception=True):
