@@ -11,7 +11,7 @@ from rest_framework.decorators import action
 from rest_framework import viewsets
 from rest_framework import status
 from app_ocr.etc.tools import validate_and_analyze
-from app_ocr.etc.e_yomitoku import test_ocr
+from app_ocr.etc.e_yomitoku import init_engine, test_ocr
 
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.db import transaction
@@ -39,8 +39,9 @@ class DocumentViewSet(viewsets.ModelViewSet):
             doc = DocumentSerializer(data={"file":file, "file_name":file.name, "file_type":FileType.label_to_value(ext_label), "total_pages":total_pages})
             if doc.is_valid(raise_exception=True):
                 doc.save() #　modelインスタンスでないとidを受取れない　doc.instanceでモデルにアクセス可能
+                ocr = init_engine()
                 for p, img in enumerate(images):
-                    words = test_ocr(img)
+                    words = test_ocr(img_bytes=img, ocr=ocr)
                     img_file = ContentFile(img, name=f"{p}.png")
                     page = PageSerializer(data={"doc":doc.instance.pk, "image":img_file, "page_number":total_pages})
                     if page.is_valid(raise_exception=True):
