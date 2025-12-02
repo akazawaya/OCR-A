@@ -59,7 +59,7 @@ async function loadSchemaColumns(schemaUrl, schemaName) {
 export default function Table({
     fetchBase:{schemaUrl, schemaName, dataUrl},
     fetchFlow:{refresh, query},
-    navigation:{onRowClick = null, onSearch = null } = {}, 
+    navigation:{onRowClick = null, onSearch } = {}, 
     options:{showDeleteButton = false, rowSelector} = {}
                             }) {
   const [columns, setColumns] = useState([]);
@@ -87,8 +87,8 @@ export default function Table({
       <thead>
         <tr>
           {columns.map(c => (
-            <th key={c.key} onClick={onColumnClick && (() => onColumnClick)({
-                        query, field:c.label, onSearch })}>{c.label} </th>
+            <th key={c.key} onClick={() => onColumnClick({ field: c.key, query, onSearch })}
+              > {c.label} </th>
           ))}
         </tr>
       </thead>
