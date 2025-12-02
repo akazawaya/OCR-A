@@ -1,6 +1,8 @@
 // Image.jsxという名前にしたかったが名前衝突で自動保管が機能しないっぽい
+// fetch部分が被っているところは、後から対応予定
 import { useEffect, useState } from "react";
-import { requestApi } from "../../api/requestApi";
+import { requestApi } from "../../../api/requestApi";
+
 
 export default function ViewerImage({
     fetchBase:{dataUrl},
