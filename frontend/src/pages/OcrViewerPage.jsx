@@ -1,38 +1,37 @@
 import { useReducer } from "react"
-import Table from "../components/Table/Table"
-import { pageApiConfig, routeTo } from "../route"
 import { RefreshContext } from "../contexts/refreshContext"
 import { useLocation, useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
-import ViewerImage from "../components/ViewerImage/ViewerImage";
+import Viewer from "../components/Viewer/Viewer";
+import { pageApiConfig } from "../route";
+
 //　useParams の返り値は文字列になるのでNumber()で変換しておく
 
-  const OcrViewerPage = () =>{
-    const [refresh, onRefresh] = useReducer(n => n + 1, 0);
-    const { primaryKey } = useParams();
-    const { search: queryString  } = useLocation(); 
+const OcrViewerPage = () =>{
+  const navigate = useNavigate();
+  const [refresh, onRefresh] = useReducer(n => n + 1, 0);
+  const { primaryKey } = useParams();
+  const { search: queryString  } = useLocation(); 
 
-    return (
-      <RefreshContext.Provider value={onRefresh}>
+  const rowSelector =
+  primaryKey !== "undefined"
+    ? (row) => row.doc === Number(primaryKey)
+    : undefined;
+  const options = { rowSelector };
+
+
+  return (
+    <RefreshContext.Provider value={onRefresh}>
       <p>OcrViewerPage</p>
-      <ViewerImage
-        fetchBase={pageApiConfig} 
-        fetchFlow={{ refresh: refresh, query: queryString }}
-        options={{
-          rowSelector:
-            primaryKey !== "undefined"  ?(row) => row.doc === Number(primaryKey) : undefined
-        }}
-      />
+      <Viewer
+      fetchBase={pageApiConfig}
+      fetchFlow={{ refresh: refresh, query: queryString }}
+      navigation={{
+          onSearch:(nextSearch) => navigate({ search: nextSearch })}}
+      options={options}
 
-      <Table 
-        fetchBase={pageApiConfig} 
-        fetchFlow={{ refresh: refresh, query: queryString }}
-        options={{
-          rowSelector:
-            primaryKey !== "undefined"  ?(row) => row.doc === Number(primaryKey) : undefined
-        }}
-      />
-      </RefreshContext.Provider>
-    )
-  }
-  export default OcrViewerPage
+    />
+    </RefreshContext.Provider>
+  )
+}
+export default OcrViewerPage
