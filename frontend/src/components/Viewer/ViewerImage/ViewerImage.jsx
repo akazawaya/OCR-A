@@ -2,6 +2,7 @@
 // fetch部分が被っているところは、後から対応予定
 import { useEffect, useState } from "react";
 import { requestApi } from "../../../api/requestApi";
+import styles from "./ViewerImage.module.css";
 
 
 export default function ViewerImage({
@@ -25,9 +26,11 @@ export default function ViewerImage({
   if (!imgs.length) return <div>Loading…</div>;
 	
   return (
-    <div>
+    <div className={styles.viewerRoot}>
           {imgs.map(i => (
-            <img key={i.id} src={i.image}/>
+            <div key={i.id} className={styles.page}>
+              <img src={i.image} className={styles.pageImage}/>
+            </div>
           ))}
     </div>  
   );
