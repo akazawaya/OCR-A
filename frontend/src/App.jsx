@@ -8,13 +8,17 @@ import DocumentPageWordsPage from './pages/DocumentPageWordsPage';
 import OcrViewerPage from './pages/OcrViewerPage';
 
 
-const drawerWidth = 240;
 function App() {
   return (
     <BrowserRouter>
-      <Box sx={{ display: "flex" }}>
+      <Box 
+        className="app-root"
+      >
+      <Box className="app-sidebar">
         <Sidebar/>
-        <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+      </Box>
+
+      <Box component="main" className="app-main">
           <Routes>
             <Route path="/" element={<DocumentsPage />} />    
             <Route path="documents" element={<DocumentsPage />} />
@@ -22,8 +26,8 @@ function App() {
             <Route path="documents/:primaryKey/ocr" element={<OcrViewerPage />} />
             <Route path="documents/:foreignKey/pages/:primaryKey" element={<DocumentPageWordsPage />} />
           </Routes>
-        </Box>
       </Box>
+    </Box>
     </BrowserRouter>
   );
 }
