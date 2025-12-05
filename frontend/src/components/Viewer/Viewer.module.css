@@ -1,9 +1,19 @@
 .viewerRoot {
+  display: flex;
+  flex-direction: column; 
   width: 100%;
   height: 100vh; 
 
   --viewer-page-max-width: 56.25rem;  /* = 900px */
 }
+
+.viewerContent {
+  flex: 1;
+  overflow: auto;          /* viewerContent だけoverflowでスクロールを許可することで、疑似的に外のviewerTopbarが固定される */
+}
+
+
+
 /* vhというのは「viewport height」で、ウィンドウ高さへの割合を示す */
 /* %と違うのは、親要素に対するパーセンテージで決まるのが%に対してvhはブラウザの表示領域そのものの割合から決まる　*/
 
