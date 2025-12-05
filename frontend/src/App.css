@@ -1,6 +1,6 @@
 #root {
   max-width: none;
-  margin: 0 ;
+  margin: 0;
   padding: 0rem;
   text-align: center;
 }
@@ -48,12 +48,14 @@
 }
 
 .app-sidebar {
+  flex: 0 0 200px; 
   width: 200px; 
   max-width: 200px; 
 
 }
 
 .app-main{
-  padding: 0px 0px 0px 24px;   /*上・右・下・左 テーマのspacing×3（24px）の余白  */
+  min-width: 0; 
+  padding: 0px 0px 36px 24px;   /*上・右・下・左 テーマのspacing×3（24px）の余白  */
   overflow: auto;     /* 中身が長いときだけスクロール */
 }
