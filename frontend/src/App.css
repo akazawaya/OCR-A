@@ -1,6 +1,6 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
+  max-width: none;
+  margin: 0 ;
   padding: 0rem;
   text-align: center;
 }
@@ -41,8 +41,6 @@
   color: #888;
 }
 
-
-
 .app-root{ 
   display: flex;
   height: 100vh;
@@ -50,11 +48,12 @@
 }
 
 .app-sidebar {
-  flex-shrink: 0;     /* 画面が狭くなっても潰れないようにする*/
+  width: 200px; 
+  max-width: 200px; 
+
 }
 
 .app-main{
-  flex-grow: 1; /* flexGrowは親のflexに対する残りのflex幅の使用率　flexGrow: 1がもう一つあった場合は残りを1:1で使う旨になる  */
   padding: 0px 0px 0px 24px;   /*上・右・下・左 テーマのspacing×3（24px）の余白  */
   overflow: auto;     /* 中身が長いときだけスクロール */
 }
