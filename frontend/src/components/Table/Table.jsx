@@ -1,7 +1,4 @@
-// src/components/Table.jsx
-import { useEffect, useState } from "react";
 import DeleteButton from "../DeleteButton/DeleteButton";
-import { requestApi } from "../../api/requestApi";
 
 const onColumnClick = ({ field, query, onSearch }) => {
 // URLSearchParamsでqueryを受け取る
@@ -32,55 +29,15 @@ const onColumnClick = ({ field, query, onSearch }) => {
   onSearch(nextSearch);
 };
 
-
-
-// fetchのresponse→OpenAPI仕様（specification）をjsonで取得
-async function loadSchemaColumns(schemaUrl, schemaName) {
-  const { res, data } = await requestApi(schemaUrl);
-  if (!res?.ok) return [];
-  const schema = data?.components?.schemas?.[schemaName];
-  if (!schema?.properties) return [];
-  
-  const props = schema.properties;
-  const required = Array.isArray(schema.required) ? schema.required : [];
-	// requiredのバリデーションは配列か否かを確認するのが良いらしい
-	// →Parameter Object の required: true/false（真偽値）も存在するため
-  // 並び：必須→その他（元の出現順がわからなければ名前順）
-  const allKeys = Object.keys(props);
-  const others = allKeys.filter(k => !required.includes(k)).sort();
-  const ordered = [...required, ...others]; // スプレッド構文じゃないとフラットに配列を結合できない
-	
-  return ordered.map(key => ({
-    key,
-		label: key,
-  }));
-}
-
 export default function Table({
     fetchBase:{schemaUrl, schemaName, dataUrl},
     fetchFlow:{refresh, query},
     navigation:{onRowClick = null, onSearch } = {}, 
-    options:{showDeleteButton = false, rowSelector} = {}
+    options:{showDeleteButton = false, rowSelector, onDeleteRow } = {},
+    data:{columns, rows}
                             }) {
-  const [columns, setColumns] = useState([]);
-  const [rows, setRows] = useState([]);
 
-  useEffect(() => {
-    (async () => {
-      //スキーマから列を自動生成
-      const columns = await loadSchemaColumns(schemaUrl, schemaName);
-      setColumns(columns);
-        //データ本体を取得
-      const url = query ? `${dataUrl}${query}` : dataUrl
-      const {data}  = await requestApi(url); 
-      const arr = Array.isArray(data) ? data : [];  
-      const filtered = rowSelector ? arr.filter(rowSelector) : arr;
-      setRows(filtered); //カラの時のハンドリングを兼ねる
-
-    })();
-  }, [query, refresh]);
-
-  if (!columns.length) return <div>Loading…</div>;
+  //if (!columns.length) return <div>Loading…</div>;
 	
   return (
     <table>
@@ -100,7 +57,7 @@ export default function Table({
           	))}
             {showDeleteButton && (
               <td key="__delete" onClick={(e) => {e.stopPropagation()}}> 
-                <DeleteButton deleteByIdUrl={`${dataUrl}${row.id}/`} />
+                <DeleteButton onDelete={() => onDeleteRow?.(row)} />
               </td>
             )}
           </tr>
