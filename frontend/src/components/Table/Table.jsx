@@ -5,8 +5,8 @@ export default function Table({
   navigation:{onColumnClick, onRowClick = null, onSearch} = {}, 
   options:{showDeleteButton = false, onDeleteRow} = {},
                           }) {
-  if (!columns.length) return <div>Loading…</div>;
 
+  if (!ordering) return <div>Loading…</div>;
   return (
     <table>
       <thead>
