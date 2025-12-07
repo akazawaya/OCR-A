@@ -1,51 +1,20 @@
-import DeleteButton from "../DeleteButton/DeleteButton";
-
-const onColumnClick = ({ field, query, onSearch }) => {
-// URLSearchParamsでqueryを受け取る
-
-  const queryParams = new URLSearchParams(query || "");
-  // "?ordering=file_name&page=2"に対してgetするとfile_nameが帰ってくる]
-  // params.set("ordering", "-file_name"); すると書き込みが行われる
-  // params.delete("ordering"); 全部消える
-  const current = queryParams.get("ordering");
-
-  // currentを　なし→　+　→　-　→　解除の流れで記入
-  // 
-  let next;
-  if (current === field) {
-    next = `-${field}`; 
-  } else if (current === `-${field}`) {
-    next = ""; 
-  } else {
-    next = field;   // なしor別フィールド → 昇順開始
-  }
-
-  //params.set deleteを設定（nextが存在するならそれに変更する）
-  if (next) queryParams.set("ordering", next);
-  else queryParams.delete("ordering");
-
-  const qs = queryParams.toString();
-  const nextSearch = qs ? `?${qs}` : "";
-  onSearch(nextSearch);
-};
+import DeleteButton from "../DeleteButton/DeleteButton"
 
 export default function Table({
-    fetchBase:{schemaUrl, schemaName, dataUrl},
-    fetchFlow:{refresh, query},
-    navigation:{onRowClick = null, onSearch } = {}, 
-    options:{showDeleteButton = false, rowSelector, onDeleteRow } = {},
-    data:{columns, rows}
-                            }) {
+  data:{columns, rows, ordering} = {},
+  navigation:{onColumnClick, onRowClick = null, onSearch} = {}, 
+  options:{showDeleteButton = false, onDeleteRow} = {},
+                          }) {
+  if (!columns.length) return <div>Loading…</div>;
 
-  //if (!columns.length) return <div>Loading…</div>;
-	
   return (
     <table>
       <thead>
         <tr>
           {columns.map(c => (
-            <th key={c.key} onClick={() => onColumnClick({ field: c.key, query, onSearch })}
-              > {c.label} </th>
+            <th key={c.key} onClick={() => onColumnClick(c.key)}>
+              {c.label}
+            </th>
           ))}
         </tr>
       </thead>
