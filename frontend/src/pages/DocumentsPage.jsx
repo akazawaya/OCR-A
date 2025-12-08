@@ -5,8 +5,8 @@ import { analyzeDocumentApiConfig, documentApiConfig, routeTo } from "../route"
 import { RefreshContext } from "../contexts/refreshContext"
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { FilterButton } from "../components/FilterButton/FilterButton"
-import { requestApi } from "../api/requestApi"
 import { useTableData } from "../hooks/useTableData"
+
 
 // currentOrderingを　なし→　+　→　-　→　解除の流れで記入
 const toggleOrdering = (current, field) => {
@@ -14,12 +14,9 @@ const toggleOrdering = (current, field) => {
   else if (current === `-${field}`) return ""; 
   else return field;   // なしor別フィールド → 昇順開始
 }
-
 //　handleXXX→イベントの“処理する関数”　クリック等トリガーを受けてonXXXを親へ伝えるだけ
 //  onXXX→イベントの“登録先”　子では呼び出すのみとして、親で処理を行う
 // というコンポーネント構造を保ちたい
-
-
 
 const DocumentsPage = () => {
   const navigate = useNavigate();
@@ -32,9 +29,7 @@ const DocumentsPage = () => {
 
 
   const { schemaUrl, schemaName, dataUrl } = documentApiConfig;
-  const { columns, rows, loading } = useTableData(schemaUrl, schemaName, dataUrl, search, refresh)
-  
-
+  const { columns, rows, deleteRow } = useTableData(schemaUrl, schemaName, dataUrl, search, refresh, onRefresh);
   
   const onColumnClick = (field) => { // orderingを引数にすると、子がorderingを把握する必要が出るため書かない
     const next = toggleOrdering(ordering, field);
@@ -58,14 +53,6 @@ const DocumentsPage = () => {
       ? (row) => row.page === Number(primaryKey)
       : undefined;
     // DocumentPageでは不要だが他のPageに使うため入れておく
-
-  const onDeleteButtonClick = async (row) => {
-    const deleteUrl = `${dataUrl}${row.id}/`;
-    const { res } = await requestApi(deleteUrl, { method: 'DELETE' });
-    if (res?.ok) {
-      onRefresh();   // ← これで useEffect が再fetchされる
-    }};
-
   
   return (
     <RefreshContext.Provider value={onRefresh}>
@@ -83,8 +70,9 @@ const DocumentsPage = () => {
         onColumnClick,
         onRowClick,
       }}
+
       options={{
-        onDeleteButtonClick,
+        onDeleteButtonClick: deleteRow,
         rowSelector:
           primaryKey !== "undefined"  ?(row) => row.page === Number(primaryKey) : undefined
       }}

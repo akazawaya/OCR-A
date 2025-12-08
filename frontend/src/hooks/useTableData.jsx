@@ -24,11 +24,10 @@ async function loadSchemaRows(dataUrl, search){
   return Array.isArray(data) ? data : []; 
 }
 
-export const useTableData = (schemaUrl, schemaName, dataUrl, search, refresh) => {
+export const useTableData = (schemaUrl, schemaName, dataUrl, search, refresh, onRefresh) => {
   const [loading, setLoading] = useState(true); //データが“今ロード中かどうか”のフラグ
   const [columns, setColumns] = useState([]);
   const [rows, setRows] = useState([]);
-
 
   useEffect(() => {
     (async () => {
@@ -45,5 +44,14 @@ export const useTableData = (schemaUrl, schemaName, dataUrl, search, refresh) =>
     })();
   }, [schemaUrl, schemaName, dataUrl, search, refresh]);
 
-  return { columns, rows, loading };
+  // 引数がuseTableData内でのみ存在する関数は、内部関数として処理する
+  const deleteRow = async (row) => {
+    const deleteUrl = `${dataUrl}${row.id}/`;
+    const { res } = await requestApi(deleteUrl, { method: "DELETE" });
+    if (res?.ok) {
+      onRefresh(); 
+    }
+  };
+
+  return { columns, rows, loading, deleteRow };
 }
