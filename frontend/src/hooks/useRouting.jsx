@@ -1,6 +1,4 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { routeTo } from "../route";
-
 
 // currentOrderingを　なし→　+　→　-　→　解除の流れで記入
 const toggleOrdering = (current, field) => {
@@ -8,7 +6,7 @@ const toggleOrdering = (current, field) => {
   else if (current === `-${field}`) return ""; 
   else return field;   // なしor別フィールド → 昇順開始
 }
-export const useRouting = () => {
+export const useRouting = (routeUrl) => {
   const navigate = useNavigate();
   const { search } = useLocation(); // search === "?ordering=file_name"という search プロパティを抽出　 {}は分割代入として一致するプロパティを抜き出せる
   // location{ pathname: "/documents", search: "?ordering=file_name",hash: "",state: null,key: "abc123"}
@@ -28,12 +26,12 @@ export const useRouting = () => {
 
     if (next) params.set("ordering", next);
     else params.delete("ordering");
-    navigate({ search: params.toString() });
+    navigate({ search: params.toString()});
   };
 
-  const dataRouter = (row) => {
-    navigate(routeTo.ocr(row.id));
-  };
+  const dataRouter = routeUrl
+    ? (row) => navigate(routeUrl(row))
+    : undefined;
 
   const applySearchFilter = (nextSearch) => {
     navigate({ search: nextSearch });
