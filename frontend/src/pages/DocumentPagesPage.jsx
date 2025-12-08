@@ -1,34 +1,33 @@
-import { useReducer } from "react"
 import Table from "../components/Table/Table"
-import { pageApiConfig, routeTo } from "../route"
+import { pageApiConfig } from "../route"
+import { useReducer } from "react"
 import { RefreshContext } from "../contexts/refreshContext"
-import { useLocation, useNavigate } from "react-router-dom";
-import { useParams } from "react-router-dom";
-//　useParams の返り値は文字列になるのでNumber()で変換しておく
+import { useTableData } from "../hooks/useTableData"
+import { useRouting } from "../hooks/useRouting"
+import { routeTo } from "../route";
 
   const DocumentPagesPage = () =>{
-    const navigate = useNavigate();
-    const [refresh, onRefresh] = useReducer(n => n + 1, 0);
-    const { primaryKey } = useParams();
-    const { search: queryString  } = useLocation(); 
+  const [refresh, onRefresh] = useReducer(n => n + 1, 0);
+  const { schemaUrl, schemaName, dataUrl } = pageApiConfig;
+  const { search, columnsSort, dataRouter, routingRowFilter }
+   = useRouting((row) => routeTo.docPageWords(row.doc, row.id));
+  const { columns, rows, loading } = useTableData(schemaUrl, schemaName, dataUrl, search, refresh, onRefresh);
 
-    return (
-      <RefreshContext.Provider value={onRefresh}>
-      <p>DocumentPagesPage</p>
-
-      <Table 
-        fetchBase={pageApiConfig} 
-        fetchFlow={{ refresh: refresh, query: queryString }}
-        navigation={{
-          onSearch:(nextSearch) => navigate({ search: nextSearch }),
-          onRowClick:(row) => navigate(routeTo.docPageWords(row.doc, row.id))
-        }}
-        options={{
-          rowSelector:
-            primaryKey !== "undefined"  ?(row) => row.doc === Number(primaryKey) : undefined
-        }}
-      />
-      </RefreshContext.Provider>
-    )
+  return (
+    <RefreshContext.Provider value={onRefresh}>
+    <p>DocumentPagesPage</p>
+    
+    <Table 
+      data={{ columns, rows, loading }}
+      navigation={{
+        onColumnClick:columnsSort,
+        onRowClick:dataRouter,
+      }}
+      options={{
+        onDataRouting:routingRowFilter,
+      }}
+          />
+    </RefreshContext.Provider>
+  )
   }
   export default DocumentPagesPage
