@@ -1,10 +1,10 @@
-export default function DeleteButton({ onDelete }) {
-  const handleClick = () => {
-    onDelete();  
+export default function DeleteButton({ onClick }) {
+  const handleRowDelete = () => {
+    onClick();  
   };
 
   return (
-  	<button onClick={handleClick}>
+  	<button onClick={handleRowDelete}>
 			削除
 		</button>
   )

@@ -1,12 +1,12 @@
 import DeleteButton from "../DeleteButton/DeleteButton"
 
 export default function Table({
-  data:{columns, rows, ordering} = {},
-  navigation:{onColumnClick, onRowClick = null, onSearch} = {}, 
-  options:{showDeleteButton = false, onDeleteRow} = {},
+  data:{columns, rows, loading} = {},
+  navigation:{onColumnClick, onRowClick = null} = {}, 
+  options:{onDeleteButtonClick} = {},
                           }) {
 
-  if (!ordering) return <div>Loading…</div>;
+  if (loading) return <div>Loading…</div>;
   return (
     <table>
       <thead>
@@ -24,9 +24,9 @@ export default function Table({
             {columns.map(c => (
             	<td key={c.key}>{row[c.key]}</td>
           	))}
-            {showDeleteButton && (
+            {onDeleteButtonClick && (
               <td key="__delete" onClick={(e) => {e.stopPropagation()}}> 
-                <DeleteButton onDelete={() => onDeleteRow?.(row)} />
+                <DeleteButton onClick={() => onDeleteButtonClick?.(row)} />
               </td>
             )}
           </tr>

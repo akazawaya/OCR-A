@@ -5,7 +5,6 @@ import { analyzeDocumentApiConfig, documentApiConfig, routeTo } from "../route"
 import { RefreshContext } from "../contexts/refreshContext"
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { FilterButton } from "../components/FilterButton/FilterButton"
-import { useEffect, useState } from "react";
 import { requestApi } from "../api/requestApi"
 import { useTableData } from "../hooks/useTableData"
 
@@ -23,7 +22,6 @@ const toggleOrdering = (current, field) => {
 
 
 const DocumentsPage = () => {
-
   const navigate = useNavigate();
   const { search } = useLocation(); // search === "?ordering=file_name"という search プロパティを抽出　 {}は分割代入として一致するプロパティを抜き出せる
   // location{ pathname: "/documents", search: "?ordering=file_name",hash: "",state: null,key: "abc123"}
@@ -51,7 +49,7 @@ const DocumentsPage = () => {
     navigate(routeTo.ocr(row.id));
   };
 
-  const onSearch = (nextSearch) => {
+  const onSearchButtonClick = (nextSearch) => {
    navigate({ search: nextSearch });
   };
 
@@ -61,7 +59,7 @@ const DocumentsPage = () => {
       : undefined;
     // DocumentPageでは不要だが他のPageに使うため入れておく
 
-  const handleDeleteRow = async (row) => {
+  const onDeleteButtonClick = async (row) => {
     const deleteUrl = `${dataUrl}${row.id}/`;
     const { res } = await requestApi(deleteUrl, { method: 'DELETE' });
     if (res?.ok) {
@@ -75,20 +73,18 @@ const DocumentsPage = () => {
     <FilterButton fetchBase={documentApiConfig} 
                   fetchFlow={{query:search}}
                   navigation={{
-                    onSearch:(nextSearch) => { navigate({ search: nextSearch })}
+                    onSearch:(nextSearch) => { navigate({ search: nextSearch }) }
                   }}
                     />
     <FileUploader fetchBase={analyzeDocumentApiConfig} />
     <Table 
-      data={{columns, rows, ordering }}
+      data={{ columns, rows, ordering }}
       navigation={{
         onColumnClick,
         onRowClick,
-        onSearch,
       }}
       options={{
-        showDeleteButton:true,
-        onDeleteRow: handleDeleteRow,
+        onDeleteButtonClick,
         rowSelector:
           primaryKey !== "undefined"  ?(row) => row.page === Number(primaryKey) : undefined
       }}
