@@ -7,8 +7,9 @@ import { RefreshContext } from "../contexts/refreshContext"
 import { useTableData } from "../hooks/useTableData"
 import { useRouting } from "../hooks/useRouting"
 import { routeTo } from "../route";
+import { useAnalyze } from "../hooks/useAnalyze"
 
-// routeTo.ocr rourwTo.docPages 関数として入力しないと即座に実行しようとしてエラーになる
+// routeTo.ocr routeTo.docPages 関数として入力しないと即座に実行しようとしてエラーになる
 const DocumentsPage = () => {
   const [refresh, onRefresh] = useReducer(n => n + 1, 0);
   const { schemaUrl, schemaName, dataUrl } = documentApiConfig;
@@ -16,7 +17,9 @@ const DocumentsPage = () => {
    = useRouting((row) => routeTo.docPages(row.id));
 
   const { columns, rows, loading, deleteRow } = useTableData(schemaUrl, schemaName, dataUrl, search, refresh, onRefresh);
- 
+  
+  const { analyzeUrl } = analyzeDocumentApiConfig;
+  const { inputRef, analyzeData } = useAnalyze(analyzeUrl, onRefresh);
 
   return (
     <RefreshContext.Provider value={onRefresh}>
@@ -24,9 +27,11 @@ const DocumentsPage = () => {
     <FilterButton 
       fetchBase={documentApiConfig} 
       fetchFlow={{query:search}}
-      navigation={{onSearchButtonClick: applySearchFilter}}
+      navigation={{onSearchButtonClick:applySearchFilter}}
                     />
-    <FileUploader fetchBase={analyzeDocumentApiConfig} />
+    <FileUploader data={{inputRef}} 
+          options={{onAnalyzeButtonClick:analyzeData}}/>
+
     <Table 
       data={{ columns, rows, loading }}
       navigation={{
