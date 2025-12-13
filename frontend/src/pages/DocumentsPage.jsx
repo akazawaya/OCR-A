@@ -9,6 +9,7 @@ import { useRouting } from "../hooks/useRouting"
 import { routeTo } from "../route";
 import { useAnalyze } from "../hooks/useAnalyze"
 
+// options={{onApplyFilterButton:applyFilterButton}}/>
 // routeTo.ocr routeTo.docPages 関数として入力しないと即座に実行しようとしてエラーになる
 const DocumentsPage = () => {
   const [refresh, onRefresh] = useReducer(n => n + 1, 0);
@@ -20,17 +21,22 @@ const DocumentsPage = () => {
   
   const { analyzeUrl } = analyzeDocumentApiConfig;
   const { inputRef, analyzeData } = useAnalyze(analyzeUrl, onRefresh);
+  const { toggleFilterMenu, updateConditions} = FilterButton()
 
   return (
     <RefreshContext.Provider value={onRefresh}>
     <p>DocumentsPage</p>
+
     <FilterButton 
-      fetchBase={documentApiConfig} 
-      fetchFlow={{query:search}}
+      data={{search}}
       navigation={{onSearchButtonClick:applySearchFilter}}
-                    />
-    <FileUploader data={{inputRef}} 
-          options={{onAnalyzeButtonClick:analyzeData}}/>
+      options={{onFilterMenuButtonClick:toggleFilterMenu,
+                onChangeConditions:updateConditions
+      }}/>
+
+    <FileUploader 
+      data={{inputRef}} 
+      options={{onAnalyzeButtonClick:analyzeData}}/>
 
     <Table 
       data={{ columns, rows, loading }}
