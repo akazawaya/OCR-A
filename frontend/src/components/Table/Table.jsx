@@ -1,4 +1,4 @@
-import DeleteButton from "../DeleteButton/DeleteButton"
+import DeleteButton from "./DeleteButton/DeleteButton";
 
 export default function Table({
   data:{columns, rows, loading} = {},
