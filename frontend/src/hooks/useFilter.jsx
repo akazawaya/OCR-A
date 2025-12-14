@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export const useFilter = (search, applySearchFilter) => {
+export const useFilter = (search, searchFilter) => {
   const [conditions, setConditions] = useState([
     {fieldName: "pages__words__content", lookup: "icontains",value: ""},
   ]);  
@@ -14,7 +14,7 @@ export const useFilter = (search, applySearchFilter) => {
     //onChangeConditions(value);　外部参照を有効化する時に使う
   };
   // hooks成立後で関数名を、Submitをになう形で改名
-  const makeNextSearch = () => {
+  const applySearchFilter = () => {
     const queryParams = new URLSearchParams(search); // URLSearchParamsを使うとエンコードや&=の取付を自動化してくれるらしい
     const c = conditions[0]; // condition配列の最初のみを暫定的に対象とする
     
@@ -28,7 +28,7 @@ export const useFilter = (search, applySearchFilter) => {
     const nextSearch = nextQueryString ? `?${nextQueryString}` : "";
     // ここで location.search が変わる → DocumentsPage で searchDataUrl 更新
 
-    applySearchFilter?.(nextSearch); // ← 暫定的にPageに次のsearchだけ渡す
+    searchFilter?.(nextSearch); // ← 暫定的にPageに次のsearchだけ渡す
   };
-  return { conditions, updateConditions, makeNextSearch  };
+  return { conditions, updateConditions, applySearchFilter };
 }

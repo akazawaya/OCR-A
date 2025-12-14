@@ -25,13 +25,13 @@ const DocumentsPage = () => {
   const { analyzeUrl } = analyzeDocumentApiConfig;
   const [refresh, onRefresh] = useReducer(n => n + 1, 0);
 
-  const { search, columnsSort, dataRouter, routingRowFilter, applySearchFilter } 
+  const { search, columnsSort, dataRouter, routingRowFilter, searchFilter } 
    = useRouting((row) => routeTo.docPages(row.id));
   
   const { columns, rows, loading, deleteRow } = useTableData(schemaUrl, schemaName, dataUrl, search, refresh, onRefresh);
   
   const { inputRef, analyzeData } = useAnalyze(analyzeUrl, onRefresh);
-  const { conditions, updateConditions, makeNextSearch } = useFilter(search, applySearchFilter)
+  const { conditions, updateConditions, applySearchFilter} = useFilter(search, searchFilter)
 
   return (
     <RefreshContext.Provider value={onRefresh}>
@@ -39,7 +39,7 @@ const DocumentsPage = () => {
 
     <FilterMenuButton 
       data={{search, conditions}}
-      navigation={{onSearchButtonClick:makeNextSearch}}
+      navigation={{onSearchButtonClick:applySearchFilter}}
       options={{onChangeConditions:updateConditions}}/>
 
     <FileUploader 

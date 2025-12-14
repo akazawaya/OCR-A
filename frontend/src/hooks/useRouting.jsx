@@ -33,9 +33,9 @@ export const useRouting = (routeUrl) => {
     ? (row) => navigate(routeUrl(row))
     : undefined;
 
-  const applySearchFilter = (nextSearch) => {
+  const searchFilter = (nextSearch) => {
     navigate({ search: nextSearch });
   };
 
-  return { search, columnsSort, dataRouter, routingRowFilter, applySearchFilter };
+  return { search, columnsSort, dataRouter, routingRowFilter, searchFilter };
 }
