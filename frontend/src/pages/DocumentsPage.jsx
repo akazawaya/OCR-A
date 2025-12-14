@@ -1,6 +1,6 @@
 import Table from "../components/Table/Table"
 import FileUploader from "../components/FileUploader/FileUploader"
-import { FilterButton } from "../components/FilterButton/FilterButton"
+import { FilterMenuButton } from "../components/FilterMenuButton/FilterMenuButton"
 import { analyzeDocumentApiConfig, documentApiConfig } from "../route"
 import { useReducer } from "react"
 import { RefreshContext } from "../contexts/refreshContext"
@@ -21,13 +21,13 @@ const DocumentsPage = () => {
   
   const { analyzeUrl } = analyzeDocumentApiConfig;
   const { inputRef, analyzeData } = useAnalyze(analyzeUrl, onRefresh);
-  const { toggleFilterMenu, updateConditions} = FilterButton()
+  const { toggleFilterMenu, updateConditions} = FilterMenuButton()
 
   return (
     <RefreshContext.Provider value={onRefresh}>
     <p>DocumentsPage</p>
 
-    <FilterButton 
+    <FilterMenuButton 
       data={{search}}
       navigation={{onSearchButtonClick:applySearchFilter}}
       options={{onFilterMenuButtonClick:toggleFilterMenu,

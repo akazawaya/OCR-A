@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { FilterMenu } from "./FilterMenu/FilterMenu";
 
-export function FilterButton({
+export function FilterMenuButton({
     data: { search = "" } = {},
     navigation: { onSearchButtonClick } = {},
     options: {

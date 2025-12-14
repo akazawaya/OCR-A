@@ -19,7 +19,7 @@ export const FilterMenu = ({
     onChangeConditions(value);
   };
   
-  const applySearchFilter = () => {
+  const makeNextSearch = () => {
     const queryParams = new URLSearchParams(search); // URLSearchParamsを使うとエンコードや&=の取付を自動化してくれるらしい
     const c = conditions[0]; // condition配列の最初のみを暫定的に対象とする
     
@@ -39,7 +39,7 @@ export const FilterMenu = ({
     <div>
       <input type="text" value={conditions[0].value} 
               onChange={updateConditions} />
-      <button  onClick={applySearchFilter} >検索実行</button>
+      <button  onClick={makeNextSearch} >検索実行</button>
     </div>
   );
 };
