@@ -11,7 +11,7 @@ import { useRouting } from "../hooks/useRouting"
 import { useAnalyze } from "../hooks/useAnalyze"
 import { useFilter } from "../hooks/useFilter"
 
-// routeTo.ocr routeTo.docPages 関数として入力しないと即座に実行しようとしてエラーになる
+// routeTo.viewer routeTo.docPages 関数として入力しないと即座に実行しようとしてエラーになる
 // 方針：prop関数名:実関数を　on(イベントハンドラ):実行される関数、として関係性をここで明記する
 // パーツコンポーネントはon(イベントハンドラ)とDOM構築を担当し、hooksは実行される関数を担当。
 // お互いがお互いを知らない状態で、Pageコンポーネントでイベントハンドラと実行される関数を結びつける役割を担う。
@@ -26,7 +26,7 @@ const DocumentsPage = () => {
   const [refresh, onRefresh] = useReducer(n => n + 1, 0);
 
   const { search, columnsSort, dataRouter, routingRowFilter, searchFilter } 
-   = useRouting((row) => routeTo.docPages(row.id));
+   = useRouting((row) => routeTo.viewer(row.id));
   
   const { columns, rows, loading, deleteRow } = useTableData(schemaUrl, schemaName, dataUrl, search, refresh, onRefresh);
   

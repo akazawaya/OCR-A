@@ -23,7 +23,7 @@ function App() {
             <Route path="/" element={<DocumentsPage />} />    
             <Route path="documents" element={<DocumentsPage />} />
             <Route path="documents/:primaryKey" element={<DocumentPagesPage />} />
-            <Route path="documents/:primaryKey/ocr" element={<OcrViewerPage />} />
+            <Route path="documents/:primaryKey/viewer" element={<OcrViewerPage />} />
             <Route path="documents/:foreignKey/pages/:primaryKey" element={<DocumentPageWordsPage />} />
           </Routes>
       </Box>

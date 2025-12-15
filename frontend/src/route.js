@@ -35,7 +35,7 @@ export const analyzeDocumentApiConfig = {
 export const routeTo = Object.freeze({
   docs: () => "/documents",
   docPages: (primaryKey) => `/documents/${encodeURIComponent(primaryKey)}`,
-  ocr: (primaryKey) => `/documents/${encodeURIComponent(primaryKey)}/ocr`,
+  viewer: (primaryKey) => `/documents/${encodeURIComponent(primaryKey)}/viewer`,
   docPageWords: (foreignKey, primaryKey) =>
     `/documents/${encodeURIComponent(foreignKey)}/pages/${encodeURIComponent(primaryKey)}`,
 });
