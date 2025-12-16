@@ -16,15 +16,14 @@ const OcrViewerPage = () =>{
   const { loading, rows, imgs } = useViewer(dataUrl, search, refresh);
   // 現状はuseTableDataにてrowsの取得を兼ねているが、useViewerにfetchを寄せて、組み立て専用としても機能するように改造する予定
   // loadingは連携が二つのhooksでとれるか？を検討しつつ使用方法を決める予定
-  const { columns } = useTableData(schemaUrl, schemaName, dataUrl, search, rows, refresh, onRefresh);
+  const { columns } = useTableData(routingRowFilter, schemaUrl, schemaName, dataUrl, search, rows, refresh, onRefresh);
 
   return (
     <RefreshContext.Provider value={onRefresh}>
       <p>OcrViewerPage</p>
       <Viewer
         data={{ columns, rows, loading, imgs }}
-        navigation={{onColumnClick:columnsSort}}
-        options={{onDataRouting:routingRowFilter}}/>
+        navigation={{onColumnClick:columnsSort}}/>
     </RefreshContext.Provider>
   )
 }

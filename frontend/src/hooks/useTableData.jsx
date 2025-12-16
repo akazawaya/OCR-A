@@ -18,13 +18,15 @@ async function loadSchemaColumns(schemaUrl, schemaName) {
   return ordered.map(key => ({key,label: key,}));
 }
 
-async function loadSchemaRows(dataUrl, search){
+async function loadSchemaRows(routingRowFilter, dataUrl, search){
   const url = search ? `${dataUrl}${search}` : dataUrl
-  const { data } = await requestApi(url); 
-  return Array.isArray(data) ? data : []; 
+  const { data } = await requestApi(url);
+  const  array = Array.isArray(data) ? data : []; 
+  const filtered = routingRowFilter ? array.filter(routingRowFilter) : array;
+  return filtered;
 }
 
-export const useTableData = (schemaUrl, schemaName, dataUrl, search, refresh, onRefresh) => {
+export const useTableData = (routingRowFilter, schemaUrl, schemaName, dataUrl, search, refresh, onRefresh) => {
   const [loading, setLoading] = useState(true); //データが“今ロード中かどうか”のフラグ
   const [columns, setColumns] = useState([]);
   const [rows, setRows] = useState([]);
@@ -36,7 +38,7 @@ export const useTableData = (schemaUrl, schemaName, dataUrl, search, refresh, on
       const columns = await loadSchemaColumns(schemaUrl, schemaName);
       setColumns(columns);
 
-      const rows = await loadSchemaRows(dataUrl, search);
+      const rows = await loadSchemaRows(routingRowFilter, dataUrl, search);
       setRows(rows); 
 
       setLoading(false);  // 完了

@@ -6,18 +6,17 @@ const toggleOrdering = (current, field) => {
   else if (current === `-${field}`) return ""; 
   else return field;   // なしor別フィールド → 昇順開始
 }
-export const useRouting = (routeUrl) => {
+export const useRouting = ({routeUrl, rowSelector} = {}) => {
   const navigate = useNavigate();
   const { search } = useLocation(); // search === "?ordering=file_name"という search プロパティを抽出　 {}は分割代入として一致するプロパティを抜き出せる
   // location{ pathname: "/documents", search: "?ordering=file_name",hash: "",state: null,key: "abc123"}
   const { primaryKey } = useParams() // { primaryKey: "123" }
-
   const queryParams = new URLSearchParams(search || ""); //ordering = "file_name"
   const ordering = queryParams.get("ordering") || ""; // "file_name"
 
   const routingRowFilter = 
-    primaryKey !== "undefined"
-      ? (row) => row.page === Number(primaryKey)
+    primaryKey != null && typeof rowSelector === "function"
+      ? (row) => rowSelector(row) === Number(primaryKey)
       : undefined;
 
   const columnsSort = (field) => { // orderingを引数にすると、子がorderingを把握する必要が出るため書かない

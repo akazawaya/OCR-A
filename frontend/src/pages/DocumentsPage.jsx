@@ -25,10 +25,11 @@ const DocumentsPage = () => {
   const { analyzeUrl } = analyzeDocumentApiConfig;
   const [refresh, onRefresh] = useReducer(n => n + 1, 0);
 
-  const { search, columnsSort, dataRouter, routingRowFilter, searchFilter } 
-   = useRouting((row) => routeTo.viewer(row.id));
+  const { search, columnsSort, dataRouter, routingRowFilter, searchFilter } = useRouting({
+    routeUrl: (row) => routeTo.viewer(row.id)
+  });
   
-  const { columns, rows, loading, deleteRow } = useTableData(schemaUrl, schemaName, dataUrl, search, refresh, onRefresh);
+  const { columns, rows, loading, deleteRow } = useTableData(routingRowFilter, schemaUrl, schemaName, dataUrl, search, refresh, onRefresh);
   
   const { inputRef, analyzeData } = useAnalyze(analyzeUrl, onRefresh);
   const { conditions, updateConditions, applySearchFilter} = useFilter(search, searchFilter)
@@ -53,7 +54,6 @@ const DocumentsPage = () => {
         onRowClick:dataRouter,
       }}
       options={{
-        onDataRouting:routingRowFilter,
         onDeleteButtonClick:deleteRow,
       }}
       />
