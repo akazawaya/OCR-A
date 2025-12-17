@@ -4,7 +4,7 @@ import ViewerTopBar from "./ViewerTopbar/ViewerTopbar";
 import Table from "../Table/Table";
 
 export default function Viewer({
-  data:{columns, rows, loading, imgs} = {},
+  data:{columns, rows, loading} = {},
   options:{onDataRouting: routingRowFilter} = {},
                           }) {
   return (
@@ -12,7 +12,7 @@ export default function Viewer({
       <ViewerTopBar/>
       <div className={styles.viewerContent}>
         <ViewerImage
-        data={{ imgs }}
+        data={{ rows }}
         />
         <Table 
         data={{ columns, rows, loading }}
