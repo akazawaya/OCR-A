@@ -1,7 +1,7 @@
 // Image.jsxという名前にしたかったが名前衝突で自動保管が機能しないっぽい
 import styles from "./ViewerImage.module.css";
 export default function ViewerImage({
-  data:{rows},
+  data:{rows, page, zoom, rotate},
   }) {
   if (!rows.length) return <div>Loading…</div>;
 	

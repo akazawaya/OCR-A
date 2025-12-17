@@ -1,25 +1,9 @@
-import { useEffect, useState } from "react";
-import { requestApi } from "../api/requestApi";
+import { useState } from "react"; 
+// 入力中文字列（draft）を安全に扱い、確定（commit）時だけ useViewer の state を更新する 
 
-const loadRowsAndImgs = async (dataUrl, search) => {
-  const url = search ? `${dataUrl}${search}` : dataUrl
-  const { data } = await requestApi(url); (dataUrl, search);
-  const arr = Array.isArray(data) ? data : [];  
-  const filtered = routingRowFilter ? arr.filter(routingRowFilter) : arr;
-  return filtered;
-}
-
-
-export const useViewer = () => {
-  const [rows, setRows] = useState([]);
-  const [imgs, setImgs] = useState([]);
-  
-  useEffect(() => {
-  (async () => {
-    const filtered = loadRowsAndImgs = (dataUrl, search);
-    setRows(filtered);
-    setImgs(filtered);
-  })();
-  }, []);
-  return {rows, imgs};
-}
+  export const useViewer = () => {
+    const [page, setPage] = useState(1); 
+    const [zoom, setZoom] = useState(1.0); // 1.0=100% 
+    const [rotate, setRotate] = useState(0); 
+    return { page, zoom, rotate, setPage, setZoom, setRotate }; 
+  };

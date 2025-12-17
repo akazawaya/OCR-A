@@ -7,19 +7,25 @@ import { useTableData } from "../hooks/useTableData";
 import { useViewer } from "../hooks/useViewer";
 //　useParams の返り値は文字列になるのでNumber()で変換しておく
 
-const OcrViewerPage = () =>{
+
+
+const OcrViewerPage = () => {
   const [refresh, onRefresh] = useReducer(n => n + 1, 0);
   const { search, columnsSort, routingRowFilter } = useRouting({
     rowSelector: (row) => row.doc
   });
   const { schemaUrl, schemaName, dataUrl } = pageApiConfig;
   const { columns, rows, loading } = useTableData(routingRowFilter, schemaUrl, schemaName, dataUrl, search, refresh, onRefresh);
+  
+  const { page, zoom, rotate, setPage, setZoom, setRotate } = useViewer();
 
   return (
     <RefreshContext.Provider value={onRefresh}>
       <p>OcrViewerPage</p>
       <Viewer
-        data={{ columns, rows, loading }}
+        data={{ columns, rows, loading,
+          page, zoom, rotate, setPage, setZoom, setRotate 
+         }}
         navigation={{onColumnClick:columnsSort}}/>
     </RefreshContext.Provider>
   )
