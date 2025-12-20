@@ -4,7 +4,8 @@ const renderTextField = (foo, setFoo, parser) => (
   // 第三引数parserはパースする関数を入れる 
   <TextField defaultValue={foo} onKeyDown={
     (e) => { if (e.key !== "Enter") return; //  return何もなし　でその処理を打ち切る意味になる
-    const next = parser(e.currentTarget.value); 
+    const next = parser(e.target.value); 
+    // TextFieldはinputのラッパーなので、要素のとり違いに注意（currentTargetだとダメだった）
     if (!Number.isFinite(next)) return; 
     setFoo(next);
   }}/> 
