@@ -3,7 +3,7 @@ import { useState } from "react";
 
   export const useViewer = () => {
     const [page, setPage] = useState(1); 
-    const [zoom, setZoom] = useState(1.0); // 1.0=100% 
+    const [zoom, setZoom] = useState(100); // 100% 
     const [rotate, setRotate] = useState(0); 
     return { page, zoom, rotate, setPage, setZoom, setRotate }; 
   };

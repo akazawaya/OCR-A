@@ -23,17 +23,20 @@ export default function ViewerImage({
 
 
 
-
-
   if (!rows.length) return <div>Loading…</div>;
 	
   return (
-    <div ref={rootRef} className={styles.viewerRoot}>
-      {/* useRef(null) を作っただけでは参照されない */}
+    <div ref={rootRef} 
+      className={styles.viewerRoot}
+      style={{ "--zoom": zoom, "--rotate": rotate }}>  {/* useRef(null) を作っただけでは参照されない */}
+
+
       {rows.map(i => (
         <div key={i.id} className={styles.page} 
           data-page={i.id}> {/* CSSセレクタでピックするための符合 */}
-          <img src={i.image} className={styles.pageImage}/>
+          <div className={styles.pageInner}>
+            <img src={i.image} className={styles.pageImage}/>
+          </div>
         </div>
           ))}
     </div>  

@@ -7,9 +7,19 @@
   width: 100%;
   height: auto;
 }
+
+
 /* overflow- でスクロールが可能になるが。親に固定の高さが必要 */
 .page {
-  width: 100%;
+  /* calc()でcss内の計算が可能になる */
+  width: calc(1% * var(--zoom, 100)); /* pageの受け取りzoom 入力と見た目がズレやすいので 親のこっちに実装した方が良いらしい */
+  margin: 0 auto 16px; /* ページ間の隙間  横方向を中央寄せ + 下だけ余白 */
+  /*　上:0・右:auto・下:16px・左:auto だが、　ブロックの左右マージンをautoにすると親の余った横幅を“等分配”してくれる規定がある */
+}
+
+.pageInner {
+  transform: rotate(calc(var(--rotate, 0) * 1deg));
+  transform-origin: center center;
 }
 
 /* isplay: block;　その要素をブロック要素として　前後で改行されて一行丸ごと使う（imgのデフォルトはインライン要素なので）　 */
@@ -17,4 +27,5 @@
   display: block;
   width: 100%;
   height: auto;
+
 }
