@@ -2,14 +2,13 @@
   display: flex;
   flex-direction: column; 
   width: 100%;
-  height: 100vh; 
-
-  --viewer-page-max-width: 56.25rem;  /* = 900px */
+  height: 100%;
 }
 
 .viewerContent {
   flex: 1;
   overflow: auto;          /* viewerContent だけoverflowでスクロールを許可することで、疑似的に外のviewerTopbarが固定される */
+  min-height: 0;      /* これがないと内部スクロールが崩れやすい */
 }
 
 

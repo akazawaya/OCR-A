@@ -3,7 +3,9 @@
   margin: 0;
   padding: 0rem;
   text-align: center;
+  overflow: hidden 
 }
+/* 親がoverflowでスクロール不可能になっても、子には継承されない */
 
 .logo {
   height: 6em;
