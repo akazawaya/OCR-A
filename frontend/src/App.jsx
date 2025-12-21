@@ -14,10 +14,11 @@ function App() {
       <Box 
         className="app-root"
       >
+      {/*
       <Box className="app-sidebar">
-        <Sidebar/>
+      <Sidebar/>
       </Box>
-
+      */}
       <Box component="main" className="app-main">
           <Routes>
             <Route path="/" element={<DocumentsPage />} />    
