@@ -5,14 +5,14 @@ import Table from "../Table/Table";
 
 export default function Viewer({
   data:{ columns, rows, loading, 
-    page, zoom, rotate, setPage, setZoom, setRotate 
+    page, zoom, rotate, setPage, setZoom, setRotate, commitPage, commitZoom, commitRotate
     } = {},
   options:{onDataRouting: routingRowFilter} = {},
                           }) {
   return (
     <div className={styles.viewerRoot}> 
       <ViewerTopBar
-      data={{ page, zoom, rotate, setPage, setZoom, setRotate }}
+      data={{ page, zoom, rotate, setPage, setZoom, setRotate, commitPage, commitZoom, commitRotate }}
       />
 
       <div className={styles.viewerContent}>
