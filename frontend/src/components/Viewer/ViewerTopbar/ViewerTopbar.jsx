@@ -10,9 +10,8 @@ const renderTextField = (foo, commitFoo) => (
   }}/> 
 ); 
 
-const ViewerTopBar = ({ 
-  data:{ page, zoom, rotate, setPage, setZoom, setRotate, commitPage, commitZoom, commitRotate } = {} 
-  }) => { 
+export default function ViewerTopBar ( { viewer } = {}){ 
+  const { page, zoom, rotate, commitPage, commitZoom, commitRotate } = viewer;
   return ( 
   <AppBar color="default" position="static">
     <Toolbar>
@@ -22,4 +21,4 @@ const ViewerTopBar = ({
     </Toolbar> 
   </AppBar> 
   )}; 
-export default ViewerTopBar;
+  

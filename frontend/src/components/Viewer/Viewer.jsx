@@ -4,20 +4,19 @@ import ViewerTopBar from "./ViewerTopbar/ViewerTopbar";
 import Table from "../Table/Table";
 
 export default function Viewer({
-  data:{ columns, rows, loading, 
-    page, zoom, rotate, setPage, setZoom, setRotate, commitPage, commitZoom, commitRotate
-    } = {},
+  data:{ columns, rows, loading } = {},
+  viewer,
   options:{onDataRouting: routingRowFilter} = {},
                           }) {
   return (
     <div className={styles.viewerRoot}> 
       <ViewerTopBar
-      data={{ page, zoom, rotate, setPage, setZoom, setRotate, commitPage, commitZoom, commitRotate }}
+      viewer={ viewer }
       />
-
       <div className={styles.viewerContent}>
         <ViewerImage
-        data={{ rows, page, zoom, rotate }}
+        data={{ rows }}
+        viewer={ viewer }
         />
         <Table 
         data={{ columns, rows, loading }}

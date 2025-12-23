@@ -14,16 +14,15 @@ const OcrViewerPage = () => {
   });
   const { schemaUrl, schemaName, dataUrl } = pageApiConfig;
   const { columns, rows, loading } = useTableData(routingRowFilter, schemaUrl, schemaName, dataUrl, search, refresh, onRefresh);
-  
-  const { page, zoom, rotate, setPage, setZoom, setRotate, commitPage, commitZoom, commitRotate } = useViewer();
+
+  const viewer = useViewer();
 
   return (
     <RefreshContext.Provider value={onRefresh}>
       <p>OcrViewerPage</p>
       <Viewer
-        data={{ columns, rows, loading,
-          page, zoom, rotate, setPage, setZoom, setRotate, commitPage, commitZoom, commitRotate
-         }}
+        data={{ columns, rows, loading }}
+        viewer={viewer}
         navigation={{onColumnClick:columnsSort}}/>
     </RefreshContext.Provider>
   )
