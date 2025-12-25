@@ -20,7 +20,9 @@ const renderTextField = (foo, commitFoo, inputRef) => (
 
 export default function ViewerTopBar ( { viewer } = {}){ 
   const { page, zoom, rotate, setPage, setZoom, setRotate,
-     commitPage, commitZoom, commitRotate } = viewer;
+    commitPage, commitZoom, commitRotate,
+    ZOOM_STEP, ROTATE_STEP
+    } = viewer;
   
   // useRef(null)はfooRef.currentというプロパティを作成
   // fooRef.currentに入るのがDOMの <input> 要素になったとき、そのDOM要素がvalueプロパティを持つ
@@ -40,16 +42,17 @@ export default function ViewerTopBar ( { viewer } = {}){
   <AppBar color="default" position="static">
     <Toolbar>
 
-      <Button onClick={(() => setPage(a => a - 1))}>戻</Button>
+      <Button onClick={() => setPage(a => a - 1)}>戻</Button>
       {renderTextField(page, commitPage, pageRef)} {/*parseIntは文字列の先頭から整数として読める部分を数字として読む　第二引数は10進数で解釈するという意味*/}
-      <Button onClick={(() => setPage(a => a + 1))}>次</Button>
+      <Button onClick={() => setPage(a => a + 1)}>次</Button>
 
-      <Button onClick={(() => setZoom(a => a - 25))}>縮小</Button>
+      <Button onClick={() => setZoom(a => a - ZOOM_STEP)}>縮小</Button>
       {renderTextField(zoom, commitZoom, zoomRef)} 
-      <Button onClick={(() => setZoom(a => a + 25))}>拡大</Button>
-
+      <Button onClick={() => setZoom(a => a + ZOOM_STEP)}>拡大</Button>
+      
+      <Button onClick={() => setRotate(a => a + ROTATE_STEP)}>回転</Button>
       {renderTextField(rotate, commitRotate, rotateRef)}
-      <Button onClick={(() => setRotate(a => a + 90))}>回転</Button>
+
 
     </Toolbar> 
   </AppBar> 

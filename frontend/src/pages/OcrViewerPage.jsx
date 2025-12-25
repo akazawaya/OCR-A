@@ -15,7 +15,7 @@ const OcrViewerPage = () => {
   const { schemaUrl, schemaName, dataUrl } = pageApiConfig;
   const { columns, rows, loading } = useTableData(routingRowFilter, schemaUrl, schemaName, dataUrl, search, refresh, onRefresh);
 
-  const viewer = useViewer();
+  const viewer = useViewer({ maxPage:rows.length });
 
   return (
     <RefreshContext.Provider value={onRefresh}>
