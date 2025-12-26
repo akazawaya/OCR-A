@@ -4,7 +4,8 @@ import ViewerTopBar from "./ViewerTopbar/ViewerTopbar";
 import Table from "../Table/Table";
 
 export default function Viewer({
-  data:{ columns, rows, loading } = {},
+  pageData:{ rows: pageRows } = {},
+  wordData:{ columns, rows: wordRows, loading } = {},
   viewer,
   options:{onDataRouting: routingRowFilter} = {},
                           }) {
@@ -15,11 +16,12 @@ export default function Viewer({
       />
       <div className={styles.viewerContent}>
         <ViewerImage
-        data={{ rows }}
+        data={{ rows: pageRows }}
         viewer={ viewer }
+        options={{onDataRouting: routingRowFilter}}
         />
         <Table 
-        data={{ columns, rows, loading }}
+        data={{ columns, rows: wordRows, loading }}
         options={{onDataRouting: routingRowFilter}}
         />
       </div>
