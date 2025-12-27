@@ -36,5 +36,23 @@ export const useRouting = ({routeUrl, rowSelector} = {}) => {
     navigate({ search: nextSearch });
   };
 
-  return { search, columnsSort, dataRouter, routingRowFilter, searchFilter };
+  const buildSearch = (patch = {}) => {
+    const params = new URLSearchParams(search);
+    for (const [k, v] of Object.entries(patch)) {
+      if (v === null || v === undefined || v === "") params.delete(k);
+      else params.set(k, String(v));
+    }
+    const s = params.toString();
+    return s ? `?${s}` : "";
+  };
+
+  return {
+    primaryKey,  
+    search,
+    buildSearch,
+    columnsSort,
+    dataRouter,
+    routingRowFilter,
+    searchFilter,
+  };
 }

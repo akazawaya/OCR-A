@@ -10,14 +10,18 @@ import { usePageRows } from "../hooks/usePageRows";
 
 const OcrViewerPage = () => {
   const [refresh, onRefresh] = useReducer(n => n + 1, 0);
-  const { search, columnsSort, routingRowFilter } = useRouting({
-    rowSelector: (row) => row.doc
-  });
+  const { search, columnsSort, primaryKey, buildSearch } = useRouting({});
+
+
+  const pageSearch = primaryKey != null ? buildSearch({ doc: primaryKey }) : search;
+  const wordSearch = primaryKey != null ? buildSearch({ page__doc: primaryKey, doc: null }) : search;
+
+
   const { dataUrl: pageDataUrl } = pageApiConfig;
-  const pageRows = usePageRows(routingRowFilter, pageDataUrl, search);
+  const pageRows = usePageRows(undefined, pageDataUrl, pageSearch);
 
   const { schemaUrl, schemaName, dataUrl: wordDataUrl } = wordApiConfig;
-  const { columns, rows: wordRows, loading } = useTableData(routingRowFilter, schemaUrl, schemaName, wordDataUrl, search, refresh, onRefresh);
+  const { columns, rows: wordRows, loading } = useTableData(undefined, schemaUrl, schemaName, wordDataUrl, wordSearch, refresh, onRefresh);
 
   const viewer = useViewer({ maxPage:pageRows.length });
 
