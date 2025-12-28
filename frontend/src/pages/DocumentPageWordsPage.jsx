@@ -10,7 +10,7 @@ const [refresh, onRefresh] = useReducer(n => n + 1, 0);
 const { schemaUrl, schemaName, dataUrl } = wordApiConfig;
 const { search, columnsSort, routingRowFilter } = useRouting({
   rowSelector: (row) => row.page});
-const { columns, rows, loading } = useTableData(routingRowFilter, schemaUrl, schemaName, dataUrl, search, refresh, onRefresh);
+const { columns, rows, loading } = useTableData({schemaUrl, schemaName, dataUrl, search, refresh, onRefresh, routingRowFilter});
 
 return (
   <RefreshContext.Provider value={onRefresh}>

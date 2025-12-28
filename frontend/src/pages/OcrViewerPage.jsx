@@ -18,10 +18,17 @@ const OcrViewerPage = () => {
 
 
   const { dataUrl: pageDataUrl } = pageApiConfig;
-  const pageRows = usePageRows(undefined, pageDataUrl, pageSearch);
+  const pageRows = usePageRows({ dataUrl: pageDataUrl, search: pageSearch });
 
   const { schemaUrl, schemaName, dataUrl: wordDataUrl } = wordApiConfig;
-  const { columns, rows: wordRows, loading } = useTableData(undefined, schemaUrl, schemaName, wordDataUrl, wordSearch, refresh, onRefresh);
+  const { columns, rows: wordRows, loading } = useTableData({
+    schemaUrl,
+    schemaName,
+    dataUrl: wordDataUrl,
+    search: wordSearch,
+    refresh,
+    onRefresh,
+  });
 
   const viewer = useViewer({ maxPage:pageRows.length });
 

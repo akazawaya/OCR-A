@@ -26,7 +26,7 @@ async function loadSchemaRows(routingRowFilter, dataUrl, search){
   return filtered;
 }
 
-export const useTableData = (routingRowFilter, schemaUrl, schemaName, dataUrl, search, refresh, onRefresh) => {
+export const useTableData = ({schemaUrl, schemaName, dataUrl, search, refresh, onRefresh, routingRowFilter = undefined} = {}) => {
   const [loading, setLoading] = useState(true); //データが“今ロード中かどうか”のフラグ
   const [columns, setColumns] = useState([]);
   const [rows, setRows] = useState([]);

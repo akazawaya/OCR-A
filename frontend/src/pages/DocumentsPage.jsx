@@ -29,7 +29,7 @@ const DocumentsPage = () => {
     routeUrl: (row) => routeTo.viewer(row.id)
   });
   
-  const { columns, rows, loading, deleteRow } = useTableData(routingRowFilter, schemaUrl, schemaName, dataUrl, search, refresh, onRefresh);
+  const { columns, rows, loading, deleteRow } = useTableData({schemaUrl, schemaName, dataUrl, search, refresh, onRefresh, routingRowFilter});
   
   const { inputRef, analyzeData } = useAnalyze(analyzeUrl, onRefresh);
   const { conditions, updateConditions, applySearchFilter} = useFilter(search, searchFilter)

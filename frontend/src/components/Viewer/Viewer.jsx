@@ -6,8 +6,9 @@ import Table from "../Table/Table";
 export default function Viewer({
   pageData:{ rows: pageRows } = {},
   wordData:{ columns, rows: wordRows, loading } = {},
+  navigation:{ onColumnClick } = {},
+  // onRowClickでマスクのfuncがあってもいいかも
   viewer,
-  options:{onDataRouting: routingRowFilter} = {},
                           }) {
   return (
     <div className={styles.viewerRoot}> 
@@ -18,11 +19,10 @@ export default function Viewer({
         <ViewerImage
         data={{ rows: pageRows }}
         viewer={ viewer }
-        options={{onDataRouting: routingRowFilter}}
         />
         <Table 
         data={{ columns, rows: wordRows, loading }}
-        options={{onDataRouting: routingRowFilter}}
+        navigation={{ onColumnClick:onColumnClick  }}
         />
       </div>
     </div>

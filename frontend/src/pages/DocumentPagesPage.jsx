@@ -13,7 +13,7 @@ const { search, columnsSort, routingRowFilter } = useRouting({
   routeUrl: (row) => routeTo.docPageWords(row.doc, row.id),
   rowSelector: (row) => row.doc,
 });
-const { columns, rows, loading } = useTableData(routingRowFilter, schemaUrl, schemaName, dataUrl, search, refresh, onRefresh);
+const { columns, rows, loading } = useTableData({schemaUrl, schemaName, dataUrl, search, refresh, onRefresh, routingRowFilter});
 
 return (
   <RefreshContext.Provider value={onRefresh}>
