@@ -30,15 +30,18 @@ const OcrViewerPage = () => {
     onRefresh,
   });
 
+  const pageData = { rows: pageRows };
+  const wordData = { columns, rows: wordRows, loading };
+
   const viewer = useViewer({ maxPage:pageRows.length });
 
   return (
     <RefreshContext.Provider value={onRefresh}>
       <p>OcrViewerPage</p>
       <Viewer
-        pageData={{ rows: pageRows }}
-        wordData={{ columns, rows: wordRows, loading }}
-        viewer={viewer}
+        pageData={ pageData }
+        wordData={ wordData }
+        viewer={ viewer }
         navigation={{onColumnClick:columnsSort}}/>
     </RefreshContext.Provider>
   )

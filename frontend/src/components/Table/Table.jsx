@@ -1,10 +1,12 @@
 import DeleteButton from "./DeleteButton/DeleteButton";
 
 export default function Table({
-  data:{columns, rows, loading} = {},
+  data = {columns, rows, loading},
   navigation:{onColumnClick, onRowClick = null} = {}, 
-  options:{onDeleteButtonClick} = {},
+  options:{onDeleteButtonClick} = {}, 
                           }) {
+
+  const { columns = [], rows = [], loading } = data;
 
   if (loading) return <div>Loading…</div>;
   return (

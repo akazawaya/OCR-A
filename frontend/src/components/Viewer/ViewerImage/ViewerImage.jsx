@@ -4,9 +4,10 @@ import styles from "./ViewerImage.module.css";
 
 
 export default function ViewerImage({
-  data: { rows = [] } = {}, 
+  data = {}, 
   viewer = {}
   }) {
+  const { rows = [] } = data;
   const { page, zoom, rotate } = viewer;
   const rootRef = useRef(null);
 

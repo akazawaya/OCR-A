@@ -4,12 +4,12 @@ import ViewerTopBar from "./ViewerTopbar/ViewerTopbar";
 import Table from "../Table/Table";
 
 export default function Viewer({
-  pageData:{ rows: pageRows } = {},
-  wordData:{ columns, rows: wordRows, loading } = {},
+  pageData = {},
+  wordData = {},
   navigation:{ onColumnClick } = {},
   // onRowClickでマスクのfuncがあってもいいかも
   viewer,
-                          }) {
+  }) {
   return (
     <div className={styles.viewerRoot}> 
       <ViewerTopBar
@@ -17,12 +17,12 @@ export default function Viewer({
       />
       <div className={styles.viewerContent}>
         <ViewerImage
-        data={{ rows: pageRows }}
+        data={ pageData }
         viewer={ viewer }
         />
-        <Table 
-        data={{ columns, rows: wordRows, loading }}
-        navigation={{ onColumnClick:onColumnClick  }}
+        <Table
+        data={ wordData }
+        navigation={{ onColumnClick:onColumnClick }}
         />
       </div>
     </div>
