@@ -37,10 +37,11 @@ export const useRouting = ({routeUrl, rowSelector} = {}) => {
   };
 
   const buildSearch = (patch = {}) => {
-    const params = new URLSearchParams(search);
+    // patch=クエリパラメータの差分(変更したいもの)key:valueで { page__doc: 123, doc: null }ならpage__doc=123を入れてdocは消す
+    const params = new URLSearchParams(search);// patchオブジェクトを[key, value]のペア配列に変換
     for (const [k, v] of Object.entries(patch)) {
       if (v === null || v === undefined || v === "") params.delete(k);
-      else params.set(k, String(v));
+      else params.set(k, String(v)); //追加と上書きを兼ねる
     }
     const s = params.toString();
     return s ? `?${s}` : "";
