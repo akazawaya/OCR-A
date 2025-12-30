@@ -35,7 +35,7 @@ export default function ViewerImage({
 
       {rows.map(i => (
         <div key={i.id} className={styles.page} 
-          data-page={i.id}> {/* CSSセレクタでピックするための符合 */}
+          data-page={i.page_number}> {/* CSSセレクタでピックするための符合 */}
           <div className={styles.pageInner}>
             <img src={i.image} className={styles.pageImage}/>
           </div>

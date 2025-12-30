@@ -43,7 +43,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
                 for p, img in enumerate(images):
                     words = test_ocr(img_bytes=img, ocr=ocr)
                     img_file = ContentFile(img, name=f"{p}.png")
-                    page = PageSerializer(data={"doc":doc.instance.pk, "image":img_file, "page_number":total_pages})
+                    page = PageSerializer(data={"doc":doc.instance.pk, "image":img_file, "page_number":p+1})
                     if page.is_valid(raise_exception=True):
                         page.save()
                         # breakpoint() 
@@ -64,4 +64,4 @@ class WordViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Word.objects.all()
     serializer_class = WordSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = ["page__doc", "page"]
+    filterset_fields = ["page__page_number", "page__doc", "page"]

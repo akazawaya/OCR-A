@@ -25,7 +25,9 @@ class PageSerializer(serializers.HyperlinkedModelSerializer):
 
 class WordSerializer(serializers.HyperlinkedModelSerializer):
     direction_display = serializers.CharField(source="get_direction_display", read_only=True)
+    page__page_number = serializers.IntegerField(source="page.page_number", read_only=True) #UIでページ番号を有効にするには明示が必要
     page = serializers.PrimaryKeyRelatedField(queryset=Page.objects.all())
     class Meta:
         model = Word
-        fields = ['id', 'page', 'bbox', 'content', 'direction', 'direction_display', 'rec_score', 'det_score']
+        fields = ['id', 'page', 'bbox', 'content', 'direction', 'direction_display', 'rec_score', 'det_score',
+                  "page__page_number"]

@@ -55,7 +55,7 @@ export const docUi = Object.freeze({
 
 export const wordUi = Object.freeze({
   table: [
-    { key: "id", label: "ページ" },
+    { key: "page__page_number", label: "ページ" },
     { key: "content", label: "本文" },
   ],
 });
