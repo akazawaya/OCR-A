@@ -1,6 +1,6 @@
 import { useReducer } from "react"
 import { RefreshContext } from "../contexts/refreshContext"
-import { pageApiConfig, wordApiConfig } from "../route";
+import { pageApiConfig, wordConfig } from "../route";
 import Viewer from "../components/Viewer/Viewer";
 import { useRouting } from "../hooks/useRouting";
 import { useTableData } from "../hooks/useTableData";
@@ -20,8 +20,8 @@ const OcrViewerPage = () => {
   const { dataUrl: pageDataUrl } = pageApiConfig;
   const pageRows = usePageRows({ dataUrl: pageDataUrl, search: pageSearch });
 
-  const { schemaUrl, schemaName, dataUrl: wordDataUrl } = wordApiConfig;
-  const { columns, rows: wordRows, loading } = useTableData({
+  const { schemaUrl, schemaName, dataUrl: wordDataUrl } = wordConfig;
+  const { rows: wordRows, loading } = useTableData({
     schemaUrl,
     schemaName,
     dataUrl: wordDataUrl,
@@ -29,10 +29,10 @@ const OcrViewerPage = () => {
     refresh,
     onRefresh,
   });
+  const wordColumns = wordConfig.ui.table.map(({ key, label }) => ({ key, label }));
 
   const pageData = { rows: pageRows };
-  const wordData = { columns, rows: wordRows, loading };
-
+  const wordData = { columns: wordColumns, rows: wordRows, loading };
   const viewer = useViewer({ maxPage:pageRows.length });
 
   return (

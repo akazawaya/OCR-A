@@ -30,7 +30,6 @@ export const analyzeDocumentApiConfig = {
   analyzeUrl: BASEURL + "documents/analyze/",
 };
 
-
 // 実URL生成器
 export const routeTo = Object.freeze({
   docs: () => "/documents",
@@ -40,3 +39,28 @@ export const routeTo = Object.freeze({
     `/documents/${encodeURIComponent(foreignKey)}/pages/${encodeURIComponent(primaryKey)}`,
 });
 //　useParams で:〇〇 の部分をオブジェクトとして受け取ることができる
+
+
+// columnsの翻訳兼,見せる要素の指定 分離が可能なようにapiConfigにui要素を追加
+const withUi = (apiConfig, ui = {}) => ({
+  ...apiConfig,ui: Object.freeze(ui),
+});
+
+export const docUi = Object.freeze({
+  table: [
+    { key: "created", label: "作成日時" },
+    { key: "file_name", label: "名前" },
+  ],
+});
+
+export const wordUi = Object.freeze({
+  table: [
+    { key: "id", label: "ページ" },
+    { key: "content", label: "本文" },
+  ],
+});
+
+
+// ApiConfig+Ui機能→Configという命名　もっといい命名があるかもしてない
+export const documentConfig = withUi(documentApiConfig, docUi);
+export const wordConfig = withUi(wordApiConfig, wordUi);

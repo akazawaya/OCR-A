@@ -1,7 +1,7 @@
 import Table from "../components/Table/Table"
 import FileUploader from "../components/FileUploader/FileUploader"
 import { FilterMenuButton } from "../components/FilterMenuButton/FilterMenuButton"
-import { analyzeDocumentApiConfig, documentApiConfig } from "../route"
+import { analyzeDocumentApiConfig, documentConfig } from "../route"
 import { routeTo } from "../route";
 
 import { useReducer } from "react"
@@ -21,7 +21,7 @@ import { useFilter } from "../hooks/useFilter"
 // FilterMenuButtonの開閉コンディション管理は自分自身にのみ関係するので閉じる
 // 入力パラメータの保持は、その値を他コンポーネントでも用いる予定なら外部公開にする(onChangeConditionsによる検索条件の表示など？)
 const DocumentsPage = () => {
-  const { schemaUrl, schemaName, dataUrl } = documentApiConfig;
+  const { schemaUrl, schemaName, dataUrl } = documentConfig;
   const { analyzeUrl } = analyzeDocumentApiConfig;
   const [refresh, onRefresh] = useReducer(n => n + 1, 0);
 
@@ -29,11 +29,11 @@ const DocumentsPage = () => {
     routeUrl: (row) => routeTo.viewer(row.id)
   });
   
-  const { columns, rows, loading, deleteRow } = useTableData({schemaUrl, schemaName, dataUrl, search, refresh, onRefresh, routingRowFilter});
+  const { rows, loading, deleteRow } = useTableData({schemaUrl, schemaName, dataUrl, search, refresh, onRefresh, routingRowFilter});
   
   const { inputRef, analyzeData } = useAnalyze(analyzeUrl, onRefresh);
   const { conditions, updateConditions, applySearchFilter} = useFilter(search, searchFilter)
-
+  const documentColumns = documentConfig.ui.table.map(({ key, label }) => ({ key, label }));
   return (
     <RefreshContext.Provider value={onRefresh}>
     <p>DocumentsPage</p>
@@ -48,7 +48,7 @@ const DocumentsPage = () => {
       options={{onAnalyzeButtonClick:analyzeData}}/>
 
     <Table 
-      data={{ columns, rows, loading }}
+      data={{ columns:documentColumns, rows, loading }}
       navigation={{
         onColumnClick:columnsSort,
         onRowClick:dataRouter,
