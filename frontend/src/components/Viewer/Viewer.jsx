@@ -13,17 +13,22 @@ export default function Viewer({
   return (
     <div className={styles.viewerRoot}> 
       <ViewerTopBar
-      viewer={ viewer }
+        viewer={ viewer }
       />
       <div className={styles.viewerContent}>
-        <ViewerImage
-        data={ pageData }
-        viewer={ viewer }
-        />
-        <Table
-        data={ wordData }
-        navigation={{ onColumnClick:onColumnClick }}
-        />
+        <div className={styles.imagePane}>
+          <ViewerImage
+            data={ pageData }
+            viewer={ viewer }
+          />
+        </div>
+        <div className={styles.tablePane}>
+          <Table
+            data={ wordData }
+            navigation={{ onColumnClick:onColumnClick }}
+            viewer={ viewer }
+          />
+        </div>
       </div>
     </div>
   )

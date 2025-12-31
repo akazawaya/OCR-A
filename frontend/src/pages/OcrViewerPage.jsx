@@ -37,7 +37,6 @@ const OcrViewerPage = () => {
 
   return (
     <RefreshContext.Provider value={onRefresh}>
-      <p>OcrViewerPage</p>
       <Viewer
         pageData={ pageData }
         wordData={ wordData }

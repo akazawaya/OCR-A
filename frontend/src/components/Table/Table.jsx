@@ -1,16 +1,33 @@
+import { useEffect, useRef } from "react";
 import DeleteButton from "./DeleteButton/DeleteButton";
 
 export default function Table({
-  data = {columns, rows, loading},
+  data,
+  viewer = {},
   navigation:{onColumnClick, onRowClick = null} = {}, 
   options:{onDeleteButtonClick} = {}, 
                           }) {
 
   const { columns = [], rows = [], loading } = data;
+  const { page } = viewer;
+  const tableRef = useRef(null);
+
+  useEffect(() => {
+    const root = tableRef.current;
+    if (!root) return;
+
+    const element = root.querySelector(`[data-page="${page}"]`);
+    // querySelectorはCSSセレクタを用いて合致するDOMを検索する機能
+
+    if (!element) return;
+
+    element.scrollIntoView({ behavior: "auto", block: "start" }); 
+  }, [page, rows.length]);
+
 
   if (loading) return <div>Loading…</div>;
   return (
-    <table>
+    <table ref={tableRef}>
       <thead>
         <tr>
           {columns.map(c => (
@@ -22,7 +39,8 @@ export default function Table({
       </thead>
       <tbody>
         {rows.map(row => (
-          <tr key={row.id} onClick={onRowClick && (() => onRowClick(row))} >
+          <tr key={row.id} data-page={row.page__page_number}
+            onClick={onRowClick && (() => onRowClick(row))} >
             {columns.map(c => (
             	<td key={c.key}>{row[c.key]}</td>
           	))}
