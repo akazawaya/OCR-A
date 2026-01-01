@@ -18,7 +18,8 @@ export default function Viewer({
       <div className={styles.viewerContent}>
         <div className={styles.imagePane}>
           <ViewerImage
-            data={ pageData }
+            pageData={ pageData }
+            wordData={ wordData }
             viewer={ viewer }
           />
         </div>
