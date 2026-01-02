@@ -3,13 +3,13 @@ import DeleteButton from "./DeleteButton/DeleteButton";
 
 export default function Table({
   data,
-  viewer = {},
+  viewerPageState = {},
   navigation:{onColumnClick, onRowClick = null} = {}, 
   options:{onDeleteButtonClick} = {}, 
                           }) {
 
   const { columns = [], rows = [], loading } = data;
-  const { page } = viewer;
+  const { page } = viewerPageState;
   const tableRef = useRef(null);
 
   useEffect(() => {

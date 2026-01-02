@@ -29,7 +29,7 @@ export default function Viewer({
           <Table
             data={ wordData }
             navigation={{ onColumnClick:onColumnClick }}
-            viewerPageState={ viewerPageState }
+            viewerPageState={viewerPageState}
           />
         </div>
       </div>
