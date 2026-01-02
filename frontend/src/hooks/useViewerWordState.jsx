@@ -6,23 +6,25 @@ export const useViewerWordState = (pageData, wordData) => {
 
   const [hoveredWordId, setHoveredWordId] = useState(null);
   const [selectedWordId, setSelectedWordId] = useState(null);
+  const [selectedBy, setSelectedBy] = useState(null); // Viewer起点か、Table起点かを示す
+
+
   // useCallbackは関数版のuseMemoであり、同じ関数の再構築を防ぐ
-  const onWordEnter = useCallback((wordId) => {
+    const hoverWord = useCallback((wordId) => {
     const id = Number(wordId);
     if (!Number.isFinite(id)) return;
     setHoveredWordId(id);
-  }, []);
+    }, []);
 
-  const onWordLeave = useCallback(() => {
-    setHoveredWordId(null);
-  }, []);
+    const unHoverWord = useCallback(() => setHoveredWordId(null), []);
 
-  const onWordClick = useCallback((wordId) => {
+    const selectWord = useCallback((wordId, by) => {
     const id = Number(wordId);
     if (!Number.isFinite(id)) return;
     setSelectedWordId(id);
-  }, []);
-  
+    setSelectedBy(by); // ここが「逆側だけスクロール」の鍵
+    }, []);
+    
   // pageMetaとしてPageごとのkey,width,heightを格納
   const pageMetaById = useMemo(() => {
     const m = new Map();
@@ -83,22 +85,23 @@ export const useViewerWordState = (pageData, wordData) => {
               stroke="red"
               strokeWidth="4"
               pointerEvents="all"
-              onMouseEnter={() => onWordEnter(w.id)}
-              onMouseLeave={onWordLeave}
-              onClick={() => onWordClick(w.id)}
+              onMouseEnter={() => hoverWord(w.id)}
+              onMouseLeave={unHoverWord}
+              onClick={() => selectWord(w.id, "viewer")}
             />
           );
         })}
       </svg>
     );
-  }, [pageMetaById, wordsByPageId, hoveredWordId, selectedWordId, onWordEnter, onWordLeave, onWordClick]);
+  }, [pageMetaById, wordsByPageId, hoveredWordId, selectedWordId, selectedBy, hoverWord, unHoverWord, selectWord]);
   // とりあえずイベントハンドラも返す（不要かも）
   return {
     hoveredWordId,
     selectedWordId,
-    onWordEnter,
-    onWordLeave,
-    onWordClick,
+    selectedBy,
+    hoverWord,
+    unHoverWord,
+    selectWord,
     getOverlayForPage,
   };
 };
