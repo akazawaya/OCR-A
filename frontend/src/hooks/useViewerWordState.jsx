@@ -1,8 +1,6 @@
 import { useCallback, useMemo } from "react";
-
 // TableのDOMに直接挿入できるようなsvgのBoxの集合を返す
-//
-export const useBoxesOverlay = (pageData, wordData) => {
+export const useViewerWordState = (pageData, wordData) => {
   const pages = pageData?.rows ?? [];
   const words = wordData?.rows ?? [];
 
@@ -59,8 +57,6 @@ export const useBoxesOverlay = (pageData, wordData) => {
       </svg>
   );
   }, [pageMetaById, wordsByPageId]);
-
-
 
 
   return { getOverlayForPage };

@@ -1,18 +1,18 @@
 // Image.jsxという名前にしたかったが名前衝突で自動保管が機能しないっぽい
 import { useEffect, useRef } from "react";
 import styles from "./ViewerImage.module.css";
-import { useBoxesOverlay } from "../../../hooks/useBoxesOverlay";
 // データソースではないため、useBoxesOverlayを直で呼んでも問題なし(コンフィグを持たせたい場合は再考慮が必要かと思う)
 
 export default function ViewerImage({
   pageData = {}, 
   wordData = {}, 
-  viewer = {}
+  viewerPageState = {},
+  viewerWordState = {}  
   }) {
   const { rows = [] } = pageData;
-  const { page, zoom, rotate } = viewer;
+  const { page, zoom, rotate } = viewerPageState;
   const imageRef = useRef(null);
-  const { getOverlayForPage } = useBoxesOverlay(pageData, wordData);
+  const { getOverlayForPage } = viewerWordState(pageData, wordData);
 
   useEffect(() => {
     const root = imageRef.current;

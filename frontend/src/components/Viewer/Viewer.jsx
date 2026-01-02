@@ -8,26 +8,28 @@ export default function Viewer({
   wordData = {},
   navigation:{ onColumnClick } = {},
   // onRowClickでマスクのfuncがあってもいいかも
-  viewer,
+  viewerPageState,
+  viewerWordState
   }) {
   return (
     <div className={styles.viewerRoot}> 
       <ViewerTopBar
-        viewer={ viewer }
+        viewerPageState={ viewerPageState }
       />
       <div className={styles.viewerContent}>
         <div className={styles.imagePane}>
           <ViewerImage
             pageData={ pageData }
             wordData={ wordData }
-            viewer={ viewer }
+            viewerPageState={ viewerPageState }
+            viewerWordState={ viewerWordState }
           />
         </div>
         <div className={styles.tablePane}>
           <Table
             data={ wordData }
             navigation={{ onColumnClick:onColumnClick }}
-            viewer={ viewer }
+            viewerPageState={ viewerPageState }
           />
         </div>
       </div>

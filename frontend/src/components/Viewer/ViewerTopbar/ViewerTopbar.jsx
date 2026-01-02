@@ -18,11 +18,11 @@ const renderTextField = (foo, commitFoo, inputRef) => (
 ); 
 
 
-export default function ViewerTopBar ( { viewer } = {}){ 
+export default function ViewerTopBar ( { viewerPageState } = {}){ 
   const { page, zoom, rotate, setPage, setZoom, setRotate,
     commitPage, commitZoom, commitRotate,
     ZOOM_STEP, ROTATE_STEP
-    } = viewer;
+    } = viewerPageState;
   
   // useRef(null)はfooRef.currentというプロパティを作成
   // fooRef.currentに入るのがDOMの <input> 要素になったとき、そのDOM要素がvalueプロパティを持つ

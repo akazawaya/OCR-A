@@ -52,7 +52,7 @@ const makeCommit = (_setFoo, rawToNum) => (raw) => {
 };
 
 
-export const useViewer = ({ maxPage }) => {
+export const useViewerPageState = ({ maxPage }) => {
   const MIN_PAGE = 1;
   const safeMaxPage = Math.max(MIN_PAGE, maxPage);
   const MIN_ZOOM = 25, MAX_ZOOM = 300, ZOOM_STEP = 25;

@@ -4,8 +4,10 @@ import { pageApiConfig, wordConfig } from "../route";
 import Viewer from "../components/Viewer/Viewer";
 import { useRouting } from "../hooks/useRouting";
 import { useTableData } from "../hooks/useTableData";
-import { useViewer } from "../hooks/useViewer";
 import { usePageRows } from "../hooks/usePageRows";
+import { useViewerPageState } from "../hooks/useViewerPageState";
+import { useViewerWordState } from "../hooks/useViewerWordState";
+
 //　useParams の返り値は文字列になるのでNumber()で変換しておく
 
 const OcrViewerPage = () => {
@@ -33,14 +35,15 @@ const OcrViewerPage = () => {
 
   const pageData = { rows: pageRows };
   const wordData = { columns: wordColumns, rows: wordRows, loading };
-  const viewer = useViewer({ maxPage:pageRows.length });
-
+  const viewerPageState  = useViewerPageState({ maxPage:pageRows.length });
+  const viewerWordState = useViewerWordState; // 返り値が現状DOMなので関数を渡す形にする
   return (
     <RefreshContext.Provider value={onRefresh}>
       <Viewer
         pageData={ pageData }
         wordData={ wordData }
-        viewer={ viewer }
+        viewerPageState={ viewerPageState }
+        viewerWordState={ viewerWordState }
         navigation={{onColumnClick:columnsSort}}/>
     </RefreshContext.Provider>
   )
