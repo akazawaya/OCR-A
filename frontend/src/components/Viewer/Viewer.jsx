@@ -6,10 +6,9 @@ import Table from "../Table/Table";
 export default function Viewer({
   pageData = {},
   wordData = {},
-  navigation:{ onColumnClick } = {},
-  // onRowClickでマスクのfuncがあってもいいかも
-  viewerPageState,
-  viewerWordState
+  navigation = {},
+  viewerPageState = {},
+  viewerWordState = {}
   }) {
   return (
     <div className={styles.viewerRoot}> 
@@ -28,7 +27,7 @@ export default function Viewer({
         <div className={styles.tablePane}>
           <Table
             data={ wordData }
-            navigation={{ onColumnClick:onColumnClick }}
+            navigation={ navigation }
             viewerPageState={ viewerPageState }
             viewerWordState={ viewerWordState }
           />

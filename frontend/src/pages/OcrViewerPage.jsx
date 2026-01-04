@@ -40,11 +40,12 @@ const OcrViewerPage = () => {
   return (
     <RefreshContext.Provider value={onRefresh}>
       <Viewer
-        pageData={ pageData }
-        wordData={ wordData }
-        viewerPageState={ viewerPageState }
-        viewerWordState={ viewerWordState }
-        navigation={{onColumnClick:columnsSort}}/>
+        pageData = { pageData }
+        wordData = { wordData }
+        viewerPageState = { viewerPageState }
+        viewerWordState = { viewerWordState }
+        navigation = {{ onColumnClick:columnsSort }}
+      />
     </RefreshContext.Provider>
   )
 }
