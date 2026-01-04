@@ -1,6 +1,7 @@
 // Image.jsxという名前にしたかったが名前衝突で自動保管が機能しないっぽい
 import { useEffect, useRef } from "react";
 import styles from "./ViewerImage.module.css";
+import WordOverlay from "./WordOverlay/WordOverlay";
 // データソースではないため、useBoxesOverlayを直で呼んでも問題なし(コンフィグを持たせたい場合は再考慮が必要かと思う)
 
 export default function ViewerImage({
@@ -12,7 +13,6 @@ export default function ViewerImage({
   const { rows = [] } = pageData;
   const { page, zoom, rotate } = viewerPageState;
   const imageRef = useRef(null);
-  const { getOverlayForPage } = viewerWordState;
 
   useEffect(() => {
     const root = imageRef.current;
@@ -31,13 +31,14 @@ export default function ViewerImage({
     <div ref={imageRef} 
       className={styles.viewerRoot}
       style={{ "--zoom": zoom, "--rotate": rotate }}>  {/* useRef(null) を作っただけでは参照されない */}
-      {rows.map(i => (
+      {rows.map(r => (
         
-        <div key={i.id} className={styles.page} 
-          data-page={i.page_number}> {/* CSSセレクタでピックするための符合 */}
+        <div key={r.id} className={styles.page} 
+          data-page={r.page_number}> {/* CSSセレクタでピックするための符合 */}
           <div className={styles.pageInner} style={{ position: "relative" }}>
-            <img src={i.image} className={styles.pageImage}/>
-            {getOverlayForPage(i.id)}
+            <img src={r.image} className={styles.pageImage}/>
+            <WordOverlay viewerPageState={viewerPageState} viewerWordState={viewerWordState} pageId={r.id}/>
+
           </div>
         </div>
           ))}
