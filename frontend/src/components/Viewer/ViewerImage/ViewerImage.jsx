@@ -12,7 +12,7 @@ export default function ViewerImage({
   const { rows = [] } = pageData;
   const { page, zoom, rotate } = viewerPageState;
   const imageRef = useRef(null);
-  const { getOverlayForPage } = viewerWordState(pageData, wordData);
+  const { getOverlayForPage } = viewerWordState;
 
   useEffect(() => {
     const root = imageRef.current;

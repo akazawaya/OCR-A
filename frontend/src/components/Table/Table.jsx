@@ -1,16 +1,21 @@
 import { useEffect, useRef } from "react";
 import DeleteButton from "./DeleteButton/DeleteButton";
 
+// onRowClickはpageの時のnavigation用と、viewerの時のscroll用がある　
+// ここではオプショナルチェイニング(.?)で両方を実行するようにして、呼び出し側からは重複しないようにする
 export default function Table({
   data,
   viewerPageState = {},
-  navigation:{onColumnClick, onRowClick = null} = {}, 
+  viewerWordState = {},
+  navigation = {}, 
   options:{onDeleteButtonClick} = {}, 
                           }) {
 
   const { columns = [], rows = [], loading } = data;
   const { page } = viewerPageState;
   const tableRef = useRef(null);
+  const hoveredWordId = viewerWordState?.hoveredWordId ?? null;
+  const selectedWordId = viewerWordState?.selectedWordId ?? null;
 
   useEffect(() => {
     const root = tableRef.current;
@@ -31,16 +36,27 @@ export default function Table({
       <thead>
         <tr>
           {columns.map(c => (
-            <th key={c.key} onClick={() => onColumnClick(c.key)}>
+            <th key={c.key} onClick={() => navigation?.onColumnClick(c.key)}>
               {c.label}
             </th>
           ))}
         </tr>
       </thead>
       <tbody>
-        {rows.map(row => (
+      {rows.map(row => {
+        const isSelected = row.id === selectedWordId;
+        const isHover = row.id === hoveredWordId;
+        return (
           <tr key={row.id} data-page={row.page__page_number}
-            onClick={onRowClick && (() => onRowClick(row))} >
+            onMouseEnter={() => viewerWordState?.hoverWord?.(row.id)}
+            onMouseLeave={() => viewerWordState?.unHoverWord?.()}
+            onClick={() => {
+              viewerWordState?.selectWord?.(row.id, "table");
+              navigation?.onRowClick?.(row);
+            }}
+            style={{
+              background: isSelected ? "rgba(255,0,0,0.12)" : isHover ? "rgba(255,0,0,0.06)" : "transparent", 
+            }}>
             {columns.map(c => (
             	<td key={c.key}>{row[c.key]}</td>
           	))}
@@ -50,7 +66,8 @@ export default function Table({
               </td>
             )}
           </tr>
-        ))}
+        );
+      })}
       </tbody>
     </table>  
   );
