@@ -14,8 +14,9 @@ export default function Table({
   const { columns = [], rows = [], loading } = data;
   const { page } = viewerPageState;
   const tableRef = useRef(null);
-  const hoveredWordId = viewerWordState?.hoveredWordId ?? null;
-  const selectedWordId = viewerWordState?.selectedWordId ?? null;
+  const {pageMetaById, wordsByPageId,
+    hoveredWordId, selectedWordId, selectedBy,
+    hoverWord, clearHoveredWord, commitSelectWord} = viewerWordState;
 
   useEffect(() => {
     const root = tableRef.current;
@@ -48,10 +49,10 @@ export default function Table({
         const isHover = row.id === hoveredWordId;
         return (
           <tr key={row.id} data-page={row.page__page_number}
-            onMouseEnter={() => viewerWordState?.hoverWord?.(row.id)}
-            onMouseLeave={() => viewerWordState?.unHoverWord?.()}
+            onMouseEnter={() => hoverWord(row.id)}
+            onMouseLeave={() => clearHoveredWord()}
             onClick={() => {
-              viewerWordState?.selectWord?.(row.id, "table");
+              commitSelectWord(row.id, "table");
               navigation?.onRowClick?.(row);
             }}
             style={{

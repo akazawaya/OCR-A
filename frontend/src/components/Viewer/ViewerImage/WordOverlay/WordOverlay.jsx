@@ -1,9 +1,9 @@
 export default function WordOverlay({ viewerWordState, pageId } ) {
 
   // ↑reactのコンポーネント関数は常に第一引数にprops　なので{}ですべて囲む
-  const { pageMetaById, wordsByPageId, 
-    hoveredWordId, selectedWordId, 
-    hoverWord, unHoverWord, selectWord }= viewerWordState;
+  const { pageMetaById, wordsByPageId,
+    hoveredWordId, selectedWordId, selectedBy,
+    hoverWord, clearHoveredWord, commitSelectWord }= viewerWordState;
 
   const meta = pageMetaById.get(pageId);
   if (!meta) return null;
@@ -37,8 +37,8 @@ export default function WordOverlay({ viewerWordState, pageId } ) {
             strokeWidth="4"
             pointerEvents="all"
             onMouseEnter={() => hoverWord(w.id)}
-            onMouseLeave={unHoverWord}
-            onClick={() => selectWord(w.id, "viewer")}
+            onMouseLeave={clearHoveredWord}
+            onClick={() => commitSelectWord(w.id, "image")}
           />
         );
       })};

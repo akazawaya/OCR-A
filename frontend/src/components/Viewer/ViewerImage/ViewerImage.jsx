@@ -12,17 +12,18 @@ export default function ViewerImage({
   }) {
   const { rows = [] } = pageData;
   const { page, zoom, rotate } = viewerPageState;
+  const { pageMetaById, wordsByPageId,
+    hoveredWordId, selectedWordId, selectedBy,
+    hoverWord, clearHoveredWord, commitSelectWord } = viewerWordState
   const imageRef = useRef(null);
 
   useEffect(() => {
     const root = imageRef.current;
     if (!root) return;
-
     const element = root.querySelector(`[data-page="${page}"]`);
-    // querySelectorはCSSセレクタを用いて合致するDOMを検索する機能
     if (!element) return;
 
-    element.scrollIntoView({ behavior: "auto", block: "start" }); 
+    element.scrollIntoView({ behavior: "auto", block: "start" });
   }, [page, rows.length]);
 
   if (!rows.length) return <div>Loading…</div>;

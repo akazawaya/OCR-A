@@ -16,13 +16,13 @@ export const useViewerWordState = (pageData, wordData) => {
     setHoveredWordId(id);
     }, []);
 
-    const unHoverWord = useCallback(() => setHoveredWordId(null), []);
+    const clearHoveredWord = useCallback(() => setHoveredWordId(null), []);
 
-    const selectWord = useCallback((wordId, by) => {
-    const id = Number(wordId);
-    if (!Number.isFinite(id)) return;
-    setSelectedWordId(id);
-    setSelectedBy(by); // ここが「逆側だけスクロール」の鍵
+    const commitSelectWord = useCallback((wordId, by) => {
+      const id = Number(wordId);
+      if (!Number.isFinite(id)) return;
+      setSelectedWordId(id);
+      setSelectedBy(by); 
     }, []);
     
   // pageMetaとしてPageごとのkey,width,heightを格納
@@ -54,6 +54,6 @@ export const useViewerWordState = (pageData, wordData) => {
   return {
     pageMetaById, wordsByPageId,
     hoveredWordId, selectedWordId, selectedBy,
-    hoverWord, unHoverWord, selectWord,
+    hoverWord, clearHoveredWord, commitSelectWord,
   };
 };
