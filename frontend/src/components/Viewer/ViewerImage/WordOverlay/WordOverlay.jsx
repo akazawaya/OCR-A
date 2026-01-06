@@ -31,6 +31,7 @@ export default function WordOverlay({ viewerWordState, pageId } ) {
         return (
           <polygon
             key={w.id}
+            data-word={w.id} 
             points={points}
             fill={isSelected ? "rgba(255,0,0,0.35)" : isHover ? "rgba(255,0,0,0.20)" : "transparent"}
             stroke="red"

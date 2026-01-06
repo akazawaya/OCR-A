@@ -12,21 +12,40 @@ export default function ViewerImage({
   }) {
   const { rows = [] } = pageData;
   const { page, zoom, rotate } = viewerPageState;
-  const imageRef = useRef(null);
+  const rootRef = useRef(null);
+  const { pageMetaById, wordsByPageId,
+    hoveredWordId, selectedWordId, selectedBy,
+    hoverWord, clearHoveredWord, commitSelectWord } = viewerWordState;
 
   useEffect(() => {
-    const root = imageRef.current;
+    const root = rootRef.current;
     if (!root) return;
+
     const element = root.querySelector(`[data-page="${page}"]`);
     if (!element) return;
 
     element.scrollIntoView({ behavior: "auto", block: "start" });
-  }, [page, rows.length]);
+  }, [page]);
+
+ 
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    if (selectedBy !== "table") return;  
+
+    const element = root.querySelector(`[data-word="${selectedWordId}"]`)
+    if (!element) return;
+
+    element.scrollIntoView({ behavior: "auto", block: "start" });
+  }, [selectedBy, selectedWordId]);
+
+
 
   if (!rows.length) return <div>Loading…</div>;
 	
   return (
-    <div ref={imageRef} 
+    <div ref={rootRef} 
       className={styles.viewerRoot}
       style={{ "--zoom": zoom, "--rotate": rotate }}>  {/* useRef(null) を作っただけでは参照されない */}
       {rows.map(r => (

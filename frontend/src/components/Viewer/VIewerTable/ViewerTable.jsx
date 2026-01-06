@@ -11,28 +11,39 @@ export default function ViewerTable({
 
   const { columns = [], rows = [], loading } = data;
   const { page } = viewerPageState;
-  const tableRef = useRef(null);
+  const rootRef = useRef(null);
   const { onColumnClick } = navigation;
   const {
-    values: { pageMetaById, wordsByPageId, hoveredWordId, selectedWordId, selectedBy },
+    values: { hoveredWordId, selectedWordId, selectedBy },
     events: { onRowMouseEnter, onRowMouseLeave, onRowClick}} = viewerWordState;
 
   useEffect(() => {
-    const root = tableRef.current;
+    const root = rootRef.current;
     if (!root) return;
 
     const element = root.querySelector(`[data-page="${page}"]`);
-    // querySelectorはCSSセレクタを用いて合致するDOMを検索する機能
-
     if (!element) return;
 
-    element.scrollIntoView({ behavior: "auto", block: "start" }); 
-  }, [page, rows.length]);
+    element.scrollIntoView({ behavior: "auto", block: "start" });
+  }, [page]);
+
+ 
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    if (selectedBy !== "image") return;  
+
+    const element = root.querySelector(`[data-word="${selectedWordId}"]`)
+    if (!element) return;
+
+    element.scrollIntoView({ behavior: "auto", block: "start" });
+  }, [selectedBy, selectedWordId]);
 
 
   if (loading) return <div>Loading…</div>;
   return (
-    <table ref={tableRef}>
+    <table ref={rootRef}>
       <thead>
         <tr>
           {columns.map(c => (
@@ -47,7 +58,7 @@ export default function ViewerTable({
         const isSelected = row.id === selectedWordId;
         const isHover = row.id === hoveredWordId;
         return (
-          <tr key={row.id} data-page={row.page__page_number}
+          <tr key={row.id} data-page={row.page__page_number} data-word={row.id} 
             onMouseEnter={() => onRowMouseEnter(row.id)}
             onMouseLeave={() => onRowMouseLeave()}
             onClick={() => onRowClick(row.id, "table")}
