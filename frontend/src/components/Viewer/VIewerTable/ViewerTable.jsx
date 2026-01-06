@@ -1,22 +1,21 @@
 import { useEffect, useRef } from "react";
-import DeleteButton from "./DeleteButton/DeleteButton";
 
 // onRowClickはpageの時のnavigation用と、viewerの時のscroll用がある　
 // ここではオプショナルチェイニング(.?)で両方を実行するようにして、呼び出し側からは重複しないようにする
-export default function Table({
+export default function ViewerTable({
   data,
   viewerPageState = {},
   viewerWordState = {},
   navigation = {}, 
-  options:{onDeleteButtonClick} = {}, 
                           }) {
 
   const { columns = [], rows = [], loading } = data;
   const { page } = viewerPageState;
   const tableRef = useRef(null);
-  const {pageMetaById, wordsByPageId,
-    hoveredWordId, selectedWordId, selectedBy,
-    hoverWord, clearHoveredWord, commitSelectWord} = viewerWordState;
+  const { onColumnClick } = navigation;
+  const {
+    values: { pageMetaById, wordsByPageId, hoveredWordId, selectedWordId, selectedBy },
+    events: { onRowMouseEnter, onRowMouseLeave, onRowClick}} = viewerWordState;
 
   useEffect(() => {
     const root = tableRef.current;
@@ -37,7 +36,7 @@ export default function Table({
       <thead>
         <tr>
           {columns.map(c => (
-            <th key={c.key} onClick={() => navigation?.onColumnClick(c.key)}>
+            <th key={c.key} onClick={() => onColumnClick(c.key)}>
               {c.label}
             </th>
           ))}
@@ -49,23 +48,15 @@ export default function Table({
         const isHover = row.id === hoveredWordId;
         return (
           <tr key={row.id} data-page={row.page__page_number}
-            onMouseEnter={() => hoverWord(row.id)}
-            onMouseLeave={() => clearHoveredWord()}
-            onClick={() => {
-              commitSelectWord(row.id, "table");
-              navigation?.onRowClick?.(row);
-            }}
+            onMouseEnter={() => onRowMouseEnter(row.id)}
+            onMouseLeave={() => onRowMouseLeave()}
+            onClick={() => onRowClick(row.id, "table")}
             style={{
               background: isSelected ? "rgba(255,0,0,0.12)" : isHover ? "rgba(255,0,0,0.06)" : "transparent", 
             }}>
             {columns.map(c => (
             	<td key={c.key}>{row[c.key]}</td>
           	))}
-            {onDeleteButtonClick && (
-              <td key="__delete" onClick={(e) => {e.stopPropagation()}}> 
-                <DeleteButton onClick={() => onDeleteButtonClick?.(row)} />
-              </td>
-            )}
           </tr>
         );
       })}

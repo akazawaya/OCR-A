@@ -1,4 +1,4 @@
-import Table from "../components/Table/Table"
+import MenuTable from "../components/MenuTable/MenuTable"
 import FileUploader from "../components/FileUploader/FileUploader"
 import { FilterMenuButton } from "../components/FilterMenuButton/FilterMenuButton"
 import { analyzeDocumentApiConfig, documentConfig } from "../route"
@@ -34,6 +34,7 @@ const DocumentsPage = () => {
   const { inputRef, analyzeData } = useAnalyze(analyzeUrl, onRefresh);
   const { conditions, updateConditions, applySearchFilter} = useFilter(search, searchFilter)
   const documentColumns = documentConfig.ui.table.map(({ key, label }) => ({ key, label }));
+
   return (
     <RefreshContext.Provider value={onRefresh}>
     <p>DocumentsPage</p>
@@ -47,7 +48,7 @@ const DocumentsPage = () => {
       data={{inputRef}} 
       options={{onAnalyzeButtonClick:analyzeData}}/>
 
-    <Table 
+    <MenuTable 
       data={{ columns:documentColumns, rows, loading }}
       navigation={{
         onColumnClick:columnsSort,

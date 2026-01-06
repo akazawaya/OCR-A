@@ -12,9 +12,6 @@ export default function ViewerImage({
   }) {
   const { rows = [] } = pageData;
   const { page, zoom, rotate } = viewerPageState;
-  const { pageMetaById, wordsByPageId,
-    hoveredWordId, selectedWordId, selectedBy,
-    hoverWord, clearHoveredWord, commitSelectWord } = viewerWordState
   const imageRef = useRef(null);
 
   useEffect(() => {

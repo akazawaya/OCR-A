@@ -12,7 +12,7 @@ import { useViewerWordState } from "../hooks/useViewerWordState";
 
 const OcrViewerPage = () => {
   const [refresh, onRefresh] = useReducer(n => n + 1, 0);
-  const { search, columnsSort, primaryKey, buildSearch } = useRouting({});
+  const { search, primaryKey, buildSearch } = useRouting({});
 
 
   const pageSearch = primaryKey != null ? buildSearch({ doc: primaryKey }) : search;
@@ -37,6 +37,7 @@ const OcrViewerPage = () => {
   const wordData = { columns: wordColumns, rows: wordRows, loading };
   const viewerPageState  = useViewerPageState({ maxPage:pageRows.length });
   const viewerWordState = useViewerWordState(pageData, wordData);
+
   return (
     <RefreshContext.Provider value={onRefresh}>
       <Viewer
@@ -44,7 +45,7 @@ const OcrViewerPage = () => {
         wordData = { wordData }
         viewerPageState = { viewerPageState }
         viewerWordState = { viewerWordState }
-        navigation = {{ onColumnClick:columnsSort }}
+        navigation = { useRouting }
       />
     </RefreshContext.Provider>
   )

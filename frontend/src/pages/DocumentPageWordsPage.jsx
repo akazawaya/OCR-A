@@ -1,4 +1,4 @@
-import Table from "../components/Table/Table"
+import MenuTable from "../components/MenuTable/MenuTable"
 import { wordApiConfig } from "../route"
 import { useReducer } from "react"
 import { RefreshContext } from "../contexts/refreshContext"
@@ -15,7 +15,7 @@ const { columns, rows, loading } = useTableData({schemaUrl, schemaName, dataUrl,
 return (
   <RefreshContext.Provider value={onRefresh}>
   <p>DocumentPageWordsPage</p>
-  <Table 
+  <MenuTable
     data={{ columns, rows, loading }}
     navigation={{
       onColumnClick:columnsSort,

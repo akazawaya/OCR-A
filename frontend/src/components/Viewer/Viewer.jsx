@@ -1,7 +1,7 @@
 import ViewerImage from "./ViewerImage/ViewerImage"
 import styles from "./Viewer.module.css";
 import ViewerTopBar from "./ViewerTopbar/ViewerTopbar";
-import Table from "../Table/Table";
+import ViewerTable from "./VIewerTable/ViewerTable";
 
 export default function Viewer({
   pageData = {},
@@ -9,7 +9,10 @@ export default function Viewer({
   navigation = {},
   viewerPageState = {},
   viewerWordState = {}
+
   }) {
+  const { columnsSort } = navigation([]);
+  const { hoverWord, clearHoveredWord, commitSelectWord } = viewerWordState;
   return (
     <div className={styles.viewerRoot}> 
       <ViewerTopBar
@@ -24,12 +27,19 @@ export default function Viewer({
             viewerWordState={ viewerWordState }
           />
         </div>
-        <div className={styles.tablePane}>
-          <Table
-            data={ wordData }
-            navigation={ navigation }
-            viewerPageState={ viewerPageState }
-            viewerWordState={ viewerWordState }
+        <div className = {styles.tablePane}>
+          <ViewerTable
+            data = { wordData }
+            navigation = {{ onColumnsClick: columnsSort }}
+            viewerPageState = { viewerPageState }
+            viewerWordState = {{
+              values: viewerWordState,
+              events: { 
+                onRowMouseEnter: hoverWord,
+                onRowMouseLeave: clearHoveredWord,
+                onRowClick: commitSelectWord,
+              }
+            }}
           />
         </div>
       </div>
