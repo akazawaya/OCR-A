@@ -53,7 +53,8 @@ export default function ViewerImage({
         <div key={r.id} className={styles.page} 
           data-page={r.page_number}> {/* CSSセレクタでピックするための符合 */}
           <div className={styles.pageInner} style={{ position: "relative" }}>
-            <img src={r.image} className={styles.pageImage}/>
+            <img src={r.image} className={styles.pageImage} 
+              width={r.image_width} height={r.image_height}/> {/* CLS対応のため画像サイズを指定 */}
             <WordOverlay viewerPageState={viewerPageState} viewerWordState={viewerWordState} pageId={r.id}/>
 
           </div>
