@@ -12,7 +12,8 @@ import { useViewerWordState } from "../hooks/useViewerWordState";
 
 const OcrViewerPage = () => {
   const [refresh, onRefresh] = useReducer(n => n + 1, 0);
-  const { search, primaryKey, buildSearch } = useRouting({});
+  const routing = useRouting({});
+  const { search, primaryKey, buildSearch } = routing;
 
 
   const pageSearch = primaryKey != null ? buildSearch({ doc: primaryKey }) : search;
@@ -45,7 +46,7 @@ const OcrViewerPage = () => {
         wordData = { wordData }
         viewerPageState = { viewerPageState }
         viewerWordState = { viewerWordState }
-        navigation = { useRouting }
+        navigation = { routing }
       />
     </RefreshContext.Provider>
   )

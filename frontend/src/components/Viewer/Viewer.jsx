@@ -11,7 +11,7 @@ export default function Viewer({
   viewerWordState = {}
 
   }) {
-  const { columnsSort } = navigation([]);
+  const { columnsSort } = navigation;
   const { hoverWord, clearHoveredWord, commitSelectWord } = viewerWordState;
   return (
     <div className={styles.viewerRoot}> 
@@ -30,7 +30,7 @@ export default function Viewer({
         <div className = {styles.tablePane}>
           <ViewerTable
             data = { wordData }
-            navigation = {{ onColumnsClick: columnsSort }}
+            navigation = {{ onColumnClick: columnsSort }}
             viewerPageState = { viewerPageState }
             viewerWordState = {{
               values: viewerWordState,
