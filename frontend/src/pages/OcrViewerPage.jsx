@@ -38,7 +38,8 @@ const OcrViewerPage = () => {
   const wordData = { columns: wordColumns, rows: wordRows, loading };
   const viewerPageState  = useViewerPageState({ maxPage:pageRows.length });
   const viewerWordState = useViewerWordState(pageData, wordData);
-
+  // 下記Viewerのpropの渡し方は、インタフェース分離から言ってよくないが、明示のスタイルをとると
+  //　Page-Viewer-Parts間の修正が必要になり大変なので特別に許容する
   return (
     <RefreshContext.Provider value={onRefresh}>
       <Viewer

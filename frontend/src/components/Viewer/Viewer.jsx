@@ -12,33 +12,69 @@ export default function Viewer({
 
   }) {
   const { columnsSort } = navigation;
-  const { hoverWord, clearHoveredWord, commitSelectWord } = viewerWordState;
+  const { page, zoom, rotate,
+    setPage, setZoom, setRotate,
+    commitPage, commitZoom, commitRotate,
+    ZOOM_STEP, ROTATE_STEP,
+  } = viewerPageState;
+  const {
+    pageMetaById, wordsByPageId,
+    hoveredWordId, selectedWordId, selectedBy,
+    hoverWord, clearHoveredWord, commitSelectWord,
+  } = viewerWordState;
+
+  const { columns = [], rows = [], loading } = wordData;
+  const { rows: pageRows = [] } = pageData;
   return (
     <div className={styles.viewerRoot}> 
       <ViewerTopBar
-        viewerPageState={ viewerPageState }
+        viewerPageState={{
+          values: { page, zoom, rotate, ZOOM_STEP, ROTATE_STEP },
+          events: {
+            onPageChange: setPage,
+            onZoomChange: setZoom,
+            onRotateChange: setRotate,
+            onPageCommit: commitPage,
+            onZoomCommit: commitZoom,
+            onRotateCommit: commitRotate,
+          },
+        }}
       />
       <div className={styles.viewerContent}>
         <div className={styles.imagePane}>
           <ViewerImage
-            pageData={ pageData }
-            wordData={ wordData }
-            viewerPageState={ viewerPageState }
-            viewerWordState={ viewerWordState }
+            rows={pageRows}
+            viewerPageState={{ values: { page, zoom, rotate } }}
+            viewerWordState={{
+              values: {
+                pageMetaById,
+                wordsByPageId,
+                hoveredWordId,
+                selectedWordId,
+                selectedBy,
+              },
+              events: {
+                onWordHover: hoverWord,
+                onWordHoverClear: clearHoveredWord,
+                onWordSelect: commitSelectWord,
+              },
+            }}
           />
         </div>
         <div className = {styles.tablePane}>
           <ViewerTable
-            data = { wordData }
-            navigation = {{ onColumnClick: columnsSort }}
-            viewerPageState = { viewerPageState }
-            viewerWordState = {{
-              values: viewerWordState,
-              events: { 
+            columns={columns}
+            rows={rows}
+            loading={loading}
+            onColumnClick={columnsSort}
+            viewerPageState={{ values: { page } }}
+            viewerWordState={{
+              values: { hoveredWordId, selectedWordId, selectedBy },
+              events: {
                 onRowMouseEnter: hoverWord,
                 onRowMouseLeave: clearHoveredWord,
                 onRowClick: commitSelectWord,
-              }
+              },
             }}
           />
         </div>

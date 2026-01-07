@@ -3,19 +3,20 @@ import { useEffect, useRef } from "react";
 // onRowClickはpageの時のnavigation用と、viewerの時のscroll用がある　
 // ここではオプショナルチェイニング(.?)で両方を実行するようにして、呼び出し側からは重複しないようにする
 export default function ViewerTable({
-  data,
+  columns = [],
+  rows = [],
+  loading,
+  onColumnClick,
   viewerPageState = {},
   viewerWordState = {},
-  navigation = {}, 
                           }) {
 
-  const { columns = [], rows = [], loading } = data;
-  const { page } = viewerPageState;
   const rootRef = useRef(null);
-  const { onColumnClick } = navigation;
+  const { values: { page } = {} } = viewerPageState;
   const {
-    values: { hoveredWordId, selectedWordId, selectedBy },
-    events: { onRowMouseEnter, onRowMouseLeave, onRowClick}} = viewerWordState;
+    values: { hoveredWordId, selectedWordId, selectedBy } = {},
+    events: { onRowMouseEnter, onRowMouseLeave, onRowClick } = {},
+  } = viewerWordState;
 
   useEffect(() => {
     const root = rootRef.current;
