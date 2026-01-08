@@ -10,7 +10,7 @@ from app_ocr.serializers import UserSerializer, DocumentSerializer, PageSerializ
 from rest_framework.decorators import action
 from rest_framework import viewsets
 from rest_framework import status
-from app_ocr.etc.tools import validate_and_analyze
+from app_ocr.etc.tools import validate_and_analyze, default_word_sort
 from app_ocr.etc.e_yomitoku import init_engine, test_ocr
 
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -42,6 +42,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
                 ocr = init_engine()
                 for p, img in enumerate(images):
                     words = test_ocr(img_bytes=img, ocr=ocr)
+                    words = default_word_sort(words) 
                     img_file = ContentFile(img, name=f"{p}.png")
                     page = PageSerializer(data={"doc":doc.instance.pk, "image":img_file, "page_number":p+1})
                     if page.is_valid(raise_exception=True):
