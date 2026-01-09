@@ -25,7 +25,7 @@ export const useRouting = ({routeUrl, rowSelector} = {}) => {
 
     if (next) params.set("ordering", next);
     else params.delete("ordering");
-    navigate({ search: params.toString()});
+    navigate({ search: params.toString()}, { replace: true });
   };
 
   const dataRouter = routeUrl
