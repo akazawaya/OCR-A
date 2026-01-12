@@ -19,6 +19,23 @@ function decideWritingMode(rect) {
   return aspect >= 2.2 ? "vertical" : "horizontal";
 }
 
+function fitFontPxHorizontal(rect, scale, text, fontFamily) {
+  const boxWpx = rect.width * scale.sx;
+  const boxHpx = rect.height * scale.sy;
+  let fontPx = Math.max(1, boxHpx);
+  const textW = measureTextPx(text, fontPx, fontFamily) || 1;
+  if (textW > boxWpx) fontPx = Math.max(1, fontPx * (boxWpx / textW));
+  return fontPx;
+}
+
+function fitFontPxVertical(rect, scale, text) {
+  const boxWpx = rect.width * scale.sx;
+  const boxHpx = rect.height * scale.sy;
+  const s = String(text ?? "").trim();
+  const n = Math.max(1, Array.from(s).length);
+  return Math.max(1, Math.min(boxWpx, boxHpx / n) * 0.95);
+}
+
 // 1つだけ Canvas を使い回す（毎回 create しない）
 let _ctx = null;
 function measureTextPx(text, fontPx, fontFamily) {
@@ -59,7 +76,7 @@ export default function WordOverlay({ pageId, viewerWordState = {} }) {
     return { sx, sy };
   }, [layerPx.w, layerPx.h, meta.w, meta.h]);
 
-  // span に使う fontFamily を、実際の描画に寄せる（精度のため）
+  // span に使う fontFamily を、実際の描画に寄せる
   const fontFamily = useMemo(() => {
     const el = layerRef.current;
     if (!el) return "sans-serif";
@@ -112,33 +129,20 @@ export default function WordOverlay({ pageId, viewerWordState = {} }) {
 
         const r = bboxToRect(bbox);
 
-        // 位置は %（SVGと同じ縮尺）
-        const left = pct(r.left, meta.w);
-        const top = pct(r.top, meta.h);
-        const width = pct(r.width, meta.w);
-        const height = pct(r.height, meta.h);
-
-        const boxWpx = r.width * scale.sx;
-        const boxHpx = r.height * scale.sy;
+        const rectStyle = {
+          left: pct(r.left, meta.w),
+          top: pct(r.top, meta.h),
+          width: pct(r.width, meta.w),
+          height: pct(r.height, meta.h),
+        };
 
         const text = `${w.content ?? ""} `;
         const mode = decideWritingMode(r);
 
-        function fitFontPxHorizontal(boxWpx, boxHpx, text, fontFamily) {
-          let fontPx = Math.max(1, boxHpx);
-          const textW = measureTextPx(text, fontPx, fontFamily) || 1;
-          if (textW > boxWpx) fontPx = Math.max(1, fontPx * (boxWpx / textW));
-          return fontPx;
-        }
-        function fitFontPxVertical(boxWpx, boxHpx, text) {
-          const s = String(text ?? "").trim();
-          const n = Math.max(1, Array.from(s).length);
-          return Math.max(1, Math.min(boxWpx, boxHpx / n) * 0.95);
-        }
         const fontPx =
           mode === "vertical"
-            ? fitFontPxVertical(boxWpx, boxHpx, text)
-            : fitFontPxHorizontal(boxWpx, boxHpx, text, fontFamily);
+            ? fitFontPxVertical(r, scale, text)
+            : fitFontPxHorizontal(r, scale, text, fontFamily);
 
         return (
           <span
@@ -149,7 +153,7 @@ export default function WordOverlay({ pageId, viewerWordState = {} }) {
             onClick={() => onWordSelect(w.id, "image")}
             style={{
               position: "absolute",
-              left, top, width, height,
+              ...rectStyle,
               fontSize: `${fontPx}px`,
               lineHeight: 1,
               whiteSpace: "nowrap",
@@ -158,7 +162,7 @@ export default function WordOverlay({ pageId, viewerWordState = {} }) {
               ...(mode === "vertical"
                 ? { writingMode: "vertical-rl", textOrientation: "upright" }
                 : null),
-              color: "transparent",
+              // color: "transparent",
             }}
           >
             {text}
