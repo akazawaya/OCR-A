@@ -1,49 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
-
-function bboxToRect(bbox) {
-  const xs = bbox.map(([x]) => x);
-  const ys = bbox.map(([, y]) => y);
-  const left = Math.min(...xs);
-  const top = Math.min(...ys);
-  const right = Math.max(...xs);
-  const bottom = Math.max(...ys);
-  return { left, top, width: right - left, height: bottom - top };
-}
-
-function decideWritingMode(rect) {
-  const w = Math.max(1e-6, rect.width);
-  const h = Math.max(1e-6, rect.height);
-  const aspect = h / w;
-
-  // 決定的ルール：縦に十分細長いなら縦、そうでなければ横
-  return aspect >= 2.2 ? "vertical" : "horizontal";
-}
-
-function fitFontPxHorizontal(rect, scale, text, fontFamily) {
-  const boxWpx = rect.width * scale.sx;
-  const boxHpx = rect.height * scale.sy;
-  let fontPx = Math.max(1, boxHpx);
-  const textW = measureTextPx(text, fontPx, fontFamily) || 1;
-  if (textW > boxWpx) fontPx = Math.max(1, fontPx * (boxWpx / textW));
-  return fontPx;
-}
-
-function fitFontPxVertical(rect, scale, text) {
-  const boxWpx = rect.width * scale.sx;
-  const boxHpx = rect.height * scale.sy;
-  const s = String(text ?? "").trim();
-  const n = Math.max(1, Array.from(s).length);
-  return Math.max(1, Math.min(boxWpx, boxHpx / n) * 0.95);
-}
-
-// 1つだけ Canvas を使い回す（毎回 create しない）
-let _ctx = null;
-function measureTextPx(text, fontPx, fontFamily) {
-  if (!_ctx) _ctx = document.createElement("canvas").getContext("2d");
-  if (!_ctx) return 0;
-  _ctx.font = `${fontPx}px ${fontFamily}`;
-  return _ctx.measureText(text).width;
-}
+import { useViewerWordOverlayLayout } from "../../../../hooks/useViewerWordOverlayLayout";
 
 export default function WordOverlay({ pageId, viewerWordState = {} }) {
   const {
@@ -54,40 +9,10 @@ export default function WordOverlay({ pageId, viewerWordState = {} }) {
   const meta = pageMetaById.get(pageId);
   const ws = wordsByPageId.get(pageId) ?? [];
 
-  const layerRef = useRef(null);
-  const [layerPx, setLayerPx] = useState({ w: 0, h: 0 });
-
-  useLayoutEffect(() => {
-    const el = layerRef.current;
-    if (!el) return;
-
-    const update = () => setLayerPx({ w: el.clientWidth, h: el.clientHeight });
-    update();
-
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  // レイアウト基準のスケール（transform: scale の影響を受けない）
-  const scale = useMemo(() => {
-    const sx = layerPx.w > 0 ? layerPx.w / meta.w : 1;
-    const sy = layerPx.h > 0 ? layerPx.h / meta.h : 1;
-    return { sx, sy };
-  }, [layerPx.w, layerPx.h, meta.w, meta.h]);
-
-  // span に使う fontFamily を、実際の描画に寄せる
-  const fontFamily = useMemo(() => {
-    const el = layerRef.current;
-    if (!el) return "sans-serif";
-    return getComputedStyle(el).fontFamily || "sans-serif";
-  }, [layerPx.w, layerPx.h]); // サイズ更新時に一緒に再取得で十分
-
-  const pct = (v, base) => `${(v / base) * 100}%`;
+  const { layerRef, wordLayout } = useViewerWordOverlayLayout(meta, ws);
 
   return (
     <div ref={layerRef} style={{ position: "absolute", inset: 0, zIndex: 10 }}>
-      {/* polygonは見た目用。選択はspanでやるので svg 側は pointerEvents none 推奨 */}
       <svg
         viewBox={`0 0 ${meta.w} ${meta.h}`}
         style={{
@@ -99,16 +24,14 @@ export default function WordOverlay({ pageId, viewerWordState = {} }) {
           pointerEvents: "none",
         }}
       >
-        {ws.map((w) => {
+        {wordLayout.map((w) => {
           const isSelected = w.id === selectedWordId;
           const isHover = w.id === hoveredWordId;
-          const points = (w.bbox ?? []).map(([x, y]) => `${x},${y}`).join(" ");
-          if (!points) return null;
           return (
             <polygon
               key={w.id}
               data-word={w.id}
-              points={points}
+              points={w.points}
               fill={
                 isSelected
                   ? "rgba(255,0,0,0.35)"
@@ -123,27 +46,7 @@ export default function WordOverlay({ pageId, viewerWordState = {} }) {
         })}
       </svg>
 
-      {ws.map((w) => {
-        const bbox = w.bbox ?? [];
-        if (!bbox.length) return null;
-
-        const r = bboxToRect(bbox);
-
-        const rectStyle = {
-          left: pct(r.left, meta.w),
-          top: pct(r.top, meta.h),
-          width: pct(r.width, meta.w),
-          height: pct(r.height, meta.h),
-        };
-
-        const text = `${w.content ?? ""} `;
-        const mode = decideWritingMode(r);
-
-        const fontPx =
-          mode === "vertical"
-            ? fitFontPxVertical(r, scale, text)
-            : fitFontPxHorizontal(r, scale, text, fontFamily);
-
+      {wordLayout.map((w) => {
         return (
           <span
             key={w.id}
@@ -153,19 +56,19 @@ export default function WordOverlay({ pageId, viewerWordState = {} }) {
             onClick={() => onWordSelect(w.id, "image")}
             style={{
               position: "absolute",
-              ...rectStyle,
-              fontSize: `${fontPx}px`,
+              ...w.rectStyle,
+              fontSize: `${w.fontPx}px`,
               lineHeight: 1,
               whiteSpace: "nowrap",
               overflow: "hidden",
               userSelect: "text",
-              ...(mode === "vertical"
+              ...(w.mode === "vertical"
                 ? { writingMode: "vertical-rl", textOrientation: "upright" }
                 : null),
-              // color: "transparent",
+               color: "transparent",
             }}
           >
-            {text}
+            {w.text}
           </span>
         );
       })}
