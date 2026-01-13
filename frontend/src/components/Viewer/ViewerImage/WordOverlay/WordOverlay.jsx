@@ -1,4 +1,4 @@
-import { useViewerWordOverlayLayout } from "../../../../hooks/useViewerWordOverlayLayout";
+import { useViewerWordOverlayLayout } from "../../../../hooks/layout/useViewerWordOverlayLayout";
 
 export default function WordOverlay({ pageId, viewerWordState = {} }) {
   const {

@@ -6,10 +6,11 @@ import { routeTo } from "../route";
 
 import { useReducer } from "react"
 import { RefreshContext } from "../contexts/refreshContext"
-import { useTableData } from "../hooks/useTableData"
-import { useRouting } from "../hooks/useRouting"
-import { useAnalyze } from "../hooks/useAnalyze"
-import { useFilter } from "../hooks/useFilter"
+import { useTableData } from "../hooks/server/useTableData"
+import { useAnalyze } from "../hooks/server/useAnalyze"
+import { useRouting } from "../hooks/routing/useRouting"
+import { useFilterRouting } from "../hooks/routing/useFilterRouting"
+import { useFilter } from "../hooks/ui/useFilterState"
 
 // routeTo.viewer routeTo.docPages 関数として入力しないと即座に実行しようとしてエラーになる
 // 方針：prop関数名:実関数を　on(イベントハンドラ):実行される関数、として関係性をここで明記する
@@ -32,7 +33,8 @@ const DocumentsPage = () => {
   const { rows, loading, deleteRow } = useTableData({schemaUrl, schemaName, dataUrl, search, refresh, onRefresh, routingRowFilter});
   
   const { inputRef, analyzeData } = useAnalyze(analyzeUrl, onRefresh);
-  const { conditions, updateConditions, applySearchFilter} = useFilter(search, searchFilter)
+  const { conditions, updateConditions } = useFilter();
+  const { applySearchFilter } = useFilterRouting(search, searchFilter);
   const documentColumns = documentConfig.ui.table.map(({ key, label }) => ({ key, label }));
 
   return (
@@ -41,7 +43,7 @@ const DocumentsPage = () => {
 
     <FilterMenuButton 
       data={{search, conditions}}
-      navigation={{onSearchButtonClick:applySearchFilter}}
+      navigation={{onSearchButtonClick:() => applySearchFilter(conditions)}}
       options={{onChangeConditions:updateConditions}}/>
 
     <FileUploader 

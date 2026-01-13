@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { requestApi } from "../api/requestApi"
+import { requestApi } from "../../api/requestApi"
 
 async function loadSchemaColumns(schemaUrl, schemaName) {
   const { data } = await requestApi(schemaUrl);

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { requestApi } from "../api/requestApi"
+import { requestApi } from "../../api/requestApi"
 
 async function loadSchemaRows({ dataUrl, search, routingRowFilter = undefined} = {}){
   const url = search ? `${dataUrl}${search}` : dataUrl

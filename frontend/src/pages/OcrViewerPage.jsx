@@ -2,11 +2,11 @@ import { useReducer } from "react"
 import { RefreshContext } from "../contexts/refreshContext"
 import { pageApiConfig, wordConfig } from "../route";
 import Viewer from "../components/Viewer/Viewer";
-import { useRouting } from "../hooks/useRouting";
-import { useTableData } from "../hooks/useTableData";
-import { usePageRows } from "../hooks/usePageRows";
-import { useViewerPageState } from "../hooks/useViewerPageState";
-import { useViewerWordState } from "../hooks/useViewerWordState";
+import { useTableData } from "../hooks/server/useTableData";
+import { usePageRows } from "../hooks/server/usePageRows";
+import { useRouting } from "../hooks/routing/useRouting";
+import { useViewerPageState } from "../hooks/ui/useViewerPageState";
+import { useViewerWordState } from "../hooks/ui/useViewerWordState";
 
 //　useParams の返り値は文字列になるのでNumber()で変換しておく
 
