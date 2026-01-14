@@ -1,4 +1,6 @@
 import { useEffect, useRef } from "react";
+import { useViewerPageStateContext } from "../../../contexts/viewer/ViewerPageStateContext";
+import { useViewerWordStateContext } from "../../../contexts/viewer/ViewerWordStateContext";
 
 // onRowClickはpageの時のnavigation用と、viewerの時のscroll用がある　
 // ここではオプショナルチェイニング(.?)で両方を実行するようにして、呼び出し側からは重複しないようにする
@@ -7,15 +9,15 @@ export default function ViewerTable({
   rows = [],
   loading,
   onColumnClick,
-  viewerPageState = {},
-  viewerWordState = {},
                           }) {
 
   const rootRef = useRef(null);
+  const viewerPageState = useViewerPageStateContext();
+  const viewerWordState = useViewerWordStateContext();
   const { values: { page } = {} } = viewerPageState;
   const {
     values: { hoveredWordId, selectedWordId, selectedBy } = {},
-    events: { onRowMouseEnter, onRowMouseLeave, onRowClick } = {},
+    events: { onWordHover, onWordHoverClear, onWordSelect } = {},
   } = viewerWordState;
 
   useEffect(() => {
@@ -60,9 +62,9 @@ export default function ViewerTable({
         const isHover = row.id === hoveredWordId;
         return (
           <tr key={row.id} data-page={row.page__page_number} data-word={row.id} 
-            onMouseEnter={() => onRowMouseEnter(row.id)}
-            onMouseLeave={() => onRowMouseLeave()}
-            onClick={() => onRowClick(row.id, "table")}
+            onMouseEnter={() => onWordHover?.(row.id)}
+            onMouseLeave={() => onWordHoverClear?.()}
+            onClick={() => onWordSelect?.(row.id, "table")}
             style={{
               background: isSelected ? "rgba(255,0,0,0.12)" : isHover ? "rgba(255,0,0,0.06)" : "transparent", 
             }}>

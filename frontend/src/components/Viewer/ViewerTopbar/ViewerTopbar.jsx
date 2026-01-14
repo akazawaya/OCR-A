@@ -1,5 +1,6 @@
 import { AppBar, Toolbar, TextField, Button } from "@mui/material";
 import { useEffect, useRef } from "react";
+import { useViewerPageStateContext } from "../../../contexts/viewer/ViewerPageStateContext";
 
 const renderTextField = (foo, commitFoo, inputRef) => ( 
   // draftでの制御形式は、stateを制御するためのstateというのも変に感じるので、inputRefでの非制御形式を試す
@@ -18,7 +19,8 @@ const renderTextField = (foo, commitFoo, inputRef) => (
 ); 
 
 
-export default function ViewerTopBar ({ viewerPageState = {} } = {}){ 
+export default function ViewerTopBar (){ 
+  const viewerPageState = useViewerPageStateContext();
   const {
     values: { page, zoom, rotate, ZOOM_STEP, ROTATE_STEP } = {},
     events: {
