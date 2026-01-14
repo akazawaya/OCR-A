@@ -2,8 +2,8 @@ import MenuTable from "../components/MenuTable/MenuTable"
 import { pageApiConfig } from "../route"
 import { useReducer } from "react"
 import { RefreshContext } from "../contexts/refreshContext"
-import { useTableData } from "../hooks/useTableData"
-import { useRouting } from "../hooks/useRouting"
+import { useTableData } from "../hooks/server/useTableData"
+import { useRouting } from "../hooks/routing/useRouting"
 import { routeTo } from "../route";
 
 const DocumentPagesPage = () =>{

@@ -1,6 +1,8 @@
-import { useViewerWordOverlayLayout } from "../../../../hooks/useViewerWordOverlayLayout";
+import { useViewerWordOverlayLayout } from "../../../../hooks/layout/useViewerWordOverlayLayout";
+import { useViewerWordStateContext } from "../../../../contexts/viewer/ViewerWordStateContext";
 
-export default function WordOverlay({ pageId, viewerWordState = {} }) {
+export default function WordOverlay({ pageId }) {
+  const viewerWordState = useViewerWordStateContext();
   const {
     values: { pageMetaById, wordsByPageId, hoveredWordId, selectedWordId } = {},
     events: { onWordHover, onWordHoverClear, onWordSelect } = {},

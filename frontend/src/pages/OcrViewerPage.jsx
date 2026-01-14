@@ -2,52 +2,42 @@ import { useReducer } from "react"
 import { RefreshContext } from "../contexts/refreshContext"
 import { pageApiConfig, wordConfig } from "../route";
 import Viewer from "../components/Viewer/Viewer";
-import { useRouting } from "../hooks/useRouting";
-import { useTableData } from "../hooks/useTableData";
-import { usePageRows } from "../hooks/usePageRows";
-import { useViewerPageState } from "../hooks/useViewerPageState";
-import { useViewerWordState } from "../hooks/useViewerWordState";
+import { useRouting } from "../hooks/routing/useRouting";
+import { useTableData } from "../hooks/server/useTableData";
+import { usePageRows } from "../hooks/server/usePageRows";
 
-//　useParams の返り値は文字列になるのでNumber()で変換しておく
-
+// Pageが渡すのは server/のfetch経由のデータと、routing/のルート関連
 const OcrViewerPage = () => {
   const [refresh, onRefresh] = useReducer(n => n + 1, 0);
   const routing = useRouting({});
   const { search, primaryKey, buildSearch } = routing;
 
-
   const pageSearch = primaryKey != null ? buildSearch({ doc: primaryKey }) : search;
   const wordSearch = primaryKey != null ? buildSearch({ page__doc: primaryKey, doc: null }) : search;
-
 
   const { dataUrl: pageDataUrl } = pageApiConfig;
   const pageRows = usePageRows({ dataUrl: pageDataUrl, search: pageSearch });
 
   const { schemaUrl, schemaName, dataUrl: wordDataUrl } = wordConfig;
   const { rows: wordRows, loading } = useTableData({
-    schemaUrl,
-    schemaName,
+    schemaUrl, schemaName,
     dataUrl: wordDataUrl,
     search: wordSearch,
-    refresh,
-    onRefresh,
+    refresh, onRefresh,
   });
   const wordColumns = wordConfig.ui.table.map(({ key, label }) => ({ key, label }));
 
-  const pageData = { rows: pageRows };
-  const wordData = { columns: wordColumns, rows: wordRows, loading };
-  const viewerPageState  = useViewerPageState({ maxPage:pageRows.length });
-  const viewerWordState = useViewerWordState(pageData, wordData);
   // 下記Viewerのpropの渡し方は、インタフェース分離から言ってよくないが、明示のスタイルをとると
   //　Page-Viewer-Parts間の修正が必要になり大変なので特別に許容する
+  // onColumnClickはViewerTable用
   return (
     <RefreshContext.Provider value={onRefresh}>
       <Viewer
-        pageData = { pageData }
-        wordData = { wordData }
-        viewerPageState = { viewerPageState }
-        viewerWordState = { viewerWordState }
-        navigation = { routing }
+        pageRows = { pageRows }
+        wordRows = { wordRows }
+        wordColumns = { wordColumns }
+        loading = { loading }
+        onColumnClick = { routing.columnsSort }
       />
     </RefreshContext.Provider>
   )

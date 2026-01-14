@@ -2,18 +2,19 @@
 import { useEffect, useRef } from "react";
 import styles from "./ViewerImage.module.css";
 import WordOverlay from "./WordOverlay/WordOverlay";
+import { useViewerPageStateContext } from "../../../contexts/viewer/ViewerPageStateContext";
+import { useViewerWordStateContext } from "../../../contexts/viewer/ViewerWordStateContext";
 // データソースではないため、useBoxesOverlayを直で呼んでも問題なし(コンフィグを持たせたい場合は再考慮が必要かと思う)
 
 export default function ViewerImage({
   rows = [],
-  viewerPageState = {},
-  viewerWordState = {},
   }) {
   const rootRef = useRef(null);
+  const viewerPageState = useViewerPageStateContext();
+  const viewerWordState = useViewerWordStateContext();
   const { values: { page, zoom, rotate } = {} } = viewerPageState;
   const {
-    values: { pageMetaById, wordsByPageId, hoveredWordId, selectedWordId, selectedBy } = {},
-    events: { onWordHover, onWordHoverClear, onWordSelect } = {},
+    values: { selectedBy, selectedWordId } = {},
   } = viewerWordState;
 
   useEffect(() => {
@@ -54,22 +55,7 @@ export default function ViewerImage({
           <div className={styles.pageInner} style={{ position: "relative" }}>
             <img src={r.image} className={styles.pageImage} 
               width={r.image_width} height={r.image_height}/> {/* CLS対応のため画像サイズを指定 */}
-            <WordOverlay
-              pageId={r.id}
-              viewerWordState={{
-                values: {
-                  pageMetaById,
-                  wordsByPageId,
-                  hoveredWordId,
-                  selectedWordId,
-                },
-                events: {
-                  onWordHover,
-                  onWordHoverClear,
-                  onWordSelect,
-                },
-              }}
-            />
+            <WordOverlay pageId={r.id} />
 
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { requestApi } from "../api/requestApi";
+import { requestApi } from "../../api/requestApi";
 
 export const useAnalyze = (analyzeUrl, onRefresh) => {
   const inputRef = useRef(null);
