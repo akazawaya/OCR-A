@@ -1,10 +1,10 @@
 import { useMemo } from "react";
 import { useViewerPageState } from "../../hooks/ui/useViewerPageState";
 import { useViewerWordState } from "../../hooks/ui/useViewerWordState";
-
+import { useViewerEditState } from "../../hooks/ui/useViewerEditState.jsx";
 import { ViewerPageStateProvider } from "./ViewerPageStateContext";
 import { ViewerWordStateProvider } from "./ViewerWordStateContext";
-
+import { ViewerEditStateProvider } from "./ViewerEditStateContext";
 // Viewer側でProviderを作って内部でhookを呼び、各Contextへvalue, eventを流す
 // useReducerは状態更新ロジックをまとめたいときの状態管理手段なので、
 // 現状としては、useViewerFooStateそれぞれがuseStateを知っていればそれで充分
@@ -17,6 +17,7 @@ export const ViewerProviders = ({
   const pageData = useMemo(() => ({ rows: pageRows }), [pageRows]);
   const wordData = useMemo(() => ({ rows: wordRows }), [wordRows]);
   const wordState = useViewerWordState(pageData, wordData);
+  const editState = useViewerEditState();
 
   const pageStateValue = useMemo(() => ({
     values: {
