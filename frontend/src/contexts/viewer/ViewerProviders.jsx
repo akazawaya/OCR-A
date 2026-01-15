@@ -18,7 +18,7 @@ export const ViewerProviders = ({
   const wordData = useMemo(() => ({ rows: wordRows }), [wordRows]);
   const wordState = useViewerWordState(pageData, wordData);
   const editState = useViewerEditState();
-
+  
   const pageStateValue = useMemo(() => ({
     values: {
       page: pageState.page,
@@ -73,10 +73,32 @@ export const ViewerProviders = ({
     wordState.commitSelectWord,
   ]);
 
+  const editStateValue = useMemo(() => ({
+    values: {
+      isEditing: editState.isEditing,
+      draftById: editState.draftById,
+    },
+    events: {
+      setDraftContent: editState.setDraftContent,
+      startEdit: editState.startEdit, 
+      saveEdit: editState.saveEdit, 
+      cancelEdit: editState.cancelEdit
+    },
+  }), [
+    editState.isEditing,
+    editState.draftById,
+    editState.setDraftContent,
+    editState.startEdit,
+    editState.saveEdit,
+    editState.cancelEdit
+  ]);
+  // childrenをラップすることで、内側にいるコンポーネントはuseContextでそれぞれのvalueを参照できる
   return (
     <ViewerPageStateProvider value={pageStateValue}>
       <ViewerWordStateProvider value={wordStateValue}>
-        {children}
+        <ViewerEditStateProvider value={editStateValue}>
+          {children}
+        </ViewerEditStateProvider>
       </ViewerWordStateProvider>
     </ViewerPageStateProvider>
   );
