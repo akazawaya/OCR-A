@@ -79,10 +79,10 @@ export const ViewerProviders = ({
       draftById: editState.draftById,
     },
     events: {
-      setDraftContent: editState.setDraftContent,
-      startEdit: editState.startEdit, 
-      saveEdit: editState.saveEdit, 
-      cancelEdit: editState.cancelEdit
+      onChangeDraftContent: editState.setDraftContent,
+      onClickEditButton: editState.startEdit, 
+      onClickSaveButton: editState.saveEdit, 
+      onClickCancelButton: editState.cancelEdit
     },
   }), [
     editState.isEditing,
