@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useViewerPageStateContext } from "../../../contexts/viewer/ViewerPageStateContext";
 import { useViewerWordStateContext } from "../../../contexts/viewer/ViewerWordStateContext";
-
+import { useViewerEditStateContext } from "../../../contexts/viewer/ViewerEditStateContext";
 // onRowClickはpageの時のnavigation用と、viewerの時のscroll用がある　
 // ここではオプショナルチェイニング(.?)で両方を実行するようにして、呼び出し側からは重複しないようにする
 export default function ViewerTable({
@@ -14,11 +14,17 @@ export default function ViewerTable({
   const rootRef = useRef(null);
   const viewerPageState = useViewerPageStateContext();
   const viewerWordState = useViewerWordStateContext();
+  const viewerEditState = useViewerEditStateContext();
   const { values: { page } = {} } = viewerPageState;
   const {
     values: { hoveredWordId, selectedWordId, selectedBy } = {},
     events: { onWordHover, onWordHoverClear, onWordSelect } = {},
   } = viewerWordState;
+
+  const {
+    values: { isEditing, draftById } = {},
+    events: { onChangeDraftContent } = {},
+  } = viewerEditState;
 
   useEffect(() => {
     const root = rootRef.current;
@@ -69,7 +75,16 @@ export default function ViewerTable({
               background: isSelected ? "rgba(255,0,0,0.12)" : isHover ? "rgba(255,0,0,0.06)" : "transparent", 
             }}>
             {columns.map(c => (
-            	<td key={c.key}>{row[c.key]}</td>
+            	<td key={c.key}>
+                {!isEditing || c.key !== "content" ? (
+                  row[c.key]
+                ):(
+                <input
+                  value={draftById[row.id] ?? row[c.key]}
+                  onChange={(e) => onChangeDraftContent(row.id, e.target.value)}
+                />    
+              )}
+              </td>
           	))}
           </tr>
         );
@@ -78,7 +93,8 @@ export default function ViewerTable({
     </table>  
   );
 }
-// &&は||の逆で、左オペラント自身がTrueの時に右辺を返す
+
+// ||はorなので、!isEditingとc.key !== "content"のどちらもFalseでないとinputにならない
 // <td key="__">はただの識別キーに過ぎない
 // idは同じ親の直下に並ぶ兄弟内でユニークであればいいので、
 // DeleteButtonのidは変数でなくて良い

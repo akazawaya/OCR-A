@@ -1,6 +1,8 @@
 import { AppBar, Toolbar, TextField, Button } from "@mui/material";
 import { useEffect, useRef } from "react";
 import { useViewerPageStateContext } from "../../../contexts/viewer/ViewerPageStateContext";
+import { useViewerEditStateContext } from "../../../contexts/viewer/ViewerEditStateContext";
+
 
 const renderTextField = (foo, commitFoo, inputRef) => ( 
   // draftでの制御形式は、stateを制御するためのstateというのも変に感じるので、inputRefでの非制御形式を試す
@@ -21,6 +23,7 @@ const renderTextField = (foo, commitFoo, inputRef) => (
 
 export default function ViewerTopBar (){ 
   const viewerPageState = useViewerPageStateContext();
+  const viewerEditState = useViewerEditStateContext();
   const {
     values: { page, zoom, rotate, ZOOM_STEP, ROTATE_STEP } = {},
     events: {
@@ -32,6 +35,15 @@ export default function ViewerTopBar (){
       onRotateCommit,
     } = {},
   } = viewerPageState;
+
+  const {
+    values: {isEditing},
+    events: {
+      onClickEditButton, 
+      onClickSaveButton, 
+      onClickCancelButton,
+    }
+  } = viewerEditState
   
   // useRef(null)はfooRef.currentというプロパティを作成
   // fooRef.currentに入るのがDOMの <input> 要素になったとき、そのDOM要素がvalueプロパティを持つ
@@ -61,6 +73,16 @@ export default function ViewerTopBar (){
       
       <Button onClick={() => onRotateChange(a => a + ROTATE_STEP)}>回転</Button>
       {renderTextField(rotate, onRotateCommit, rotateRef)}
+
+
+      {!isEditing ? (
+        <Button onClick={onClickEditButton}>編集</Button>
+        ) : (
+        <>
+        <Button onClick={onClickSaveButton}>保存</Button>
+        <Button onClick={onClickCancelButton}>中止</Button>
+        </>
+      )}
 
 
     </Toolbar> 
