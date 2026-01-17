@@ -1,23 +1,28 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useViewerPageState } from "../../hooks/ui/useViewerPageState";
 import { useViewerWordState } from "../../hooks/ui/useViewerWordState";
 import { useViewerEditState } from "../../hooks/ui/useViewerEditState.jsx";
 import { ViewerPageStateProvider } from "./ViewerPageStateContext";
 import { ViewerWordStateProvider } from "./ViewerWordStateContext";
 import { ViewerEditStateProvider } from "./ViewerEditStateContext";
+import { useSaveWord } from "../../hooks/server/useSaveWord";
+import { useRefresh } from "../refreshContext";
+
 // Viewer側でProviderを作って内部でhookを呼び、各Contextへvalue, eventを流す
 // useReducerは状態更新ロジックをまとめたいときの状態管理手段なので、
 // 現状としては、useViewerFooStateそれぞれがuseStateを知っていればそれで充分
 export const ViewerProviders = ({
   pageRows = [],
   wordRows = [],
+  wordUrl,
   children,
-}) => {
+  }) => {
   const pageState = useViewerPageState({ maxPage: pageRows.length });
   const pageData = useMemo(() => ({ rows: pageRows }), [pageRows]);
   const wordData = useMemo(() => ({ rows: wordRows }), [wordRows]);
   const wordState = useViewerWordState(pageData, wordData);
   const editState = useViewerEditState();
+  const onRefresh = useRefresh();
   
   const pageStateValue = useMemo(() => ({
     values: {
@@ -73,6 +78,17 @@ export const ViewerProviders = ({
     wordState.commitSelectWord,
   ]);
 
+  // saveEditにpatchDraftByIdをくっつけたいのでここで合成する
+  const { patchDraftById } = useSaveWord(wordUrl);
+  const saveAllEdits = useCallback(async () => {
+    try {
+      await patchDraftById(editState.draftById);
+      editState.saveEdit(); // 成功したときだけドラフトクリア
+      onRefresh();
+    } catch {
+    }
+  }, [patchDraftById, editState.draftById, editState.saveEdit, onRefresh]);
+
   const editStateValue = useMemo(() => ({
     values: {
       isEditing: editState.isEditing,
@@ -81,7 +97,7 @@ export const ViewerProviders = ({
     events: {
       onChangeDraftContent: editState.setDraftContent,
       onClickEditButton: editState.startEdit, 
-      onClickSaveButton: editState.saveEdit, 
+      onClickSaveButton: saveAllEdits, 
       onClickCancelButton: editState.cancelEdit
     },
   }), [
@@ -90,7 +106,8 @@ export const ViewerProviders = ({
     editState.setDraftContent,
     editState.startEdit,
     editState.saveEdit,
-    editState.cancelEdit
+    editState.cancelEdit,
+    saveAllEdits
   ]);
   // childrenをラップすることで、内側にいるコンポーネントはuseContextでそれぞれのvalueを参照できる
   return (
