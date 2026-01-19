@@ -1,8 +1,8 @@
 import MenuTable from "../components/MenuTable/MenuTable"
 import FileUploader from "../components/FileUploader/FileUploader"
 import { FilterMenuButton } from "../components/FilterMenuButton/FilterMenuButton"
-import { analyzeDocumentApiConfig, documentConfig } from "../route"
-import { routeTo } from "../route";
+import { analyzeDocumentApiConfig, documentConfig } from "../appConfig"
+import { routeTo } from "../appConfig";
 
 import { useReducer } from "react"
 import { RefreshContext } from "../contexts/refreshContext"

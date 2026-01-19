@@ -1,10 +1,10 @@
 import MenuTable from "../components/MenuTable/MenuTable"
-import { pageApiConfig } from "../route"
+import { pageApiConfig } from "../appConfig"
 import { useReducer } from "react"
 import { RefreshContext } from "../contexts/refreshContext"
 import { useTableData } from "../hooks/server/useTableData"
 import { useRouting } from "../hooks/routing/useRouting"
-import { routeTo } from "../route";
+import { routeTo } from "../appConfig";
 
 const DocumentPagesPage = () =>{
 const [refresh, onRefresh] = useReducer(n => n + 1, 0);

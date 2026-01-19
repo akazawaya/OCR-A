@@ -1,5 +1,5 @@
 import MenuTable from "../components/MenuTable/MenuTable"
-import { wordApiConfig } from "../route"
+import { wordApiConfig } from "../appConfig"
 import { useReducer } from "react"
 import { RefreshContext } from "../contexts/refreshContext"
 import { useTableData } from "../hooks/server/useTableData"

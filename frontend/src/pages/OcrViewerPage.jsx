@@ -1,6 +1,6 @@
 import { useReducer } from "react"
 import { RefreshContext } from "../contexts/refreshContext"
-import { pageApiConfig, wordConfig } from "../route";
+import { pageApiConfig, wordConfig } from "../appConfig";
 import Viewer from "../components/Viewer/Viewer";
 import { useRouting } from "../hooks/routing/useRouting";
 import { useTableData } from "../hooks/server/useTableData";
