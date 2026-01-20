@@ -22,7 +22,7 @@ import { useFilter } from "../hooks/ui/useFilterState"
 // FilterMenuButtonの開閉コンディション管理は自分自身にのみ関係するので閉じる
 // 入力パラメータの保持は、その値を他コンポーネントでも用いる予定なら外部公開にする(onChangeConditionsによる検索条件の表示など？)
 const DocumentsPage = () => {
-  const { schemaUrl, schemaName, dataUrl } = documentConfig;
+  const { schemaUrl, schemaKey, collectionUrl } = documentConfig;
   const { analyzeUrl } = analyzeDocumentApiConfig;
   const [refresh, onRefresh] = useReducer(n => n + 1, 0);
 
@@ -30,7 +30,7 @@ const DocumentsPage = () => {
     routeUrl: (row) => routeTo.viewer(row.id)
   });
   
-  const { rows, loading, deleteRow } = useTableData({schemaUrl, schemaName, dataUrl, search, refresh, onRefresh, routingRowFilter});
+  const { rows, loading, deleteRow } = useTableData({schemaUrl, schemaKey, collectionUrl, search, refresh, onRefresh, routingRowFilter});
   
   const { inputRef, analyzeData } = useAnalyze(analyzeUrl, onRefresh);
   const { conditions, updateConditions } = useFilter();

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { requestApi } from "../../api/requestApi"
 
-async function loadSchemaColumns(schemaUrl, schemaName) {
+async function loadSchemaColumns(schemaUrl, schemaKey) {
   const { data } = await requestApi(schemaUrl);
-  const schema = data?.components?.schemas?.[schemaName];
+  const schema = data?.components?.schemas?.[schemaKey];
   if (!schema?.properties) return [];
   
   const props = schema.properties;
@@ -18,15 +18,15 @@ async function loadSchemaColumns(schemaUrl, schemaName) {
   return ordered.map(key => ({key,label: key,}));
 }
 
-async function loadSchemaRows(routingRowFilter, dataUrl, search){
-  const url = search ? `${dataUrl}${search}` : dataUrl
+async function loadSchemaRows(routingRowFilter, collectionUrl, search){
+  const url = search ? `${collectionUrl}${search}` : collectionUrl
   const { data } = await requestApi(url);
   const  array = Array.isArray(data) ? data : []; 
   const filtered = routingRowFilter ? array.filter(routingRowFilter) : array;
   return filtered;
 }
 
-export const useTableData = ({schemaUrl, schemaName, dataUrl, search, refresh, onRefresh, routingRowFilter = undefined} = {}) => {
+export const useTableData = ({schemaUrl, schemaKey, collectionUrl, search, refresh, onRefresh, routingRowFilter = undefined} = {}) => {
   const [loading, setLoading] = useState(true); //データが“今ロード中かどうか”のフラグ
   const [columns, setColumns] = useState([]);
   const [rows, setRows] = useState([]);
@@ -35,20 +35,20 @@ export const useTableData = ({schemaUrl, schemaName, dataUrl, search, refresh, o
     (async () => {
       setLoading(true); // 開始
 
-      const columns = await loadSchemaColumns(schemaUrl, schemaName);
+      const columns = await loadSchemaColumns(schemaUrl, schemaKey);
       setColumns(columns);
 
-      const rows = await loadSchemaRows(routingRowFilter, dataUrl, search);
+      const rows = await loadSchemaRows(routingRowFilter, collectionUrl, search);
       setRows(rows); 
 
       setLoading(false);  // 完了
 
     })();
-  }, [schemaUrl, schemaName, dataUrl, search, refresh]);
+  }, [schemaUrl, schemaKey, collectionUrl, search, refresh]);
 
   // 引数がuseTableData内でのみ存在する関数は、内部関数として処理する
   const deleteRow = async (row) => {
-    const deleteUrl = `${dataUrl}${row.id}/`;
+    const deleteUrl = `${collectionUrl}${row.id}/`;
     const { res } = await requestApi(deleteUrl, { method: "DELETE" });
     if (res?.ok) {
       onRefresh(); 

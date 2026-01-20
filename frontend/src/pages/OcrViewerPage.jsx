@@ -15,13 +15,13 @@ const OcrViewerPage = () => {
   const pageSearch = primaryKey != null ? buildSearch({ doc: primaryKey }) : search;
   const wordSearch = primaryKey != null ? buildSearch({ page__doc: primaryKey, doc: null }) : search;
 
-  const { dataUrl: pageDataUrl } = pageApiConfig;
-  const pageRows = usePageRows({ dataUrl: pageDataUrl, search: pageSearch });
+  const { collectionUrl: pageCollectionUrl } = pageApiConfig;
+  const pageRows = usePageRows({ collectionUrl: pageCollectionUrl, search: pageSearch });
 
-  const { schemaUrl, schemaName, dataUrl: wordDataUrl } = wordConfig;
+  const { schemaUrl, schemaKey, collectionUrl: wordCollectionUrl } = wordConfig;
   const { rows: wordRows, loading } = useTableData({
-    schemaUrl, schemaName,
-    dataUrl: wordDataUrl,
+    schemaUrl, schemaKey,
+    collectionUrl: wordCollectionUrl,
     search: wordSearch,
     refresh, onRefresh,
   });

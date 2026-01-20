@@ -7,10 +7,10 @@ import { useRouting } from "../hooks/routing/useRouting"
 
 const DocumentPageWordsPage = () =>{
 const [refresh, onRefresh] = useReducer(n => n + 1, 0);
-const { schemaUrl, schemaName, dataUrl } = wordApiConfig;
+const { schemaUrl, schemaKey, collectionUrl } = wordApiConfig;
 const { search, columnsSort, routingRowFilter } = useRouting({
   rowSelector: (row) => row.page});
-const { columns, rows, loading } = useTableData({schemaUrl, schemaName, dataUrl, search, refresh, onRefresh, routingRowFilter});
+const { columns, rows, loading } = useTableData({schemaUrl, schemaKey, collectionUrl, search, refresh, onRefresh, routingRowFilter});
 
 return (
   <RefreshContext.Provider value={onRefresh}>

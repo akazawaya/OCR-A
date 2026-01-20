@@ -1,31 +1,25 @@
-// 変える予定のない変数等を保持するファイル
-// URLについてはidで変動するものがあり、静的ではない気がするが
-// 暫定としてまとめる
+export const API_BASE_URL = "http://127.0.0.1:8000/"
+export const OPENAPI_URL = API_BASE_URL + "schema/"
 
-// 画面側(Route)が使う“テンプレート”
-export const BASEURL = "http://127.0.0.1:8000/"
-export const SCHEMAURL = BASEURL + "schema/"
-
-// parameter取得時のクエリの変数は　new URL(dataUrl).pathnameで自動生成できるらしいが
-// エンドポイント情報はここにまとめておきたい
-
-const makeConfig = (schemaName, dataName) =>{
-  const dataPath = `/${dataName}/`;
-  return{
-    schemaUrl: SCHEMAURL,
-    schemaName,
-    dataName,
-    dataPath,
-    dataUrl: BASEURL + dataName + "/"
+const makeConfig = ({schemaKey, collection}) =>{
+  const collectionPath = `/${collection}/`; 
+  // ↑オブジェクトリテラル内に書かないのは、return以下はこれから作るプロパティに過ぎず、
+  // 外側スコープに存在しないcollectionPathの参照がcollectionUrlで不可能になるため
+  return {
+    schemaUrl: OPENAPI_URL,
+    schemaKey,
+    collection,
+    collectionPath,
+    collectionUrl: API_BASE_URL + collectionPath
  }
 };
 
-export const documentApiConfig = makeConfig("Document", "documents");
-export const pageApiConfig = makeConfig("Page", "pages");
-export const wordApiConfig = makeConfig("Word", "words");
+export const documentApiConfig = makeConfig({ schemaKey: "Document", collection: "documents" });
+export const pageApiConfig = makeConfig({ schemaKey: "Page", collection: "pages" });
+export const wordApiConfig = makeConfig({ schemaKey: "Word", collection: "words" });
 
 export const analyzeDocumentApiConfig = {
-  analyzeUrl: BASEURL + "documents/analyze/",
+  analyzeUrl: API_BASE_URL + "documents/analyze/",
 };
 
 // 実URL生成器

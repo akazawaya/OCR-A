@@ -2,13 +2,13 @@ import { useCallback } from "react";
 import { requestApi } from "../../api/requestApi"
 
 //　try/catchはProvider側で担う
-export const useSaveWord = (dataUrl) => {
+export const useSaveWord = (collectionUrl) => {
   const patchDraftById = useCallback(async (draftById) => {
     const snapshot = { ...(draftById) ?? {} }; // データ一貫性のためスナップショットをとっておく
     const entries = Object.entries(snapshot);
     // Object.entriesは{key,value} を {[],[]}という配列の集合で返す。そのままfor文に使えて便利
     for (const [wordId, content] of entries){
-      const patchUrl = `${dataUrl}${wordId}/`;
+      const patchUrl = `${collectionUrl}${wordId}/`;
       await requestApi(patchUrl, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -16,7 +16,6 @@ export const useSaveWord = (dataUrl) => {
         throwOnError: true ,
       });
     }
-  }, [dataUrl]);
+  }, [collectionUrl]);
     return { patchDraftById };
 };
-

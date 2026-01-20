@@ -16,7 +16,7 @@ export default function Viewer({
     <ViewerProviders
       pageRows={pageRows}
       wordRows={wordRows}
-      wordUrl={wordConfig.dataUrl}
+      wordUrl={wordConfig.collectionUrl}
     >
       <div className={styles.viewerRoot}>
         <ViewerTopBar />

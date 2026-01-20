@@ -8,12 +8,12 @@ import { routeTo } from "../appConfig";
 
 const DocumentPagesPage = () =>{
 const [refresh, onRefresh] = useReducer(n => n + 1, 0);
-const { schemaUrl, schemaName, dataUrl } = pageApiConfig;
+const { schemaUrl, schemaKey, collectionUrl } = pageApiConfig;
 const { search, columnsSort, routingRowFilter } = useRouting({
   routeUrl: (row) => routeTo.docPageWords(row.doc, row.id),
   rowSelector: (row) => row.doc,
 });
-const { columns, rows, loading } = useTableData({schemaUrl, schemaName, dataUrl, search, refresh, onRefresh, routingRowFilter});
+const { columns, rows, loading } = useTableData({schemaUrl, schemaKey, collectionUrl, search, refresh, onRefresh, routingRowFilter});
 
 return (
   <RefreshContext.Provider value={onRefresh}>
