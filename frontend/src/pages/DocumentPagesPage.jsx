@@ -1,16 +1,15 @@
 import MenuTable from "../components/MenuTable/MenuTable"
-import { pageApiConfig } from "../appConfig"
+import { pageAccessSpec, routePaths } from "../appConfig";
 import { useReducer } from "react"
 import { RefreshContext } from "../contexts/refreshContext"
 import { useTableData } from "../hooks/server/useTableData"
 import { useRouting } from "../hooks/routing/useRouting"
-import { routeTo } from "../appConfig";
 
 const DocumentPagesPage = () =>{
 const [refresh, onRefresh] = useReducer(n => n + 1, 0);
-const { schemaUrl, schemaKey, collectionUrl } = pageApiConfig;
+const { schemaUrl, schemaKey, collectionUrl } = pageAccessSpec;
 const { search, columnsSort, routingRowFilter } = useRouting({
-  routeUrl: (row) => routeTo.docPageWords(row.doc, row.id),
+  routeUrl: (row) => routePaths.docPageWords(row.doc, row.id),
   rowSelector: (row) => row.doc,
 });
 const { columns, rows, loading } = useTableData({schemaUrl, schemaKey, collectionUrl, search, refresh, onRefresh, routingRowFilter});

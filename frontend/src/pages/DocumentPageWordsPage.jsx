@@ -1,5 +1,5 @@
 import MenuTable from "../components/MenuTable/MenuTable"
-import { wordApiConfig } from "../appConfig"
+import { wordAccessSpec } from "../appConfig";
 import { useReducer } from "react"
 import { RefreshContext } from "../contexts/refreshContext"
 import { useTableData } from "../hooks/server/useTableData"
@@ -7,7 +7,7 @@ import { useRouting } from "../hooks/routing/useRouting"
 
 const DocumentPageWordsPage = () =>{
 const [refresh, onRefresh] = useReducer(n => n + 1, 0);
-const { schemaUrl, schemaKey, collectionUrl } = wordApiConfig;
+const { schemaUrl, schemaKey, collectionUrl } = wordAccessSpec;
 const { search, columnsSort, routingRowFilter } = useRouting({
   rowSelector: (row) => row.page});
 const { columns, rows, loading } = useTableData({schemaUrl, schemaKey, collectionUrl, search, refresh, onRefresh, routingRowFilter});

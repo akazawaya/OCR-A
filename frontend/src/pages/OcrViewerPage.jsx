@@ -1,6 +1,6 @@
 import { useReducer } from "react"
 import { RefreshContext } from "../contexts/refreshContext"
-import { pageApiConfig, wordConfig } from "../appConfig";
+import { pageAccessSpec, wordSpec } from "../appConfig";
 import Viewer from "../components/Viewer/Viewer";
 import { useRouting } from "../hooks/routing/useRouting";
 import { useTableData } from "../hooks/server/useTableData";
@@ -15,17 +15,17 @@ const OcrViewerPage = () => {
   const pageSearch = primaryKey != null ? buildSearch({ doc: primaryKey }) : search;
   const wordSearch = primaryKey != null ? buildSearch({ page__doc: primaryKey, doc: null }) : search;
 
-  const { collectionUrl: pageCollectionUrl } = pageApiConfig;
+  const { collectionUrl: pageCollectionUrl } = pageAccessSpec;
   const pageRows = usePageRows({ collectionUrl: pageCollectionUrl, search: pageSearch });
 
-  const { schemaUrl, schemaKey, collectionUrl: wordCollectionUrl } = wordConfig;
+  const { schemaUrl, schemaKey, collectionUrl: wordCollectionUrl } = wordSpec;
   const { rows: wordRows, loading } = useTableData({
     schemaUrl, schemaKey,
     collectionUrl: wordCollectionUrl,
     search: wordSearch,
     refresh, onRefresh,
   });
-  const wordColumns = wordConfig.ui.table.map(({ key, label }) => ({ key, label }));
+  const wordColumns = wordSpec.ui.table.map(({ key, label }) => ({ key, label }));
 
   // 下記Viewerのpropの渡し方は、インタフェース分離から言ってよくないが、明示のスタイルをとると
   //　Page-Viewer-Parts間の修正が必要になり大変なので特別に許容する

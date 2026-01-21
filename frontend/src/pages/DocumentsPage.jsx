@@ -1,8 +1,7 @@
 import MenuTable from "../components/MenuTable/MenuTable"
 import FileUploader from "../components/FileUploader/FileUploader"
 import { FilterMenuButton } from "../components/FilterMenuButton/FilterMenuButton"
-import { analyzeDocumentApiConfig, documentConfig } from "../appConfig"
-import { routeTo } from "../appConfig";
+import { analyzeDocumentAccessSpec, documentSpec, routePaths } from "../appConfig";
 
 import { useReducer } from "react"
 import { RefreshContext } from "../contexts/refreshContext"
@@ -12,7 +11,7 @@ import { useRouting } from "../hooks/routing/useRouting"
 import { useFilterRouting } from "../hooks/routing/useFilterRouting"
 import { useFilter } from "../hooks/ui/useFilterState"
 
-// routeTo.viewer routeTo.docPages 関数として入力しないと即座に実行しようとしてエラーになる
+// routePaths.viewer routePaths.docPages 関数として入力しないと即座に実行しようとしてエラーになる
 // 方針：prop関数名:実関数を　on(イベントハンドラ):実行される関数、として関係性をここで明記する
 // パーツコンポーネントはon(イベントハンドラ)とDOM構築を担当し、hooksは実行される関数を担当。
 // お互いがお互いを知らない状態で、Pageコンポーネントでイベントハンドラと実行される関数を結びつける役割を担う。
@@ -22,12 +21,12 @@ import { useFilter } from "../hooks/ui/useFilterState"
 // FilterMenuButtonの開閉コンディション管理は自分自身にのみ関係するので閉じる
 // 入力パラメータの保持は、その値を他コンポーネントでも用いる予定なら外部公開にする(onChangeConditionsによる検索条件の表示など？)
 const DocumentsPage = () => {
-  const { schemaUrl, schemaKey, collectionUrl } = documentConfig;
-  const { analyzeUrl } = analyzeDocumentApiConfig;
+  const { schemaUrl, schemaKey, collectionUrl } = documentSpec;
+  const { analyzeUrl } = analyzeDocumentAccessSpec;
   const [refresh, onRefresh] = useReducer(n => n + 1, 0);
 
   const { search, columnsSort, dataRouter, routingRowFilter, searchFilter } = useRouting({
-    routeUrl: (row) => routeTo.viewer(row.id)
+    routeUrl: (row) => routePaths.viewer(row.id)
   });
   
   const { rows, loading, deleteRow } = useTableData({schemaUrl, schemaKey, collectionUrl, search, refresh, onRefresh, routingRowFilter});
@@ -35,7 +34,7 @@ const DocumentsPage = () => {
   const { inputRef, analyzeData } = useAnalyze(analyzeUrl, onRefresh);
   const { conditions, updateConditions } = useFilter();
   const { applySearchFilter } = useFilterRouting(search, searchFilter);
-  const documentColumns = documentConfig.ui.table.map(({ key, label }) => ({ key, label }));
+  const documentColumns = documentSpec.ui.table.map(({ key, label }) => ({ key, label }));
 
   return (
     <RefreshContext.Provider value={onRefresh}>

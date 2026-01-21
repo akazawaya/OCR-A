@@ -1,8 +1,20 @@
 export const API_BASE_URL = "http://127.0.0.1:8000/"
 export const OPENAPI_URL = API_BASE_URL + "schema/"
+// 目的
+// OpenAPI（components/schemas）から型情報（schema）を動的に参照できる様にして、
+// REST の collection endpointに対して操作を行うための情報をまとめる。
 
-const makeConfig = ({schemaKey, collection}) =>{
-  const collectionPath = `/${collection}/`; 
+// 変数の命名規則
+// schema: OpenAPI由来の設計図 (metadata)
+// collection: REST由来のcollection endpoint情報（data の入口）
+// spec: specification（仕様・契約） 上記を包含するspecは双方どちらにも依った用語ではない
+
+// 関数の命名規則
+// makeFoo: ルールベースで一意に決まるもの
+// attachFoo: 何かを束ねるとき
+
+const makeAccessSpec = ({schemaKey, collection}) =>{
+  const collectionPath = `${collection}/`; 
   // ↑オブジェクトリテラル内に書かないのは、return以下はこれから作るプロパティに過ぎず、
   // 外側スコープに存在しないcollectionPathの参照がcollectionUrlで不可能になるため
   return {
@@ -14,45 +26,43 @@ const makeConfig = ({schemaKey, collection}) =>{
  }
 };
 
-export const documentApiConfig = makeConfig({ schemaKey: "Document", collection: "documents" });
-export const pageApiConfig = makeConfig({ schemaKey: "Page", collection: "pages" });
-export const wordApiConfig = makeConfig({ schemaKey: "Word", collection: "words" });
-
-export const analyzeDocumentApiConfig = {
+export const documentAccessSpec = makeAccessSpec({ schemaKey: "Document", collection: "documents" });
+export const pageAccessSpec = makeAccessSpec({ schemaKey: "Page", collection: "pages" });
+export const wordAccessSpec = makeAccessSpec({ schemaKey: "Word", collection: "words" });
+export const analyzeDocumentAccessSpec = {
   analyzeUrl: API_BASE_URL + "documents/analyze/",
 };
 
-// 実URL生成器
-export const routeTo = Object.freeze({
-  docs: () => "/documents",
-  docPages: (primaryKey) => `/documents/${encodeURIComponent(primaryKey)}`,
-  viewer: (primaryKey) => `/documents/${encodeURIComponent(primaryKey)}/viewer`,
-  docPageWords: (foreignKey, primaryKey) =>
-    `/documents/${encodeURIComponent(foreignKey)}/pages/${encodeURIComponent(primaryKey)}`,
-});
-//　useParams で:〇〇 の部分をオブジェクトとして受け取ることができる
-
-
-// columnsの翻訳兼,見せる要素の指定 分離が可能なようにapiConfigにui要素を追加
-const withUi = (apiConfig, ui = {}) => ({
-  ...apiConfig,ui: Object.freeze(ui),
-});
-
-export const docUi = Object.freeze({
+// 表示するフィールド/列を選ぶ（表示名の翻訳も兼ねる）
+const documentUiSpec = Object.freeze({
   table: [
     { key: "created", label: "作成日時" },
     { key: "file_name", label: "名前" },
   ],
 });
-
-export const wordUi = Object.freeze({
+const wordUiSpec = Object.freeze({
   table: [
     { key: "page__page_number", label: "ページ" },
     { key: "content", label: "本文" },
   ],
 });
 
+// attachResourceSpec:accessSpec（入口）と uiSpec（表示定義）を束ねる
+// Resourceはrestに則った名称
+// 粒度で言えば返り値はcollectionに近いが、「外側が表す対象単位」として上位概念のresourceを採用する
+const attachResourceSpec = (accessSpec, uiSpec = {}) => ({
+  ...accessSpec,ui: Object.freeze(uiSpec),
+});
 
-// ApiConfig+Ui機能→Configという命名　もっといい命名があるかもしてない
-export const documentConfig = withUi(documentApiConfig, docUi);
-export const wordConfig = withUi(wordApiConfig, wordUi);
+export const documentSpec = attachResourceSpec(documentAccessSpec, documentUiSpec);
+export const wordSpec = attachResourceSpec(wordAccessSpec, wordUiSpec);
+
+// routePaths（ルーティングに使うパス）
+// useParams で:〇〇 の部分をオブジェクトとして受け取る
+export const routePaths = Object.freeze({
+  docs: () => "/documents",
+  docPages: (primaryKey) => `/documents/${encodeURIComponent(primaryKey)}`,
+  viewer: (primaryKey) => `/documents/${encodeURIComponent(primaryKey)}/viewer`,
+  docPageWords: (foreignKey, primaryKey) =>
+    `/documents/${encodeURIComponent(foreignKey)}/pages/${encodeURIComponent(primaryKey)}`,
+});

@@ -3,7 +3,7 @@ import styles from "./Viewer.module.css";
 import ViewerTopBar from "./ViewerTopbar/ViewerTopbar";
 import ViewerTable from "./VIewerTable/ViewerTable";
 import { ViewerProviders } from "../../contexts/viewer/ViewerProviders";
-import { wordConfig } from "../../appConfig";
+import { wordSpec } from "../../appConfig";
 
 export default function Viewer({
   pageRows = [],
@@ -16,7 +16,7 @@ export default function Viewer({
     <ViewerProviders
       pageRows={pageRows}
       wordRows={wordRows}
-      wordUrl={wordConfig.collectionUrl}
+      wordUrl={wordSpec.collectionUrl}
     >
       <div className={styles.viewerRoot}>
         <ViewerTopBar />
