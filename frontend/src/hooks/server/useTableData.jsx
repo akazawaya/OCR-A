@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { requestApi } from "../../api/requestApi"
+import { fetchBackend } from "../../api/fetchBackend"
 
 async function loadSchemaColumns(schemaUrl, schemaKey) {
-  const { data } = await requestApi(schemaUrl);
+  const { data } = await fetchBackend(schemaUrl);
   const schema = data?.components?.schemas?.[schemaKey];
   if (!schema?.properties) return [];
   
@@ -20,7 +20,7 @@ async function loadSchemaColumns(schemaUrl, schemaKey) {
 
 async function loadSchemaRows(routingRowFilter, collectionUrl, search){
   const url = search ? `${collectionUrl}${search}` : collectionUrl
-  const { data } = await requestApi(url);
+  const { data } = await fetchBackend(url);
   const  array = Array.isArray(data) ? data : []; 
   const filtered = routingRowFilter ? array.filter(routingRowFilter) : array;
   return filtered;
@@ -49,7 +49,7 @@ export const useTableData = ({schemaUrl, schemaKey, collectionUrl, search, refre
   // 引数がuseTableData内でのみ存在する関数は、内部関数として処理する
   const deleteRow = async (row) => {
     const deleteUrl = `${collectionUrl}${row.id}/`;
-    const { res } = await requestApi(deleteUrl, { method: "DELETE" });
+    const { res } = await fetchBackend(deleteUrl, { method: "DELETE" });
     if (res?.ok) {
       onRefresh(); 
     }

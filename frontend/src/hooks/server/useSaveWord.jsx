@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { requestApi } from "../../api/requestApi"
+import { fetchBackend } from "../../api/fetchBackend"
 
 //　try/catchはProvider側で担う
 export const useSaveWord = (collectionUrl) => {
@@ -9,7 +9,7 @@ export const useSaveWord = (collectionUrl) => {
     // Object.entriesは{key,value} を {[],[]}という配列の集合で返す。そのままfor文に使えて便利
     for (const [wordId, content] of entries){
       const patchUrl = `${collectionUrl}${wordId}/`;
-      await requestApi(patchUrl, {
+      await fetchBackend(patchUrl, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: content }),

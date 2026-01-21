@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { requestApi } from "../../api/requestApi";
+import { fetchBackend } from "../../api/fetchBackend";
 
 export const useAnalyze = (analyzeUrl, onRefresh) => {
   const inputRef = useRef(null);
@@ -14,7 +14,7 @@ export const useAnalyze = (analyzeUrl, onRefresh) => {
     const fd = new FormData();
     fd.append("file", f); 
     
-    const { res } = await requestApi(analyzeUrl, {
+    const { res } = await fetchBackend(analyzeUrl, {
       method: "POST",
       body: fd
     });

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { requestApi } from "../../api/requestApi"
+import { fetchBackend } from "../../api/fetchBackend"
 
 async function loadSchemaRows({ collectionUrl, search, routingRowFilter = undefined } = {}) {
   const url = search ? `${collectionUrl}${search}` : collectionUrl
-  const { data } = await requestApi(url);
+  const { data } = await fetchBackend(url);
   const  array = Array.isArray(data) ? data : []; 
   const filtered = typeof routingRowFilter === "function" ? array.filter(routingRowFilter) : array;
   return filtered;

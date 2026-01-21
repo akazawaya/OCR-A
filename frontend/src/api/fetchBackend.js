@@ -6,12 +6,12 @@
 // とりあえずalert()でエラー表示できればOK
 // 返り値はresとjson(data)とする　dataもres.json()で取得するためresに吸収できそうだが、json変換の処理を分けておきたいので個別実装
 
-// optionsには通常のfetchオプションに加えて、throwOnErrorを追加→trueの場合、エラー時に例外を上位にthrowする（requestApiがfor文の内側など、下位側に属する時に使用）
+// optionsには通常のfetchオプションに加えて、throwOnErrorを追加→trueの場合、エラー時に例外を上位にthrowする（fetchBackendがfor文の内側など、下位側に属する時に使用）
 // 呼び出し先では、　try {...} catch {空}で完結できる想定
 
 
-export async function requestApi(url, options = {}) {
-  const { throwOnError = false, ...fetchOptions } = options; //requestApiをfor文で回す様なとき、上位のfor/try-catchに対して中断&エラー伝達が可能になる様にする
+export async function fetchBackend(url, options = {}) {
+  const { throwOnError = false, ...fetchOptions } = options; //fetchBackendをfor文で回す様なとき、上位のfor/try-catchに対して中断&エラー伝達が可能になる様にする
   const headers = {
     Accept: "application/json",
     ...(fetchOptions.headers ?? {}),
