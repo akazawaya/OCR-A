@@ -23,7 +23,7 @@ export async function fetchBackend(url, options = {}) {
 		const data = res.status === 204 ? null : await res.json().catch(() => null);
 
     if (!res.ok) {
-      alert(`HTTP Error:${res.status}`);
+      console.log(`HTTP Error:${res.status}`);
 	    if (throwOnError) {
         // 例外にして上位のfor/try-catchで中断できるようにする
         throw new Error(`HTTP Error:${res.status}`);
@@ -32,7 +32,7 @@ export async function fetchBackend(url, options = {}) {
     return { res, data };
 
 	}catch(e){
-		alert(`Network Error: ${e.message}`)
+		console.log(`Network Error: ${e.message}`)
     if (throwOnError) throw e;          // 上位にeを投げる
 		return { res: null, data: null };
 	}
