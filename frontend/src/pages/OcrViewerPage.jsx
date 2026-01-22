@@ -4,19 +4,32 @@ import { pageAccessSpec, wordSpec } from "../appConfig";
 import Viewer from "../components/Viewer/Viewer";
 import { useRouting } from "../hooks/routing/useRouting";
 import { useTableData } from "../hooks/server/useTableData";
-import { usePageRows } from "../hooks/server/usePageRows";
-
+import { useMemo } from "react";
+import { useBackendQuery } from "../hooks/server/query/useBackendQuery";
+import { getCollection } from "../api/clients/collectionClient";
+import { applyFilter } from "../utils/queryUi";
 // Pageが渡すのは server/のfetch経由のデータと、routing/のルート関連
 const OcrViewerPage = () => {
   const [refresh, onRefresh] = useReducer(n => n + 1, 0);
   const routing = useRouting({});
-  const { search, primaryKey, buildSearch } = routing;
+  const { search, primaryKey, buildSearch, routingRowFilter } = routing;
 
   const pageSearch = primaryKey != null ? buildSearch({ doc: primaryKey }) : search;
   const wordSearch = primaryKey != null ? buildSearch({ page__doc: primaryKey, doc: null }) : search;
 
   const { collectionUrl: pageCollectionUrl } = pageAccessSpec;
-  const pageRows = usePageRows({ collectionUrl: pageCollectionUrl, search: pageSearch });
+
+  const { data: pageRowsRaw } = useBackendQuery({
+    queryKey: ["collection", pageCollectionUrl, pageSearch ?? ""],
+    queryFn: () => getCollection({ collectionUrl: pageCollectionUrl, search: pageSearch }),
+    enabled: Boolean(pageCollectionUrl),
+    initialData: [],
+  });
+
+  const pageRows = useMemo(
+    () => applyFilter(pageRowsRaw, routingRowFilter), 
+    [pageRowsRaw, routingRowFilter]
+  );
 
   const { schemaUrl, schemaKey, collectionUrl: wordCollectionUrl } = wordSpec;
   const { rows: wordRows, loading } = useTableData({
