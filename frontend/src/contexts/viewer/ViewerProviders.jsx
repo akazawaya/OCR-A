@@ -5,8 +5,9 @@ import { useViewerEditState } from "../../hooks/ui/useViewerEditState.jsx";
 import { ViewerPageStateProvider } from "./ViewerPageStateContext";
 import { ViewerWordStateProvider } from "./ViewerWordStateContext";
 import { ViewerEditStateProvider } from "./ViewerEditStateContext";
-import { useSaveWord } from "../../hooks/server/useSaveWord";
 import { useRefresh } from "../refreshContext";
+import { useBackendMutation } from "../../hooks/server/query/useBackendMutation";
+import { patchCollectionItem } from "../../api/clients/mutationClient";
 
 // Viewer側でProviderを作って内部でhookを呼び、各Contextへvalue, eventを流す
 // useReducerは状態更新ロジックをまとめたいときの状態管理手段なので、
@@ -79,7 +80,20 @@ export const ViewerProviders = ({
   ]);
 
   // saveEditにpatchDraftByIdをくっつけたいのでここで合成する
-  const { patchDraftById } = useSaveWord(wordUrl);
+  const { mutate: patchDraftById } = useBackendMutation({
+    mutationFn: async (draftById) => {
+      const snapshot = { ...(draftById ?? {}) };
+      const entries = Object.entries(snapshot);
+      for (const [wordId, content] of entries) {
+        await patchCollectionItem({
+          collectionUrl: wordUrl,
+          id: wordId,
+          body: { content },
+        });
+      }
+      return entries.length;
+    },
+  });
   const saveAllEdits = useCallback(async () => {
     try {
       await patchDraftById(editState.draftById);

@@ -3,13 +3,16 @@ import FileUploader from "../components/FileUploader/FileUploader"
 import { FilterMenuButton } from "../components/FilterMenuButton/FilterMenuButton"
 import { analyzeDocumentAccessSpec, documentSpec, routePaths } from "../appConfig";
 
-import { useReducer } from "react"
+import { useCallback, useMemo, useReducer, useRef } from "react"
 import { RefreshContext } from "../contexts/refreshContext"
-import { useTableData } from "../hooks/server/useTableData"
-import { useAnalyze } from "../hooks/server/useAnalyze"
 import { useRouting } from "../hooks/routing/useRouting"
 import { useFilterRouting } from "../hooks/routing/useFilterRouting"
 import { useFilter } from "../hooks/ui/useFilterState"
+import { useBackendQuery } from "../hooks/server/query/useBackendQuery"
+import { useBackendMutation } from "../hooks/server/query/useBackendMutation"
+import { getCollection } from "../api/clients/collectionClient"
+import { analyzeDocument, deleteCollectionItem } from "../api/clients/mutationClient"
+import { applyFilter } from "../utils/queryUi"
 
 // routePaths.viewer routePaths.docPages 関数として入力しないと即座に実行しようとしてエラーになる
 // 方針：prop関数名:実関数を　on(イベントハンドラ):実行される関数、として関係性をここで明記する
@@ -21,7 +24,7 @@ import { useFilter } from "../hooks/ui/useFilterState"
 // FilterMenuButtonの開閉コンディション管理は自分自身にのみ関係するので閉じる
 // 入力パラメータの保持は、その値を他コンポーネントでも用いる予定なら外部公開にする(onChangeConditionsによる検索条件の表示など？)
 const DocumentsPage = () => {
-  const { schemaUrl, schemaKey, collectionUrl } = documentSpec;
+  const { collectionUrl } = documentSpec;
   const { analyzeUrl } = analyzeDocumentAccessSpec;
   const [refresh, onRefresh] = useReducer(n => n + 1, 0);
 
@@ -29,9 +32,35 @@ const DocumentsPage = () => {
     routeUrl: (row) => routePaths.viewer(row.id)
   });
   
-  const { rows, loading, deleteRow } = useTableData({schemaUrl, schemaKey, collectionUrl, search, refresh, onRefresh, routingRowFilter});
+  const { data: rowsRaw, isLoading: rowsLoading } = useBackendQuery({
+    queryKey: ["collection", collectionUrl, search ?? "", refresh],
+    queryFn: () => getCollection({ collectionUrl, search }),
+    enabled: Boolean(collectionUrl),
+    initialData: [],
+  });
+  const rows = useMemo(() => applyFilter(rowsRaw, routingRowFilter), [rowsRaw, routingRowFilter]);
+
+  const { mutate: deleteRowMutation } = useBackendMutation({
+    mutationFn: ({ id }) => deleteCollectionItem({ collectionUrl, id }),
+    onSuccess: () => onRefresh(),
+  });
+  const deleteRow = useCallback((row) => deleteRowMutation({ id: row.id }), [deleteRowMutation]);
   
-  const { inputRef, analyzeData } = useAnalyze(analyzeUrl, onRefresh);
+  const inputRef = useRef(null);
+  const { mutate: analyzeMutation } = useBackendMutation({
+    mutationFn: ({ formData }) => analyzeDocument({ analyzeUrl, formData }),
+    onSuccess: () => onRefresh(),
+  });
+  const analyzeData = useCallback(() => {
+    const file = inputRef.current?.files?.[0];
+    if (!file) {
+      alert("ファイルを選択してください");
+      return;
+    }
+    const formData = new FormData();
+    formData.append("file", file);
+    analyzeMutation({ formData }).catch(() => {});
+  }, [analyzeMutation]);
   const { conditions, updateConditions } = useFilter();
   const { applySearchFilter } = useFilterRouting(search, searchFilter);
   const documentColumns = documentSpec.ui.table.map(({ key, label }) => ({ key, label }));
@@ -50,7 +79,7 @@ const DocumentsPage = () => {
       options={{onAnalyzeButtonClick:analyzeData}}/>
 
     <MenuTable 
-      data={{ columns:documentColumns, rows, loading }}
+      data={{ columns:documentColumns, rows, loading: rowsLoading }}
       navigation={{
         onColumnClick:columnsSort,
         onRowClick:dataRouter,

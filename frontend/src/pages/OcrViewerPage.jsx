@@ -3,7 +3,6 @@ import { RefreshContext } from "../contexts/refreshContext"
 import { pageAccessSpec, wordSpec } from "../appConfig";
 import Viewer from "../components/Viewer/Viewer";
 import { useRouting } from "../hooks/routing/useRouting";
-import { useTableData } from "../hooks/server/useTableData";
 import { useMemo } from "react";
 import { useBackendQuery } from "../hooks/server/query/useBackendQuery";
 import { getCollection } from "../api/clients/collectionClient";
@@ -31,12 +30,12 @@ const OcrViewerPage = () => {
     [pageRowsRaw, routingRowFilter]
   );
 
-  const { schemaUrl, schemaKey, collectionUrl: wordCollectionUrl } = wordSpec;
-  const { rows: wordRows, loading } = useTableData({
-    schemaUrl, schemaKey,
-    collectionUrl: wordCollectionUrl,
-    search: wordSearch,
-    refresh, onRefresh,
+  const { collectionUrl: wordCollectionUrl } = wordSpec;
+  const { data: wordRows, isLoading: wordRowsLoading } = useBackendQuery({
+    queryKey: ["collection", wordCollectionUrl, wordSearch ?? "", refresh],
+    queryFn: () => getCollection({ collectionUrl: wordCollectionUrl, search: wordSearch }),
+    enabled: Boolean(wordCollectionUrl),
+    initialData: [],
   });
   const wordColumns = wordSpec.ui.table.map(({ key, label }) => ({ key, label }));
 
@@ -49,7 +48,7 @@ const OcrViewerPage = () => {
         pageRows = { pageRows }
         wordRows = { wordRows }
         wordColumns = { wordColumns }
-        loading = { loading }
+        loading = { wordRowsLoading }
         onColumnClick = { routing.columnsSort }
       />
     </RefreshContext.Provider>

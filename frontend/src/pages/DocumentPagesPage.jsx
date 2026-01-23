@@ -1,9 +1,12 @@
 import MenuTable from "../components/MenuTable/MenuTable"
 import { pageAccessSpec, routePaths } from "../appConfig";
-import { useReducer } from "react"
+import { useMemo, useReducer } from "react"
 import { RefreshContext } from "../contexts/refreshContext"
-import { useTableData } from "../hooks/server/useTableData"
 import { useRouting } from "../hooks/routing/useRouting"
+import { useBackendQuery } from "../hooks/server/query/useBackendQuery"
+import { getSchema, buildColumnDefsFromSchema } from "../api/clients/schemaClient"
+import { getCollection } from "../api/clients/collectionClient"
+import { applyFilter } from "../utils/queryUi"
 
 const DocumentPagesPage = () =>{
 const [refresh, onRefresh] = useReducer(n => n + 1, 0);
@@ -12,7 +15,22 @@ const { search, columnsSort, routingRowFilter } = useRouting({
   routeUrl: (row) => routePaths.docPageWords(row.doc, row.id),
   rowSelector: (row) => row.doc,
 });
-const { columns, rows, loading } = useTableData({schemaUrl, schemaKey, collectionUrl, search, refresh, onRefresh, routingRowFilter});
+const { data: schema, isLoading: schemaLoading } = useBackendQuery({
+  queryKey: ["schema", schemaUrl, schemaKey],
+  queryFn: () => getSchema({ schemaUrl, schemaKey }),
+  enabled: Boolean(schemaUrl && schemaKey),
+  initialData: null,
+});
+const columns = useMemo(() => buildColumnDefsFromSchema(schema), [schema]);
+
+const { data: rowsRaw, isLoading: rowsLoading } = useBackendQuery({
+  queryKey: ["collection", collectionUrl, search ?? "", refresh],
+  queryFn: () => getCollection({ collectionUrl, search }),
+  enabled: Boolean(collectionUrl),
+  initialData: [],
+});
+const rows = useMemo(() => applyFilter(rowsRaw, routingRowFilter), [rowsRaw, routingRowFilter]);
+const loading = schemaLoading || rowsLoading;
 
 return (
   <RefreshContext.Provider value={onRefresh}>
