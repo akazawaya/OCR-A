@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export function useBackendQuery({ queryKey, queryFn, enabled = true, initialData }) {
+  const [data, setData] = useState(initialData);
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
   // queryKey は「変わったら再取得」のトリガー。配列/文字列を想定
   const key = useMemo(() => {
     if (Array.isArray(queryKey)) return JSON.stringify(queryKey);
     return String(queryKey);
   }, [queryKey]);
-
-  const [data, setData] = useState(initialData);
-  const [error, setError] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
 
   // queryFn は毎renderで変わりうるので ref に退避（Effect依存に入れない）
   const queryFnRef = useRef(queryFn);
