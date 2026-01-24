@@ -71,21 +71,21 @@ const DocumentsPage = () => {
 
     <FilterMenuButton 
       data={{search, conditions}}
-      navigation={{onSearchButtonClick:() => applySearchFilter(conditions)}}
+      navigation={{onClickSearchButton:() => applySearchFilter(conditions)}}
       options={{onChangeConditions:updateConditions}}/>
 
     <FileUploader 
       data={{inputRef}} 
-      options={{onAnalyzeButtonClick:analyzeData}}/>
+      options={{onClickAnalyzeButton:analyzeData}}/>
 
     <MenuTable 
       data={{ columns:documentColumns, rows, loading: rowsLoading }}
       navigation={{
-        onColumnClick:columnsSort,
-        onRowClick:dataRouter,
+        onClickColumn:columnsSort,
+        onClickRow:dataRouter,
       }}
       options={{
-        onDeleteButtonClick:deleteRow,
+        onClickDeleteButton:deleteRow,
       }}
       />
     </RefreshContext.Provider>

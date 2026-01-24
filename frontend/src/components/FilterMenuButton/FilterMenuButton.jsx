@@ -5,12 +5,11 @@ import { FilterMenu } from "./FilterMenu/FilterMenu";
 
 export function FilterMenuButton({
   data: { search, conditions } = {},
-  navigation: { onSearchButtonClick } = {},
+  navigation: { onClickSearchButton } = {},
   options: { onChangeConditions }
   } = {},
   ) {
   const [open, setOpen] = useState(false);
-  //onFilterMenuButtonClick は　今は冗長だがhooks分離するための伏線
   const toggleFilterMenu = async () => {
     setOpen(prev => !prev);
   };
@@ -23,7 +22,7 @@ export function FilterMenuButton({
 
       <div style={{ display: open ? "block" : "none" }}>
       <FilterMenu data={{search, conditions}}
-        navigation={{ onSearchButtonClick }}
+        navigation={{ onClickSearchButton }}
         options={{ onChangeConditions }}
       />
       </div>

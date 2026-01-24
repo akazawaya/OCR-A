@@ -5,7 +5,7 @@ export default function WordOverlay({ pageId }) {
   const viewerWordState = useViewerWordStateContext();
   const {
     values: { pageMetaById, wordsByPageId, hoveredWordId, selectedWordId } = {},
-    events: { onWordHover, onWordHoverClear, onWordSelect } = {},
+    events: { onHoverWord, onHoverClearWord, onSelectWord } = {},
   } = viewerWordState;
 
   const meta = pageMetaById.get(pageId);
@@ -53,9 +53,9 @@ export default function WordOverlay({ pageId }) {
           <span
             key={w.id}
             data-word={w.id}
-            onMouseEnter={() => onWordHover(w.id)}
-            onMouseLeave={onWordHoverClear}
-            onClick={() => onWordSelect(w.id, "image")}
+            onMouseEnter={() => onHoverWord(w.id)}
+            onMouseLeave={onHoverClearWord}
+            onClick={() => onSelectWord(w.id, "image")}
             style={{
               position: "absolute",
               ...w.rectStyle,

@@ -34,12 +34,12 @@ export const ViewerProviders = ({
       ROTATE_STEP: pageState.ROTATE_STEP,
     },
     events: {
-      onPageChange: pageState.setPage,
-      onZoomChange: pageState.setZoom,
-      onRotateChange: pageState.setRotate,
-      onPageCommit: pageState.commitPage,
-      onZoomCommit: pageState.commitZoom,
-      onRotateCommit: pageState.commitRotate,
+      onChangePage: pageState.setPage,
+      onChangeZoom: pageState.setZoom,
+      onChangeRotate: pageState.setRotate,
+      onCommitPage: pageState.commitPage,
+      onCommitZoom: pageState.commitZoom,
+      onCommitRotate: pageState.commitRotate,
     },
   }), [
     pageState.page,
@@ -64,9 +64,9 @@ export const ViewerProviders = ({
       selectedBy: wordState.selectedBy,
     },
     events: {
-      onWordHover: wordState.hoverWord,
-      onWordHoverClear: wordState.clearHoveredWord,
-      onWordSelect: wordState.commitSelectWord,
+      onHoverWord: wordState.hoverWord,
+      onHoverClearWord: wordState.clearHoveredWord,
+      onSelectWord: wordState.commitSelectWord,
     },
   }), [
     wordState.pageMetaById,

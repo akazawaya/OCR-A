@@ -10,7 +10,7 @@ export default function Viewer({
   wordRows = [],
   wordColumns = [],
   loading,
-  onColumnClick,
+  onClickColumn,
   }) {
   return (
     <ViewerProviders
@@ -29,7 +29,7 @@ export default function Viewer({
               columns={wordColumns}
               rows={wordRows}
               loading={loading}
-              onColumnClick={onColumnClick}
+              onClickColumn={onClickColumn}
             />
           </div>
         </div>

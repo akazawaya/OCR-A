@@ -3,8 +3,8 @@ import DeleteButton from "./DeleteButton/DeleteButton";
 
 export default function MenuTable({
   data,
-  navigation:{onColumnClick, onRowClick = null} = {}, 
-  options:{onDeleteButtonClick} = {}, 
+  navigation:{onClickColumn, onClickRow = null} = {}, 
+  options:{onClickDeleteButton} = {}, 
                           }) {
 
   const { columns = [], rows = [], loading } = data;
@@ -15,7 +15,7 @@ export default function MenuTable({
       <thead>
         <tr>
           {columns.map(c => (
-            <th key={c.key} onClick={() => onColumnClick(c.key)}>
+            <th key={c.key} onClick={() => onClickColumn(c.key)}>
               {c.label}
             </th>
           ))}
@@ -24,13 +24,13 @@ export default function MenuTable({
       <tbody>
         {rows.map(row => (
           <tr key={row.id} 
-            onClick={onRowClick && (() => onRowClick(row))} >
+            onClick={onClickRow && (() => onClickRow(row))} >
             {columns.map(c => (
             	<td key={c.key}>{row[c.key]}</td>
           	))}
-            {onDeleteButtonClick && (
+            {onClickDeleteButton && (
               <td key="__delete" onClick={(e) => {e.stopPropagation()}}> 
-                <DeleteButton onClick={() => onDeleteButtonClick?.(row)} />
+                <DeleteButton onClick={() => onClickDeleteButton?.(row)} />
               </td>
             )}
           </tr>

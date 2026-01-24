@@ -1,6 +1,6 @@
 export const FilterMenu = ({
   data:{conditions},
-  navigation:{onSearchButtonClick},
+  navigation:{onClickSearchButton},
   options:{onChangeConditions}
   }) => {
 
@@ -9,7 +9,7 @@ export const FilterMenu = ({
     <div>
       <input type="text" value={conditions[0].value} 
               onChange={onChangeConditions}/>
-      <button  onClick={onSearchButtonClick} >検索実行</button>
+      <button  onClick={onClickSearchButton} >検索実行</button>
     </div>
   );
 };

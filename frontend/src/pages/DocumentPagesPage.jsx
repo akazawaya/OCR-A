@@ -39,7 +39,7 @@ return (
   <MenuTable 
     data={{ columns, rows, loading }}
     navigation={{
-      onColumnClick:columnsSort,
+      onClickColumn:columnsSort,
     }}
         />
   </RefreshContext.Provider>

@@ -1,12 +1,12 @@
 export default function FileUploader({
   data:{inputRef} = {},
-  options:{onAnalyzeButtonClick}
+  options:{onClickAnalyzeButton}
   }){
 
   return (
     <div>
       <input ref={inputRef} type="file" />
-      <button onClick={ onAnalyzeButtonClick }>OCR実行</button>
+      <button onClick={ onClickAnalyzeButton }>OCR実行</button>
     </div>
   );
 }

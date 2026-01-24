@@ -41,7 +41,7 @@ const OcrViewerPage = () => {
 
   // 下記Viewerのpropの渡し方は、インタフェース分離から言ってよくないが、明示のスタイルをとると
   //　Page-Viewer-Parts間の修正が必要になり大変なので特別に許容する
-  // onColumnClickはViewerTable用
+  // onClickColumnはViewerTable用
   return (
     <RefreshContext.Provider value={onRefresh}>
       <Viewer
@@ -49,7 +49,7 @@ const OcrViewerPage = () => {
         wordRows = { wordRows }
         wordColumns = { wordColumns }
         loading = { wordRowsLoading }
-        onColumnClick = { routing.columnsSort }
+        onClickColumn = { routing.columnsSort }
       />
     </RefreshContext.Provider>
   )
