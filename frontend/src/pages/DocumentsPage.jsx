@@ -12,7 +12,7 @@ import { useBackendQuery } from "../hooks/server/query/useBackendQuery"
 import { useBackendMutation } from "../hooks/server/query/useBackendMutation"
 import { getCollection } from "../api/clients/collectionClient"
 import { analyzeDocument, deleteCollectionItem } from "../api/clients/mutationClient"
-import { applyFilter } from "../utils/queryUi"
+import { applyFilter } from "../hooks/server/query/queryUi"
 
 // routePaths.viewer routePaths.docPages 関数として入力しないと即座に実行しようとしてエラーになる
 // 方針：prop関数名:実関数を　on(イベントハンドラ):実行される関数、として関係性をここで明記する

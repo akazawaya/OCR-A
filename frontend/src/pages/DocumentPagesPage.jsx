@@ -6,7 +6,7 @@ import { useRouting } from "../hooks/routing/useRouting"
 import { useBackendQuery } from "../hooks/server/query/useBackendQuery"
 import { getSchema, buildColumnDefsFromSchema } from "../api/clients/schemaClient"
 import { getCollection } from "../api/clients/collectionClient"
-import { applyFilter } from "../utils/queryUi"
+import { applyFilter } from "../hooks/server/query/queryUi"
 
 const DocumentPagesPage = () =>{
 const [refresh, onRefresh] = useReducer(n => n + 1, 0);
