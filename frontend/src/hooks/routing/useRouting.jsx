@@ -40,9 +40,6 @@ export const useRouting = ({routeUrl, rowSelector} = {}) => {
     : undefined
   ), [routeUrl, navigate]);
 
-  const searchFilter = useCallback((nextSearch) => {
-    navigate({ search: nextSearch });
-  }, [navigate]);
 
   const buildSearch = useCallback((patch = {}) => {
     // patch=クエリパラメータの差分(変更したいもの)key:valueで { page__doc: 123, doc: null }ならpage__doc=123を入れてdocは消す
@@ -56,6 +53,23 @@ export const useRouting = ({routeUrl, rowSelector} = {}) => {
     return s ? `?${s}` : "";
   }, [search]);
 
+
+  // 検索フォーム用のFilter　検索条件は現状、ハードコーディングで実装している。
+  const applySearchFilter = useCallback((conditions = []) => {
+    const c = conditions[0]; // condition配列の最初のみを暫定的に対象とする
+    if (!c) return;
+
+    const params = new URLSearchParams(search || ""); // URLSearchParamsを使うとエンコードや&=の取付を自動化してくれるらしい
+    const key = c.lookup === "exact" ? c.fieldName: `${c.fieldName}__${c.lookup}`;
+
+    const v = c.value;
+    if (v === null || v === undefined || v === "") params.delete(key);
+    else params.set(key, String(v));
+
+    const qs = params.toString();
+    navigate({ search: qs }, { replace: true });
+  },[search, navigate]);
+
   return {
     primaryKey,  
     search,
@@ -63,6 +77,6 @@ export const useRouting = ({routeUrl, rowSelector} = {}) => {
     columnsSort,
     dataRouter,
     routingRowFilter,
-    searchFilter,
+    applySearchFilter
   };
 }

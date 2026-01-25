@@ -6,7 +6,6 @@ import { analyzeDocumentAccessSpec, documentSpec, routePaths } from "../appConfi
 import { useCallback, useMemo, useReducer, useRef } from "react"
 import { RefreshContext } from "../contexts/refreshContext"
 import { useRouting } from "../hooks/routing/useRouting"
-import { useFilterRouting } from "../hooks/routing/useFilterRouting"
 import { useFilter } from "../hooks/ui/useFilterState"
 import { useBackendQuery } from "../hooks/server/query/useBackendQuery"
 import { useBackendMutation } from "../hooks/server/query/useBackendMutation"
@@ -28,7 +27,7 @@ const DocumentsPage = () => {
   const { analyzeUrl } = analyzeDocumentAccessSpec;
   const [refresh, onRefresh] = useReducer(n => n + 1, 0);
 
-  const { search, columnsSort, dataRouter, routingRowFilter, searchFilter } = useRouting({
+  const { search, columnsSort, dataRouter, routingRowFilter, applySearchFilter } = useRouting({
     routeUrl: (row) => routePaths.viewer(row.id)
   });
   
@@ -62,7 +61,6 @@ const DocumentsPage = () => {
     analyzeMutation({ formData }).catch(() => {});
   }, [analyzeMutation]);
   const { conditions, updateConditions } = useFilter();
-  const { applySearchFilter } = useFilterRouting(search, searchFilter);
   const documentColumns = documentSpec.ui.table.map(({ key, label }) => ({ key, label }));
 
   return (
