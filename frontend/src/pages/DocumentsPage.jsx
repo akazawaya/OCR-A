@@ -6,7 +6,7 @@ import { analyzeDocumentAccessSpec, documentSpec, routePaths } from "../appConfi
 import { useCallback, useMemo, useReducer, useRef } from "react"
 import { RefreshContext } from "../contexts/refreshContext"
 import { useRouting } from "../hooks/routing/useRouting"
-import { useFilter } from "../hooks/ui/useFilterState"
+import { useFilterState } from "../hooks/ui/useFilterState"
 import { useBackendQuery } from "../hooks/server/query/useBackendQuery"
 import { useBackendMutation } from "../hooks/server/query/useBackendMutation"
 import { getCollection } from "../api/clients/collectionClient"
@@ -60,7 +60,8 @@ const DocumentsPage = () => {
     formData.append("file", file);
     analyzeMutation({ formData }).catch(() => {});
   }, [analyzeMutation]);
-  const { conditions, updateConditions } = useFilter();
+  
+  const { conditions, updateConditions } = useFilterState();
   const documentColumns = documentSpec.ui.table.map(({ key, label }) => ({ key, label }));
 
   return (

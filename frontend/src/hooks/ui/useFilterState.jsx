@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export const useFilter = () => {
+export const useFilterState = () => {
   const [conditions, setConditions] = useState([
     {fieldName: "pages__words__content", lookup: "icontains",value: ""},
   ]);  
