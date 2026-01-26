@@ -62,7 +62,12 @@ export const useViewerWordOverlayLayout = (meta, words = []) => {
     const el = layerRef.current;
     if (!el) return;
 
-    const update = () => setLayerPx({ w: el.clientWidth, h: el.clientHeight });
+    const update = () => {
+      const w = el.clientWidth;
+      const h = el.clientHeight;
+      setLayerPx(prev => (prev.w === w && prev.h === h ? prev : { w, h }));
+      // 重さの軽減（w,hが前と同じ値ならsetしない）
+    };
     update(); //　初期サイズ確定のため一回呼ぶ
     // ResizeObserver...監視用標準API　要素単位でサイズ変化を監視できる
     const ro = new ResizeObserver(update); // サイズ変化を検知したらupdateを呼ぶ監視者を作る
@@ -110,7 +115,7 @@ export const useViewerWordOverlayLayout = (meta, words = []) => {
     }
 
     return items;
-  }, [words, meta, scale.sx, scale.sy]);
+  }, [words, meta.w, meta.h, scale.sx, scale.sy]);
 
   return { layerRef, wordLayout };
 };
