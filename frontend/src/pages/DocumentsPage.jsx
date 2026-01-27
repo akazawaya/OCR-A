@@ -3,7 +3,7 @@ import FileUploader from "../components/FileUploader/FileUploader"
 import { FilterMenuButton } from "../components/FilterMenuButton/FilterMenuButton"
 import { analyzeDocumentAccessSpec, documentSpec, routePaths } from "../appConfig";
 
-import { useCallback, useMemo, useReducer, useRef } from "react"
+import { useCallback, useMemo, useReducer, useRef, useState } from "react"
 import { RefreshContext } from "../contexts/refreshContext"
 import { useRouting } from "../hooks/routing/useRouting"
 import { useFilterState } from "../hooks/ui/useFilterState"
@@ -11,7 +11,7 @@ import { useBackendQuery } from "../hooks/server/query/useBackendQuery"
 import { useBackendMutation } from "../hooks/server/query/useBackendMutation"
 import { getCollection } from "../api/clients/collectionClient"
 import { analyzeDocument, deleteCollectionItem } from "../api/clients/mutationClient"
-import { applyFilter } from "../hooks/server/query/queryUi"
+import { buildSearch } from "../hooks/server/query/queryUi"
 
 // routePaths.viewer routePaths.docPages 関数として入力しないと即座に実行しようとしてエラーになる
 // 方針：prop関数名:実関数を　on(イベントハンドラ):実行される関数、として関係性をここで明記する
@@ -27,17 +27,25 @@ const DocumentsPage = () => {
   const { analyzeUrl } = analyzeDocumentAccessSpec;
   const [refresh, onRefresh] = useReducer(n => n + 1, 0);
 
-  const { search, columnsSort, dataRouter, routingRowFilter, applySearchFilter } = useRouting({
+  const { search, columnsSort, dataRouter } = useRouting({
     routeUrl: (row) => routePaths.viewer(row.id)
   });
-  
-  const { data: rowsRaw, isLoading: rowsLoading } = useBackendQuery({
-    queryKey: ["collection", collectionUrl, search ?? "", refresh],
-    queryFn: () => getCollection({ collectionUrl, search }),
+  const { conditions, updateConditions } = useFilterState();
+
+  const [appliedConditions, setAppliedConditions] = useState(conditions);
+  const applySearch = useCallback(() => setAppliedConditions(conditions), [conditions]);
+
+  const finalSearch = useMemo(
+    () => buildSearch({ baseSearch: search, conditions: appliedConditions }),
+    [search, appliedConditions]
+  );
+
+  const { data: rows, isLoading: rowsLoading } = useBackendQuery({
+    queryKey: ["collection", collectionUrl, finalSearch ?? "", refresh],
+    queryFn: () => getCollection({ collectionUrl, search: finalSearch }),
     enabled: Boolean(collectionUrl),
     initialData: [],
   });
-  const rows = useMemo(() => applyFilter(rowsRaw, routingRowFilter), [rowsRaw, routingRowFilter]);
 
   const { mutate: deleteRowMutation } = useBackendMutation({
     mutationFn: ({ id }) => deleteCollectionItem({ collectionUrl, id }),
@@ -45,11 +53,12 @@ const DocumentsPage = () => {
   });
   const deleteRow = useCallback((row) => deleteRowMutation({ id: row.id }), [deleteRowMutation]);
   
-  const inputRef = useRef(null);
   const { mutate: analyzeMutation } = useBackendMutation({
     mutationFn: ({ formData }) => analyzeDocument({ analyzeUrl, formData }),
     onSuccess: () => onRefresh(),
   });
+  
+  const inputRef = useRef(null);
   const analyzeData = useCallback(() => {
     const file = inputRef.current?.files?.[0];
     if (!file) {
@@ -61,7 +70,6 @@ const DocumentsPage = () => {
     analyzeMutation({ formData }).catch(() => {});
   }, [analyzeMutation]);
   
-  const { conditions, updateConditions } = useFilterState();
   const documentColumns = documentSpec.ui.table.map(({ key, label }) => ({ key, label }));
 
   return (
@@ -70,7 +78,7 @@ const DocumentsPage = () => {
 
     <FilterMenuButton 
       data={{search, conditions}}
-      navigation={{onClickSearchButton:() => applySearchFilter(conditions)}}
+      navigation={{onClickSearchButton:applySearch}}
       options={{onChangeConditions:updateConditions}}/>
 
     <FileUploader 

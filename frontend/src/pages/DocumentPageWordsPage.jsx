@@ -7,13 +7,12 @@ import { useBackendQuery } from "../hooks/server/query/useBackendQuery"
 import { getSchema } from "../api/clients/schemaClient"
 import { buildColumnDefsFromSchema } from "../hooks/server/query/schemaUi"
 import { getCollection } from "../api/clients/collectionClient"
-import { applyFilter } from "../hooks/server/query/queryUi"
+import { buildSearch } from "../hooks/server/query/queryUi"
 
 const DocumentPageWordsPage = () =>{
 const [refresh, onRefresh] = useReducer(n => n + 1, 0);
 const { schemaUrl, schemaKey, collectionUrl } = wordAccessSpec;
-const { search, columnsSort, routingRowFilter } = useRouting({
-  rowSelector: (row) => row.page});
+const { search, columnsSort, primaryKey } = useRouting({});
 const { data: schema, isLoading: schemaLoading } = useBackendQuery({
   queryKey: ["schema", schemaUrl, schemaKey],
   queryFn: () => getSchema({ schemaUrl, schemaKey }),
@@ -22,13 +21,17 @@ const { data: schema, isLoading: schemaLoading } = useBackendQuery({
 });
 const columns = useMemo(() => buildColumnDefsFromSchema(schema), [schema]);
 
-const { data: rowsRaw, isLoading: rowsLoading } = useBackendQuery({
-  queryKey: ["collection", collectionUrl, search ?? "", refresh],
-  queryFn: () => getCollection({ collectionUrl, search }),
+const finalSearch = useMemo(
+  () => buildSearch({ baseSearch: search, routing: { page: primaryKey } }),
+  [search, primaryKey]
+);
+
+const { data: rows, isLoading: rowsLoading } = useBackendQuery({
+  queryKey: ["collection", collectionUrl, finalSearch ?? "", refresh],
+  queryFn: () => getCollection({ collectionUrl, search: finalSearch }),
   enabled: Boolean(collectionUrl),
   initialData: [],
 });
-const rows = useMemo(() => applyFilter(rowsRaw, routingRowFilter), [rowsRaw, routingRowFilter]);
 const loading = schemaLoading || rowsLoading;
 
 return (

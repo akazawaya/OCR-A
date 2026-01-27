@@ -1,34 +1,34 @@
-import { useReducer } from "react"
+import { useMemo, useReducer } from "react"
 import { RefreshContext } from "../contexts/refreshContext"
 import { pageAccessSpec, wordSpec } from "../appConfig";
 import Viewer from "../components/Viewer/Viewer";
 import { useRouting } from "../hooks/routing/useRouting";
-import { useMemo } from "react";
 import { useBackendQuery } from "../hooks/server/query/useBackendQuery";
 import { getCollection } from "../api/clients/collectionClient";
-import { applyFilter } from "../hooks/server/query/queryUi";
+import { buildSearch } from "../hooks/server/query/queryUi";
 // Pageが渡すのは server/のfetch経由のデータと、routing/のルート関連
 const OcrViewerPage = () => {
   const [refresh, onRefresh] = useReducer(n => n + 1, 0);
   const routing = useRouting({});
-  const { search, primaryKey, buildSearch, routingRowFilter } = routing;
+  const { search, primaryKey } = routing;
 
-  const pageSearch = primaryKey != null ? buildSearch({ doc: primaryKey }) : search;
-  const wordSearch = primaryKey != null ? buildSearch({ page__doc: primaryKey, doc: null }) : search;
+  const pageSearch = useMemo(
+    () => buildSearch({ baseSearch: search, routing: { doc: primaryKey } }),
+    [search, primaryKey]
+  );
+  const wordSearch = useMemo(
+    () => buildSearch({ baseSearch: search, routing: { page__doc: primaryKey, doc: null } }),
+    [search, primaryKey]
+  );
 
   const { collectionUrl: pageCollectionUrl } = pageAccessSpec;
 
-  const { data: pageRowsRaw } = useBackendQuery({
+  const { data: pageRows } = useBackendQuery({
     queryKey: ["collection", pageCollectionUrl, pageSearch ?? ""],
     queryFn: () => getCollection({ collectionUrl: pageCollectionUrl, search: pageSearch }),
     enabled: Boolean(pageCollectionUrl),
     initialData: [],
   });
-
-  const pageRows = useMemo(
-    () => applyFilter(pageRowsRaw, routingRowFilter), 
-    [pageRowsRaw, routingRowFilter]
-  );
 
   const { collectionUrl: wordCollectionUrl } = wordSpec;
   const { data: wordRows, isLoading: wordRowsLoading } = useBackendQuery({
