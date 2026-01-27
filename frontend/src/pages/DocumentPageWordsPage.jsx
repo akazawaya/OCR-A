@@ -5,9 +5,9 @@ import { RefreshContext } from "../contexts/refreshContext"
 import { useRouting } from "../hooks/routing/useRouting"
 import { useBackendQuery } from "../hooks/server/query/useBackendQuery"
 import { getSchema } from "../api/clients/schemaClient"
-import { buildColumnDefsFromSchema } from "../hooks/server/query/schemaUi"
+import { buildColumnDefsFromSchema } from "../hooks/server/query/schemaColumns"
 import { getCollection } from "../api/clients/collectionClient"
-import { buildSearch } from "../hooks/server/query/queryUi"
+import { buildSearch } from "../hooks/server/query/collectionQuery"
 
 const DocumentPageWordsPage = () =>{
 const [refresh, onRefresh] = useReducer(n => n + 1, 0);

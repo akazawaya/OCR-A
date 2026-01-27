@@ -5,7 +5,7 @@ import Viewer from "../components/Viewer/Viewer";
 import { useRouting } from "../hooks/routing/useRouting";
 import { useBackendQuery } from "../hooks/server/query/useBackendQuery";
 import { getCollection } from "../api/clients/collectionClient";
-import { buildSearch } from "../hooks/server/query/queryUi";
+import { buildSearch } from "../hooks/server/query/collectionQuery";
 // Pageが渡すのは server/のfetch経由のデータと、routing/のルート関連
 const OcrViewerPage = () => {
   const [refresh, onRefresh] = useReducer(n => n + 1, 0);

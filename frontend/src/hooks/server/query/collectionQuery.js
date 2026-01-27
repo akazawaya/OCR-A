@@ -1,3 +1,4 @@
+// collection取得のためのquery（検索条件）
 export function buildSearch({ baseSearch = "", routing = {}, conditions = [] } = {}) {
   const params = new URLSearchParams(baseSearch || "");
 
