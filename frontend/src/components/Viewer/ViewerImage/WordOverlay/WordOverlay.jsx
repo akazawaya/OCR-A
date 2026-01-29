@@ -1,17 +1,25 @@
-import { useViewerWordOverlayLayout } from "../../../../hooks/layout/useViewerWordOverlayLayout";
 import { useViewerWordStateContext } from "../../../../contexts/viewer/ViewerWordStateContext";
+import { useElementSize } from "../../../../hooks/layout/useElementSize";
+import { buildWordOverlayLayout } from "../../../../hooks/layout/buildWordOverlayLayout";
+import { useMemo } from "react";
+
 
 export default function WordOverlay({ pageId }) {
   const viewerWordState = useViewerWordStateContext();
+  const { ref:layerRef, layerPx } = useElementSize()
+
   const {
     values: { pageMetaById, wordsByPageId, hoveredWordId, selectedWordId } = {},
     events: { onHoverWord, onHoverClearWord, onSelectWord } = {},
   } = viewerWordState;
 
   const meta = pageMetaById.get(pageId);
-  const ws = wordsByPageId.get(pageId) ?? [];
+  const words = wordsByPageId.get(pageId);
 
-  const { layerRef, wordLayout } = useViewerWordOverlayLayout(meta, ws);
+  const { wordLayout } = useMemo(
+  () => buildWordOverlayLayout({ layerPx, meta, words }),
+  [layerPx, meta, words]
+);
 
   return (
     <div ref={layerRef} style={{ position: "absolute", inset: 0, zIndex: 10 }}>
