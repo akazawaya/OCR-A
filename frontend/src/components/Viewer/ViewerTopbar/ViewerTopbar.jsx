@@ -27,12 +27,12 @@ export default function ViewerTopBar (){
   const {
     values: { page, zoom, rotate, ZOOM_STEP, ROTATE_STEP } = {},
     events: {
-      onChangePage,
-      onChangeZoom,
-      onChangeRotate,
-      onCommitPage,
-      onCommitZoom,
-      onCommitRotate,
+      onClickPageStepButton,
+      onClickZoomStepButton,
+      onClickRotateStepButton,
+      onEnterPageInput,
+      onEnterZoomInput,
+      onEnterRotateInput,
     } = {},
   } = viewerPageState;
 
@@ -63,17 +63,16 @@ export default function ViewerTopBar (){
   <AppBar color="default" position="static">
     <Toolbar>
 
-      <Button onClick={() => onChangePage(a => a - 1)}>戻</Button>
-      {renderTextField(page, onCommitPage, pageRef)} {/*parseIntは文字列の先頭から整数として読める部分を数字として読む　第二引数は10進数で解釈するという意味*/}
-      <Button onClick={() => onChangePage(a => a + 1)}>次</Button>
+      <Button onClick={() => onClickPageStepButton(a => a - 1)}>戻</Button>
+      {renderTextField(page, onEnterPageInput, pageRef)} {/*parseIntは文字列の先頭から整数として読める部分を数字として読む　第二引数は10進数で解釈するという意味*/}
+      <Button onClick={() => onClickPageStepButton(a => a + 1)}>次</Button>
 
-      <Button onClick={() => onChangeZoom(a => a - ZOOM_STEP)}>縮小</Button>
-      {renderTextField(zoom, onCommitZoom, zoomRef)} 
-      <Button onClick={() => onChangeZoom(a => a + ZOOM_STEP)}>拡大</Button>
+      <Button onClick={() => onClickZoomStepButton(a => a - ZOOM_STEP)}>縮小</Button>
+      {renderTextField(zoom, onEnterZoomInput, zoomRef)} 
+      <Button onClick={() => onClickZoomStepButton(a => a + ZOOM_STEP)}>拡大</Button>
       
-      <Button onClick={() => onChangeRotate(a => a + ROTATE_STEP)}>回転</Button>
-      {renderTextField(rotate, onCommitRotate, rotateRef)}
-
+      <Button onClick={() => onClickRotateStepButton(a => a + ROTATE_STEP)}>回転</Button>
+      {renderTextField(rotate, onEnterRotateInput, rotateRef)}
 
       {!isEditing ? (
         <Button onClick={onClickEditButton}>編集</Button>

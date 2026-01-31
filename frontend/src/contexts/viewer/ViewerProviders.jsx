@@ -34,12 +34,12 @@ export const ViewerProviders = ({
       ROTATE_STEP: pageState.ROTATE_STEP,
     },
     events: {
-      onChangePage: pageState.setPage,
-      onChangeZoom: pageState.setZoom,
-      onChangeRotate: pageState.setRotate,
-      onCommitPage: pageState.commitPage,
-      onCommitZoom: pageState.commitZoom,
-      onCommitRotate: pageState.commitRotate,
+      onClickPageStepButton: pageState.setPage,
+      onClickZoomStepButton: pageState.setZoom,
+      onClickRotateStepButton: pageState.setRotate,
+      onEnterPageInput: pageState.commitPage,
+      onEnterZoomInput: pageState.commitZoom,
+      onEnterRotateInput: pageState.commitRotate,
     },
   }), [
     pageState.page,
