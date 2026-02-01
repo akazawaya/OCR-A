@@ -10,8 +10,6 @@ const Sidebar = () => {
       className={styles.drawerRoot}
       >
       <Link to ={routePaths.docs()} >Home</Link>
-      <Link to ={routePaths.docPages()} >出力一覧_ページごと</Link>
-      <Link to ={routePaths.docPageWords()} >出力一覧_OCR一覧</Link>
     </Drawer>
     );
 

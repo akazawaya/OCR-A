@@ -61,8 +61,5 @@ export const wordSpec = attachResourceSpec(wordAccessSpec, wordUiSpec);
 // useParams で:〇〇 の部分をオブジェクトとして受け取る
 export const routePaths = Object.freeze({
   docs: () => "/documents",
-  docPages: (primaryKey) => `/documents/${encodeURIComponent(primaryKey)}`,
   viewer: (primaryKey) => `/documents/${encodeURIComponent(primaryKey)}/viewer`,
-  docPageWords: (foreignKey, primaryKey) =>
-    `/documents/${encodeURIComponent(foreignKey)}/pages/${encodeURIComponent(primaryKey)}`,
 });
