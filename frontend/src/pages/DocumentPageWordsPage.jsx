@@ -3,11 +3,11 @@ import { wordAccessSpec } from "../appConfig";
 import { useMemo, useReducer } from "react"
 import { RefreshContext } from "../contexts/refreshContext"
 import { useRouting } from "../hooks/routing/useRouting"
-import { useBackendQuery } from "../hooks/server/query/useBackendQuery"
+import { useBackendQuery } from "../hooks/server/useBackendQuery"
 import { getSchema } from "../api/clients/schemaClient"
-import { buildColumnDefsFromSchema } from "../hooks/server/query/schemaColumns"
+import { buildColumnDefsFromSchema } from "../hooks/server/schemaColumns"
 import { getCollection } from "../api/clients/collectionClient"
-import { buildSearch } from "../hooks/server/query/collectionQuery"
+import { buildSearch } from "../hooks/server/collectionQuery"
 
 const DocumentPageWordsPage = () =>{
 const [refresh, onRefresh] = useReducer(n => n + 1, 0);

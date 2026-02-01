@@ -6,7 +6,7 @@ import { ViewerPageStateProvider } from "./ViewerPageStateContext";
 import { ViewerWordStateProvider } from "./ViewerWordStateContext";
 import { ViewerEditStateProvider } from "./ViewerEditStateContext";
 import { useRefresh } from "../refreshContext";
-import { useBackendMutation } from "../../hooks/server/query/useBackendMutation";
+import { useBackendMutation } from "../../hooks/server/useBackendMutation";
 import { patchCollectionItem } from "../../api/clients/mutationClient";
 
 // Viewer側でProviderを作って内部でhookを呼び、各Contextへvalue, eventを流す

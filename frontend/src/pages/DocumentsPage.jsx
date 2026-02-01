@@ -7,11 +7,11 @@ import { useCallback, useMemo, useReducer, useRef, useState } from "react"
 import { RefreshContext } from "../contexts/refreshContext"
 import { useRouting } from "../hooks/routing/useRouting"
 import { useFilterState } from "../hooks/ui/useFilterState"
-import { useBackendQuery } from "../hooks/server/query/useBackendQuery"
-import { useBackendMutation } from "../hooks/server/query/useBackendMutation"
+import { useBackendQuery } from "../hooks/server/useBackendQuery"
+import { useBackendMutation } from "../hooks/server/useBackendMutation"
 import { getCollection } from "../api/clients/collectionClient"
 import { analyzeDocument, deleteCollectionItem } from "../api/clients/mutationClient"
-import { buildSearch } from "../hooks/server/query/collectionQuery"
+import { buildSearch } from "../hooks/server/collectionQuery"
 
 // routePaths.viewer routePaths.docPages 関数として入力しないと即座に実行しようとしてエラーになる
 // 方針：prop関数名:実関数を　on(イベントハンドラ):実行される関数、として関係性をここで明記する

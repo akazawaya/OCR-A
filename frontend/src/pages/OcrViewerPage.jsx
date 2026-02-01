@@ -3,9 +3,9 @@ import { RefreshContext } from "../contexts/refreshContext"
 import { pageAccessSpec, wordSpec } from "../appConfig";
 import Viewer from "../components/Viewer/Viewer";
 import { useRouting } from "../hooks/routing/useRouting";
-import { useBackendQuery } from "../hooks/server/query/useBackendQuery";
+import { useBackendQuery } from "../hooks/server/useBackendQuery";
 import { getCollection } from "../api/clients/collectionClient";
-import { buildSearch } from "../hooks/server/query/collectionQuery";
+import { buildSearch } from "../hooks/server/collectionQuery";
 // Pageが渡すのは server/のfetch経由のデータと、routing/のルート関連
 const OcrViewerPage = () => {
   const [refresh, onRefresh] = useReducer(n => n + 1, 0);
