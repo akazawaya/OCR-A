@@ -12,5 +12,5 @@ dependencies = [
     "drf-spectacular>=0.28.0",
     "httpie>=3.2.4",
     "tifffile>=2025.10.16",
-    "yomitoku>=0.9.5",
+    "yomitoku>=0.10.3",
 ]

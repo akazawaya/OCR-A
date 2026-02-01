@@ -748,6 +748,21 @@ wheels = [
 ]
 
 [[package]]
+name = "onnx-ir"
+version = "0.1.15"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "ml-dtypes" },
+    { name = "numpy" },
+    { name = "onnx" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7a/a4/930427e49ccae912f2e21da96b8f52dbb7fb2fdfbba8006dca15c678e96b/onnx_ir-0.1.15.tar.gz", hash = "sha256:edec4db6c502856835e8f46f2d9f5dd8079fbd930170e418eda4203c599fb74a", size = 128266, upload-time = "2026-01-21T17:42:37.465Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/21/bf/62da272e87fd1d6317fe7a4dd22a8339f5ce37f95e5f63ad1ee46a13cd35/onnx_ir-0.1.15-py3-none-any.whl", hash = "sha256:c6df0eabd732671e9272275cf7693797497658610c00688d5e05132cbb4e2495", size = 148733, upload-time = "2026-01-21T17:42:36.313Z" },
+]
+
+[[package]]
 name = "onnxruntime"
 version = "1.23.0"
 source = { registry = "https://pypi.org/simple" }
@@ -767,6 +782,23 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/9b/69/070eae0d0369562d1dec0046ec2e3dd7c523adfae0f30b3887f81ef98c3b/onnxruntime-1.23.0-cp313-cp313-win_amd64.whl", hash = "sha256:e52c8603c4cc74746ece9966102e4fc6c2b355efc0102a9deb107f3ff86680af", size = 13392787, upload-time = "2025-09-25T19:16:38.871Z" },
     { url = "https://files.pythonhosted.org/packages/42/8c/6f1d8ec63c887a855f65648b1c743f673191da94703b5fd207d21f17c292/onnxruntime-1.23.0-cp313-cp313t-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:24ac2a8b2c6dd00a152a08a9cf1ba3f06b38915f6cb6cf1adbe714e16e5ff460", size = 15148462, upload-time = "2025-09-25T18:56:25.11Z" },
     { url = "https://files.pythonhosted.org/packages/eb/59/0db51308fa479f9325ade08c343a5164153ad01dbb83b62ff661e1129d2e/onnxruntime-1.23.0-cp313-cp313t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:ed85686e08cfb29ee96365b9a49e8a350aff7557c13d63d9f07ca3ad68975074", size = 17281939, upload-time = "2025-09-25T19:16:16.16Z" },
+]
+
+[[package]]
+name = "onnxscript"
+version = "0.6.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "ml-dtypes" },
+    { name = "numpy" },
+    { name = "onnx" },
+    { name = "onnx-ir" },
+    { name = "packaging" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/12/0e/56414e9523b27eb84bec31aeb6b7b6f63a000b2c432bdfb2286c38c0f4dc/onnxscript-0.6.0.tar.gz", hash = "sha256:6858e46d53dd508c617636824e8103f29513c18e4bd693e379927ece9b68772f", size = 590933, upload-time = "2026-01-29T19:08:57.147Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0c/28/96f946a46b1b5d9ac2cd74f40df17e47e3481aeb469c23d7152d7ba1283f/onnxscript-0.6.0-py3-none-any.whl", hash = "sha256:80ded699e4953b05134e79abf6b77969ad4d66587f532ca583bee382086d1d24", size = 689121, upload-time = "2026-01-29T19:08:59.296Z" },
 ]
 
 [[package]]
@@ -1095,7 +1127,7 @@ requires-dist = [
     { name = "drf-spectacular", specifier = ">=0.28.0" },
     { name = "httpie", specifier = ">=3.2.4" },
     { name = "tifffile", specifier = ">=2025.10.16" },
-    { name = "yomitoku", specifier = ">=0.9.5" },
+    { name = "yomitoku", specifier = ">=0.10.3" },
 ]
 
 [[package]]
@@ -1433,7 +1465,7 @@ wheels = [
 
 [[package]]
 name = "yomitoku"
-version = "0.9.5"
+version = "0.10.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "huggingface-hub" },
@@ -1442,6 +1474,7 @@ dependencies = [
     { name = "omegaconf" },
     { name = "onnx" },
     { name = "onnxruntime" },
+    { name = "onnxscript" },
     { name = "opencv-python" },
     { name = "pyclipper" },
     { name = "pydantic" },
@@ -1452,7 +1485,7 @@ dependencies = [
     { name = "torch" },
     { name = "torchvision" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/33/98/8e3f0e566f3051b348764a4869776ff620f60b55784d645345644590334f/yomitoku-0.9.5.tar.gz", hash = "sha256:3b4f03cc3910ba2f6f95c7a81aa9b1ba1ec7777931de6f15f06f0f34fa5a7199", size = 57920063, upload-time = "2025-09-09T08:22:32.477Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ec/f4/2bf12677b384b66ac9ebf3116628fe37a275fcc7a27f68f20b5a694ac733/yomitoku-0.10.3.tar.gz", hash = "sha256:c9627d39422427249da43e8b21ad03d51f891398ccc50475c9e10f37c050e745", size = 64922990, upload-time = "2025-12-17T10:23:16.007Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d9/50/f9c9cb277e7f5610cb43bf8609bac3351d0ce642f716e6f48c9f73190366/yomitoku-0.9.5-py3-none-any.whl", hash = "sha256:b511ed6765f83229d0eb78d0b7af4ce2237b93cd5843986ab417408e152bd0ac", size = 1115141, upload-time = "2025-09-09T08:22:26.195Z" },
+    { url = "https://files.pythonhosted.org/packages/be/bc/724f1481bd50f247c4d449cb113e2d14082265bec3d75cff264b4eccebe3/yomitoku-0.10.3-py3-none-any.whl", hash = "sha256:eafc742fd01e003dc42b186e0f198bab6a9399fd0ffc85dad93068b76862340f", size = 8103273, upload-time = "2025-12-17T10:23:12.81Z" },
 ]
