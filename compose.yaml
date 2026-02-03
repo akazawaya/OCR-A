@@ -2,13 +2,22 @@ services:
   backend:
     build: ./backend
     container_name: restocr_backend
-    depends_on: #dbが先に立ち上がってから起動
+    depends_on: # dbが先に立ち上がってから起動
       - db
     ports:
       - "8000:8000"
-    volumes:
-      - ./backend:/app
-      - /app/.venv
+    develop:
+      watch:
+        - action: sync
+          path: ./backend
+          target: /app
+          ignore:
+            - .venv/ # ホスト側には.venvが存在しない想定だが、念のため同期の無視を明記する
+        - action: rebuild
+          path: ./backend/uv.lock
+        - action: rebuild
+          path: ./backend/pyproject.toml
+
     environment:
       SECRET_KEY: ${SECRET_KEY}
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
@@ -25,7 +34,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - postgres_db:/var/lib/postgresql
+      - postgres_db:/var/lib/postgresql # 18系からvolumesのマウント先が変更になった点に注意
 
 volumes:
   postgres_db:
