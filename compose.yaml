@@ -15,10 +15,12 @@ services:
           path: ./frontend/package.json
         - action: rebuild
           path: ./frontend/package-lock.json
-
+          
+    command:
+      ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
+    
   backend:
     build: ./backend
-    container_name: restocr_backend
     depends_on: # dbが先に立ち上がってから起動
       - db
     ports:
@@ -42,6 +44,9 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    command:
+      ["/app/.venv/bin/python", "project/manage.py", "runserver", "0.0.0.0:8000"]
 
   db:
     image: postgres:18.1-bookworm

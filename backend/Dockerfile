@@ -13,9 +13,4 @@ COPY pyproject.toml uv.lock ./
 
 RUN uv sync --locked
 
-
 COPY . .
-
-EXPOSE 8000
-
-CMD ["/app/.venv/bin/python", "project/manage.py", "runserver", "0.0.0.0:8000"]
