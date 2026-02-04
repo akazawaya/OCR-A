@@ -1,4 +1,21 @@
 services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend
+          target: /app
+          ignore:
+            - node_modules/
+            - dist/
+        - action: rebuild
+          path: ./frontend/package.json
+        - action: rebuild
+          path: ./frontend/package-lock.json
+
   backend:
     build: ./backend
     container_name: restocr_backend
