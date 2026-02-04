@@ -1,8 +1,19 @@
-__pycache__/
-*.pyc
-.venv/
+# backend(DRF+uv)
+# 秘密情報
 .env
-.git/
-node_modules/
-dist/
+.env.*
+!.env.example
+
+# 依存物の実体
+.venv/
+
+# 生成物/キャッシュ
+__pycache__/
+
+# 巨大データ
 input/
+
+# よくある混入ファイル
+*.log
+.DS_Store
+Thumbs.db

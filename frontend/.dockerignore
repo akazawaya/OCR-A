@@ -1,12 +1,16 @@
-node_modules
-dist
-.vite
-coverage
-*.log
-
-.git
-.vscode
-.DS_Store
-
+# frontend(React+Vite)
+# 秘密情報
 .env
 .env.*
+!.env.example
+
+# 依存物の実体
+node_modules/
+
+# 生成物/キャッシュ
+dist/
+
+# よくある混入ファイル
+*.log
+.DS_Store
+Thumbs.db
