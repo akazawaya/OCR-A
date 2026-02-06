@@ -1,3 +1,12 @@
+x-django-env: &django_env
+  SECRET_KEY: ${SECRET_KEY}
+  DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
+  DB_HOST: db
+  POSTGRES_DB: ${POSTGRES_DB}
+  POSTGRES_USER: ${POSTGRES_USER}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  CELERY_BROKER_URL: redis://broker:6379/0
+
 services:
   frontend:
     build: ./frontend
@@ -15,14 +24,14 @@ services:
           path: ./frontend/package.json
         - action: rebuild
           path: ./frontend/package-lock.json
-          
     command:
       ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
     
   backend:
     build: ./backend
-    depends_on: # dbが先に立ち上がってから起動
+    depends_on:
       - db
+      - broker
     ports:
       - "8000:8000"
     develop:
@@ -35,19 +44,24 @@ services:
         - action: rebuild
           path: ./backend/uv.lock
         - action: rebuild
-          path: ./backend/pyproject.toml
-
+          path: ./backend/pyproject.toml  
     environment:
-      SECRET_KEY: ${SECRET_KEY}
-      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
-      DB_HOST: db
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-
+      <<: *django_env
     command:
       ["/app/.venv/bin/python", "project/manage.py", "runserver", "0.0.0.0:8000"]
 
+  worker:
+    build: ./backend
+    depends_on:
+      - db
+      - broker
+    environment:
+      <<: *django_env
+    command: ["/app/.venv/bin/python", "-m", "celery", "-A", "<DJANGO_PROJECT>", "worker", "-l", "INFO"]
+
+  broker:
+    image: redis:8.4.0-bookworm
+    
   db:
     image: postgres:18.1-bookworm
     restart: unless-stopped
