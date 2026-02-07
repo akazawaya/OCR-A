@@ -55,9 +55,10 @@ services:
     depends_on:
       - db
       - broker
+    working_dir: /app/project
     environment:
       <<: *django_env
-    command: ["/app/.venv/bin/python", "-m", "celery", "-A", "<DJANGO_PROJECT>", "worker", "-l", "INFO"]
+    command: ["/app/.venv/bin/python", "-m", "celery", "-A", "project.celery:app", "worker", "-l", "INFO"]
 
   broker:
     image: redis:8.4.0-bookworm
