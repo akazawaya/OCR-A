@@ -8,7 +8,7 @@ x-django-env: &django_env
   CELERY_BROKER_URL: redis://broker:6379/0
 
 x-media-volumes: &media_volumes
-  - media_input:/app/project/media
+  - media_input:/app/media
 
 services:
   frontend:
@@ -52,14 +52,14 @@ services:
       <<: *django_env
     volumes: *media_volumes
     command:
-      ["/app/.venv/bin/python", "project/manage.py", "runserver", "0.0.0.0:8000"]
+      ["/app/.venv/bin/python", "manage.py", "runserver", "0.0.0.0:8000"]
 
   worker:
     build: ./backend
     depends_on:
       - db
       - broker
-    working_dir: /app/project # モジュールインポート用にカレントディレクトリを指定
+    working_dir: /app
     environment:
       <<: *django_env
     volumes: *media_volumes
