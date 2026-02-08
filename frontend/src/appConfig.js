@@ -30,7 +30,7 @@ export const documentAccessSpec = makeAccessSpec({ schemaKey: "Document", collec
 export const pageAccessSpec = makeAccessSpec({ schemaKey: "Page", collection: "pages" });
 export const wordAccessSpec = makeAccessSpec({ schemaKey: "Word", collection: "words" });
 export const analyzeDocumentAccessSpec = {
-  analyzeUrl: API_BASE_URL + "documents/analyze/",
+  analyzeUrl: API_BASE_URL + "documents/start_ocr/",
 };
 
 // 表示するフィールド/列を選ぶ（表示名の翻訳も兼ねる）

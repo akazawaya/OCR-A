@@ -3,73 +3,72 @@ import pypdfium2
 import numpy as np
 import cv2
 import io
-import tifffile
-
+# import tifffile
+# 頃合いを見てtifffileはuvから排除する
 
 # (.venv/lib64/python3.13/site-packages/yomitoku/constants.py)
 # models.pyの定義に合わせる　modelsとtoolsで拡張子定義が個別なのを後で修正したい
-SUPPORT_INPUT_FORMAT = ["jpg", "png", "bmp", "tif", "pdf"]
-# SUPPORT_OUTPUT_FORMAT = ["json", "csv", "html", "markdown", "md", "pdf"]
-# MIN_IMAGE_SIZE = 32
-# WARNING_IMAGE_SIZE = 720
+SUPPORT_INPUT_FORMAT = ["jpg", "png", "pdf"]
 # filesizeはDjangoのバリデーターで十分であると判断
 # /root/Django/RestOCR/.venv/lib64/python3.13/site-packages/yomitoku/data/functions.py を参考にする
 # yomitokuにはRGBの入力が必要
 
-def validate_and_analyze(file):
+# 最低限のメタ情報 拡張子とページ数を返す
+def inspect_file(file):
     ext = Path(file.name).suffix.lstrip('.').lower()
     ext = exchange_ext(ext)
     if ext not in SUPPORT_INPUT_FORMAT:
         raise ValueError(
             f"Unsupported file format. Supported formats are {SUPPORT_INPUT_FORMAT}")
-    if ext == 'pdf':
-       image_list, total_pages = analyze_pdf(file)
-    elif ext in ["tif", "tiff"]:
-        image_list, total_pages = analyze_tif(file)
-    else:
-        image_list, total_pages = analyze_img(file)
-    return image_list, ext, total_pages
-
-
-def analyze_pdf(file, type=".png", dpi=300):
-    scale = dpi / 72 
-    images = []
-    pdf = pypdfium2.PdfDocument(file)
-    for page in pdf:
-        array = page.render(scale=scale, rotation=0).to_numpy() 
-        images.append(cv2.imencode(type, array)[1].tobytes())
-    return images, len(images)
-
-
-def analyze_tif(file, type=".png"):
     file.seek(0)
-    blob = file.read()
-    images = []
+    pdf = None
+    try:
+        if ext == 'pdf':
+            pdf = pypdfium2.PdfDocument(file)
+            total_pages = len(pdf)
+            return ext, total_pages
+        # pdfじゃない時 = img系で1枚確定
+        return ext, 1
+    finally:
+        if pdf is not None:
+            try:
+                pdf.close()
+            except Exception:
+                pass
+        file.seek(0)
 
-    with tifffile.TiffFile(io.BytesIO(blob)) as tf:
-        for s in tf.series:
-            tif = s.asarray()
-        # tifが複数枚の場合は(N, H, W) と要素が３つに増える
-        if tif.ndim >= 3:
-            tif_list = list(tif)
-        else:
-            tif_list = [tif]
+# def analyze_tif(file, type=".png"): 廃止
 
-    for img in tif_list:
-        images.append(cv2.imencode(type, img)[1].tobytes())
-    return images, len(images)
+# 1枚ずつimgを返す
+def render_page(file, page_number, input_ext, output_ext=".png", dpi=300):
+    if page_number < 1:
+        raise ValueError("page_number must be 1-based (>= 1)")        
 
-
-def analyze_img(file, type=".png"):
-    # cv2.imreadmulti(str(file)) だと、Djangoではfileが不確定なケースがあるため seekでバイナリを読む
-    # FieldFile（保存済み）、TemporaryUploadedFilefile.temporary_file_path() が取れることがある（実在パス）
-    # InMemoryUploadedFile（アップロード直後・小さめ)実在パスが存在しない の三種類がある
+    if input_ext not in SUPPORT_INPUT_FORMAT:
+        raise ValueError(
+            f"Unsupported file format. Supported formats are {SUPPORT_INPUT_FORMAT}")
     file.seek(0)
-    blob = file.read() # blobはbinary large objectの意
-    array = np.frombuffer(blob, np.uint8)
-    img = cv2.imdecode(array, cv2.IMREAD_UNCHANGED)
-    images = [cv2.imencode(type, img)[1].tobytes()]
-    return images, 1
+    pdf = None
+    try:
+        if input_ext == 'pdf':
+            pdf = pypdfium2.PdfDocument(file)
+            page = pdf[page_number - 1]
+            img_pixels = page.render(scale=dpi/72, rotation=0).to_numpy() 
+            img_bytes = cv2.imencode(output_ext, img_pixels)[1].tobytes()
+            return img_bytes
+
+        file_bytes = file.read()
+        file_bytes_uint8_ndarray = np.frombuffer(file_bytes, np.uint8)
+        img_pixels = cv2.imdecode(file_bytes_uint8_ndarray, cv2.IMREAD_UNCHANGED)
+        img_bytes = cv2.imencode(output_ext, img_pixels)[1].tobytes()
+        return img_bytes
+    finally:
+        if pdf is not None:
+            try:
+                pdf.close()
+            except Exception:
+                pass
+        file.seek(0)
 
 def exchange_ext(ext):
     """
@@ -79,8 +78,6 @@ def exchange_ext(ext):
     ALIAS = {
         "jpeg": "jpg", "jpg": "jpg",
         "png":  "png",
-        "bmp":  "bmp",
-        "tiff":  "tif", "tif": "tif",
         "pdf":  "pdf",
     }
     return ALIAS[ext]
