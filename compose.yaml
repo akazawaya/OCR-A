@@ -49,6 +49,8 @@ services:
       <<: *django_env
     command:
       ["/app/.venv/bin/python", "project/manage.py", "runserver", "0.0.0.0:8000"]
+    volumes:
+      - ./backend/project/media:/app/project/media
 
   worker:
     build: ./backend
@@ -59,6 +61,8 @@ services:
     environment:
       <<: *django_env
     command: ["/app/.venv/bin/python", "-m", "celery", "-A", "project.celery:app", "worker", "-l", "INFO"]
+    volumes:
+      - ./backend/project/media:/app/project/media
 
   broker:
     image: redis:8.4.0-bookworm

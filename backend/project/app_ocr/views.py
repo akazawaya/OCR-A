@@ -19,7 +19,8 @@ from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from app_ocr.filters import DocumentFilter
 from rest_framework.filters import OrderingFilter
-from app_ocr.tasks import ocr_page
+from app_ocr.tasks import dispatch_ocr_pages_task 
+
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all()
@@ -47,25 +48,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
         with transaction.atomic():
             doc.save()
             # テストでocr_page実行
-            transaction.on_commit(lambda: ocr_page.delay(doc.instance.pk, 1))
+            transaction.on_commit(lambda: dispatch_ocr_pages_task.delay(doc.instance.pk))
         return Response({"document": doc.data}, status=status.HTTP_202_ACCEPTED) 
-
-"""
-→/services/ocr.py 的なフォルダに移行
-ocr = init_engine()
-for p, img in enumerate(images):
-    words = test_ocr(img_bytes=img, ocr=ocr)
-    words = default_word_sort(words) 
-    img_file = ContentFile(img, name=f"{p}.png")
-    page = PageSerializer(data={"doc":doc.instance.pk, "image":img_file, "page_number":p+1})
-    if page.is_valid(raise_exception=True):
-        page.save()
-        # breakpoint() 
-        for w in words:
-            word = WordSerializer(data={"page":page.instance.pk, "bbox":w["points"], "content":w["content"], "direction":Direction.label_to_value(w["direction"]), "rec_score":w["rec_score"], "det_score":w["det_score"]})
-            if word.is_valid(raise_exception=True):
-                word.save()
-"""
                         
         
 class PageViewSet(viewsets.ReadOnlyModelViewSet):
