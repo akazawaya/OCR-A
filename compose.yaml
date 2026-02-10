@@ -7,6 +7,9 @@ x-django-env: &django_env
   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
   CELERY_BROKER_URL: redis://broker:6379/0
 
+x-media-volumes: &media_volumes
+  - media_input:/app/project/media
+
 services:
   frontend:
     build: ./frontend
@@ -47,22 +50,22 @@ services:
           path: ./backend/pyproject.toml  
     environment:
       <<: *django_env
+    volumes: *media_volumes
     command:
       ["/app/.venv/bin/python", "project/manage.py", "runserver", "0.0.0.0:8000"]
-    volumes:
-      - ./backend/project/media:/app/project/media
 
   worker:
     build: ./backend
     depends_on:
       - db
       - broker
-    working_dir: /app/project
+    working_dir: /app/project # モジュールインポート用にカレントディレクトリを指定
     environment:
       <<: *django_env
-    command: ["/app/.venv/bin/python", "-m", "celery", "-A", "project.celery:app", "worker", "-l", "INFO"]
-    volumes:
-      - ./backend/project/media:/app/project/media
+    volumes: *media_volumes
+    command: 
+      ["/app/.venv/bin/python", "-m", "celery", "-A", "project.celery:app", "worker", "-l", "INFO"]
+
 
   broker:
     image: redis:8.4.0-bookworm
@@ -79,3 +82,4 @@ services:
 
 volumes:
   postgres_db:
+  media_input:
