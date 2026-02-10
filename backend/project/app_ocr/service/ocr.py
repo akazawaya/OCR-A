@@ -4,12 +4,11 @@ from django.db import transaction
 from app_ocr.models import Document, Direction
 from app_ocr.serializers import PageSerializer, WordSerializer
 from app_ocr.etc.tools import render_page, default_word_sort
-from app_ocr.etc.e_yomitoku import init_engine, test_ocr
+from app_ocr.etc.e_yomitoku import get_engine, test_ocr
 
 def run_ocr_for_page(document_id, page_number):
     doc = Document.objects.get(pk=document_id)
-    ocr = init_engine()
-
+    ocr = get_engine()
     input_ext = doc.get_file_type_display()
     img_bytes = render_page(doc.file, page_number, input_ext)
 

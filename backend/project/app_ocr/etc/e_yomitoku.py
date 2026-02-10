@@ -1,10 +1,14 @@
 import cv2
 import numpy as np
 from yomitoku.ocr import OCR
+from functools import lru_cache
 
 def init_engine():
-    # 親（viewsのanalyze)から、doc単位ずつ呼び出して初期化される
     return OCR(visualize=False, device="auto")
+
+@lru_cache(maxsize=1)
+def get_engine():
+    return init_engine()
 
 # 1ページずつ処理する方針
 def test_ocr(img_bytes, ocr):
@@ -27,7 +31,3 @@ def test_ocr(img_bytes, ocr):
         }
         words.append(content)
     return words
-
-
-
-#test_ocr(r"/root/Django/RestOCR/input/f12d2251-ec34-4495-9da7-2c5a901c02df/")
