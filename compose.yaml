@@ -64,7 +64,7 @@ services:
       <<: *django_env
     volumes: *media_volumes
     command: 
-      ["/app/.venv/bin/python", "-m", "celery", "-A", "project.celery:app", "worker", "-l", "INFO"]
+      ["/app/.venv/bin/python", "-m", "celery", "-A", "project.celery:app", "worker", "-l", "INFO", "--concurrency", "1"]
 
 
   broker:
