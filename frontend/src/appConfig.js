@@ -38,6 +38,7 @@ const documentUiSpec = Object.freeze({
   table: [
     { key: "created", label: "作成日時" },
     { key: "file_name", label: "名前" },
+    { key: "state_display", label: "状態" },
   ],
 });
 const wordUiSpec = Object.freeze({
