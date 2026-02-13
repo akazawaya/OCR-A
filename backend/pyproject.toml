@@ -6,6 +6,8 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "celery[redis]>=5.6.2",
+    "channels>=4.3.2",
+    "channels-redis>=4.3.0",
     "django>=5.2.6",
     "django-cors-headers>=4.9.0",
     "django-filter>=25.2",
@@ -14,5 +16,6 @@ dependencies = [
     "httpie>=3.2.4",
     "psycopg[binary]>=3.3.2",
     "tifffile>=2025.10.16",
+    "uvicorn[standard]>=0.40.0",
     "yomitoku>=0.10.3",
 ]
