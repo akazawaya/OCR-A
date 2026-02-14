@@ -6,6 +6,7 @@ x-django-env: &django_env
   POSTGRES_USER: ${POSTGRES_USER}
   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
   CELERY_BROKER_URL: redis://broker:6379/0
+  CHANNEL_REDIS_URL: redis://broker:6379/1
 
 x-media-volumes: &media_volumes
   - media_input:/app/media
@@ -52,7 +53,7 @@ services:
       <<: *django_env
     volumes: *media_volumes
     command:
-      ["/app/.venv/bin/python", "manage.py", "runserver", "0.0.0.0:8000"]
+      ["/app/.venv/bin/python", "-m", "uvicorn", "project.asgi:application", "--host", "0.0.0.0", "--port", "8000"]
 
   worker:
     build: ./backend
