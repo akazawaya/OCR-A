@@ -1,4 +1,5 @@
-export const API_BASE_URL = "http://127.0.0.1:8000/"
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+export const WS_BASE_URL = API_BASE_URL.replace(/^http/, "ws");
 export const OPENAPI_URL = API_BASE_URL + "schema/"
 // 目的
 // OpenAPI（components/schemas）から型情報（schema）を動的に参照できる様にして、
