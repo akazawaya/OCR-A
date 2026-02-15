@@ -1,9 +1,8 @@
 import MenuTable from "../components/MenuTable/MenuTable"
 import FileUploader from "../components/FileUploader/FileUploader"
 import { FilterMenuButton } from "../components/FilterMenuButton/FilterMenuButton"
-import { analyzeDocumentAccessSpec, documentSpec, routePaths } from "../appConfig";
-
-import { useCallback, useMemo, useReducer, useRef, useState } from "react"
+import { analyzeDocumentAccessSpec, documentSpec, routePaths, WS_BASE_URL } from "../appConfig";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react"
 import { RefreshContext } from "../contexts/refreshContext"
 import { useRouting } from "../hooks/routing/useRouting"
 import { useFilterState } from "../hooks/ui/useFilterState"
@@ -71,6 +70,12 @@ const DocumentsPage = () => {
   }, [analyzeMutation]);
   
   const documentColumns = documentSpec.ui.table.map(({ key, label }) => ({ key, label }));
+  
+  useEffect(() => {
+    const ws = new WebSocket(`${WS_BASE_URL}documents/`);
+    ws.onmessage = () => onRefresh();
+    return () => ws.close();
+  }, [onRefresh]);
 
   return (
     <RefreshContext.Provider value={onRefresh}>
