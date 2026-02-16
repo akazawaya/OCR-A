@@ -8,23 +8,22 @@ export const useViewerWordState = (pageData, wordData) => {
   const [selectedWordId, setSelectedWordId] = useState(null);
   const [selectedBy, setSelectedBy] = useState(null); // Viewer起点か、Table起点かを示す
 
-
   // useCallbackは関数版のuseMemoであり、同じ関数の再構築を防ぐ
-    const hoverWord = useCallback((wordId) => {
+  const hoverWord = useCallback((wordId) => {
     const id = Number(wordId);
     if (!Number.isFinite(id)) return;
     setHoveredWordId(id);
-    }, []);
+  }, []);
 
-    const clearHoveredWord = useCallback(() => setHoveredWordId(null), []);
+  const clearHoveredWord = useCallback(() => setHoveredWordId(null), []);
 
-    const commitSelectWord = useCallback((wordId, by) => {
-      const id = Number(wordId);
-      if (!Number.isFinite(id)) return;
-      setSelectedWordId(id);
-      setSelectedBy(by); 
-    }, []);
-    
+  const commitSelectWord = useCallback((wordId, by) => {
+    const id = Number(wordId);
+    if (!Number.isFinite(id)) return;
+    setSelectedWordId(id);
+    setSelectedBy(by);
+  }, []);
+
   // pageMetaとしてPageごとのkey,width,heightを格納
   const pageMetaById = useMemo(() => {
     const m = new Map();
@@ -32,7 +31,8 @@ export const useViewerWordState = (pageData, wordData) => {
       const k = Number(p.id); // Page.id
       const w = Number(p.width_px);
       const h = Number(p.height_px);
-      if (!Number.isFinite(k) || !Number.isFinite(w) || !Number.isFinite(h)) continue;
+      if (!Number.isFinite(k) || !Number.isFinite(w) || !Number.isFinite(h))
+        continue;
       m.set(k, { w, h });
     }
     return m;
@@ -52,8 +52,13 @@ export const useViewerWordState = (pageData, wordData) => {
   }, [words]);
 
   return {
-    pageMetaById, wordsByPageId,
-    hoveredWordId, selectedWordId, selectedBy,
-    hoverWord, clearHoveredWord, commitSelectWord,
+    pageMetaById,
+    wordsByPageId,
+    hoveredWordId,
+    selectedWordId,
+    selectedBy,
+    hoverWord,
+    clearHoveredWord,
+    commitSelectWord,
   };
 };

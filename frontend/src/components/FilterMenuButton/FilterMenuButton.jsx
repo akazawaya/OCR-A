@@ -6,27 +6,26 @@ import { FilterMenu } from "./FilterMenu/FilterMenu";
 export function FilterMenuButton({
   data: { search, conditions } = {},
   navigation: { onClickSearchButton } = {},
-  options: { onChangeConditions }
-  } = {},
-  ) {
+  options: { onChangeConditions },
+} = {}) {
   const [open, setOpen] = useState(false);
   const toggleFilterMenu = async () => {
-    setOpen(prev => !prev);
+    setOpen((prev) => !prev);
   };
 
   return (
     <div>
-      <button type="button" onClick={ toggleFilterMenu }>
+      <button type="button" onClick={toggleFilterMenu}>
         検索メニュー
       </button>
 
       <div style={{ display: open ? "block" : "none" }}>
-      <FilterMenu data={{search, conditions}}
-        navigation={{ onClickSearchButton }}
-        options={{ onChangeConditions }}
-      />
+        <FilterMenu
+          data={{ search, conditions }}
+          navigation={{ onClickSearchButton }}
+          options={{ onChangeConditions }}
+        />
       </div>
     </div>
   );
 }
-

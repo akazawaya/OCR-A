@@ -1,16 +1,31 @@
-import MenuTable from "../components/MenuTable/MenuTable"
-import FileUploader from "../components/FileUploader/FileUploader"
-import { FilterMenuButton } from "../components/FilterMenuButton/FilterMenuButton"
-import { analyzeDocumentAccessSpec, documentSpec, routePaths, WS_BASE_URL } from "../appConfig";
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react"
-import { RefreshContext } from "../contexts/refreshContext"
-import { useRouting } from "../hooks/routing/useRouting"
-import { useFilterState } from "../hooks/ui/useFilterState"
-import { useBackendQuery } from "../hooks/server/useBackendQuery"
-import { useBackendMutation } from "../hooks/server/useBackendMutation"
-import { getCollection } from "../api/clients/collectionClient"
-import { analyzeDocument, deleteCollectionItem } from "../api/clients/mutationClient"
-import { buildSearch } from "../hooks/server/collectionQuery"
+import MenuTable from "../components/MenuTable/MenuTable";
+import FileUploader from "../components/FileUploader/FileUploader";
+import { FilterMenuButton } from "../components/FilterMenuButton/FilterMenuButton";
+import {
+  analyzeDocumentAccessSpec,
+  documentSpec,
+  routePaths,
+  WS_BASE_URL,
+} from "../appConfig";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
+import { RefreshContext } from "../contexts/refreshContext";
+import { useRouting } from "../hooks/routing/useRouting";
+import { useFilterState } from "../hooks/ui/useFilterState";
+import { useBackendQuery } from "../hooks/server/useBackendQuery";
+import { useBackendMutation } from "../hooks/server/useBackendMutation";
+import { getCollection } from "../api/clients/collectionClient";
+import {
+  analyzeDocument,
+  deleteCollectionItem,
+} from "../api/clients/mutationClient";
+import { buildSearch } from "../hooks/server/collectionQuery";
 
 // routePaths.viewer routePaths.docPages 関数として入力しないと即座に実行しようとしてエラーになる
 // 方針：prop関数名:実関数を　on(イベントハンドラ):実行される関数、として関係性をここで明記する
@@ -24,19 +39,22 @@ import { buildSearch } from "../hooks/server/collectionQuery"
 const DocumentsPage = () => {
   const { collectionUrl } = documentSpec;
   const { analyzeUrl } = analyzeDocumentAccessSpec;
-  const [refresh, onRefresh] = useReducer(n => n + 1, 0);
+  const [refresh, onRefresh] = useReducer((n) => n + 1, 0);
 
   const { search, columnsSort, dataRouter } = useRouting({
-    routeUrl: (row) => routePaths.viewer(row.id)
+    routeUrl: (row) => routePaths.viewer(row.id),
   });
   const { conditions, updateConditions } = useFilterState();
 
   const [appliedConditions, setAppliedConditions] = useState(conditions);
-  const applySearch = useCallback(() => setAppliedConditions(conditions), [conditions]);
+  const applySearch = useCallback(
+    () => setAppliedConditions(conditions),
+    [conditions],
+  );
 
   const finalSearch = useMemo(
     () => buildSearch({ baseSearch: search, conditions: appliedConditions }),
-    [search, appliedConditions]
+    [search, appliedConditions],
   );
 
   const { data: rows, isLoading: rowsLoading } = useBackendQuery({
@@ -50,13 +68,16 @@ const DocumentsPage = () => {
     mutationFn: ({ id }) => deleteCollectionItem({ collectionUrl, id }),
     onSuccess: () => onRefresh(),
   });
-  const deleteRow = useCallback((row) => deleteRowMutation({ id: row.id }), [deleteRowMutation]);
-  
+  const deleteRow = useCallback(
+    (row) => deleteRowMutation({ id: row.id }),
+    [deleteRowMutation],
+  );
+
   const { mutate: analyzeMutation } = useBackendMutation({
     mutationFn: ({ formData }) => analyzeDocument({ analyzeUrl, formData }),
     onSuccess: () => onRefresh(),
   });
-  
+
   const inputRef = useRef(null);
   const analyzeData = useCallback(() => {
     const file = inputRef.current?.files?.[0];
@@ -68,9 +89,12 @@ const DocumentsPage = () => {
     formData.append("file", file);
     analyzeMutation({ formData }).catch(() => {});
   }, [analyzeMutation]);
-  
-  const documentColumns = documentSpec.ui.table.map(({ key, label }) => ({ key, label }));
-  
+
+  const documentColumns = documentSpec.ui.table.map(({ key, label }) => ({
+    key,
+    label,
+  }));
+
   useEffect(() => {
     const ws = new WebSocket(`${WS_BASE_URL}documents/`);
     ws.onmessage = () => onRefresh();
@@ -79,28 +103,30 @@ const DocumentsPage = () => {
 
   return (
     <RefreshContext.Provider value={onRefresh}>
-    <p>DocumentsPage</p>
+      <p>DocumentsPage</p>
 
-    <FilterMenuButton 
-      data={{search, conditions}}
-      navigation={{onClickSearchButton:applySearch}}
-      options={{onChangeConditions:updateConditions}}/>
+      <FilterMenuButton
+        data={{ search, conditions }}
+        navigation={{ onClickSearchButton: applySearch }}
+        options={{ onChangeConditions: updateConditions }}
+      />
 
-    <FileUploader 
-      data={{inputRef}} 
-      options={{onClickAnalyzeButton:analyzeData}}/>
+      <FileUploader
+        data={{ inputRef }}
+        options={{ onClickAnalyzeButton: analyzeData }}
+      />
 
-    <MenuTable 
-      data={{ columns:documentColumns, rows, loading: rowsLoading }}
-      navigation={{
-        onClickColumn:columnsSort,
-        onClickRow:dataRouter,
-      }}
-      options={{
-        onClickDeleteButton:deleteRow,
-      }}
+      <MenuTable
+        data={{ columns: documentColumns, rows, loading: rowsLoading }}
+        navigation={{
+          onClickColumn: columnsSort,
+          onClickRow: dataRouter,
+        }}
+        options={{
+          onClickDeleteButton: deleteRow,
+        }}
       />
     </RefreshContext.Provider>
-  )
-}
-export default DocumentsPage
+  );
+};
+export default DocumentsPage;

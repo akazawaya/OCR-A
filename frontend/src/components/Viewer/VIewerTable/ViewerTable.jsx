@@ -2,15 +2,14 @@ import { useEffect, useRef } from "react";
 import { useViewerPageStateContext } from "../../../contexts/viewer/ViewerPageStateContext";
 import { useViewerWordStateContext } from "../../../contexts/viewer/ViewerWordStateContext";
 import { useViewerEditStateContext } from "../../../contexts/viewer/ViewerEditStateContext";
-// onClickRowはpageの時のnavigation用と、viewerの時のscroll用がある　
+// onClickRowはpageの時のnavigation用と、viewerの時のscroll用がある
 // ここではオプショナルチェイニング(.?)で両方を実行するようにして、呼び出し側からは重複しないようにする
 export default function ViewerTable({
   columns = [],
   rows = [],
   loading,
   onClickColumn,
-                          }) {
-
+}) {
   const rootRef = useRef(null);
   const viewerPageState = useViewerPageStateContext();
   const viewerWordState = useViewerWordStateContext();
@@ -36,26 +35,24 @@ export default function ViewerTable({
     element.scrollIntoView({ behavior: "auto", block: "start" });
   }, [page]);
 
- 
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
 
-    if (selectedBy !== "image") return;  
+    if (selectedBy !== "image") return;
 
-    const element = root.querySelector(`[data-word="${selectedWordId}"]`)
+    const element = root.querySelector(`[data-word="${selectedWordId}"]`);
     if (!element) return;
 
     element.scrollIntoView({ behavior: "auto", block: "start" });
   }, [selectedBy, selectedWordId]);
-
 
   if (loading) return <div>Loading…</div>;
   return (
     <table ref={rootRef}>
       <thead>
         <tr>
-          {columns.map(c => (
+          {columns.map((c) => (
             <th key={c.key} onClick={() => onClickColumn(c.key)}>
               {c.label}
             </th>
@@ -63,34 +60,44 @@ export default function ViewerTable({
         </tr>
       </thead>
       <tbody>
-      {rows.map(row => {
-        const isSelected = row.id === selectedWordId;
-        const isHover = row.id === hoveredWordId;
-        return (
-          <tr key={row.id} data-page={row.page__page_number} data-word={row.id} 
-            onMouseEnter={() => onHoverWord?.(row.id)}
-            onMouseLeave={() => onHoverClearWord?.()}
-            onClick={() => onSelectWord?.(row.id, "table")}
-            style={{
-              background: isSelected ? "rgba(255,0,0,0.12)" : isHover ? "rgba(255,0,0,0.06)" : "transparent", 
-            }}>
-            {columns.map(c => (
-            	<td key={c.key}>
-                {!isEditing || c.key !== "content" ? (
-                  row[c.key]
-                ):(
-                <input
-                  value={draftById[row.id] ?? row[c.key]}
-                  onChange={(e) => onChangeDraftContent(row.id, e.target.value)}
-                />    
-              )}
-              </td>
-          	))}
-          </tr>
-        );
-      })}
+        {rows.map((row) => {
+          const isSelected = row.id === selectedWordId;
+          const isHover = row.id === hoveredWordId;
+          return (
+            <tr
+              key={row.id}
+              data-page={row.page__page_number}
+              data-word={row.id}
+              onMouseEnter={() => onHoverWord?.(row.id)}
+              onMouseLeave={() => onHoverClearWord?.()}
+              onClick={() => onSelectWord?.(row.id, "table")}
+              style={{
+                background: isSelected
+                  ? "rgba(255,0,0,0.12)"
+                  : isHover
+                    ? "rgba(255,0,0,0.06)"
+                    : "transparent",
+              }}
+            >
+              {columns.map((c) => (
+                <td key={c.key}>
+                  {!isEditing || c.key !== "content" ? (
+                    row[c.key]
+                  ) : (
+                    <input
+                      value={draftById[row.id] ?? row[c.key]}
+                      onChange={(e) =>
+                        onChangeDraftContent(row.id, e.target.value)
+                      }
+                    />
+                  )}
+                </td>
+              ))}
+            </tr>
+          );
+        })}
       </tbody>
-    </table>  
+    </table>
   );
 }
 

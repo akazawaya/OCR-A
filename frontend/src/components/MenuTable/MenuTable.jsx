@@ -3,10 +3,9 @@ import DeleteButton from "./DeleteButton/DeleteButton";
 
 export default function MenuTable({
   data,
-  navigation:{onClickColumn, onClickRow = null} = {}, 
-  options:{onClickDeleteButton} = {}, 
-                          }) {
-
+  navigation: { onClickColumn, onClickRow = null } = {},
+  options: { onClickDeleteButton } = {},
+}) {
   const { columns = [], rows = [], loading } = data;
 
   if (loading) return <div>Loading…</div>;
@@ -14,7 +13,7 @@ export default function MenuTable({
     <table>
       <thead>
         <tr>
-          {columns.map(c => (
+          {columns.map((c) => (
             <th key={c.key} onClick={() => onClickColumn(c.key)}>
               {c.label}
             </th>
@@ -22,21 +21,25 @@ export default function MenuTable({
         </tr>
       </thead>
       <tbody>
-        {rows.map(row => (
-          <tr key={row.id} 
-            onClick={onClickRow && (() => onClickRow(row))} >
-            {columns.map(c => (
-            	<td key={c.key}>{row[c.key]}</td>
-          	))}
+        {rows.map((row) => (
+          <tr key={row.id} onClick={onClickRow && (() => onClickRow(row))}>
+            {columns.map((c) => (
+              <td key={c.key}>{row[c.key]}</td>
+            ))}
             {onClickDeleteButton && (
-              <td key="__delete" onClick={(e) => {e.stopPropagation()}}> 
+              <td
+                key="__delete"
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+              >
                 <DeleteButton onClick={() => onClickDeleteButton?.(row)} />
               </td>
             )}
           </tr>
         ))}
       </tbody>
-    </table>  
+    </table>
   );
 }
 // &&は||の逆で、左オペラント自身がTrueの時に右辺を返す

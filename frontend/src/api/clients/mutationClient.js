@@ -22,7 +22,9 @@ export async function patchCollectionItem({ collectionUrl, id, body }) {
 
 export async function deleteCollectionItem({ collectionUrl, id }) {
   const url = `${collectionUrl}${id}/`;
-  const { res } = await fetchBackend(url, { method: "DELETE", throwOnError: true });
+  const { res } = await fetchBackend(url, {
+    method: "DELETE",
+    throwOnError: true,
+  });
   return res;
 }
-

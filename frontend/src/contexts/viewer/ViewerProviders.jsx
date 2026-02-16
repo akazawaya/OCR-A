@@ -17,67 +17,73 @@ export const ViewerProviders = ({
   wordRows = [],
   wordUrl,
   children,
-  }) => {
+}) => {
   const pageState = useViewerPageState({ maxPage: pageRows.length });
   const pageData = useMemo(() => ({ rows: pageRows }), [pageRows]);
   const wordData = useMemo(() => ({ rows: wordRows }), [wordRows]);
   const wordState = useViewerWordState(pageData, wordData);
   const editState = useViewerEditState();
   const onRefresh = useRefresh();
-  
-  const pageStateValue = useMemo(() => ({
-    values: {
-      page: pageState.page,
-      zoom: pageState.zoom,
-      rotate: pageState.rotate,
-      ZOOM_STEP: pageState.ZOOM_STEP,
-      ROTATE_STEP: pageState.ROTATE_STEP,
-    },
-    events: {
-      onClickPageStepButton: pageState.setPage,
-      onClickZoomStepButton: pageState.setZoom,
-      onClickRotateStepButton: pageState.setRotate,
-      onEnterPageInput: pageState.commitPage,
-      onEnterZoomInput: pageState.commitZoom,
-      onEnterRotateInput: pageState.commitRotate,
-    },
-  }), [
-    pageState.page,
-    pageState.zoom,
-    pageState.rotate,
-    pageState.ZOOM_STEP,
-    pageState.ROTATE_STEP,
-    pageState.setPage,
-    pageState.setZoom,
-    pageState.setRotate,
-    pageState.commitPage,
-    pageState.commitZoom,
-    pageState.commitRotate,
-  ]);
 
-  const wordStateValue = useMemo(() => ({
-    values: {
-      pageMetaById: wordState.pageMetaById,
-      wordsByPageId: wordState.wordsByPageId,
-      hoveredWordId: wordState.hoveredWordId,
-      selectedWordId: wordState.selectedWordId,
-      selectedBy: wordState.selectedBy,
-    },
-    events: {
-      onHoverWord: wordState.hoverWord,
-      onHoverClearWord: wordState.clearHoveredWord,
-      onSelectWord: wordState.commitSelectWord,
-    },
-  }), [
-    wordState.pageMetaById,
-    wordState.wordsByPageId,
-    wordState.hoveredWordId,
-    wordState.selectedWordId,
-    wordState.selectedBy,
-    wordState.hoverWord,
-    wordState.clearHoveredWord,
-    wordState.commitSelectWord,
-  ]);
+  const pageStateValue = useMemo(
+    () => ({
+      values: {
+        page: pageState.page,
+        zoom: pageState.zoom,
+        rotate: pageState.rotate,
+        ZOOM_STEP: pageState.ZOOM_STEP,
+        ROTATE_STEP: pageState.ROTATE_STEP,
+      },
+      events: {
+        onClickPageStepButton: pageState.setPage,
+        onClickZoomStepButton: pageState.setZoom,
+        onClickRotateStepButton: pageState.setRotate,
+        onEnterPageInput: pageState.commitPage,
+        onEnterZoomInput: pageState.commitZoom,
+        onEnterRotateInput: pageState.commitRotate,
+      },
+    }),
+    [
+      pageState.page,
+      pageState.zoom,
+      pageState.rotate,
+      pageState.ZOOM_STEP,
+      pageState.ROTATE_STEP,
+      pageState.setPage,
+      pageState.setZoom,
+      pageState.setRotate,
+      pageState.commitPage,
+      pageState.commitZoom,
+      pageState.commitRotate,
+    ],
+  );
+
+  const wordStateValue = useMemo(
+    () => ({
+      values: {
+        pageMetaById: wordState.pageMetaById,
+        wordsByPageId: wordState.wordsByPageId,
+        hoveredWordId: wordState.hoveredWordId,
+        selectedWordId: wordState.selectedWordId,
+        selectedBy: wordState.selectedBy,
+      },
+      events: {
+        onHoverWord: wordState.hoverWord,
+        onHoverClearWord: wordState.clearHoveredWord,
+        onSelectWord: wordState.commitSelectWord,
+      },
+    }),
+    [
+      wordState.pageMetaById,
+      wordState.wordsByPageId,
+      wordState.hoveredWordId,
+      wordState.selectedWordId,
+      wordState.selectedBy,
+      wordState.hoverWord,
+      wordState.clearHoveredWord,
+      wordState.commitSelectWord,
+    ],
+  );
 
   // saveEditにpatchDraftByIdをくっつけたいのでここで合成する
   const { mutate: patchDraftById } = useBackendMutation({
@@ -99,30 +105,32 @@ export const ViewerProviders = ({
       await patchDraftById(editState.draftById);
       editState.saveEdit(); // 成功したときだけドラフトクリア
       onRefresh();
-    } catch {
-    }
+    } catch {}
   }, [patchDraftById, editState.draftById, editState.saveEdit, onRefresh]);
 
-  const editStateValue = useMemo(() => ({
-    values: {
-      isEditing: editState.isEditing,
-      draftById: editState.draftById,
-    },
-    events: {
-      onChangeDraftContent: editState.setDraftContent,
-      onClickEditButton: editState.startEdit, 
-      onClickSaveButton: saveAllEdits, 
-      onClickCancelButton: editState.cancelEdit
-    },
-  }), [
-    editState.isEditing,
-    editState.draftById,
-    editState.setDraftContent,
-    editState.startEdit,
-    editState.saveEdit,
-    editState.cancelEdit,
-    saveAllEdits
-  ]);
+  const editStateValue = useMemo(
+    () => ({
+      values: {
+        isEditing: editState.isEditing,
+        draftById: editState.draftById,
+      },
+      events: {
+        onChangeDraftContent: editState.setDraftContent,
+        onClickEditButton: editState.startEdit,
+        onClickSaveButton: saveAllEdits,
+        onClickCancelButton: editState.cancelEdit,
+      },
+    }),
+    [
+      editState.isEditing,
+      editState.draftById,
+      editState.setDraftContent,
+      editState.startEdit,
+      editState.saveEdit,
+      editState.cancelEdit,
+      saveAllEdits,
+    ],
+  );
   // childrenをラップすることで、内側にいるコンポーネントはuseContextでそれぞれのvalueを参照できる
   return (
     <ViewerPageStateProvider value={pageStateValue}>

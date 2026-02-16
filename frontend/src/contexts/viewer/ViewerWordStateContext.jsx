@@ -10,5 +10,10 @@ export const ViewerWordStateProvider = ({ value, children }) => (
 
 export const useViewerWordStateContext = () => {
   const ctx = useContext(ViewerWordStateContext);
-  return ctx ?? { values: { pageMetaById: new Map(), wordsByPageId: new Map() }, events: {} };
+  return (
+    ctx ?? {
+      values: { pageMetaById: new Map(), wordsByPageId: new Map() },
+      events: {},
+    }
+  );
 };

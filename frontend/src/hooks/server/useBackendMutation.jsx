@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export function useBackendMutation({ mutationFn, onSuccess, onError, initialData }) {
+export function useBackendMutation({
+  mutationFn,
+  onSuccess,
+  onError,
+  initialData,
+}) {
   const [data, setData] = useState(initialData);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -34,7 +39,7 @@ export function useBackendMutation({ mutationFn, onSuccess, onError, initialData
         if (requestId === requestIdRef.current) setIsLoading(false);
       }
     },
-    [onSuccess, onError]
+    [onSuccess, onError],
   );
 
   return { data, error, isLoading, mutate };

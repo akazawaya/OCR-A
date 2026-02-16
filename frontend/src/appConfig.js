@@ -1,6 +1,6 @@
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export const WS_BASE_URL = API_BASE_URL.replace("http", "ws");
-export const OPENAPI_URL = API_BASE_URL + "schema/"
+export const OPENAPI_URL = API_BASE_URL + "schema/";
 // 目的
 // OpenAPI（components/schemas）から型情報（schema）を動的に参照できる様にして、
 // REST の collection endpointに対して操作を行うための情報をまとめる。
@@ -14,8 +14,8 @@ export const OPENAPI_URL = API_BASE_URL + "schema/"
 // makeFoo: ルールベースで一意に決まるもの
 // attachFoo: 何かを束ねるとき
 
-const makeAccessSpec = ({schemaKey, collection}) =>{
-  const collectionPath = `${collection}/`; 
+const makeAccessSpec = ({ schemaKey, collection }) => {
+  const collectionPath = `${collection}/`;
   // ↑オブジェクトリテラル内に書かないのは、return以下はこれから作るプロパティに過ぎず、
   // 外側スコープに存在しないcollectionPathの参照がcollectionUrlで不可能になるため
   return {
@@ -23,13 +23,22 @@ const makeAccessSpec = ({schemaKey, collection}) =>{
     schemaKey,
     collection,
     collectionPath,
-    collectionUrl: API_BASE_URL + collectionPath
- }
+    collectionUrl: API_BASE_URL + collectionPath,
+  };
 };
 
-export const documentAccessSpec = makeAccessSpec({ schemaKey: "Document", collection: "documents" });
-export const pageAccessSpec = makeAccessSpec({ schemaKey: "Page", collection: "pages" });
-export const wordAccessSpec = makeAccessSpec({ schemaKey: "Word", collection: "words" });
+export const documentAccessSpec = makeAccessSpec({
+  schemaKey: "Document",
+  collection: "documents",
+});
+export const pageAccessSpec = makeAccessSpec({
+  schemaKey: "Page",
+  collection: "pages",
+});
+export const wordAccessSpec = makeAccessSpec({
+  schemaKey: "Word",
+  collection: "words",
+});
 export const analyzeDocumentAccessSpec = {
   analyzeUrl: API_BASE_URL + "documents/start_ocr/",
 };
@@ -53,10 +62,14 @@ const wordUiSpec = Object.freeze({
 // Resourceはrestに則った名称
 // 粒度で言えば返り値はcollectionに近いが、「外側が表す対象単位」として上位概念のresourceを採用する
 const attachResourceSpec = (accessSpec, uiSpec = {}) => ({
-  ...accessSpec,ui: Object.freeze(uiSpec),
+  ...accessSpec,
+  ui: Object.freeze(uiSpec),
 });
 
-export const documentSpec = attachResourceSpec(documentAccessSpec, documentUiSpec);
+export const documentSpec = attachResourceSpec(
+  documentAccessSpec,
+  documentUiSpec,
+);
 export const wordSpec = attachResourceSpec(wordAccessSpec, wordUiSpec);
 
 // routePaths（ルーティングに使うパス）

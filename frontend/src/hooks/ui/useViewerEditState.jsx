@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState } from "react";
 // Edit,Save,Cancelのロジック用まとめのhook
 
 export const useViewerEditState = () => {
@@ -8,27 +8,29 @@ export const useViewerEditState = () => {
   // Table側でのonChangeに合わせてこれを呼ぶ
   const setDraftContent = (wordId, nextContent) => {
     //setFooは変数だけではなく、関数型更新　例：prev => 返り値：更新後 も受け取れる
-    setDraftById(prev => ({ ...prev,[wordId]: nextContent} ));// ここでの[]は配列ではなく、オブジェクトリテラル{...}の用法の一部　[変数]をプロパティ名,キーにできる　こうしないと変数とならない
+    setDraftById((prev) => ({ ...prev, [wordId]: nextContent })); // ここでの[]は配列ではなく、オブジェクトリテラル{...}の用法の一部　[変数]をプロパティ名,キーにできる　こうしないと変数とならない
   };
-
 
   const startEdit = () => {
-    setIsEditing(true)
-  }
- 
+    setIsEditing(true);
+  };
+
   const saveEdit = () => {
-    setIsEditing(false)
+    setIsEditing(false);
     setDraftById({}); // 保存後はドラフトを空にするのが安全
-  }
+  };
 
   const cancelEdit = () => {
-    setIsEditing(false)
-    setDraftById({}); 
-  }
+    setIsEditing(false);
+    setDraftById({});
+  };
 
   return {
-    isEditing, draftById,
+    isEditing,
+    draftById,
     setDraftContent,
-    startEdit, saveEdit, cancelEdit
+    startEdit,
+    saveEdit,
+    cancelEdit,
   };
-}
+};

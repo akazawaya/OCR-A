@@ -8,11 +8,10 @@ const Sidebar = () => {
     <Drawer
       variant="permanent" // MUI のDrawerはそれそのままでsidebar的なUIをサポートする　permanentは常に表示の意(これはjsx側に置く必要がある)
       className={styles.drawerRoot}
-      >
-      <Link to ={routePaths.docs()} >Home</Link>
+    >
+      <Link to={routePaths.docs()}>Home</Link>
     </Drawer>
-    );
-
+  );
 };
 
 export default Sidebar;

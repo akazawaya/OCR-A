@@ -50,12 +50,12 @@ function fitFontPxVertical(rect, scale, text) {
 
 const pct = (v, base) => `${(v / base) * 100}%`;
 
-export const buildWordOverlayLayout = ({layerPx, meta, words = []}) => {
+export const buildWordOverlayLayout = ({ layerPx, meta, words = [] }) => {
   if (!meta || !layerPx?.w || !layerPx?.h) return { wordLayout: [] };
   // レイアウト基準のスケール layerPx（レンダー要素から直接得た要素のwhのpx)とmeta（DBからのwh座標系)から、
   // sx, sy 元画像の1単位が画面上で何pxに相当するかの倍率を返す
-  const scale = { sx:layerPx.w / meta.w, sy:layerPx.h / meta.h };
-  
+  const scale = { sx: layerPx.w / meta.w, sy: layerPx.h / meta.h };
+
   const items = [];
 
   for (const w of words) {
@@ -63,7 +63,7 @@ export const buildWordOverlayLayout = ({layerPx, meta, words = []}) => {
     if (!bbox.length) continue;
 
     const rect = bboxToRect(bbox);
-  
+
     const rectStyle = {
       left: pct(rect.left, meta.w),
       top: pct(rect.top, meta.h),

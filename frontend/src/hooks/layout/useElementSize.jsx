@@ -13,7 +13,7 @@ export const useElementSize = () => {
     const update = () => {
       const w = el.clientWidth;
       const h = el.clientHeight;
-      setLayerPx(prev => (prev.w === w && prev.h === h ? prev : { w, h }));
+      setLayerPx((prev) => (prev.w === w && prev.h === h ? prev : { w, h }));
       // 重さの軽減（w,hが前と同じ値ならsetしない）
     };
     update(); //　初期サイズ確定のため一回呼ぶ

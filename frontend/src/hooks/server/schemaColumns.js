@@ -8,7 +8,7 @@ export const buildColumnDefsFromSchema = (schema) => {
   const required = Array.isArray(schema.required) ? schema.required : [];
   // 並びを[必須(required),その他(others)]に変更（元の出現順がわからなければ名前順 ）
   const allKeys = Object.keys(props);
-  const others = allKeys.filter(k => !required.includes(k)).sort(); 
+  const others = allKeys.filter((k) => !required.includes(k)).sort();
   const ordered = [...required, ...others];
-  return ordered.map(key => ({ key, label: key })); // 列定義を返す
-}
+  return ordered.map((key) => ({ key, label: key })); // 列定義を返す
+};

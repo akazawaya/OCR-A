@@ -3,10 +3,9 @@ import { useElementSize } from "../../../../hooks/layout/useElementSize";
 import { buildWordOverlayLayout } from "../../../../hooks/layout/buildWordOverlayLayout";
 import { useMemo } from "react";
 
-
 export default function WordOverlay({ pageId }) {
   const viewerWordState = useViewerWordStateContext();
-  const { ref:layerRef, layerPx } = useElementSize()
+  const { ref: layerRef, layerPx } = useElementSize();
 
   const {
     values: { pageMetaById, wordsByPageId, hoveredWordId, selectedWordId } = {},
@@ -17,9 +16,9 @@ export default function WordOverlay({ pageId }) {
   const words = wordsByPageId.get(pageId);
 
   const { wordLayout } = useMemo(
-  () => buildWordOverlayLayout({ layerPx, meta, words }),
-  [layerPx, meta, words]
-);
+    () => buildWordOverlayLayout({ layerPx, meta, words }),
+    [layerPx, meta, words],
+  );
 
   return (
     <div ref={layerRef} style={{ position: "absolute", inset: 0, zIndex: 10 }}>
@@ -46,8 +45,8 @@ export default function WordOverlay({ pageId }) {
                 isSelected
                   ? "rgba(255,0,0,0.35)"
                   : isHover
-                  ? "rgba(255,0,0,0.20)"
-                  : "transparent"
+                    ? "rgba(255,0,0,0.20)"
+                    : "transparent"
               }
               stroke="red"
               strokeWidth="4"
@@ -75,7 +74,7 @@ export default function WordOverlay({ pageId }) {
               ...(w.mode === "vertical"
                 ? { writingMode: "vertical-rl", textOrientation: "upright" }
                 : null),
-               color: "transparent",
+              color: "transparent",
             }}
           >
             {w.text}

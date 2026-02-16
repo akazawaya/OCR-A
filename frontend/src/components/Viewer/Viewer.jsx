@@ -1,4 +1,4 @@
-import ViewerImage from "./ViewerImage/ViewerImage"
+import ViewerImage from "./ViewerImage/ViewerImage";
 import styles from "./Viewer.module.css";
 import ViewerTopBar from "./ViewerTopbar/ViewerTopbar";
 import ViewerTable from "./VIewerTable/ViewerTable";
@@ -11,7 +11,7 @@ export default function Viewer({
   wordColumns = [],
   loading,
   onClickColumn,
-  }) {
+}) {
   return (
     <ViewerProviders
       pageRows={pageRows}
@@ -35,5 +35,5 @@ export default function Viewer({
         </div>
       </div>
     </ViewerProviders>
-  )
+  );
 }

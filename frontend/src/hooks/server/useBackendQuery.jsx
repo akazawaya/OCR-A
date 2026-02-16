@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-export function useBackendQuery({ queryKey, queryFn, enabled = true, initialData }) {
+export function useBackendQuery({
+  queryKey,
+  queryFn,
+  enabled = true,
+  initialData,
+}) {
   const [data, setData] = useState(initialData);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
