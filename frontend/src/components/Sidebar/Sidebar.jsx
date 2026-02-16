@@ -1,7 +1,9 @@
 import { Drawer } from "@mui/material";
-import styles from "./Sidebar.module.css";
 import { Link } from "react-router-dom";
+
 import { routePaths } from "../../appConfig";
+
+import styles from "./Sidebar.module.css";
 
 const Sidebar = () => {
   return (

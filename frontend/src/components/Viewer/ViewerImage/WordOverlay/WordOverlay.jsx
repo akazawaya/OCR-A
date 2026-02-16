@@ -1,7 +1,8 @@
+import { useMemo } from "react";
+
 import { useViewerWordStateContext } from "../../../../contexts/viewer/ViewerWordStateContext";
 import { useElementSize } from "../../../../hooks/layout/useElementSize";
 import { buildWordOverlayLayout } from "../../../../hooks/layout/buildWordOverlayLayout";
-import { useMemo } from "react";
 
 export default function WordOverlay({ pageId }) {
   const viewerWordState = useViewerWordStateContext();

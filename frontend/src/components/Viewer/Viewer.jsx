@@ -1,9 +1,10 @@
+import { ViewerProviders } from "../../contexts/viewer/ViewerProviders";
+import { wordSpec } from "../../appConfig";
+
 import ViewerImage from "./ViewerImage/ViewerImage";
 import styles from "./Viewer.module.css";
 import ViewerTopBar from "./ViewerTopbar/ViewerTopbar";
 import ViewerTable from "./VIewerTable/ViewerTable";
-import { ViewerProviders } from "../../contexts/viewer/ViewerProviders";
-import { wordSpec } from "../../appConfig";
 
 export default function Viewer({
   pageRows = [],

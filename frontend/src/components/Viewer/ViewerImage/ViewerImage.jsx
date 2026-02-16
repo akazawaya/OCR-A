@@ -1,9 +1,11 @@
 // Image.jsxという名前にしたかったが名前衝突で自動保管が機能しないっぽい
 import { useEffect, useRef } from "react";
-import styles from "./ViewerImage.module.css";
-import WordOverlay from "./WordOverlay/WordOverlay";
+
 import { useViewerPageStateContext } from "../../../contexts/viewer/ViewerPageStateContext";
 import { useViewerWordStateContext } from "../../../contexts/viewer/ViewerWordStateContext";
+
+import styles from "./ViewerImage.module.css";
+import WordOverlay from "./WordOverlay/WordOverlay";
 // データソースではないため、useBoxesOverlayを直で呼んでも問題なし(コンフィグを持たせたい場合は再考慮が必要かと思う)
 
 export default function ViewerImage({ rows = [] }) {

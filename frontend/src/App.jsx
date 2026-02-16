@@ -1,6 +1,7 @@
 import "./App.css";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Box } from "@mui/material";
+
 import Sidebar from "./components/Sidebar/Sidebar";
 import DocumentsPage from "./pages/DocumentsPage";
 import OcrViewerPage from "./pages/OcrViewerPage";
