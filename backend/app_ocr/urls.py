@@ -20,15 +20,17 @@ DELETE /snippets/{pk}/ → destroy（削除）… name=snippet-detail
 
 # ルーターを作成し、ViewSet をそのルーターに登録します。
 router = DefaultRouter()
-router.register(r'users', views.UserViewSet, basename='user')
-router.register(r'documents', views.DocumentViewSet, basename='document')
-router.register(r'pages', views.PageViewSet, basename='page')
-router.register(r'words', views.WordViewSet, basename='word')
+router.register(r"users", views.UserViewSet, basename="user")
+router.register(r"documents", views.DocumentViewSet, basename="document")
+router.register(r"pages", views.PageViewSet, basename="page")
+router.register(r"words", views.WordViewSet, basename="word")
 
 # これにより、APIのURLはルーターによって自動的に決定されます。
 urlpatterns = [
-    path('', include(router.urls)),
-    path('schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path('redoc/', SpectacularRedocView.as_view(url_name='schema')),
+    path("", include(router.urls)),
+    path("schema/", SpectacularAPIView.as_view(), name="schema"),
+    path(
+        "swagger/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"
+    ),
+    path("redoc/", SpectacularRedocView.as_view(url_name="schema")),
 ]

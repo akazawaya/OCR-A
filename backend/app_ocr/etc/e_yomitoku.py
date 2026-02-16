@@ -3,12 +3,15 @@ import numpy as np
 from yomitoku.ocr import OCR
 from functools import lru_cache
 
+
 def init_engine():
     return OCR(visualize=False, device="auto")
+
 
 @lru_cache(maxsize=1)
 def get_engine():
     return init_engine()
+
 
 # 1ページずつ処理する方針
 def test_ocr(img_bytes, ocr):
@@ -16,8 +19,8 @@ def test_ocr(img_bytes, ocr):
     arr = np.frombuffer(img_bytes, dtype=np.uint8)
     arr_bgr = cv2.imdecode(arr, cv2.IMREAD_COLOR)
     if arr_bgr is None:
-        raise ValueError(f"failed to read")
-    img_rgb = cv2.cvtColor(arr_bgr, cv2.COLOR_BGR2RGB) # yomitokuはrgb入力想定    
+        raise ValueError("failed to read")
+    img_rgb = cv2.cvtColor(arr_bgr, cv2.COLOR_BGR2RGB)  # yomitokuはrgb入力想定
 
     results, _ = ocr(img_rgb)
     # ocrの初期化は外部入力を必要とする

@@ -6,50 +6,159 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Document',
+            name="Document",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('state', models.PositiveSmallIntegerField(choices=[(1, '待機中'), (2, '処理中'), (3, '完了'), (4, '失敗')], default=1)),
-                ('file', models.FileField(upload_to='input/', validators=[django.core.validators.FileExtensionValidator(allowed_extensions=['jpg', 'png', 'bmp', 'tif', 'pdf'])])),
-                ('file_name', models.CharField(max_length=255)),
-                ('file_type', models.PositiveSmallIntegerField(choices=[(1, 'jpg'), (2, 'png'), (3, 'bmp'), (4, 'tif'), (5, 'pdf')])),
-                ('total_pages', models.PositiveSmallIntegerField(default=1)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created", models.DateTimeField(auto_now_add=True)),
+                (
+                    "state",
+                    models.PositiveSmallIntegerField(
+                        choices=[
+                            (1, "待機中"),
+                            (2, "処理中"),
+                            (3, "完了"),
+                            (4, "失敗"),
+                        ],
+                        default=1,
+                    ),
+                ),
+                (
+                    "file",
+                    models.FileField(
+                        upload_to="input/",
+                        validators=[
+                            django.core.validators.FileExtensionValidator(
+                                allowed_extensions=["jpg", "png", "bmp", "tif", "pdf"]
+                            )
+                        ],
+                    ),
+                ),
+                ("file_name", models.CharField(max_length=255)),
+                (
+                    "file_type",
+                    models.PositiveSmallIntegerField(
+                        choices=[
+                            (1, "jpg"),
+                            (2, "png"),
+                            (3, "bmp"),
+                            (4, "tif"),
+                            (5, "pdf"),
+                        ]
+                    ),
+                ),
+                ("total_pages", models.PositiveSmallIntegerField(default=1)),
             ],
             options={
-                'ordering': ['created'],
+                "ordering": ["created"],
             },
         ),
         migrations.CreateModel(
-            name='Page',
+            name="Page",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('image', models.ImageField(blank=True, height_field='height_px', null=True, upload_to='input/1f5cb2ff-9ace-4cf1-9397-9e3b86461a05', width_field='width_px')),
-                ('state', models.PositiveSmallIntegerField(choices=[(1, '待機中'), (2, '処理中'), (3, '完了'), (4, '失敗')], default=1)),
-                ('page_number', models.PositiveSmallIntegerField(default=1)),
-                ('width_px', models.PositiveIntegerField(blank=True, null=True)),
-                ('height_px', models.PositiveIntegerField(blank=True, null=True)),
-                ('doc', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='pages', to='app_ocr.document')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "image",
+                    models.ImageField(
+                        blank=True,
+                        height_field="height_px",
+                        null=True,
+                        upload_to="input/1f5cb2ff-9ace-4cf1-9397-9e3b86461a05",
+                        width_field="width_px",
+                    ),
+                ),
+                (
+                    "state",
+                    models.PositiveSmallIntegerField(
+                        choices=[
+                            (1, "待機中"),
+                            (2, "処理中"),
+                            (3, "完了"),
+                            (4, "失敗"),
+                        ],
+                        default=1,
+                    ),
+                ),
+                ("page_number", models.PositiveSmallIntegerField(default=1)),
+                ("width_px", models.PositiveIntegerField(blank=True, null=True)),
+                ("height_px", models.PositiveIntegerField(blank=True, null=True)),
+                (
+                    "doc",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="pages",
+                        to="app_ocr.document",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Word',
+            name="Word",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('bbox', models.JSONField(blank=True, null=True)),
-                ('content', models.TextField(blank=True, null=True)),
-                ('direction', models.PositiveSmallIntegerField(choices=[(1, 'horizontal'), (2, 'vertical')])),
-                ('rec_score', models.FloatField(validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(1)])),
-                ('det_score', models.FloatField(validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(1)])),
-                ('page', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='words', to='app_ocr.page')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("bbox", models.JSONField(blank=True, null=True)),
+                ("content", models.TextField(blank=True, null=True)),
+                (
+                    "direction",
+                    models.PositiveSmallIntegerField(
+                        choices=[(1, "horizontal"), (2, "vertical")]
+                    ),
+                ),
+                (
+                    "rec_score",
+                    models.FloatField(
+                        validators=[
+                            django.core.validators.MinValueValidator(0),
+                            django.core.validators.MaxValueValidator(1),
+                        ]
+                    ),
+                ),
+                (
+                    "det_score",
+                    models.FloatField(
+                        validators=[
+                            django.core.validators.MinValueValidator(0),
+                            django.core.validators.MaxValueValidator(1),
+                        ]
+                    ),
+                ),
+                (
+                    "page",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="words",
+                        to="app_ocr.page",
+                    ),
+                ),
             ],
         ),
     ]

@@ -14,13 +14,13 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
+
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('', include('app_ocr.urls')),
+    path("", include("app_ocr.urls")),
 ]
 
 
@@ -29,5 +29,3 @@ urlpatterns = [
 if settings.DEBUG:
     # ファイルの配信(MEDIA_URL,MEDIA_ROOTがsettingで未設定の場合はデフォルトの"”を参照する)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-
