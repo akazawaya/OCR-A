@@ -46,7 +46,7 @@ services:
           path: ./backend
           target: /app
           ignore:
-            - .venv/ # ホスト側には.venvが存在しない想定だが、念のため同期の無視を明記する
+            - .venv/ # ホスト側にruffのインタープリター用の.venvが存在する想定で、同期を無視する
         - action: rebuild
           path: ./backend/uv.lock
         - action: rebuild

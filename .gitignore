@@ -39,3 +39,4 @@ dist-ssr
 *.sw?
 
 .env
+.ruff_cache
