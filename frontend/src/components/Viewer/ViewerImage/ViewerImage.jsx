@@ -45,19 +45,18 @@ export default function ViewerImage({ rows = [] }) {
       className={styles.viewerRoot}
       style={{ "--zoom": zoom, "--rotate": rotate }}
     >
-      {" "}
       {/* useRef(null) を作っただけでは参照されない */}
       {rows.map((r) => (
         <div key={r.id} className={styles.page} data-page={r.page_number}>
-          {" "}
           {/* CSSセレクタでピックするための符合 */}
           <div className={styles.pageInner} style={{ position: "relative" }}>
             <img
+              alt=""
               src={r.image}
               className={styles.pageImage}
               width={r.image_width}
               height={r.image_height}
-            />{" "}
+            />
             {/* CLS対応のため画像サイズを指定 */}
             <WordOverlay pageId={r.id} />
           </div>
