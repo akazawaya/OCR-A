@@ -1,8 +1,9 @@
 // Image.jsxという名前にしたかったが名前衝突で自動保管が機能しないっぽい
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 
 import { useViewerPageStateContext } from "../../../contexts/viewer/ViewerPageStateContext";
 import { useViewerWordStateContext } from "../../../contexts/viewer/ViewerWordStateContext";
+import { useScroll } from "../../../hooks/layout/useScroll";
 
 import styles from "./ViewerImage.module.css";
 import WordOverlay from "./WordOverlay/WordOverlay";
@@ -15,27 +16,17 @@ export default function ViewerImage({ rows = [] }) {
   const { values: { page, zoom, rotate } = {} } = viewerPageState;
   const { values: { selectedBy, selectedWordId } = {} } = viewerWordState;
 
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
+  // page変更に追随してスクロールする
+  useScroll({ rootRef, targetAttrName: "data-page", targetAttrValue: page });
 
-    const element = root.querySelector(`[data-page="${page}"]`);
-    if (!element) return;
-
-    element.scrollIntoView({ behavior: "auto", block: "start" });
-  }, [page]);
-
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-
-    if (selectedBy !== "table") return;
-
-    const element = root.querySelector(`[data-word="${selectedWordId}"]`);
-    if (!element) return;
-
-    element.scrollIntoView({ behavior: "auto", block: "start" });
-  }, [selectedBy, selectedWordId]);
+  // viewerImage起点のwordの選択時、viewerTable側を追随スクロールする
+  const shouldScroll = selectedBy === "table";
+  useScroll({
+    rootRef,
+    targetAttrName: "data-word",
+    targetAttrValue: selectedWordId,
+    shouldScroll,
+  });
 
   if (!rows.length) return <div>Loading…</div>;
 

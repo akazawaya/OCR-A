@@ -1,8 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 
 import { useViewerPageStateContext } from "../../../contexts/viewer/ViewerPageStateContext";
 import { useViewerWordStateContext } from "../../../contexts/viewer/ViewerWordStateContext";
 import { useViewerEditStateContext } from "../../../contexts/viewer/ViewerEditStateContext";
+import { useScroll } from "../../../hooks/layout/useScroll";
 // onClickRowはpageの時のnavigation用と、viewerの時のscroll用がある
 // ここではオプショナルチェイニング(.?)で両方を実行するようにして、呼び出し側からは重複しないようにする
 export default function ViewerTable({
@@ -26,27 +27,17 @@ export default function ViewerTable({
     events: { onChangeDraftContent } = {},
   } = viewerEditState;
 
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
+  // page変更に追随してスクロールする
+  useScroll({ rootRef, targetAttrName: "data-page", targetAttrValue: page });
 
-    const element = root.querySelector(`[data-page="${page}"]`);
-    if (!element) return;
-
-    element.scrollIntoView({ behavior: "auto", block: "start" });
-  }, [page]);
-
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-
-    if (selectedBy !== "image") return;
-
-    const element = root.querySelector(`[data-word="${selectedWordId}"]`);
-    if (!element) return;
-
-    element.scrollIntoView({ behavior: "auto", block: "start" });
-  }, [selectedBy, selectedWordId]);
+  // viewerTable起点のwordの選択時、viewerImage側を追随スクロールする
+  const shouldScroll = selectedBy === "image";
+  useScroll({
+    rootRef,
+    targetAttrName: "data-word",
+    targetAttrValue: selectedWordId,
+    shouldScroll,
+  });
 
   if (loading) return <div>Loading…</div>;
   return (
