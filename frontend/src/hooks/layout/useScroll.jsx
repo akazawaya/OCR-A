@@ -60,5 +60,5 @@ export const useScroll = ({
     if (!element) return;
 
     element.scrollIntoView({ behavior: "auto", block: "start" });
-  }, [targetAttrName, targetAttrValue, shouldScroll]);
+  }, [rootRef, targetAttrName, targetAttrValue, shouldScroll]);
 };

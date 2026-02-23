@@ -18,12 +18,15 @@ export default function WordOverlay({ pageId }) {
 
   const meta = pageMetaById.get(pageId);
   const words = wordsByPageId.get(pageId);
-  const imageSizePx = meta ? { w: meta.w, h: meta.h } : null;
+  const imageW = meta?.w;
+  const imageH = meta?.h;
 
-  const { wordLayout } = useMemo(
-    () => buildWordOverlayLayout({ clientSizePx, imageSizePx, words }),
-    [clientSizePx, imageSizePx, words],
-  );
+  const { wordLayout } = useMemo(() => {
+    const imageSizePx =
+      imageW == null || imageH == null ? null : { w: imageW, h: imageH };
+
+    return buildWordOverlayLayout({ clientSizePx, imageSizePx, words });
+  }, [clientSizePx, imageW, imageH, words]);
 
   return (
     <div
@@ -31,7 +34,7 @@ export default function WordOverlay({ pageId }) {
       style={{ position: "absolute", inset: 0, zIndex: 10 }}
     >
       <svg
-        viewBox={`0 0 ${imageSizePx?.w ?? 0} ${imageSizePx?.h ?? 0}`}
+        viewBox={`0 0 ${imageW ?? 0} ${imageH ?? 0}`}
         style={{
           position: "absolute",
           inset: 0,
@@ -77,7 +80,7 @@ export default function WordOverlay({ pageId }) {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
                 onSelectWord(w.id, "image");
-              } // 現状意味がないので強化検討の対象
+              } // 現状意味がないので強化検討対象
             }}
             style={{
               position: "absolute",

@@ -42,6 +42,6 @@ export const useClientSizePx = (elementRef) => {
     ro.observe(el);
 
     return () => ro.disconnect();
-  }, []);
+  }, [elementRef]);
   return { clientSizePx };
 };
