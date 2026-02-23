@@ -1,12 +1,15 @@
-import { useMemo } from "react";
+// css部分はjsxから切り離す、
+// useHover的なものの作成検討を行い、onClick,onHover等の都合をviewerImageと合わせる
+import { useMemo, useRef } from "react";
 
 import { useViewerWordStateContext } from "../../../../contexts/viewer/ViewerWordStateContext";
-import { useElementSize } from "../../../../hooks/layout/useElementSize";
+import { useClientSizePx } from "../../../../hooks/layout/useClientSizePx";
 import { buildWordOverlayLayout } from "../../../../hooks/layout/buildWordOverlayLayout";
 
 export default function WordOverlay({ pageId }) {
   const viewerWordState = useViewerWordStateContext();
-  const { ref: layerRef, layerPx } = useElementSize();
+  const elementRef = useRef(null);
+  const { clientSizePx } = useClientSizePx(elementRef);
 
   const {
     values: { pageMetaById, wordsByPageId, hoveredWordId, selectedWordId } = {},
@@ -15,16 +18,20 @@ export default function WordOverlay({ pageId }) {
 
   const meta = pageMetaById.get(pageId);
   const words = wordsByPageId.get(pageId);
+  const imageSizePx = meta ? { w: meta.w, h: meta.h } : null;
 
   const { wordLayout } = useMemo(
-    () => buildWordOverlayLayout({ layerPx, meta, words }),
-    [layerPx, meta, words],
+    () => buildWordOverlayLayout({ clientSizePx, imageSizePx, words }),
+    [clientSizePx, imageSizePx, words],
   );
 
   return (
-    <div ref={layerRef} style={{ position: "absolute", inset: 0, zIndex: 10 }}>
+    <div
+      ref={elementRef}
+      style={{ position: "absolute", inset: 0, zIndex: 10 }}
+    >
       <svg
-        viewBox={`0 0 ${meta.w} ${meta.h}`}
+        viewBox={`0 0 ${imageSizePx?.w ?? 0} ${imageSizePx?.h ?? 0}`}
         style={{
           position: "absolute",
           inset: 0,
@@ -41,7 +48,7 @@ export default function WordOverlay({ pageId }) {
             <polygon
               key={w.id}
               data-word={w.id}
-              points={w.points}
+              points={w.polygon.points}
               fill={
                 isSelected
                   ? "rgba(255,0,0,0.35)"
@@ -64,21 +71,29 @@ export default function WordOverlay({ pageId }) {
             onMouseEnter={() => onHoverWord(w.id)}
             onMouseLeave={onHoverClearWord}
             onClick={() => onSelectWord(w.id, "image")}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onSelectWord(w.id, "image");
+              } // 現状意味がないので強化検討の対象
+            }}
             style={{
               position: "absolute",
-              ...w.rectStyle,
-              fontSize: `${w.fontPx}px`,
+              ...w.span.style,
+              fontSize: `${w.span.fontPx}px`,
               lineHeight: 1,
               whiteSpace: "nowrap",
               overflow: "hidden",
               userSelect: "text",
-              ...(w.mode === "vertical"
+              ...(w.span.mode === "vertical"
                 ? { writingMode: "vertical-rl", textOrientation: "upright" }
                 : null),
               color: "transparent",
             }}
           >
-            {w.text}
+            {w.span.text}
           </span>
         );
       })}
