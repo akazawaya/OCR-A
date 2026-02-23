@@ -24,6 +24,11 @@
  * @param {Array<{ id: string|number, bbox: Array<[number, number]>, content: string|null }>} [params.words]
  * - OCR結果のwordの配列。bboxは頂点座標[[x1,y1],[x2,y2],...]を想定
  *
+ * @param {string | undefined} [params.fontFamily]
+ * - 文字のサイズ推定の計算に使う際のfontFamily
+ * 　 ※ undefined の場合はデフォルトの FONTFAMILYを使用するが、
+ * 　   null や空文字が渡されるとデフォルト扱いにならないため、呼び出し側はundefinedで省略すること。
+ *
  * @returns {{ wordLayout: WordOverlayItem[] }}
  * - wordLayout: overlay描画用のアイテム配列（polygon用 + span用)
  */
@@ -46,10 +51,8 @@
  * @typedef {{ id: string|number, polygon: WordPolygonLayout, span: WordSpanLayout }} WordOverlayItem
  */
 
-// size調整のために仮で文字のサイズを出力して、その幅の大きさと比較する
-// span に使う fontFamily(index.css の :root と同じ値)
+// デフォルトのFONTFAMILY
 const FONTFAMILY = "system-ui, Avenir, Helvetica, Arial, sans-serif";
-// const fontFamily = getComputedStyle(spanElement).fontFamily;　を使えるなら使いたい
 
 // x, yの最大値/最小値からrect{ left, top, width, height }を得る
 // この値を"rectStyle"としてspanの絶対座標に使う
@@ -116,6 +119,7 @@ export const buildWordOverlayLayout = ({
   clientSizePx,
   imageSizePx,
   words = [],
+  fontFamily = FONTFAMILY,
 }) => {
   if (!imageSizePx || !clientSizePx?.w || !clientSizePx?.h)
     return { wordLayout: [] };
@@ -148,7 +152,7 @@ export const buildWordOverlayLayout = ({
     const fontPx =
       mode === "vertical"
         ? fitFontPxVertical(rect, scale, text)
-        : fitFontPxHorizontal(rect, scale, text, FONTFAMILY);
+        : fitFontPxHorizontal(rect, scale, text, fontFamily);
     const points = bbox.map(([x, y]) => `${x},${y}`).join(" ");
 
     items.push({
