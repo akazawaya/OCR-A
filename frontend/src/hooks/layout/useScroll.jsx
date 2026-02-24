@@ -35,10 +35,10 @@
  * - ReactでDOMを操作可能にする方法として、refを経由することが定石。
  * 　よって、呼び出し側のcomponentがrefを作成し、useScrollが受け取る責務とする。
  *
- * - ref.currentの変化はReactの依存配列では追跡されない。
+ * - ref.currentの変化はreactの依存配列では追跡されない。
  *   また、ref.currentの更新自体は再レンダリングを発生させない。
- *   よって。depsにrootRefを含めても、currentの変化を検知しないため、
- *   useEffectの依存にrootRefは含めない。
+ * - 依存配列に含められるのはrootRef（refオブジェクト）であり、currentの変化は検知できない。
+ * - ただし、effect内でrootRefを参照しているため参照整合性の観点からdepsにrootRefを含める。
  */
 
 import { useEffect } from "react";
