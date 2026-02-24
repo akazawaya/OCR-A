@@ -43,7 +43,7 @@ const DocumentsPage = () => {
   const [refresh, onRefresh] = useReducer((n) => n + 1, 0);
 
   const { search, columnsSort, dataRouter } = useRouting({
-    routeUrl: (row) => routePaths.viewer(row.id),
+    routeUrl: (resource) => routePaths.viewer(resource.id),
   });
   const { conditions, updateConditions } = useFilterState();
 
@@ -70,7 +70,7 @@ const DocumentsPage = () => {
     onSuccess: () => onRefresh(),
   });
   const deleteRow = useCallback(
-    (row) => deleteRowMutation({ id: row.id }),
+    (resource) => deleteRowMutation({ id: resource.id }),
     [deleteRowMutation],
   );
 
