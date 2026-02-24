@@ -5,14 +5,7 @@
  * - OCR結果のword配列から、overlay描画に必要なレイアウト情報(polygonとspan)を生成する。
  * - clientSizePx(DOM要素のサイズ), imageSizePx(座標系全体のサイズ）を受け取り、拡大縮小に伴うサイズの変更を担う。
  *
- * 特筆事項:
- * 内部関数について
- * - bboxToRect: bboxからspan配置用のrect(画像座標系)を算出する
- * - measureTextPx: canvasで文字幅計測
- * - decideWritingMode: 縦書き/横書きの判定(縦書きは排除を検討中)
- * - fitFontPxHorizontal/Vertical: bbox内に収めるためのfontPxの計算
- *
- * @param {Object} params
+ * @param {object} params
  *
  * @param {{ w:number, h:number }} params.clientSizePx
  * - overlayを描画するDOM要素のclientサイズ
@@ -27,35 +20,36 @@
  * @param {string | undefined} [params.fontFamily]
  * - 文字のサイズ推定の計算に使う際のfontFamily
  * 　 ※ undefined の場合はデフォルトの FONTFAMILYを使用するが、
- * 　   null や空文字が渡されるとデフォルト扱いにならないため、呼び出し側はundefinedで省略すること。
+ * 　   nullや空文字が渡されるとデフォルト扱いにならないため、呼び出し側はundefinedで省略すること。
  *
- * @returns {{ wordLayout: WordOverlayItem[] }}
- * - wordLayout: overlay描画用のアイテム配列（polygon用 + span用)
- */
-
-/**
- * @typedef {{ left: string, top: string, width: string, height: string }} PercentRectStyle
- */
-
-/**
- * @typedef {{ points: string }} WordPolygonLayout
- * - svg <polygon> に渡すレイアウト情報
- */
-
-/**
- * @typedef {{ style: PercentRectStyle, text: string, mode: "vertical"|"horizontal", fontPx: number }} WordSpanLayout
- * - <span> に渡すレイアウト情報
- */
-
-/**
- * @typedef {{ id: string|number, polygon: WordPolygonLayout, span: WordSpanLayout }} WordOverlayItem
+ * @returns {object} result
+ *
+ * @property {Array<{
+ *   id: string|number,
+ *   polygon: { points: string },
+ *   span: {
+ *     style: { left: string, top: string, width: string, height: string },
+ *     text: string,
+ *     mode: "vertical"|"horizontal",
+ *     fontPx: number
+ *   }
+ * }>} result.wordLayout
+ * - overlay描画用のアイテム配列（<polygon>用 + <span>用）
+ *
+ * 特筆事項:
+ * 内部関数について
+ * - bboxToRect: bboxからspan配置用のrect(画像座標系)を算出する
+ * - measureTextPx: canvasで文字幅計測
+ * - decideWritingMode: 縦書き/横書きの判定(縦書きは排除を検討中)
+ * - fitFontPxHorizontal/Vertical: bbox内に収めるためのfontPxの計算
+ *
  */
 
 // デフォルトのFONTFAMILY
 const FONTFAMILY = "system-ui, Avenir, Helvetica, Arial, sans-serif";
 
 // x, yの最大値/最小値からrect{ left, top, width, height }を得る
-// この値を"rectStyle"としてspanの絶対座標に使う
+// この値を基にrectStyleに変換して、spanの絶対座標に使う
 function bboxToRect(bbox) {
   const xs = bbox.map(([x]) => x);
   const ys = bbox.map(([, y]) => y);
@@ -138,8 +132,6 @@ export const buildWordOverlayLayout = ({
 
     const rect = bboxToRect(bbox);
 
-    // rectStyle: image座標系のrect(left/top/width/height) を%に変換したもの。
-    // 親要素(absolute配置)のwidth/heightに対して相対的に追随するため%を使う。
     const rectStyle = {
       left: toPercent(rect.left, imageSizePx.w),
       top: toPercent(rect.top, imageSizePx.h),
