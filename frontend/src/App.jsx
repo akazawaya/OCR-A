@@ -4,6 +4,7 @@ import { Box } from "@mui/material";
 
 import DocumentsPage from "./pages/DocumentsPage";
 import OcrViewerPage from "./pages/OcrViewerPage";
+import { routePaths } from "./appConfig";
 
 function App() {
   return (
@@ -12,10 +13,14 @@ function App() {
         <Box className="app-sidebar"></Box>
         <Box component="main" className="app-main">
           <Routes>
+            {/* ルート( / )でも documents 一覧を表示する */}
             <Route path="/" element={<DocumentsPage />} />
-            <Route path="documents" element={<DocumentsPage />} />
             <Route
-              path="documents/:primaryKey/viewer"
+              path={routePaths.docs.template}
+              element={<DocumentsPage />}
+            />
+            <Route
+              path={routePaths.viewer.template}
               element={<OcrViewerPage />}
             />
           </Routes>

@@ -73,8 +73,15 @@ export const documentSpec = attachResourceSpec(
 export const wordSpec = attachResourceSpec(wordAccessSpec, wordUiSpec);
 
 // routePaths（ルーティングに使うパス）
-// useParams で:〇〇 の部分をオブジェクトとして受け取る
+// template:React Routerのdynamic paramsを用いた抽象URL。App.jsx の <Route path=...> に渡して定義に使う。
+// to: 遷移先URLを生成する関数。Link の to や navigate() に渡す具体URLを作る。
 export const routePaths = Object.freeze({
-  docs: () => "/documents",
-  viewer: (primaryKey) => `/documents/${encodeURIComponent(primaryKey)}/viewer`,
+  docs: {
+    template: "/documents",
+    to: () => "/documents",
+  },
+  viewer: {
+    template: "/documents/:primaryKey/viewer",
+    to: (primaryKey) => `/documents/${encodeURIComponent(primaryKey)}/viewer`,
+  },
 });

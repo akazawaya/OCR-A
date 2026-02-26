@@ -43,7 +43,7 @@ const DocumentsPage = () => {
   const [refresh, onRefresh] = useReducer((n) => n + 1, 0);
 
   const { search, columnsSort, dataRouter } = useRouting({
-    routeUrl: (resource) => routePaths.viewer(resource.id),
+    routeUrl: (resource) => routePaths.viewer.to(resource.id),
   });
   const { conditions, updateConditions } = useFilterState();
 

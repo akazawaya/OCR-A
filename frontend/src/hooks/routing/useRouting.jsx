@@ -48,6 +48,7 @@ export const useRouting = ({ routeUrl } = {}) => {
   const navigate = useNavigate();
   const { search } = useLocation();
   const { primaryKey } = useParams();
+  // useLocation() /useParams()はが返すオブジェクトは、複数プロパティを持つため、分割代入の{}で、必要なプロパティのみを取得する
 
   // orderingを引数にすると、子がorderingを把握する必要が出るため書かない
   const columnsSort = useCallback(
