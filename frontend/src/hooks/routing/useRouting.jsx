@@ -37,31 +37,35 @@
 import { useCallback, useMemo } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
-// currentOrderingを　なし→　+　→　-　→　解除の流れで記入
-const toggleOrdering = (current, field) => {
-  if (current === field) return `-${field}`;
-  else if (current === `-${field}`) return "";
-  else return field; // なしor別フィールド → 昇順開始
+//　orderingValueの現在の値を、素のorderingFieldと比較して、
+// 「未指定 → 昇順 → 降順 → 解除」の順にトグルする関数
+
+const toggleOrdering = (orderingValue, orderingField) => {
+  if (orderingValue === orderingField) return `-${orderingField}`;
+  else if (orderingValue === `-${orderingField}`) return "";
+  else return orderingField; // なしor別フィールド → 昇順開始
 };
 
 export const useRouting = ({ routeUrl } = {}) => {
   const navigate = useNavigate();
   const { search } = useLocation();
   const { primaryKey } = useParams();
-  // useLocation() /useParams()はが返すオブジェクトは、複数プロパティを持つため、分割代入の{}で、必要なプロパティのみを取得する
+  // useLocation()/useParams()はが返すオブジェクトは、複数プロパティを持つため、分割代入の{}で、必要なプロパティのみを取得する
 
-  // orderingを引数にすると、子がorderingを把握する必要が出るため書かない
   const columnsSort = useCallback(
-    (field) => {
+    (orderingField) => {
       // 破壊的操作(set,delete)を行うため、クロージャとは個別にparamsを作成
-      const current = new URLSearchParams(search || "");
-      const currentOrdering = current.get("ordering") || "";
+      const queryParams = new URLSearchParams(search || "");
+      const currentOrderingValue = queryParams.get("ordering") || "";
 
-      const next = toggleOrdering(currentOrdering, field);
-      if (next) current.set("ordering", next);
-      else current.delete("ordering");
+      const nextOrderingValue = toggleOrdering(
+        currentOrderingValue,
+        orderingField,
+      );
+      if (nextOrderingValue) queryParams.set("ordering", nextOrderingValue);
+      else queryParams.delete("ordering");
 
-      navigate({ search: current.toString() }, { replace: true });
+      navigate({ search: queryParams.toString() }, { replace: true });
     },
     [search, navigate],
   );
