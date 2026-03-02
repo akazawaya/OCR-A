@@ -1,10 +1,10 @@
 import { useCallback, useMemo } from "react";
+import { useMutation } from "@tanstack/react-query";
 
 import { useViewerPageState } from "../../hooks/ui/useViewerPageState";
 import { useViewerWordState } from "../../hooks/ui/useViewerWordState";
 import { useViewerEditState } from "../../hooks/ui/useViewerEditState.jsx";
 import { useRefresh } from "../refreshContext";
-import { useBackendMutation } from "../../hooks/server/useBackendMutation";
 import { patchCollectionItem } from "../../api/clients/mutationClient";
 
 import { ViewerPageStateProvider } from "./ViewerPageStateContext";
@@ -88,7 +88,7 @@ export const ViewerProviders = ({
   );
 
   // saveEditにpatchDraftByIdをくっつけたいのでここで合成する
-  const { mutate: patchDraftById } = useBackendMutation({
+  const { mutate: patchDraftById } = useMutation({
     mutationFn: async (draftById) => {
       const snapshot = { ...(draftById ?? {}) };
       const entries = Object.entries(snapshot);
@@ -107,7 +107,9 @@ export const ViewerProviders = ({
       await patchDraftById(editState.draftById);
       editState.saveEdit(); // 成功したときだけドラフトクリア
       onRefresh();
-    } catch {}
+    } catch (e) {
+      console.error("saveAllEdits failed", e);
+    }
   }, [patchDraftById, editState.draftById, editState.saveEdit, onRefresh]);
 
   const editStateValue = useMemo(

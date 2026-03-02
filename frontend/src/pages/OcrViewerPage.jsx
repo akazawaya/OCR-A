@@ -1,10 +1,10 @@
 import { useMemo, useReducer } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import { RefreshContext } from "../contexts/refreshContext";
 import { pageAccessSpec, wordSpec } from "../appConfig";
 import Viewer from "../components/Viewer/Viewer";
 import { useRouting } from "../hooks/routing/useRouting";
-import { useBackendQuery } from "../hooks/server/useBackendQuery";
 import { getCollection } from "../api/clients/collectionClient";
 import { buildSearch } from "../hooks/server/collectionQuery";
 // Pageが渡すのは server/のfetch経由のデータと、routing/のルート関連
@@ -27,22 +27,21 @@ const OcrViewerPage = () => {
   );
 
   const { collectionUrl: pageCollectionUrl } = pageAccessSpec;
-
-  const { data: pageRows } = useBackendQuery({
+  const { data: pageRows = [] } = useQuery({
     queryKey: ["collection", pageCollectionUrl, pageSearch ?? ""],
     queryFn: () =>
       getCollection({ collectionUrl: pageCollectionUrl, search: pageSearch }),
     enabled: Boolean(pageCollectionUrl),
-    initialData: [],
+    placeholderData: [],
   });
 
   const { collectionUrl: wordCollectionUrl } = wordSpec;
-  const { data: wordRows, isLoading: wordRowsLoading } = useBackendQuery({
+  const { data: wordRows = [], isLoading: wordRowsLoading } = useQuery({
     queryKey: ["collection", wordCollectionUrl, wordSearch ?? "", refresh],
     queryFn: () =>
       getCollection({ collectionUrl: wordCollectionUrl, search: wordSearch }),
     enabled: Boolean(wordCollectionUrl),
-    initialData: [],
+    placeholderData: [],
   });
   const wordColumns = wordSpec.ui.table.map(({ key, label }) => ({
     key,

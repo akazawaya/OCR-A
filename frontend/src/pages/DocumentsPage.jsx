@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 import MenuTable from "../components/MenuTable/MenuTable";
 import FileUploader from "../components/FileUploader/FileUploader";
@@ -19,8 +20,6 @@ import {
 import { RefreshContext } from "../contexts/refreshContext";
 import { useRouting } from "../hooks/routing/useRouting";
 import { useFilterState } from "../hooks/ui/useFilterState";
-import { useBackendQuery } from "../hooks/server/useBackendQuery";
-import { useBackendMutation } from "../hooks/server/useBackendMutation";
 import { getCollection } from "../api/clients/collectionClient";
 import {
   analyzeDocument,
@@ -58,14 +57,14 @@ const DocumentsPage = () => {
     [search, appliedConditions],
   );
 
-  const { data: rows, isLoading: rowsLoading } = useBackendQuery({
+  const { data: rows, isLoading: rowsLoading } = useQuery({
     queryKey: ["collection", collectionUrl, finalSearch ?? "", refresh],
     queryFn: () => getCollection({ collectionUrl, search: finalSearch }),
     enabled: Boolean(collectionUrl),
-    initialData: [],
+    placeholderData: [],
   });
 
-  const { mutate: deleteRowMutation } = useBackendMutation({
+  const { mutate: deleteRowMutation } = useMutation({
     mutationFn: ({ id }) => deleteCollectionItem({ collectionUrl, id }),
     onSuccess: () => onRefresh(),
   });
@@ -74,7 +73,7 @@ const DocumentsPage = () => {
     [deleteRowMutation],
   );
 
-  const { mutate: analyzeMutation } = useBackendMutation({
+  const { mutate: analyzeMutation } = useMutation({
     mutationFn: ({ formData }) => analyzeDocument({ analyzeUrl, formData }),
     onSuccess: () => onRefresh(),
   });
@@ -88,7 +87,7 @@ const DocumentsPage = () => {
     }
     const formData = new FormData();
     formData.append("file", file);
-    analyzeMutation({ formData }).catch(() => {});
+    analyzeMutation({ formData });
   }, [analyzeMutation]);
 
   const documentColumns = documentSpec.ui.table.map(({ key, label }) => ({
