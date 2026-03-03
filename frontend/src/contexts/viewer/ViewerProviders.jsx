@@ -1,11 +1,9 @@
-import { useCallback, useMemo } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMemo } from "react";
 
 import { useViewerPageState } from "../../hooks/ui/useViewerPageState";
 import { useViewerWordState } from "../../hooks/ui/useViewerWordState";
 import { useViewerEditState } from "../../hooks/ui/useViewerEditState.jsx";
 import { useRefresh } from "../refreshContext";
-import { patchCollectionItem } from "../../api/clients/mutationClient";
 
 import { ViewerPageStateProvider } from "./ViewerPageStateContext";
 import { ViewerWordStateProvider } from "./ViewerWordStateContext";
@@ -17,15 +15,15 @@ import { ViewerEditStateProvider } from "./ViewerEditStateContext";
 export const ViewerProviders = ({
   pageRows = [],
   wordRows = [],
-  wordUrl,
   children,
+  commitDraftById,
 }) => {
   const pageState = useViewerPageState({ maxPage: pageRows.length });
   const pageData = useMemo(() => ({ rows: pageRows }), [pageRows]);
   const wordData = useMemo(() => ({ rows: wordRows }), [wordRows]);
   const wordState = useViewerWordState(pageData, wordData);
-  const editState = useViewerEditState();
   const onRefresh = useRefresh();
+  const editState = useViewerEditState({ commitDraftById, onRefresh });
 
   const pageStateValue = useMemo(
     () => ({
@@ -87,31 +85,6 @@ export const ViewerProviders = ({
     ],
   );
 
-  // saveEditにpatchDraftByIdをくっつけたいのでここで合成する
-  const { mutate: patchDraftById } = useMutation({
-    mutationFn: async (draftById) => {
-      const snapshot = { ...(draftById ?? {}) };
-      const entries = Object.entries(snapshot);
-      for (const [wordId, content] of entries) {
-        await patchCollectionItem({
-          collectionUrl: wordUrl,
-          id: wordId,
-          body: { content },
-        });
-      }
-      return entries.length;
-    },
-  });
-  const saveAllEdits = useCallback(async () => {
-    try {
-      await patchDraftById(editState.draftById);
-      editState.saveEdit(); // 成功したときだけドラフトクリア
-      onRefresh();
-    } catch (e) {
-      console.error("saveAllEdits failed", e);
-    }
-  }, [patchDraftById, editState.draftById, editState.saveEdit, onRefresh]);
-
   const editStateValue = useMemo(
     () => ({
       values: {
@@ -121,7 +94,7 @@ export const ViewerProviders = ({
       events: {
         onChangeDraftContent: editState.setDraftContent,
         onClickEditButton: editState.startEdit,
-        onClickSaveButton: saveAllEdits,
+        onClickSaveButton: editState.saveEdit,
         onClickCancelButton: editState.cancelEdit,
       },
     }),
@@ -132,7 +105,6 @@ export const ViewerProviders = ({
       editState.startEdit,
       editState.saveEdit,
       editState.cancelEdit,
-      saveAllEdits,
     ],
   );
   // childrenをラップすることで、内側にいるコンポーネントはuseContextでそれぞれのvalueを参照できる

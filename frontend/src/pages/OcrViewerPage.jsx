@@ -1,12 +1,13 @@
 import { useMemo, useReducer } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
-import { RefreshContext } from "../contexts/refreshContext";
 import { pageAccessSpec, wordSpec } from "../appConfig";
+import { RefreshContext } from "../contexts/refreshContext";
 import Viewer from "../components/Viewer/Viewer";
 import { useRouting } from "../hooks/routing/useRouting";
 import { getCollection } from "../api/clients/collectionClient";
 import { buildSearch } from "../hooks/server/collectionQuery";
+import { patchCollectionItem } from "../api/clients/mutationClient";
 // Pageが渡すのは server/のfetch経由のデータと、routing/のルート関連
 const OcrViewerPage = () => {
   const [refresh, onRefresh] = useReducer((n) => n + 1, 0);
@@ -43,10 +44,25 @@ const OcrViewerPage = () => {
     enabled: Boolean(wordCollectionUrl),
     placeholderData: [],
   });
+
   const wordColumns = wordSpec.ui.table.map(({ key, label }) => ({
     key,
     label,
   }));
+
+  const { mutateAsync: commitDraftById } = useMutation({
+    mutationFn: async (draftById) => {
+      const snapshot = { ...(draftById ?? {}) };
+      const entries = Object.entries(snapshot);
+      for (const [wordId, content] of entries) {
+        await patchCollectionItem({
+          collectionUrl: wordCollectionUrl,
+          id: wordId,
+          body: { content },
+        });
+      }
+    },
+  });
 
   // 下記Viewerのpropの渡し方は、インタフェース分離から言ってよくないが、明示のスタイルをとると
   //　Page-Viewer-Parts間の修正が必要になり大変なので特別に許容する
@@ -59,6 +75,7 @@ const OcrViewerPage = () => {
         wordColumns={wordColumns}
         loading={wordRowsLoading}
         onClickColumn={routing.columnsSort}
+        commitDraftById={commitDraftById}
       />
     </RefreshContext.Provider>
   );

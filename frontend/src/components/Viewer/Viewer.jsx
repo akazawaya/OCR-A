@@ -1,5 +1,4 @@
 import { ViewerProviders } from "../../contexts/viewer/ViewerProviders";
-import { wordSpec } from "../../appConfig";
 
 import ViewerImage from "./ViewerImage/ViewerImage";
 import styles from "./Viewer.module.css";
@@ -12,12 +11,13 @@ export default function Viewer({
   wordColumns = [],
   loading,
   onClickColumn,
+  commitDraftById,
 }) {
   return (
     <ViewerProviders
       pageRows={pageRows}
       wordRows={wordRows}
-      wordUrl={wordSpec.collectionUrl}
+      commitDraftById={commitDraftById}
     >
       <div className={styles.viewerRoot}>
         <ViewerTopBar />
