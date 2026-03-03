@@ -21,7 +21,7 @@ export const ViewerProviders = ({
   const pageState = useViewerPageState({ maxPage: pageRows.length });
   const pageData = useMemo(() => ({ rows: pageRows }), [pageRows]);
   const wordData = useMemo(() => ({ rows: wordRows }), [wordRows]);
-  const wordState = useViewerWordState(pageData, wordData);
+  const wordState = useViewerWordState({ pageData, wordData });
   const onRefresh = useRefresh();
   const editState = useViewerEditState({ commitDraftById, onRefresh });
 

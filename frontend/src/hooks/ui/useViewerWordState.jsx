@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
+
 // Hover時とClick時のwordのidと、TableのDOMに直接挿入できるようなsvgの集合を返す
-export const useViewerWordState = (pageData, wordData) => {
+export const useViewerWordState = ({ pageData, wordData }) => {
   const pages = pageData?.rows ?? [];
   const words = wordData?.rows ?? [];
 
