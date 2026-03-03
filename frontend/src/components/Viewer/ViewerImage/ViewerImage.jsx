@@ -9,7 +9,7 @@ import styles from "./ViewerImage.module.css";
 import WordOverlay from "./WordOverlay/WordOverlay";
 // データソースではないため、useBoxesOverlayを直で呼んでも問題なし(コンフィグを持たせたい場合は再考慮が必要かと思う)
 
-export default function ViewerImage({ rows = [] }) {
+export default function ViewerImage({ pages }) {
   const rootRef = useRef(null);
   const viewerPageState = useViewerPageStateContext();
   const viewerWordState = useViewerWordStateContext();
@@ -28,7 +28,7 @@ export default function ViewerImage({ rows = [] }) {
     shouldScroll,
   });
 
-  if (!rows.length) return <div>Loading…</div>;
+  if (!pages.length) return <div>Loading…</div>;
 
   return (
     <div
@@ -37,7 +37,7 @@ export default function ViewerImage({ rows = [] }) {
       style={{ "--zoom": zoom, "--rotate": rotate }}
     >
       {/* useRef(null) を作っただけでは参照されない */}
-      {rows.map((r) => (
+      {pages.map((r) => (
         <div key={r.id} className={styles.page} data-page={r.page_number}>
           {/* CSSセレクタでピックするための符合 */}
           <div className={styles.pageInner} style={{ position: "relative" }}>

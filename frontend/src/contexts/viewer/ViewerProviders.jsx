@@ -13,15 +13,13 @@ import { ViewerEditStateProvider } from "./ViewerEditStateContext";
 // useReducerは状態更新ロジックをまとめたいときの状態管理手段なので、
 // 現状としては、useViewerFooStateそれぞれがuseStateを知っていればそれで充分
 export const ViewerProviders = ({
-  pageRows = [],
-  wordRows = [],
+  pages = [],
+  words = [],
   children,
   commitDraftById,
 }) => {
-  const pageState = useViewerPageState({ maxPage: pageRows.length });
-  const pageData = useMemo(() => ({ rows: pageRows }), [pageRows]);
-  const wordData = useMemo(() => ({ rows: wordRows }), [wordRows]);
-  const wordState = useViewerWordState({ pageData, wordData });
+  const pageState = useViewerPageState({ maxPage: pages.length });
+  const wordState = useViewerWordState({ pages, words });
   const onRefresh = useRefresh();
   const editState = useViewerEditState({ commitDraftById, onRefresh });
 

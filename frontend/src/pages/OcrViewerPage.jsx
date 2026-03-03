@@ -28,7 +28,7 @@ const OcrViewerPage = () => {
   );
 
   const { collectionUrl: pageCollectionUrl } = pageAccessSpec;
-  const { data: pageRows = [] } = useQuery({
+  const { data: pages = [] } = useQuery({
     queryKey: ["collection", pageCollectionUrl, pageSearch ?? ""],
     queryFn: () =>
       getCollection({ collectionUrl: pageCollectionUrl, search: pageSearch }),
@@ -37,7 +37,7 @@ const OcrViewerPage = () => {
   });
 
   const { collectionUrl: wordCollectionUrl } = wordSpec;
-  const { data: wordRows = [], isLoading: wordRowsLoading } = useQuery({
+  const { data: words = [], isLoading: wordRowsLoading } = useQuery({
     queryKey: ["collection", wordCollectionUrl, wordSearch ?? "", refresh],
     queryFn: () =>
       getCollection({ collectionUrl: wordCollectionUrl, search: wordSearch }),
@@ -45,7 +45,7 @@ const OcrViewerPage = () => {
     placeholderData: [],
   });
 
-  const wordColumns = wordSpec.ui.table.map(({ key, label }) => ({
+  const wordSchema = wordSpec.ui.table.map(({ key, label }) => ({
     key,
     label,
   }));
@@ -70,9 +70,9 @@ const OcrViewerPage = () => {
   return (
     <RefreshContext.Provider value={onRefresh}>
       <Viewer
-        pageRows={pageRows}
-        wordRows={wordRows}
-        wordColumns={wordColumns}
+        pages={pages}
+        words={words}
+        wordSchema={wordSchema}
         loading={wordRowsLoading}
         onClickColumn={routing.columnsSort}
         commitDraftById={commitDraftById}

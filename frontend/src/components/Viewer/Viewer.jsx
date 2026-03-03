@@ -6,29 +6,29 @@ import ViewerTopBar from "./ViewerTopbar/ViewerTopbar";
 import ViewerTable from "./VIewerTable/ViewerTable";
 
 export default function Viewer({
-  pageRows = [],
-  wordRows = [],
-  wordColumns = [],
+  pages = [],
+  words = [],
+  wordSchema = [],
   loading,
   onClickColumn,
   commitDraftById,
 }) {
   return (
     <ViewerProviders
-      pageRows={pageRows}
-      wordRows={wordRows}
+      pages={pages}
+      words={words}
       commitDraftById={commitDraftById}
     >
       <div className={styles.viewerRoot}>
         <ViewerTopBar />
         <div className={styles.viewerContent}>
           <div className={styles.imagePane}>
-            <ViewerImage rows={pageRows} />
+            <ViewerImage pages={pages} />
           </div>
           <div className={styles.tablePane}>
             <ViewerTable
-              columns={wordColumns}
-              rows={wordRows}
+              columns={wordSchema}
+              rows={words}
               loading={loading}
               onClickColumn={onClickColumn}
             />
