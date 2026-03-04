@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import MenuTable from "../components/MenuTable/MenuTable";
-import FileUploader from "../components/FileUploader/FileUploader";
-import { FilterMenuButton } from "../components/FilterMenuButton/FilterMenuButton";
+import DocumentToolbar from "../components/Document/DocumentToolbar";
+import MenuTable from "../components/Document/DocumentTable";
 import {
   analyzeDocumentAccessSpec,
   documentSpec,
@@ -26,7 +25,7 @@ import { buildSearch } from "../hooks/server/collectionQuery";
 
 // ただし、パーツコンポーネント内で完結すべき動作やイベントは外部に出さない
 // 例:URLの変更、CRUD,他コンポーネントの表示/挙動に影響する,親の状態やグローバル状態を変える処理は外部に出す
-// FilterMenuButtonの開閉コンディション管理は自分自身にのみ関係するので閉じる
+// DocumentToolbarの開閉コンディション管理は自分自身にのみ関係するので閉じる
 // 入力パラメータの保持は、その値を他コンポーネントでも用いる予定なら外部公開にする(onChangeConditionsによる検索条件の表示など？)
 const DocumentsPage = () => {
   const { collectionUrl } = documentSpec;
@@ -96,18 +95,14 @@ const DocumentsPage = () => {
 
   return (
     <div className="px-2 py-2 text-center">
-      <p className="m-5">DocumentsPage</p>
-      <FilterMenuButton
-        data={{ search, conditions }}
+      <p className="m-1">DocumentsPage</p>
+      <DocumentToolbar
+        data={{ conditions, inputRef }}
         events={{
           onClickSearchButton: applySearch,
           onChangeConditions: updateConditions,
+          onClickAnalyzeButton: analyzeData,
         }}
-      />
-
-      <FileUploader
-        data={{ inputRef }}
-        events={{ onClickAnalyzeButton: analyzeData }}
       />
 
       <MenuTable

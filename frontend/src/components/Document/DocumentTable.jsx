@@ -1,6 +1,4 @@
-import DeleteButton from "./DeleteButton/DeleteButton";
-
-export default function MenuTable({
+export default function DocumentTable({
   data = {},
   events: { onClickColumn, onClickRow = null, onClickDeleteButton } = {},
 }) {
@@ -30,9 +28,7 @@ export default function MenuTable({
                   e.stopPropagation();
                 }}
               >
-                <DeleteButton
-                  events={{ onClick: () => onClickDeleteButton(row) }}
-                />
+                <button onClick={() => onClickDeleteButton(row)}>削除</button>
               </td>
             )}
           </tr>
