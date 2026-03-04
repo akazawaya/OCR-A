@@ -25,7 +25,7 @@ export default function ViewerTopBar() {
   const viewerPageState = useViewerPageStateContext();
   const viewerEditState = useViewerEditStateContext();
   const {
-    values: { page, zoom, rotate, ZOOM_STEP, ROTATE_STEP } = {},
+    data: { page, zoom, rotate, ZOOM_STEP, ROTATE_STEP } = {},
     events: {
       onClickPageStepButton,
       onClickZoomStepButton,
@@ -37,7 +37,7 @@ export default function ViewerTopBar() {
   } = viewerPageState;
 
   const {
-    values: { isEditing },
+    data: { isEditing },
     events: { onClickEditButton, onClickSaveButton, onClickCancelButton },
   } = viewerEditState;
 

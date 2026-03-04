@@ -6,7 +6,7 @@ import { useViewerWordStateContext } from "../../../../contexts/viewer/ViewerWor
 import { useClientSizePx } from "../../../../hooks/layout/useClientSizePx";
 import { buildWordOverlayLayout } from "../../../../hooks/layout/buildWordOverlayLayout";
 
-export default function WordOverlay({ pageId }) {
+export default function WordOverlay({ data: { pageId } = {} }) {
   const viewerWordState = useViewerWordStateContext();
 
   const elementRef = useRef(null);
@@ -20,7 +20,7 @@ export default function WordOverlay({ pageId }) {
   }, []);
 
   const {
-    values: { pageMetaById, wordsByPageId, hoveredWordId, selectedWordId } = {},
+    data: { pageMetaById, wordsByPageId, hoveredWordId, selectedWordId } = {},
     events: { onHoverWord, onHoverClearWord, onSelectWord } = {},
   } = viewerWordState;
 

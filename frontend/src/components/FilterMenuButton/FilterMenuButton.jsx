@@ -6,8 +6,7 @@ import { FilterMenu } from "./FilterMenu/FilterMenu";
 
 export function FilterMenuButton({
   data: { search, conditions } = {},
-  navigation: { onClickSearchButton } = {},
-  options: { onChangeConditions },
+  events: { onClickSearchButton, onChangeConditions } = {},
 } = {}) {
   const [open, setOpen] = useState(false);
   const toggleFilterMenu = async () => {
@@ -23,8 +22,7 @@ export function FilterMenuButton({
       <div style={{ display: open ? "block" : "none" }}>
         <FilterMenu
           data={{ search, conditions }}
-          navigation={{ onClickSearchButton }}
-          options={{ onChangeConditions }}
+          event={{ onClickSearchButton, onChangeConditions }}
         />
       </div>
     </div>

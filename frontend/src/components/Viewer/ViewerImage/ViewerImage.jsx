@@ -9,12 +9,12 @@ import styles from "./ViewerImage.module.css";
 import WordOverlay from "./WordOverlay/WordOverlay";
 // データソースではないため、useBoxesOverlayを直で呼んでも問題なし(コンフィグを持たせたい場合は再考慮が必要かと思う)
 
-export default function ViewerImage({ pages }) {
+export default function ViewerImage({ data: { pages = [] } = {} }) {
   const rootRef = useRef(null);
   const viewerPageState = useViewerPageStateContext();
   const viewerWordState = useViewerWordStateContext();
-  const { values: { page, zoom, rotate } = {} } = viewerPageState;
-  const { values: { selectedBy, selectedWordId } = {} } = viewerWordState;
+  const { data: { page, zoom, rotate } = {} } = viewerPageState;
+  const { data: { selectedBy, selectedWordId } = {} } = viewerWordState;
 
   // page変更に追随してスクロールする
   useScroll({ rootRef, targetAttrName: "data-page", targetAttrValue: page });
@@ -49,7 +49,7 @@ export default function ViewerImage({ pages }) {
               height={r.image_height}
             />
             {/* CLS対応のため画像サイズを指定 */}
-            <WordOverlay pageId={r.id} />
+            <WordOverlay data={{ pageId: r.id }} />
           </div>
         </div>
       ))}

@@ -10,5 +10,5 @@ export const ViewerEditStateProvider = ({ value, children }) => (
 
 export const useViewerEditStateContext = () => {
   const ctx = useContext(ViewerEditStateContext);
-  return ctx ?? { values: {}, events: {} };
+  return ctx ?? { data: {}, events: {} };
 };

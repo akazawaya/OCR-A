@@ -1,9 +1,8 @@
 import DeleteButton from "./DeleteButton/DeleteButton";
 
 export default function MenuTable({
-  data,
-  navigation: { onClickColumn, onClickRow = null } = {},
-  options: { onClickDeleteButton } = {},
+  data = {},
+  events: { onClickColumn, onClickRow = null, onClickDeleteButton } = {},
 }) {
   const { columns = [], rows = [], loading } = data;
 
@@ -32,7 +31,9 @@ export default function MenuTable({
                   e.stopPropagation();
                 }}
               >
-                <DeleteButton onClick={() => onClickDeleteButton?.(row)} />
+                <DeleteButton
+                  event={{ onClick: () => onClickDeleteButton(row) }}
+                />
               </td>
             )}
           </tr>
@@ -41,10 +42,3 @@ export default function MenuTable({
     </table>
   );
 }
-// &&は||の逆で、左オペラント自身がTrueの時に右辺を返す
-// <td key="__">はただの識別キーに過ぎない
-// idは同じ親の直下に並ぶ兄弟内でユニークであればいいので、
-// DeleteButtonのidは変数でなくて良い
-
-// stopPropagation は伝搬を止めるという意味で、この場合　e.type → "click"を対象とし、
-// tdのさらに親のtrにclickが伝搬されなくなる

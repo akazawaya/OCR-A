@@ -1,4 +1,4 @@
-export default function DeleteButton({ onClick }) {
+export default function DeleteButton({ events: { onClick } = {} }) {
   const handleRowDelete = () => {
     onClick();
   };

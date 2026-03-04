@@ -7,23 +7,21 @@ import { useScroll } from "../../../hooks/layout/useScroll";
 // onClickRowはpageの時のnavigation用と、viewerの時のscroll用がある
 // ここではオプショナルチェイニング(.?)で両方を実行するようにして、呼び出し側からは重複しないようにする
 export default function ViewerTable({
-  columns = [],
-  rows = [],
-  loading,
-  onClickColumn,
+  data: { columns = [], rows = [], loading } = {},
+  events: { onClickColumn } = {},
 }) {
   const rootRef = useRef(null);
   const viewerPageState = useViewerPageStateContext();
   const viewerWordState = useViewerWordStateContext();
   const viewerEditState = useViewerEditStateContext();
-  const { values: { page } = {} } = viewerPageState;
+  const { data: { page } = {} } = viewerPageState;
   const {
-    values: { hoveredWordId, selectedWordId, selectedBy } = {},
+    data: { hoveredWordId, selectedWordId, selectedBy } = {},
     events: { onHoverWord, onHoverClearWord, onSelectWord } = {},
   } = viewerWordState;
 
   const {
-    values: { isEditing, draftById } = {},
+    data: { isEditing, draftById } = {},
     events: { onChangeDraftContent } = {},
   } = viewerEditState;
 

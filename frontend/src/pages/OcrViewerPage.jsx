@@ -70,11 +70,15 @@ const OcrViewerPage = () => {
   return (
     <RefreshContext.Provider value={onRefresh}>
       <Viewer
-        pages={pages}
-        words={words}
-        wordSchema={wordSchema}
-        loading={wordRowsLoading}
-        onClickColumn={routing.columnsSort}
+        data={{
+          pages,
+          words,
+          wordSchema,
+          loading: wordRowsLoading,
+        }}
+        event={{
+          onClickColumn: routing.columnsSort,
+        }}
         commitDraftById={commitDraftById}
       />
     </RefreshContext.Provider>

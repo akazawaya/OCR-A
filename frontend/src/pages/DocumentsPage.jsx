@@ -107,22 +107,22 @@ const DocumentsPage = () => {
 
       <FilterMenuButton
         data={{ search, conditions }}
-        navigation={{ onClickSearchButton: applySearch }}
-        options={{ onChangeConditions: updateConditions }}
+        event={{
+          onClickSearchButton: applySearch,
+          onChangeConditions: updateConditions,
+        }}
       />
 
       <FileUploader
         data={{ inputRef }}
-        options={{ onClickAnalyzeButton: analyzeData }}
+        event={{ onClickAnalyzeButton: analyzeData }}
       />
 
       <MenuTable
         data={{ columns: documentColumns, rows, loading: rowsLoading }}
-        navigation={{
+        event={{
           onClickColumn: columnsSort,
           onClickRow: dataRouter,
-        }}
-        options={{
           onClickDeleteButton: deleteRow,
         }}
       />

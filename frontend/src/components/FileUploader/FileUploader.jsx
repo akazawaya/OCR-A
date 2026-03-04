@@ -1,6 +1,6 @@
 export default function FileUploader({
   data: { inputRef } = {},
-  options: { onClickAnalyzeButton },
+  events: { onClickAnalyzeButton } = {},
 }) {
   return (
     <div>
