@@ -15,7 +15,7 @@ import { ViewerEditStateProvider } from "./ViewerEditStateContext";
 export const ViewerProviders = ({
   data: { pages = [], words = [] } = {},
   children,
-  commitDraftById,
+  mutations: { commitDraftById } = {},
 }) => {
   const pageState = useViewerPageState({ maxPage: pages.length });
   const wordState = useViewerWordState({ pages, words });

@@ -1,6 +1,7 @@
 import { useMemo, useReducer } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
+import { ViewerProviders } from "../contexts/viewer/ViewerProviders";
 import { pageAccessSpec, wordSpec } from "../appConfig";
 import { RefreshContext } from "../contexts/refreshContext";
 import Viewer from "../components/Viewer/Viewer";
@@ -69,18 +70,19 @@ const OcrViewerPage = () => {
   // onClickColumnはViewerTable用
   return (
     <RefreshContext.Provider value={onRefresh}>
-      <Viewer
-        data={{
-          pages,
-          words,
-          wordSchema,
-          loading: wordRowsLoading,
-        }}
-        event={{
-          onClickColumn: routing.columnsSort,
-        }}
-        commitDraftById={commitDraftById}
-      />
+      <ViewerProviders data={{ pages, words }} mutations={{ commitDraftById }}>
+        <Viewer
+          data={{
+            pages,
+            words,
+            wordSchema,
+            loading: wordRowsLoading,
+          }}
+          events={{
+            onClickColumn: routing.columnsSort,
+          }}
+        />
+      </ViewerProviders>
     </RefreshContext.Provider>
   );
 };
