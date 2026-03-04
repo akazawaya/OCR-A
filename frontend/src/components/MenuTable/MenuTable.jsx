@@ -32,7 +32,7 @@ export default function MenuTable({
                 }}
               >
                 <DeleteButton
-                  event={{ onClick: () => onClickDeleteButton(row) }}
+                  events={{ onClick: () => onClickDeleteButton(row) }}
                 />
               </td>
             )}

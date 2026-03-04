@@ -17,7 +17,7 @@ export default function Viewer({
         <div className={styles.tablePane}>
           <ViewerTable
             data={{ columns: wordSchema, rows: words, loading }}
-            event={{ onClickColumn }}
+            events={{ onClickColumn }}
           />
         </div>
       </div>

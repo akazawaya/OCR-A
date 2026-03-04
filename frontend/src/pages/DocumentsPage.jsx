@@ -107,7 +107,7 @@ const DocumentsPage = () => {
 
       <FilterMenuButton
         data={{ search, conditions }}
-        event={{
+        events={{
           onClickSearchButton: applySearch,
           onChangeConditions: updateConditions,
         }}
@@ -115,12 +115,12 @@ const DocumentsPage = () => {
 
       <FileUploader
         data={{ inputRef }}
-        event={{ onClickAnalyzeButton: analyzeData }}
+        events={{ onClickAnalyzeButton: analyzeData }}
       />
 
       <MenuTable
         data={{ columns: documentColumns, rows, loading: rowsLoading }}
-        event={{
+        events={{
           onClickColumn: columnsSort,
           onClickRow: dataRouter,
           onClickDeleteButton: deleteRow,

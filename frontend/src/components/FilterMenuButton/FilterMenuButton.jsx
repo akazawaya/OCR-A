@@ -22,7 +22,7 @@ export function FilterMenuButton({
       <div style={{ display: open ? "block" : "none" }}>
         <FilterMenu
           data={{ search, conditions }}
-          event={{ onClickSearchButton, onChangeConditions }}
+          events={{ onClickSearchButton, onChangeConditions }}
         />
       </div>
     </div>
