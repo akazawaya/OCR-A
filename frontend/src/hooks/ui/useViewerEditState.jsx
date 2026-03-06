@@ -1,7 +1,7 @@
 import { useState } from "react";
 // Edit,Save,Cancelのロジック用まとめのhook
 
-export const useViewerEditState = ({ commitDraftById, onRefresh }) => {
+export const useViewerEditState = ({ commitDraftById }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [draftById, setDraftById] = useState({}); // id,文字列の辞書 なので初期値は空オブジェクト{}にしておくのが安全 []は配列で、これは連番に向いている
 
@@ -19,7 +19,6 @@ export const useViewerEditState = ({ commitDraftById, onRefresh }) => {
     commitDraftById(draftById);
     setIsEditing(false);
     setDraftById({}); // 保存後はドラフトを空にするのが安全
-    onRefresh();
   };
 
   const cancelEdit = () => {

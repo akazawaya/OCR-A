@@ -1,12 +1,5 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useReducer,
-  useRef,
-  useState,
-} from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import MenuTable from "../components/MenuTable/MenuTable";
 import FileUploader from "../components/FileUploader/FileUploader";
@@ -17,7 +10,6 @@ import {
   routePaths,
   WS_BASE_URL,
 } from "../appConfig";
-import { RefreshContext } from "../contexts/refreshContext";
 import { useRouting } from "../hooks/routing/useRouting";
 import { useFilterState } from "../hooks/ui/useFilterState";
 import { getCollection } from "../api/clients/collectionClient";
@@ -39,7 +31,7 @@ import { buildSearch } from "../hooks/server/collectionQuery";
 const DocumentsPage = () => {
   const { collectionUrl } = documentSpec;
   const { analyzeUrl } = analyzeDocumentAccessSpec;
-  const [refresh, onRefresh] = useReducer((n) => n + 1, 0);
+  const queryClient = useQueryClient();
 
   const { search, columnsSort, dataRouter } = useRouting({
     routeUrl: (resource) => routePaths.viewer.to(resource.id),
@@ -58,7 +50,7 @@ const DocumentsPage = () => {
   );
 
   const { data: rows, isLoading: rowsLoading } = useQuery({
-    queryKey: ["collection", collectionUrl, finalSearch ?? "", refresh],
+    queryKey: [collectionUrl, finalSearch],
     queryFn: () => getCollection({ collectionUrl, search: finalSearch }),
     enabled: Boolean(collectionUrl),
     placeholderData: [],
@@ -66,7 +58,8 @@ const DocumentsPage = () => {
 
   const { mutate: deleteRowMutation } = useMutation({
     mutationFn: ({ id }) => deleteCollectionItem({ collectionUrl, id }),
-    onSuccess: () => onRefresh(),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: [collectionUrl] }),
   });
   const deleteRow = useCallback(
     (resource) => deleteRowMutation({ id: resource.id }),
@@ -75,7 +68,6 @@ const DocumentsPage = () => {
 
   const { mutate: analyzeMutation } = useMutation({
     mutationFn: ({ formData }) => analyzeDocument({ analyzeUrl, formData }),
-    onSuccess: () => onRefresh(),
   });
 
   const inputRef = useRef(null);
@@ -97,12 +89,13 @@ const DocumentsPage = () => {
 
   useEffect(() => {
     const ws = new WebSocket(`${WS_BASE_URL}documents/`);
-    ws.onmessage = () => onRefresh();
+    ws.onmessage = () =>
+      queryClient.invalidateQueries({ queryKey: [collectionUrl] });
     return () => ws.close();
-  }, [onRefresh]);
+  }, [queryClient, collectionUrl]);
 
   return (
-    <RefreshContext.Provider value={onRefresh}>
+    <>
       <p>DocumentsPage</p>
 
       <FilterMenuButton
@@ -126,7 +119,7 @@ const DocumentsPage = () => {
           onClickDeleteButton: deleteRow,
         }}
       />
-    </RefreshContext.Provider>
+    </>
   );
 };
 export default DocumentsPage;

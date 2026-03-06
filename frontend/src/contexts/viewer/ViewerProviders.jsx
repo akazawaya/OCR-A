@@ -3,7 +3,6 @@ import { useMemo } from "react";
 import { useViewerPageState } from "../../hooks/ui/useViewerPageState";
 import { useViewerWordState } from "../../hooks/ui/useViewerWordState";
 import { useViewerEditState } from "../../hooks/ui/useViewerEditState.jsx";
-import { useRefresh } from "../refreshContext";
 
 import { ViewerPageStateProvider } from "./ViewerPageStateContext";
 import { ViewerWordStateProvider } from "./ViewerWordStateContext";
@@ -19,8 +18,7 @@ export const ViewerProviders = ({
 }) => {
   const pageState = useViewerPageState({ maxPage: pages.length });
   const wordState = useViewerWordState({ pages, words });
-  const onRefresh = useRefresh();
-  const editState = useViewerEditState({ commitDraftById, onRefresh });
+  const editState = useViewerEditState({ commitDraftById });
 
   const pageStateValue = useMemo(
     () => ({
