@@ -51,7 +51,7 @@ const OcrViewerPage = () => {
     label,
   }));
 
-  const { mutateAsync: commitDraftById } = useMutation({
+  const { mutate: commitDraftById } = useMutation({
     mutationFn: async (draftById) => {
       const snapshot = { ...(draftById ?? {}) };
       const entries = Object.entries(snapshot);

@@ -15,9 +15,8 @@ export const useViewerEditState = ({ commitDraftById, onRefresh }) => {
     setIsEditing(true);
   };
 
-  // commitDraftByIdはPromiseを返す（失敗時は throw）前提。成功後のみ編集を確定する。
-  const saveEdit = async () => {
-    await commitDraftById(draftById);
+  const saveEdit = () => {
+    commitDraftById(draftById);
     setIsEditing(false);
     setDraftById({}); // 保存後はドラフトを空にするのが安全
     onRefresh();
