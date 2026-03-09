@@ -49,7 +49,7 @@ const DocumentsPage = () => {
     [search, appliedConditions],
   );
 
-  const { data: rows, isLoading: rowsLoading } = useQuery({
+  const { data: rows } = useQuery({
     queryKey: [collectionUrl, finalSearch],
     queryFn: () => getCollection({ collectionUrl, search: finalSearch }),
     enabled: Boolean(collectionUrl),
@@ -95,9 +95,8 @@ const DocumentsPage = () => {
   }, [queryClient, collectionUrl]);
 
   return (
-    <>
-      <p>DocumentsPage</p>
-
+    <div className="px-2 py-2 text-center">
+      <p className="m-5">DocumentsPage</p>
       <FilterMenuButton
         data={{ search, conditions }}
         events={{
@@ -112,14 +111,14 @@ const DocumentsPage = () => {
       />
 
       <MenuTable
-        data={{ columns: documentColumns, rows, loading: rowsLoading }}
+        data={{ columns: documentColumns, rows }}
         events={{
           onClickColumn: columnsSort,
           onClickRow: dataRouter,
           onClickDeleteButton: deleteRow,
         }}
       />
-    </>
+    </div>
   );
 };
 export default DocumentsPage;

@@ -4,11 +4,10 @@ export default function MenuTable({
   data = {},
   events: { onClickColumn, onClickRow = null, onClickDeleteButton } = {},
 }) {
-  const { columns = [], rows = [], loading } = data;
+  const { columns = [], rows = [] } = data;
 
-  if (loading) return <div>Loading…</div>;
   return (
-    <table>
+    <table className="mx-auto">
       <thead>
         <tr>
           {columns.map((c) => (

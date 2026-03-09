@@ -1,30 +1,21 @@
-//　検索機能はクエリパラメータ(URL末尾の?以降)をクエリに付け足すことで実行可能（backendでの許可が前提）
-// よって、fetchのGETリクエストの延長として実装できる
-import { useState } from "react";
-
 import { FilterMenu } from "./FilterMenu/FilterMenu";
 
 export function FilterMenuButton({
   data: { search, conditions } = {},
   events: { onClickSearchButton, onChangeConditions } = {},
 } = {}) {
-  const [open, setOpen] = useState(false);
-  const toggleFilterMenu = async () => {
-    setOpen((prev) => !prev);
-  };
-
   return (
-    <div>
-      <button type="button" onClick={toggleFilterMenu}>
+    <details className="mx-auto flex w-fit flex-col items-center">
+      <summary className="w-fit cursor-pointer list-none rounded-md bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-600">
         検索メニュー
-      </button>
+      </summary>
 
-      <div style={{ display: open ? "block" : "none" }}>
+      <div className="m-2">
         <FilterMenu
           data={{ search, conditions }}
           events={{ onClickSearchButton, onChangeConditions }}
         />
       </div>
-    </div>
+    </details>
   );
 }
