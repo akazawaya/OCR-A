@@ -1,9 +1,12 @@
 import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import ViewerImage from "../components/Viewer/ViewerImage/ViewerImage";
+import styles from "../components/Viewer/Viewer.module.css";
+import ViewerTopBar from "../components/Viewer/ViewerTopbar/ViewerTopbar";
+import ViewerTable from "../components/Viewer/VIewerTable/ViewerTable";
 import { ViewerProviders } from "../contexts/viewer/ViewerProviders";
 import { pageAccessSpec, wordSpec } from "../appConfig";
-import Viewer from "../components/Viewer/Viewer";
 import { useRouting } from "../hooks/routing/useRouting";
 import { getCollection } from "../api/clients/collectionClient";
 import { buildSearch } from "../hooks/server/collectionQuery";
@@ -69,22 +72,26 @@ const OcrViewerPage = () => {
     },
   });
 
-  // 下記Viewerのpropの渡し方は、インタフェース分離から言ってよくないが、明示のスタイルをとると
-  //　Page-Viewer-queryClientParts間の修正が必要になり大変なので特別に許容する
-  // onClickColumnはViewerTable用
   return (
     <ViewerProviders data={{ pages, words }} mutations={{ commitDraftById }}>
-      <Viewer
-        data={{
-          pages,
-          words,
-          wordSchema,
-          loading: wordRowsLoading,
-        }}
-        events={{
-          onClickColumn: routing.columnsSort,
-        }}
-      />
+      <div className={styles.viewerRoot}>
+        <ViewerTopBar />
+        <div className={styles.viewerContent}>
+          <div className={styles.imagePane}>
+            <ViewerImage data={{ pages }} />
+          </div>
+          <div className={styles.tablePane}>
+            <ViewerTable
+              data={{
+                columns: wordSchema,
+                rows: words,
+                loading: wordRowsLoading,
+              }}
+              events={{ onClickColumn: routing.columnsSort }}
+            />
+          </div>
+        </div>
+      </div>
     </ViewerProviders>
   );
 };
