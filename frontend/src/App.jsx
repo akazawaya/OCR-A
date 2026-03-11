@@ -12,14 +12,19 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<DocumentsPage />} />
-          <Route path={routePaths.docs.template} element={<DocumentsPage />} />
-          <Route
-            path={routePaths.viewer.template}
-            element={<OcrViewerPage />}
-          />
-        </Routes>
+        <div className="h-dvh overflow-hidden">
+          <Routes>
+            <Route path="/" element={<DocumentsPage />} />
+            <Route
+              path={routePaths.docs.template}
+              element={<DocumentsPage />}
+            />
+            <Route
+              path={routePaths.viewer.template}
+              element={<OcrViewerPage />}
+            />
+          </Routes>
+        </div>
       </BrowserRouter>
 
       <ReactQueryDevtools initialIsOpen={false} />
