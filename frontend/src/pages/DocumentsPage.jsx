@@ -94,8 +94,8 @@ const DocumentsPage = () => {
   }, [queryClient, collectionUrl]);
 
   return (
-    <div className="px-2 py-2 text-center">
-      <p className="m-1">DocumentsPage</p>
+    <div className="flex flex-col gap-2 p-2 text-center">
+      <p>DocumentsPage</p>
       <DocumentToolbar
         data={{ conditions, inputRef }}
         events={{
@@ -104,7 +104,6 @@ const DocumentsPage = () => {
           onClickAnalyzeButton: analyzeData,
         }}
       />
-
       <MenuTable
         data={{ columns: documentColumns, rows }}
         events={{
