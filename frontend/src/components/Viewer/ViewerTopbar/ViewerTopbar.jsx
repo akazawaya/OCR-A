@@ -1,4 +1,3 @@
-import { AppBar, Toolbar, TextField, Button } from "@mui/material";
 import { useEffect, useRef } from "react";
 
 import { useViewerPageStateContext } from "../../../contexts/viewer/ViewerPageStateContext";
@@ -7,9 +6,9 @@ import { useViewerEditStateContext } from "../../../contexts/viewer/ViewerEditSt
 const renderTextField = (foo, commitFoo, inputRef) => (
   // draftでの制御形式は、stateを制御するためのstateというのも変に感じるので、inputRefでの非制御形式を試す
   // 外部の foo が変わったときにinputRef.current.value = ... で表示を同期
-  // useRefは再レンダーを起こさずに値を保持できる（=バックエンドが保持する必要のない値に対して有効）　ref,inputRefを引数に持つDOM,MUIコンポーネントに対しては「参照」先として指定できる
-  <TextField
-    inputRef={inputRef}
+  <input
+    className="w-[3ch] border-1 border-double border-black bg-white text-center"
+    ref={inputRef}
     defaultValue={foo}
     onKeyDown={(e) => {
       if (e.key !== "Enter") return; //  return何もなし　でその処理を打ち切る意味になる
@@ -55,32 +54,29 @@ export default function ViewerTopBar() {
   }, [page, zoom, rotate]);
 
   return (
-    <AppBar color="default" position="static">
-      <Toolbar>
-        <Button onClick={() => onClickPageStepButton((a) => a - 1)}>戻</Button>
-        {renderTextField(page, onEnterPageInput, pageRef)}{" "}
-        {/*parseIntは文字列の先頭から整数として読める部分を数字として読む　第二引数は10進数で解釈するという意味*/}
-        <Button onClick={() => onClickPageStepButton((a) => a + 1)}>次</Button>
-        <Button onClick={() => onClickZoomStepButton((a) => a - ZOOM_STEP)}>
-          縮小
-        </Button>
-        {renderTextField(zoom, onEnterZoomInput, zoomRef)}
-        <Button onClick={() => onClickZoomStepButton((a) => a + ZOOM_STEP)}>
-          拡大
-        </Button>
-        <Button onClick={() => onClickRotateStepButton((a) => a + ROTATE_STEP)}>
-          回転
-        </Button>
-        {renderTextField(rotate, onEnterRotateInput, rotateRef)}
-        {!isEditing ? (
-          <Button onClick={onClickEditButton}>編集</Button>
-        ) : (
-          <>
-            <Button onClick={onClickSaveButton}>保存</Button>
-            <Button onClick={onClickCancelButton}>中止</Button>
-          </>
-        )}
-      </Toolbar>
-    </AppBar>
+    <div className="flex justify-center gap-2 bg-gray-200 px-2">
+      <button onClick={() => onClickPageStepButton((a) => a - 1)}>戻</button>
+      {renderTextField(page, onEnterPageInput, pageRef)}
+      <button onClick={() => onClickPageStepButton((a) => a + 1)}>次</button>
+      <button onClick={() => onClickZoomStepButton((a) => a - ZOOM_STEP)}>
+        縮小
+      </button>
+      {renderTextField(zoom, onEnterZoomInput, zoomRef)}
+      <button onClick={() => onClickZoomStepButton((a) => a + ZOOM_STEP)}>
+        拡大
+      </button>
+      <button onClick={() => onClickRotateStepButton((a) => a + ROTATE_STEP)}>
+        回転
+      </button>
+      {renderTextField(rotate, onEnterRotateInput, rotateRef)}
+      {!isEditing ? (
+        <button onClick={onClickEditButton}>編集</button>
+      ) : (
+        <>
+          <button onClick={onClickSaveButton}>保存</button>
+          <button onClick={onClickCancelButton}>中止</button>
+        </>
+      )}
+    </div>
   );
 }

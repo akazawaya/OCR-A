@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import ViewerImage from "../components/Viewer/ViewerImage/ViewerImage";
-import styles from "../components/Viewer/Viewer.module.css";
 import ViewerTopBar from "../components/Viewer/ViewerTopbar/ViewerTopbar";
 import ViewerTable from "../components/Viewer/VIewerTable/ViewerTable";
 import { ViewerProviders } from "../contexts/viewer/ViewerProviders";
@@ -74,22 +73,22 @@ const OcrViewerPage = () => {
 
   return (
     <ViewerProviders data={{ pages, words }} mutations={{ commitDraftById }}>
-      <div className={styles.viewerRoot}>
-        <ViewerTopBar />
-        <div className={styles.viewerContent}>
-          <div className={styles.imagePane}>
-            <ViewerImage data={{ pages }} />
-          </div>
-          <div className={styles.tablePane}>
-            <ViewerTable
-              data={{
-                columns: wordSchema,
-                rows: words,
-                loading: wordRowsLoading,
-              }}
-              events={{ onClickColumn: routing.columnsSort }}
-            />
-          </div>
+      <div className="grid h-full grid-cols-[2fr_1fr] grid-rows-[auto_1fr] gap-2 overflow-hidden p-2">
+        <div className="col-span-2">
+          <ViewerTopBar />
+        </div>
+        <div className="overflow-auto overscroll-contain">
+          <ViewerImage data={{ pages }} />
+        </div>
+        <div className="overflow-auto overscroll-contain">
+          <ViewerTable
+            data={{
+              columns: wordSchema,
+              rows: words,
+              loading: wordRowsLoading,
+            }}
+            events={{ onClickColumn: routing.columnsSort }}
+          />
         </div>
       </div>
     </ViewerProviders>
