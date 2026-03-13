@@ -2,14 +2,14 @@ import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import ViewerImage from "../components/Viewer/ViewerImage/ViewerImage";
-import ViewerTopBar from "../components/Viewer/ViewerTopbar/ViewerTopbar";
-import ViewerTable from "../components/Viewer/VIewerTable/ViewerTable";
+import ViewerTopBar from "../components/Viewer/ViewerTopbar";
 import { ViewerProviders } from "../contexts/viewer/ViewerProviders";
 import { pageAccessSpec, wordSpec } from "../appConfig";
 import { useRouting } from "../hooks/routing/useRouting";
 import { getCollection } from "../api/clients/collectionClient";
 import { buildSearch } from "../hooks/server/collectionQuery";
 import { patchCollectionItem } from "../api/clients/mutationClient";
+import ViewerTable from "../components/Viewer/ViewerTable";
 // Pageが渡すのは server/のfetch経由のデータと、routing/のルート関連
 const OcrViewerPage = () => {
   const queryClient = useQueryClient();

@@ -1,9 +1,9 @@
 import { useRef } from "react";
 
-import { useViewerPageStateContext } from "../../../contexts/viewer/ViewerPageStateContext";
-import { useViewerWordStateContext } from "../../../contexts/viewer/ViewerWordStateContext";
-import { useViewerEditStateContext } from "../../../contexts/viewer/ViewerEditStateContext";
-import { useScroll } from "../../../hooks/layout/useScroll";
+import { useViewerPageStateContext } from "../../contexts/viewer/ViewerPageStateContext";
+import { useViewerWordStateContext } from "../../contexts/viewer/ViewerWordStateContext";
+import { useViewerEditStateContext } from "../../contexts/viewer/ViewerEditStateContext";
+import { useScroll } from "../../hooks/layout/useScroll";
 // onClickRowはpageの時のnavigation用と、viewerの時のscroll用がある
 // ここではオプショナルチェイニング(.?)で両方を実行するようにして、呼び出し側からは重複しないようにする
 export default function ViewerTable({
@@ -58,9 +58,9 @@ export default function ViewerTable({
               key={row.id}
               data-page={row.page__page_number}
               data-word={row.id}
-              onMouseEnter={() => onHoverWord?.(row.id)}
-              onMouseLeave={() => onHoverClearWord?.()}
-              onClick={() => onSelectWord?.(row.id, "table")}
+              onMouseEnter={() => onHoverWord(row.id)}
+              onMouseLeave={onHoverClearWord}
+              onClick={() => onSelectWord(row.id, "table")}
               style={{
                 background: isSelected
                   ? "rgba(255,0,0,0.12)"

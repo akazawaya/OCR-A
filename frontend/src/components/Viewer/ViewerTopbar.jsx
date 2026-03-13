@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
-import { useViewerPageStateContext } from "../../../contexts/viewer/ViewerPageStateContext";
-import { useViewerEditStateContext } from "../../../contexts/viewer/ViewerEditStateContext";
+import { useViewerPageStateContext } from "../../contexts/viewer/ViewerPageStateContext";
+import { useViewerEditStateContext } from "../../contexts/viewer/ViewerEditStateContext";
 
 const renderTextField = (foo, commitFoo, inputRef) => (
   // draftでの制御形式は、stateを制御するためのstateというのも変に感じるので、inputRefでの非制御形式を試す
