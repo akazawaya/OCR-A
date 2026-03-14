@@ -17,11 +17,6 @@
  * @param {Array<{ id: string|number, bbox: Array<[number, number]>, content: string|null }>} [params.words]
  * - OCR結果のwordの配列。bboxは頂点座標[[x1,y1],[x2,y2],...]を想定
  *
- * @param {string | undefined} [params.fontFamily]
- * - 文字のサイズ推定の計算に使う際のfontFamily
- * 　 ※ undefined の場合はデフォルトの FONTFAMILYを使用するが、
- * 　   nullや空文字が渡されるとデフォルト扱いにならないため、呼び出し側はundefinedで省略すること。
- *
  * @returns {object} result
  *
  * @property {Array<{
@@ -45,8 +40,11 @@
  *
  */
 
-// デフォルトのFONTFAMILY
-const FONTFAMILY = "system-ui, Avenir, Helvetica, Arial, sans-serif";
+const getAppFontFamily = () => {
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue("--app-font-family")
+    .trim();
+};
 
 // x, yの最大値/最小値からrect{ left, top, width, height }を得る
 // この値を基にrectStyleに変換して、spanの絶対座標に使う
@@ -113,10 +111,11 @@ export const buildWordOverlayLayout = ({
   clientSizePx,
   imageSizePx,
   words = [],
-  fontFamily = FONTFAMILY,
 }) => {
   if (!imageSizePx || !clientSizePx?.w || !clientSizePx?.h)
     return { wordLayout: [] };
+
+  const fontFamily = getAppFontFamily();
 
   //　scale { sx, sy } 元画像の1単位が画面上で何pxに相当するかの倍率を返す
   const scale = {
