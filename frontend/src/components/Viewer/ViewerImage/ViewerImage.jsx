@@ -1,13 +1,11 @@
-// Image.jsxという名前にしたかったが名前衝突で自動保管が機能しないっぽい
 import { useRef } from "react";
 
 import { useViewerPageStateContext } from "../../../contexts/viewer/ViewerPageStateContext";
 import { useViewerWordStateContext } from "../../../contexts/viewer/ViewerWordStateContext";
 import { useScroll } from "../../../hooks/layout/useScroll";
+import { useClientSizePx } from "../../../hooks/layout/useClientSizePx";
 
-import styles from "./ViewerImage.module.css";
 import WordOverlay from "./WordOverlay/WordOverlay";
-// データソースではないため、useBoxesOverlayを直で呼んでも問題なし(コンフィグを持たせたい場合は再考慮が必要かと思う)
 
 export default function ViewerImage({ data: { pages = [] } = {} }) {
   const rootRef = useRef(null);
@@ -18,7 +16,8 @@ export default function ViewerImage({ data: { pages = [] } = {} }) {
 
   // page変更に追随してスクロールする
   useScroll({ rootRef, targetAttrName: "data-page", targetAttrValue: page });
-
+  const { clientSizePx } = useClientSizePx(rootRef);
+  const limitW = clientSizePx.w;
   // viewerImage起点のwordの選択時、viewerTable側を追随スクロールする
   const shouldScroll = selectedBy === "table";
   useScroll({
@@ -27,32 +26,40 @@ export default function ViewerImage({ data: { pages = [] } = {} }) {
     targetAttrValue: selectedWordId,
     shouldScroll,
   });
-
-  if (!pages.length) return <div>Loading…</div>;
-
   return (
-    <div
-      ref={rootRef}
-      className={styles.viewerRoot}
-      style={{ "--zoom": zoom, "--rotate": rotate }}
-    >
-      {/* useRef(null) を作っただけでは参照されない */}
-      {pages.map((r) => (
-        <div key={r.id} className={styles.page} data-page={r.page_number}>
-          {/* CSSセレクタでピックするための符合 */}
-          <div className={styles.pageInner} style={{ position: "relative" }}>
-            <img
-              alt=""
-              src={r.image}
-              className={styles.pageImage}
-              width={r.image_width}
-              height={r.image_height}
-            />
-            {/* CLS対応のため画像サイズを指定 */}
-            <WordOverlay data={{ pageId: r.id }} />
+    <div ref={rootRef}>
+      {pages.map((r) => {
+        const zoomScale = zoom / 100;
+        const baseScale = limitW / r.width_px;
+        const finalScale = baseScale * zoomScale;
+
+        const w = r.width_px * finalScale;
+        const h = r.height_px * finalScale;
+
+        return (
+          <div
+            key={r.id}
+            data-page={r.page_number}
+            className="relative mx-auto"
+            style={{
+              width: rotate === 90 || rotate === 270 ? h : w,
+              height: rotate === 90 || rotate === 270 ? w : h,
+            }}
+          >
+            <div
+              className="absolute top-1/2 left-1/2 origin-center -translate-x-1/2 -translate-y-1/2 rotate-(--rotate)"
+              style={{
+                width: w,
+                height: h,
+                "--rotate": `${rotate}deg`,
+              }}
+            >
+              <img alt="" src={r.image} width={w} height={h} />
+              <WordOverlay data={{ pageId: r.id }} />
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
