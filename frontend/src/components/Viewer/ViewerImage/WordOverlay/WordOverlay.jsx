@@ -1,23 +1,12 @@
 // css部分はjsxから切り離す、
 // useHover的なものの作成検討を行い、onClick,onHover等の都合をviewerImageと合わせる
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 
 import { useViewerWordStateContext } from "../../../../contexts/viewer/ViewerWordStateContext";
-import { useClientSizePx } from "../../../../hooks/layout/useClientSizePx";
 import { buildWordOverlayLayout } from "../../../../hooks/layout/buildWordOverlayLayout";
 
-export default function WordOverlay({ data: { pageId } = {} }) {
+export default function WordOverlay({ data: { pageId, clientSizePx } = {} }) {
   const viewerWordState = useViewerWordStateContext();
-
-  const elementRef = useRef(null);
-  const { clientSizePx } = useClientSizePx(elementRef);
-  const [fontFamily, setFontFamily] = useState(); // 初期値をundefinedにすることで、buildWordOverlayLayoutのデフォルト引数が働くようにする
-
-  useLayoutEffect(() => {
-    if (!elementRef.current) return;
-    const style = getComputedStyle(elementRef.current);
-    setFontFamily(style.fontFamily);
-  }, []);
 
   const {
     data: { pageMetaById, wordsByPageId, hoveredWordId, selectedWordId } = {},
@@ -37,15 +26,11 @@ export default function WordOverlay({ data: { pageId } = {} }) {
       clientSizePx,
       imageSizePx,
       words,
-      fontFamily,
     });
-  }, [clientSizePx, imageW, imageH, words, fontFamily]);
+  }, [clientSizePx, imageW, imageH, words]);
 
   return (
-    <div
-      ref={elementRef}
-      style={{ position: "absolute", inset: 0, zIndex: 10 }}
-    >
+    <div style={{ position: "absolute", inset: 0, zIndex: 10 }}>
       <svg
         viewBox={`0 0 ${imageW ?? 0} ${imageH ?? 0}`}
         style={{

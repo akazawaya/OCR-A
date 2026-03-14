@@ -55,7 +55,7 @@ export default function ViewerImage({ data: { pages = [] } = {} }) {
               }}
             >
               <img alt="" src={r.image} width={w} height={h} />
-              <WordOverlay data={{ pageId: r.id }} />
+              <WordOverlay data={{ pageId: r.id, clientSizePx: { w, h } }} />
             </div>
           </div>
         );
