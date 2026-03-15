@@ -1,5 +1,3 @@
-// css部分はjsxから切り離す、
-// useHover的なものの作成検討を行い、onClick,onHover等の都合をviewerImageと合わせる
 import { useMemo } from "react";
 
 import { useViewerWordStateContext } from "../../../../contexts/viewer/ViewerWordStateContext";
@@ -30,18 +28,8 @@ export default function WordOverlay({ data: { pageId, clientSizePx } = {} }) {
   }, [clientSizePx, imageW, imageH, words]);
 
   return (
-    <div style={{ position: "absolute", inset: 0, zIndex: 10 }}>
-      <svg
-        viewBox={`0 0 ${imageW ?? 0} ${imageH ?? 0}`}
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          zIndex: 10,
-          pointerEvents: "none",
-        }}
-      >
+    <div className="absolute inset-0">
+      <svg viewBox={`0 0 ${imageW ?? 0} ${imageH ?? 0}`}>
         {wordLayout.map((w) => {
           const isSelected = w.id === selectedWordId;
           const isHover = w.id === hoveredWordId;
@@ -50,15 +38,13 @@ export default function WordOverlay({ data: { pageId, clientSizePx } = {} }) {
               key={w.id}
               data-word={w.id}
               points={w.polygon.points}
-              fill={
+              className={`stroke-red-500 stroke-4 ${
                 isSelected
-                  ? "rgba(255,0,0,0.35)"
+                  ? "fill-red-500/30"
                   : isHover
-                    ? "rgba(255,0,0,0.20)"
-                    : "transparent"
-              }
-              stroke="red"
-              strokeWidth="4"
+                    ? "fill-red-500/20"
+                    : "fill-transparent"
+              }`}
             />
           );
         })}
@@ -80,18 +66,14 @@ export default function WordOverlay({ data: { pageId, clientSizePx } = {} }) {
                 onSelectWord(w.id, "image");
               } // 現状意味がないので強化検討対象
             }}
+            className={`absolute leading-none whitespace-nowrap text-transparent ${
+              w.span.mode === "vertical"
+                ? "[text-orientation:upright] [writing-mode:vertical-rl]"
+                : ""
+            }`}
             style={{
-              position: "absolute",
               ...w.span.style,
               fontSize: `${w.span.fontPx}px`,
-              lineHeight: 1,
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              userSelect: "text",
-              ...(w.span.mode === "vertical"
-                ? { writingMode: "vertical-rl", textOrientation: "upright" }
-                : null),
-              color: "transparent",
             }}
           >
             {w.span.text}

@@ -4,8 +4,7 @@ import { useViewerPageStateContext } from "../../contexts/viewer/ViewerPageState
 import { useViewerWordStateContext } from "../../contexts/viewer/ViewerWordStateContext";
 import { useViewerEditStateContext } from "../../contexts/viewer/ViewerEditStateContext";
 import { useScroll } from "../../hooks/layout/useScroll";
-// onClickRowはpageの時のnavigation用と、viewerの時のscroll用がある
-// ここではオプショナルチェイニング(.?)で両方を実行するようにして、呼び出し側からは重複しないようにする
+
 export default function ViewerTable({
   data: { columns = [], rows = [] } = {},
   events: { onClickColumn } = {},
@@ -60,13 +59,13 @@ export default function ViewerTable({
               onMouseEnter={() => onHoverWord(row.id)}
               onMouseLeave={onHoverClearWord}
               onClick={() => onSelectWord(row.id, "table")}
-              style={{
-                background: isSelected
-                  ? "rgba(255,0,0,0.12)"
+              className={
+                isSelected
+                  ? "bg-red-500/30"
                   : isHover
-                    ? "rgba(255,0,0,0.06)"
-                    : "transparent",
-              }}
+                    ? "bg-red-500/20"
+                    : "bg-transparent"
+              }
             >
               {columns.map((c) => (
                 <td key={c.key}>
@@ -89,11 +88,3 @@ export default function ViewerTable({
     </table>
   );
 }
-
-// ||はorなので、!isEditingとc.key !== "content"のどちらもFalseでないとinputにならない
-// <td key="__">はただの識別キーに過ぎない
-// idは同じ親の直下に並ぶ兄弟内でユニークであればいいので、
-// DeleteButtonのidは変数でなくて良い
-
-// stopPropagation は伝搬を止めるという意味で、この場合　e.type → "click"を対象とし、
-// tdのさらに親のtrにclickが伝搬されなくなる
