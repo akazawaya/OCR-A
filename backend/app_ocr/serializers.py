@@ -1,8 +1,7 @@
 from rest_framework import serializers
 from app_ocr.models import Document, Page, Word
 from django.contrib.auth.models import User
-
-# http -f POST http://localhost:8000/documents/ file@"/mnt/..." file_name=test file_type=0
+from zoneinfo import ZoneInfo
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -16,6 +15,12 @@ class DocumentSerializer(serializers.HyperlinkedModelSerializer):
     file_type_display = serializers.CharField(
         source="get_file_type_display", read_only=True
     )
+    created_display = serializers.DateTimeField(
+        source="created",
+        format="%Y/%m/%d %H:%M:%S",
+        default_timezone=ZoneInfo("Asia/Tokyo"),
+        read_only=True,
+    )
 
     class Meta:
         model = Document
@@ -24,6 +29,7 @@ class DocumentSerializer(serializers.HyperlinkedModelSerializer):
             "state",
             "state_display",
             "created",
+            "created_display",
             "file",
             "file_name",
             "file_type",
