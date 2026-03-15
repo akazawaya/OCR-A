@@ -46,9 +46,9 @@ export const analyzeDocumentAccessSpec = {
 // 表示するフィールド/列を選ぶ（表示名の翻訳も兼ねる）
 const documentUiSpec = Object.freeze({
   table: [
-    { key: "created_display", label: "作成日時" },
+    { key: "created", label: "作成日時" },
     { key: "file_name", label: "名前" },
-    { key: "state_display", label: "状態" },
+    { key: "state", label: "状態" },
   ],
 });
 const wordUiSpec = Object.freeze({

@@ -11,12 +11,8 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class DocumentSerializer(serializers.HyperlinkedModelSerializer):
-    state_display = serializers.CharField(source="get_state_display", read_only=True)
-    file_type_display = serializers.CharField(
-        source="get_file_type_display", read_only=True
-    )
-    created_display = serializers.DateTimeField(
-        source="created",
+    state = serializers.CharField(source="get_state_display", read_only=True)
+    created = serializers.DateTimeField(
         format="%Y/%m/%d %H:%M:%S",
         default_timezone=ZoneInfo("Asia/Tokyo"),
         read_only=True,
@@ -27,22 +23,18 @@ class DocumentSerializer(serializers.HyperlinkedModelSerializer):
         fields = [
             "id",
             "state",
-            "state_display",
             "created",
-            "created_display",
             "file",
             "file_name",
             "file_type",
-            "file_type_display",
             "total_pages",
         ]
 
 
 class PageSerializer(serializers.HyperlinkedModelSerializer):
-    state_display = serializers.CharField(source="get_state_display", read_only=True)
     doc = serializers.PrimaryKeyRelatedField(
         queryset=Document.objects.all()
-    )  # これがないとID の保存時にURL形式を求めてくる
+    )  # これがないとIDの保存時にURL形式を求めてくる
 
     class Meta:
         model = Page
@@ -51,7 +43,6 @@ class PageSerializer(serializers.HyperlinkedModelSerializer):
             "doc",
             "image",
             "state",
-            "state_display",
             "page_number",
             "width_px",
             "height_px",
@@ -59,9 +50,6 @@ class PageSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class WordSerializer(serializers.HyperlinkedModelSerializer):
-    direction_display = serializers.CharField(
-        source="get_direction_display", read_only=True
-    )
     page__page_number = serializers.IntegerField(
         source="page.page_number", read_only=True
     )  # UIでページ番号を有効にするには明示が必要
@@ -75,7 +63,6 @@ class WordSerializer(serializers.HyperlinkedModelSerializer):
             "bbox",
             "content",
             "direction",
-            "direction_display",
             "rec_score",
             "det_score",
             "page__page_number",
