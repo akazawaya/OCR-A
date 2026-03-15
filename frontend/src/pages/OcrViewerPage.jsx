@@ -39,7 +39,7 @@ const OcrViewerPage = () => {
   });
 
   const { collectionUrl: wordCollectionUrl } = wordSpec;
-  const { data: words = [], isLoading: wordRowsLoading } = useQuery({
+  const { data: words = [] } = useQuery({
     queryKey: [wordCollectionUrl, wordSearch],
     queryFn: () =>
       getCollection({ collectionUrl: wordCollectionUrl, search: wordSearch }),
@@ -85,7 +85,6 @@ const OcrViewerPage = () => {
             data={{
               columns: wordSchema,
               rows: words,
-              loading: wordRowsLoading,
             }}
             events={{ onClickColumn: routing.columnsSort }}
           />

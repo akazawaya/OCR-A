@@ -7,7 +7,7 @@ import { useScroll } from "../../hooks/layout/useScroll";
 // onClickRowはpageの時のnavigation用と、viewerの時のscroll用がある
 // ここではオプショナルチェイニング(.?)で両方を実行するようにして、呼び出し側からは重複しないようにする
 export default function ViewerTable({
-  data: { columns = [], rows = [], loading } = {},
+  data: { columns = [], rows = [] } = {},
   events: { onClickColumn } = {},
 }) {
   const rootRef = useRef(null);
@@ -37,7 +37,6 @@ export default function ViewerTable({
     shouldScroll,
   });
 
-  if (loading) return <div>Loading…</div>;
   return (
     <table ref={rootRef}>
       <thead>
