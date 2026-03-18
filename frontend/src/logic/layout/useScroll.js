@@ -1,5 +1,5 @@
 /**
- * useScroll.jsx
+ * useScroll.js
  *
  * 責務:
  * 依存値の変化をトリガーに、rootRef配下のelementのうち、

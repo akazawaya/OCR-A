@@ -1,5 +1,5 @@
 /**
- * useClientSizePx.jsx
+ * useClientSizePx.js
  *
  * 責務:
  * - ref に紐付けたDOM要素(element)のclientサイズ（px）を監視し、{ w, h } を返す。

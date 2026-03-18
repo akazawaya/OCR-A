@@ -2,8 +2,8 @@ import { useRef } from "react";
 
 import { useViewerPageStateContext } from "../../../contexts/viewer/ViewerPageStateContext";
 import { useViewerWordStateContext } from "../../../contexts/viewer/ViewerWordStateContext";
-import { useScroll } from "../../../hooks/layout/useScroll";
-import { useClientSizePx } from "../../../hooks/layout/useClientSizePx";
+import { useScroll } from "../../../logic/layout/useScroll";
+import { useClientSizePx } from "../../../logic/layout/useClientSizePx";
 
 import WordOverlay from "./WordOverlay/WordOverlay";
 

@@ -9,14 +9,14 @@ import {
   routePaths,
   WS_BASE_URL,
 } from "../appConfig";
-import { useRouting } from "../hooks/routing/useRouting";
-import { useFilterState } from "../hooks/ui/useFilterState";
+import { useRouting } from "../logic/routing/useRouting";
+import { useFilterState } from "../logic/ui/useFilterState";
 import { getCollection } from "../api/clients/collectionClient";
 import {
   analyzeDocument,
   deleteCollectionItem,
 } from "../api/clients/mutationClient";
-import { buildSearch } from "../hooks/server/collectionQuery";
+import { buildSearch } from "../logic/server/collectionQuery";
 
 // routePaths.viewer routePaths.docPages 関数として入力しないと即座に実行しようとしてエラーになる
 // 方針：prop関数名:実関数を　on(イベントハンドラ):実行される関数、として関係性をここで明記する

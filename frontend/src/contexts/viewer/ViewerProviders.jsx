@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 
-import { useViewerPageState } from "../../hooks/ui/useViewerPageState";
-import { useViewerWordState } from "../../hooks/ui/useViewerWordState";
-import { useViewerEditState } from "../../hooks/ui/useViewerEditState.jsx";
+import { useViewerPageState } from "../../logic/ui/useViewerPageState";
+import { useViewerWordState } from "../../logic/ui/useViewerWordState";
+import { useViewerEditState } from "../../logic/ui/useViewerEditState";
 
 import { ViewerPageStateProvider } from "./ViewerPageStateContext";
 import { ViewerWordStateProvider } from "./ViewerWordStateContext";

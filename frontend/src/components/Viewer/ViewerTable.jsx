@@ -3,7 +3,7 @@ import { useRef } from "react";
 import { useViewerPageStateContext } from "../../contexts/viewer/ViewerPageStateContext";
 import { useViewerWordStateContext } from "../../contexts/viewer/ViewerWordStateContext";
 import { useViewerEditStateContext } from "../../contexts/viewer/ViewerEditStateContext";
-import { useScroll } from "../../hooks/layout/useScroll";
+import { useScroll } from "../../logic/layout/useScroll";
 
 export default function ViewerTable({
   data: { columns = [], rows = [] } = {},
