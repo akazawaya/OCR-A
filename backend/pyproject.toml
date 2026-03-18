@@ -16,7 +16,6 @@ dependencies = [
     "httpie>=3.2.4",
     "psycopg[binary]>=3.3.2",
     "ruff>=0.15.1",
-    "tifffile>=2025.10.16",
     "uvicorn[standard]>=0.40.0",
     "yomitoku>=0.10.3",
 ]

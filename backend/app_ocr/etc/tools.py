@@ -2,15 +2,9 @@ from pathlib import Path
 import pypdfium2
 import numpy as np
 import cv2
-# import tifffile
-# 頃合いを見てtifffileはuvから排除する
 
-# (.venv/lib64/python3.13/site-packages/yomitoku/constants.py)
-# models.pyの定義に合わせる　modelsとtoolsで拡張子定義が個別なのを後で修正したい
 SUPPORT_INPUT_FORMAT = ["jpg", "png", "pdf"]
 # filesizeはDjangoのバリデーターで十分であると判断
-# /root/Django/RestOCR/.venv/lib64/python3.13/site-packages/yomitoku/data/functions.py を参考にする
-# yomitokuにはRGBの入力が必要
 
 
 # 最低限のメタ情報 拡張子とページ数を返す
@@ -37,9 +31,6 @@ def inspect_file(file):
             except Exception:
                 pass
         file.seek(0)
-
-
-# def analyze_tif(file, type=".png"): 廃止
 
 
 # 1枚ずつimgを返す

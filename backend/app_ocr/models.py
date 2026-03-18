@@ -11,9 +11,7 @@ class FileType(models.IntegerChoices):
     # name, value, label で各要素にアクセス可能
     JPG = 1, "jpg"
     PNG = 2, "png"
-    BMP = 3, "bmp"
-    TIF = 4, "tif"
-    PDF = 5, "pdf"
+    PDF = 3, "pdf"
 
     @classmethod
     def label_to_value(cls, ext_label):
@@ -46,8 +44,7 @@ class State(models.IntegerChoices):
                 return ext.value
 
 
-# Userモデルはdjango.contrib.auth.models
-# から自動で作成される
+# Userモデルはdjango.contrib.auth.modelsから自動で作成される
 class Document(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     state = models.PositiveSmallIntegerField(
@@ -55,11 +52,7 @@ class Document(models.Model):
     )
     file = models.FileField(
         upload_to="input/",
-        validators=[
-            FileExtensionValidator(
-                allowed_extensions=["jpg", "png", "bmp", "tif", "pdf"]
-            )
-        ],
+        validators=[FileExtensionValidator(allowed_extensions=["jpg", "png", "pdf"])],
     )
     # FileField / ImageField は自動で日付ごとのサブディレクトリを作成する
     file_name = models.CharField(max_length=255)
