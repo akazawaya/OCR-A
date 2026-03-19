@@ -32,9 +32,7 @@ class DocumentSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class PageSerializer(serializers.HyperlinkedModelSerializer):
-    doc = serializers.PrimaryKeyRelatedField(
-        queryset=Document.objects.all()
-    )  # これがないとIDの保存時にURL形式を求めてくる
+    doc = serializers.PrimaryKeyRelatedField(queryset=Document.objects.all())
 
     class Meta:
         model = Page
@@ -50,10 +48,12 @@ class PageSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class WordSerializer(serializers.HyperlinkedModelSerializer):
+    page = serializers.PrimaryKeyRelatedField(queryset=Page.objects.all())
     page__page_number = serializers.IntegerField(
         source="page.page_number", read_only=True
-    )  # UIでページ番号を有効にするには明示が必要
-    page = serializers.PrimaryKeyRelatedField(queryset=Page.objects.all())
+    )
+    # pageは純粋なページ数ではなく、外部キーであることに注意
+    # 純粋なページ数はpage__page_numberにて実装
 
     class Meta:
         model = Word

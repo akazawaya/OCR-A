@@ -15,7 +15,8 @@ class OcrProgressConsumer(WebsocketConsumer):
             self.group_name, self.channel_name
         )
 
-    # worker: {"type": "document_state_changed", "document_id": 1, "state": "SUCCESS"}
+    # worker: {"type": "document_state_changed", "document_id": 1, "state": "SUCCESS"}　のようなpayloadを送信
+    # ※現状、このイベントは再fetchのトリガーとしてのみ使っており、payloadの内容自体は利用していない。
     def document_state_changed(self, event):
         payload = {
             "type": "document_state_changed",

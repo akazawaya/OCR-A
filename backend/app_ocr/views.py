@@ -53,7 +53,6 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
         with transaction.atomic():
             doc.save()
-            # テストでocr_page実行
             transaction.on_commit(
                 lambda: dispatch_ocr_pages_task.delay(doc.instance.pk)
             )
