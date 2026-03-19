@@ -14,7 +14,7 @@ def get_engine():
 
 
 # 1ページずつ処理する方針
-def test_ocr(img_bytes, ocr):
+def yomitoku_ocr(img_bytes, ocr_instance):
     words = []
     arr = np.frombuffer(img_bytes, dtype=np.uint8)
     arr_bgr = cv2.imdecode(arr, cv2.IMREAD_COLOR)
@@ -22,7 +22,7 @@ def test_ocr(img_bytes, ocr):
         raise ValueError("failed to read")
     img_rgb = cv2.cvtColor(arr_bgr, cv2.COLOR_BGR2RGB)  # yomitokuはrgb入力想定
 
-    results, _ = ocr(img_rgb)
+    results, _ = ocr_instance(img_rgb)
     # ocrの初期化は外部入力を必要とする
     for w in results.words:
         content = {
