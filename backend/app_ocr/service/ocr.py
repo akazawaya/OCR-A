@@ -4,7 +4,7 @@ from django.db import transaction
 from app_ocr.models import Document, Direction
 from app_ocr.serializers import PageSerializer, WordSerializer
 from app_ocr.etc.tools import render_page, default_word_sort
-from backend.app_ocr.etc.yomitoku_adapter import get_engine, yomitoku_ocr
+from app_ocr.etc.yomitoku_adapter import get_engine, yomitoku_ocr
 
 
 def run_ocr_for_page(document_id, page_number):
