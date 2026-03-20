@@ -7,7 +7,7 @@ import { patchCollectionItem } from "../api/clients/mutationClient";
 import { useRouting } from "../logic/routing/useRouting";
 import { buildCollectionQueryString } from "../logic/server/buildCollectionQueryString";
 import { ViewerProviders } from "../contexts/viewer/ViewerProviders";
-import ViewerTopBar from "../components/Viewer/ViewerTopbar";
+import ViewerTopBar from "../components/Viewer/ViewerTopBar";
 import ViewerImage from "../components/Viewer/ViewerImage/ViewerImage";
 import ViewerTable from "../components/Viewer/ViewerTable";
 
