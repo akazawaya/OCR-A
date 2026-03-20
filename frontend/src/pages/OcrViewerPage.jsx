@@ -1,48 +1,58 @@
 import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import ViewerImage from "../components/Viewer/ViewerImage/ViewerImage";
-import ViewerTopBar from "../components/Viewer/ViewerTopbar";
-import { ViewerProviders } from "../contexts/viewer/ViewerProviders";
 import { pageAccessSpec, wordSpec } from "../appConfig";
-import { useRouting } from "../logic/routing/useRouting";
 import { getCollection } from "../api/clients/collectionClient";
-import { buildSearch } from "../logic/server/collectionQuery";
 import { patchCollectionItem } from "../api/clients/mutationClient";
+import { useRouting } from "../logic/routing/useRouting";
+import { buildCollectionQueryString } from "../logic/server/buildCollectionQueryString";
+import { ViewerProviders } from "../contexts/viewer/ViewerProviders";
+import ViewerTopBar from "../components/Viewer/ViewerTopbar";
+import ViewerImage from "../components/Viewer/ViewerImage/ViewerImage";
 import ViewerTable from "../components/Viewer/ViewerTable";
-// Pageが渡すのは server/のfetch経由のデータと、routing/のルート関連
+
 const OcrViewerPage = () => {
   const queryClient = useQueryClient();
   const routing = useRouting({});
   const { search, primaryKey } = routing;
 
-  const pageSearch = useMemo(
-    () => buildSearch({ baseSearch: search, routing: { doc: primaryKey } }),
+  const pageQueryString = useMemo(
+    () =>
+      buildCollectionQueryString({
+        baseSearch: search,
+        extraParams: { doc: primaryKey },
+      }),
     [search, primaryKey],
   );
-  const wordSearch = useMemo(
+  const wordQueryString = useMemo(
     () =>
-      buildSearch({
+      buildCollectionQueryString({
         baseSearch: search,
-        routing: { page__doc: primaryKey, doc: null },
+        extraParams: { page__doc: primaryKey, doc: null },
       }),
     [search, primaryKey],
   );
 
   const { collectionUrl: pageCollectionUrl } = pageAccessSpec;
   const { data: pages = [] } = useQuery({
-    queryKey: [pageCollectionUrl, pageSearch],
+    queryKey: [pageCollectionUrl, pageQueryString],
     queryFn: () =>
-      getCollection({ collectionUrl: pageCollectionUrl, search: pageSearch }),
+      getCollection({
+        collectionUrl: pageCollectionUrl,
+        queryString: pageQueryString,
+      }),
     enabled: Boolean(pageCollectionUrl),
     placeholderData: [],
   });
 
   const { collectionUrl: wordCollectionUrl } = wordSpec;
   const { data: words = [] } = useQuery({
-    queryKey: [wordCollectionUrl, wordSearch],
+    queryKey: [wordCollectionUrl, wordQueryString],
     queryFn: () =>
-      getCollection({ collectionUrl: wordCollectionUrl, search: wordSearch }),
+      getCollection({
+        collectionUrl: wordCollectionUrl,
+        queryString: wordQueryString,
+      }),
     enabled: Boolean(wordCollectionUrl),
     placeholderData: [],
   });
@@ -66,7 +76,7 @@ const OcrViewerPage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [wordCollectionUrl, wordSearch],
+        queryKey: [wordCollectionUrl, wordQueryString],
       });
     },
   });

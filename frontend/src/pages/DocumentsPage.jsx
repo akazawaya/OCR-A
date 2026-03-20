@@ -1,36 +1,27 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import DocumentToolbar from "../components/Document/DocumentToolbar";
-import MenuTable from "../components/Document/DocumentTable";
 import {
   analyzeDocumentAccessSpec,
   documentSpec,
   routePaths,
   WS_BASE_URL,
 } from "../appConfig";
-import { useRouting } from "../logic/routing/useRouting";
-import { useFilterState } from "../logic/ui/useFilterState";
 import { getCollection } from "../api/clients/collectionClient";
 import {
   analyzeDocument,
   deleteCollectionItem,
 } from "../api/clients/mutationClient";
-import { buildSearch } from "../logic/server/collectionQuery";
+import { useRouting } from "../logic/routing/useRouting";
+import { useFilterState } from "../logic/ui/useFilterState";
+import { buildCollectionQueryString } from "../logic/server/buildCollectionQueryString";
+import DocumentToolbar from "../components/Document/DocumentToolbar";
+import MenuTable from "../components/Document/DocumentTable";
 
-// routePaths.viewer routePaths.docPages 関数として入力しないと即座に実行しようとしてエラーになる
-// 方針：prop関数名:実関数を　on(イベントハンドラ):実行される関数、として関係性をここで明記する
-// パーツコンポーネントはon(イベントハンドラ)とDOM構築を担当し、hooksは実行される関数を担当。
-// お互いがお互いを知らない状態で、Pageコンポーネントでイベントハンドラと実行される関数を結びつける役割を担う。
-
-// ただし、パーツコンポーネント内で完結すべき動作やイベントは外部に出さない
-// 例:URLの変更、CRUD,他コンポーネントの表示/挙動に影響する,親の状態やグローバル状態を変える処理は外部に出す
-// DocumentToolbarの開閉コンディション管理は自分自身にのみ関係するので閉じる
-// 入力パラメータの保持は、その値を他コンポーネントでも用いる予定なら外部公開にする(onChangeConditionsによる検索条件の表示など？)
 const DocumentsPage = () => {
+  const queryClient = useQueryClient();
   const { collectionUrl } = documentSpec;
   const { analyzeUrl } = analyzeDocumentAccessSpec;
-  const queryClient = useQueryClient();
 
   const { search, columnsSort, dataRouter } = useRouting({
     routeUrl: (resource) => routePaths.viewer.to(resource.id),
@@ -43,14 +34,19 @@ const DocumentsPage = () => {
     [conditions],
   );
 
-  const finalSearch = useMemo(
-    () => buildSearch({ baseSearch: search, conditions: appliedConditions }),
+  const documentQueryString = useMemo(
+    () =>
+      buildCollectionQueryString({
+        baseSearch: search,
+        conditions: appliedConditions,
+      }),
     [search, appliedConditions],
   );
 
   const { data: rows } = useQuery({
-    queryKey: [collectionUrl, finalSearch],
-    queryFn: () => getCollection({ collectionUrl, search: finalSearch }),
+    queryKey: [collectionUrl, documentQueryString],
+    queryFn: () =>
+      getCollection({ collectionUrl, queryString: documentQueryString }),
     enabled: Boolean(collectionUrl),
     placeholderData: [],
   });

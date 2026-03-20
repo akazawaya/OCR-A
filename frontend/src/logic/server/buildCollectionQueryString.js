@@ -1,14 +1,14 @@
 // collection取得のためのquery（検索条件）
-export function buildSearch({
+export function buildCollectionQueryString({
   baseSearch = "",
-  routing = {},
+  extraParams = {},
   conditions = [],
 } = {}) {
   const params = new URLSearchParams(baseSearch || "");
 
   // 前半：routingに関わる表示IDの絞り込み
-  if (routing && typeof routing === "object") {
-    for (const [key, value] of Object.entries(routing)) {
+  if (extraParams && typeof extraParams === "object") {
+    for (const [key, value] of Object.entries(extraParams)) {
       if (value === null || value === undefined || value === "")
         params.delete(key);
       else params.set(key, String(value));
