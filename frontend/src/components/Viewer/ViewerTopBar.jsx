@@ -7,7 +7,7 @@ const renderTextField = (foo, commitFoo, inputRef) => (
   // draftでの制御形式は、stateを制御するためのstateというのも変に感じるので、inputRefでの非制御形式を試す
   // 外部の foo が変わったときにinputRef.current.value = ... で表示を同期
   <input
-    className="w-[3ch] border-1 border-double border-black bg-white text-center"
+    className="w-[3ch] border border-double border-black bg-white text-center"
     ref={inputRef}
     defaultValue={foo}
     onKeyDown={(e) => {
