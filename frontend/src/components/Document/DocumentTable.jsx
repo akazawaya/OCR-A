@@ -16,10 +16,10 @@ export default function DocumentTable({
         </tr>
       </thead>
       <tbody>
-        {rows.map((row) => (
-          <tr key={row.id} onClick={onClickRow && (() => onClickRow(row))}>
+        {rows.map((r) => (
+          <tr key={r.id} onClick={onClickRow && (() => onClickRow(r))}>
             {columns.map((c) => (
-              <td key={c.key}>{row[c.key]}</td>
+              <td key={c.key}>{r[c.key]}</td>
             ))}
             {onClickDeleteButton && (
               <td
@@ -28,7 +28,7 @@ export default function DocumentTable({
                   e.stopPropagation();
                 }}
               >
-                <button onClick={() => onClickDeleteButton(row)}>削除</button>
+                <button onClick={() => onClickDeleteButton(r)}>削除</button>
               </td>
             )}
           </tr>

@@ -26,20 +26,21 @@ export default function ViewerImage({ data: { pages = [] } = {} }) {
     targetAttrValue: selectedWordId,
     shouldScroll,
   });
+
   return (
     <div ref={rootRef}>
-      {pages.map((r) => {
+      {pages.map((p) => {
         const zoomScale = zoom / 100;
-        const baseScale = limitW / r.width_px;
+        const baseScale = limitW / p.width_px;
         const finalScale = baseScale * zoomScale;
 
-        const w = r.width_px * finalScale;
-        const h = r.height_px * finalScale;
+        const w = p.width_px * finalScale;
+        const h = p.height_px * finalScale;
 
         return (
           <div
-            key={r.id}
-            data-page={r.page_number}
+            key={p.id}
+            data-page={p.page_number}
             className="relative mx-auto"
             style={{
               width: rotate === 90 || rotate === 270 ? h : w,
@@ -54,8 +55,8 @@ export default function ViewerImage({ data: { pages = [] } = {} }) {
                 "--rotate": `${rotate}deg`,
               }}
             >
-              <img alt="" src={r.image} width={w} height={h} />
-              <WordOverlay data={{ pageId: r.id, clientSizePx: { w, h } }} />
+              <img alt="" src={p.image} width={w} height={h} />
+              <WordOverlay data={{ pageId: p.id, clientSizePx: { w, h } }} />
             </div>
           </div>
         );

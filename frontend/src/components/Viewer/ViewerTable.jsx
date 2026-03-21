@@ -48,17 +48,17 @@ export default function ViewerTable({
         </tr>
       </thead>
       <tbody>
-        {rows.map((row) => {
-          const isSelected = row.id === selectedWordId;
-          const isHover = row.id === hoveredWordId;
+        {rows.map((r) => {
+          const isSelected = r.id === selectedWordId;
+          const isHover = r.id === hoveredWordId;
           return (
             <tr
-              key={row.id}
-              data-page={row.page__page_number}
-              data-word={row.id}
-              onMouseEnter={() => onHoverWord(row.id)}
+              key={r.id}
+              data-page={r.page__page_number}
+              data-word={r.id}
+              onMouseEnter={() => onHoverWord(r.id)}
               onMouseLeave={onHoverClearWord}
-              onClick={() => onSelectWord(row.id, "table")}
+              onClick={() => onSelectWord(r.id, "table")}
               className={
                 isSelected
                   ? "bg-red-500/30"
@@ -70,12 +70,12 @@ export default function ViewerTable({
               {columns.map((c) => (
                 <td key={c.key}>
                   {!isEditing || c.key !== "content" ? (
-                    row[c.key]
+                    r[c.key]
                   ) : (
                     <input
-                      value={draftById[row.id] ?? row[c.key]}
+                      value={draftById[r.id] ?? r[c.key]}
                       onChange={(e) =>
-                        onChangeDraftContent(row.id, e.target.value)
+                        onChangeDraftContent(r.id, e.target.value)
                       }
                     />
                   )}
