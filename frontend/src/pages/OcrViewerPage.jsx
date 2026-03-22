@@ -4,8 +4,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { pageAccessSpec, wordSpec } from "../appConfig";
 import { getCollection } from "../api/clients/collectionClient";
 import { patchCollectionItem } from "../api/clients/mutationClient";
+import { usePrint } from "../logic/print/usePrint";
 import { useRouting } from "../logic/routing/useRouting";
 import { buildCollectionQueryString } from "../logic/server/buildCollectionQueryString";
+import { useViewerPageState } from "../logic/ui/useViewerPageState";
 import { ViewerProviders } from "../contexts/viewer/ViewerProviders";
 import ViewerTopBar from "../components/Viewer/ViewerTopBar";
 import ViewerImage from "../components/Viewer/ViewerImage/ViewerImage";
@@ -62,6 +64,13 @@ const OcrViewerPage = () => {
     label,
   }));
 
+  const pageState = useViewerPageState({ maxPage: pages.length });
+  const { printRef, isPrintMode, openPrintDialog } = usePrint({
+    pages,
+    currentPage: pageState.page,
+    documentTitle: "viewer-export",
+  });
+
   const { mutate: commitDraftById } = useMutation({
     mutationFn: async (draftById) => {
       const snapshot = { ...(draftById ?? {}) };
@@ -82,13 +91,21 @@ const OcrViewerPage = () => {
   });
 
   return (
-    <ViewerProviders data={{ pages, words }} mutations={{ commitDraftById }}>
+    <ViewerProviders
+      data={{ pages, words }}
+      mutations={{ commitDraftById }}
+      pageState={pageState}
+    >
       <div className="grid h-full grid-cols-[2fr_1fr] grid-rows-[auto_1fr] gap-2 overflow-hidden p-2">
         <div className="col-span-2">
-          <ViewerTopBar />
+          <ViewerTopBar events={{ onClickPrintButton: openPrintDialog }} />
         </div>
         <div className="overflow-auto overscroll-contain">
-          <ViewerImage data={{ pages }} />
+          <ViewerImage
+            data={{ pages }}
+            printRef={printRef}
+            isPrintMode={isPrintMode}
+          />
         </div>
         <div className="overflow-auto overscroll-contain">
           <ViewerTable

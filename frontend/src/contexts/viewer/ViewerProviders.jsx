@@ -15,8 +15,10 @@ export const ViewerProviders = ({
   data: { pages = [], words = [] } = {},
   children,
   mutations: { commitDraftById } = {},
+  pageState: externalPageState,
 }) => {
-  const pageState = useViewerPageState({ maxPage: pages.length });
+  const internalPageState = useViewerPageState({ maxPage: pages.length });
+  const pageState = externalPageState ?? internalPageState;
   const wordState = useViewerWordState({ pages, words });
   const editState = useViewerEditState({ commitDraftById });
 

@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useCallback, useRef } from "react";
 
 import { useViewerPageStateContext } from "../../../contexts/viewer/ViewerPageStateContext";
 import { useViewerWordStateContext } from "../../../contexts/viewer/ViewerWordStateContext";
@@ -7,8 +7,20 @@ import { useClientSizePx } from "../../../logic/layout/useClientSizePx";
 
 import WordOverlay from "./WordOverlay/WordOverlay";
 
-export default function ViewerImage({ data: { pages = [] } = {} }) {
+export default function ViewerImage({
+  data: { pages = [] } = {},
+  printRef,
+  isPrintMode = false,
+}) {
   const rootRef = useRef(null);
+  const setRefs = useCallback(
+    (node) => {
+      rootRef.current = node;
+      if (typeof printRef === "function") printRef(node);
+      else if (printRef) printRef.current = node;
+    },
+    [printRef],
+  );
   const viewerPageState = useViewerPageStateContext();
   const viewerWordState = useViewerWordStateContext();
   const { data: { page, zoom, rotate } = {} } = viewerPageState;
@@ -28,33 +40,39 @@ export default function ViewerImage({ data: { pages = [] } = {} }) {
   });
 
   return (
-    <div ref={rootRef}>
+    <div ref={setRefs} data-print-root={isPrintMode ? "true" : undefined}>
       {pages.map((p) => {
-        const zoomScale = zoom / 100;
-        const baseScale = limitW / p.width_px;
+        const baseW = Number(p.width_px) || 0;
+        const baseH = Number(p.height_px) || 0;
+        const safeRotate = isPrintMode ? 0 : rotate;
+        const zoomScale = isPrintMode ? 1 : zoom / 100;
+        const baseScale = isPrintMode ? 1 : baseW ? limitW / baseW : 1;
         const finalScale = baseScale * zoomScale;
 
-        const w = p.width_px * finalScale;
-        const h = p.height_px * finalScale;
+        const w = baseW * finalScale;
+        const h = baseH * finalScale;
+        const containerW = safeRotate === 90 || safeRotate === 270 ? h : w;
+        const containerH = safeRotate === 90 || safeRotate === 270 ? w : h;
+        const containerClass = isPrintMode ? "relative" : "relative mx-auto";
+        const imageClass = isPrintMode
+          ? "relative"
+          : "absolute top-1/2 left-1/2 origin-center -translate-x-1/2 -translate-y-1/2 rotate-(--rotate)";
+        const containerStyle = isPrintMode
+          ? { width: containerW, height: containerH, margin: 0 }
+          : { width: containerW, height: containerH };
+        const imageStyle = isPrintMode
+          ? { width: w, height: h }
+          : { width: w, height: h, "--rotate": `${safeRotate}deg` };
 
         return (
           <div
             key={p.id}
             data-page={p.page_number}
-            className="relative mx-auto"
-            style={{
-              width: rotate === 90 || rotate === 270 ? h : w,
-              height: rotate === 90 || rotate === 270 ? w : h,
-            }}
+            data-print-page={isPrintMode ? "true" : undefined}
+            className={containerClass}
+            style={containerStyle}
           >
-            <div
-              className="absolute top-1/2 left-1/2 origin-center -translate-x-1/2 -translate-y-1/2 rotate-(--rotate)"
-              style={{
-                width: w,
-                height: h,
-                "--rotate": `${rotate}deg`,
-              }}
-            >
+            <div className={imageClass} style={imageStyle}>
               <img alt="" src={p.image} width={w} height={h} />
               <WordOverlay data={{ pageId: p.id, clientSizePx: { w, h } }} />
             </div>
