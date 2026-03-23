@@ -7,7 +7,7 @@ import { useScroll } from "../../logic/layout/useScroll";
 
 export default function ViewerTable({
   data: { columns = [], rows = [] } = {},
-  events: { onClickColumn } = {},
+  events: { onClickColumn, onClickDeleteButton } = {},
 }) {
   const rootRef = useRef(null);
   const viewerPageState = useViewerPageStateContext();
@@ -67,6 +67,19 @@ export default function ViewerTable({
                     : "bg-transparent"
               }
             >
+              {isEditing && (
+                <td>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onClickDeleteButton(r.id);
+                    }}
+                  >
+                    削除
+                  </button>
+                </td>
+              )}
+
               {columns.map((c) => (
                 <td key={c.key}>
                   {!isEditing || c.key !== "content" ? (
