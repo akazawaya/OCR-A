@@ -20,8 +20,8 @@ export default function ViewerTable({
   } = viewerWordState;
 
   const {
-    data: { isEditing, draftById } = {},
-    events: { onChangeDraftContent } = {},
+    data: { isEditing, contentDraftById } = {},
+    events: { onChangeContentDraft } = {},
   } = viewerEditState;
 
   // page変更に追随してスクロールする
@@ -86,9 +86,9 @@ export default function ViewerTable({
                     r[c.key]
                   ) : (
                     <input
-                      value={draftById[r.id] ?? r[c.key]}
+                      value={contentDraftById[r.id] ?? r[c.key]}
                       onChange={(e) =>
-                        onChangeDraftContent(r.id, e.target.value)
+                        onChangeContentDraft(r.id, e.target.value)
                       }
                     />
                   )}

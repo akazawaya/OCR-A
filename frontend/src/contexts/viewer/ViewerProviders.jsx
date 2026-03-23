@@ -14,13 +14,13 @@ import { ViewerEditStateProvider } from "./ViewerEditStateContext";
 export const ViewerProviders = ({
   data: { pages = [], words = [] } = {},
   children,
-  mutations: { commitDraftById } = {},
+  mutations: { patchWordContentById } = {},
   pageState: externalPageState,
 }) => {
   const internalPageState = useViewerPageState({ maxPage: pages.length });
   const pageState = externalPageState ?? internalPageState;
   const wordState = useViewerWordState({ pages, words });
-  const editState = useViewerEditState({ commitDraftById });
+  const editState = useViewerEditState({ patchWordContentById });
 
   const pageStateValue = useMemo(
     () => ({
@@ -86,10 +86,10 @@ export const ViewerProviders = ({
     () => ({
       data: {
         isEditing: editState.isEditing,
-        draftById: editState.draftById,
+        contentDraftById: editState.contentDraftById,
       },
       events: {
-        onChangeDraftContent: editState.setDraftContent,
+        onChangeContentDraft: editState.changeContentDraftById,
         onClickEditButton: editState.startEdit,
         onClickSaveButton: editState.saveEdit,
         onClickCancelButton: editState.cancelEdit,
@@ -97,8 +97,8 @@ export const ViewerProviders = ({
     }),
     [
       editState.isEditing,
-      editState.draftById,
-      editState.setDraftContent,
+      editState.contentDraftById,
+      editState.changeContentDraftById,
       editState.startEdit,
       editState.saveEdit,
       editState.cancelEdit,

@@ -87,9 +87,9 @@ const OcrViewerPage = () => {
     [deleteRowMutation],
   );
 
-  const { mutate: commitDraftById } = useMutation({
-    mutationFn: async (draftById) => {
-      const snapshot = { ...(draftById ?? {}) };
+  const { mutate: patchWordContentById } = useMutation({
+    mutationFn: async (contentDraftById) => {
+      const snapshot = { ...(contentDraftById ?? {}) };
       const entries = Object.entries(snapshot);
       for (const [wordId, content] of entries) {
         await patchCollectionItem({
@@ -109,7 +109,7 @@ const OcrViewerPage = () => {
   return (
     <ViewerProviders
       data={{ pages, words }}
-      mutations={{ commitDraftById }}
+      mutations={{ patchWordContentById }}
       pageState={pageState}
     >
       <div className="grid h-full grid-cols-[2fr_1fr] grid-rows-[auto_1fr] gap-2 overflow-hidden p-2">

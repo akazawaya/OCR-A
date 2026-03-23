@@ -1,14 +1,14 @@
 import { useState } from "react";
 // Edit,Save,Cancelのロジック用まとめのhook
 
-export const useViewerEditState = ({ commitDraftById }) => {
+export const useViewerEditState = ({ patchWordContentById }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [draftById, setDraftById] = useState({}); // id,文字列の辞書 なので初期値は空オブジェクト{}にしておくのが安全 []は配列で、これは連番に向いている
+  const [contentDraftById, setContentDraftById] = useState({});
 
   // Table側でのonChangeに合わせてこれを呼ぶ
-  const setDraftContent = (wordId, nextContent) => {
-    //setFooは変数だけではなく、関数型更新　例：prev => 返り値：更新後 も受け取れる
-    setDraftById((prev) => ({ ...prev, [wordId]: nextContent })); // ここでの[]は配列ではなく、オブジェクトリテラル{...}の用法の一部　[変数]をプロパティ名,キーにできる　こうしないと変数とならない
+  // 外部からchangeのみを実行可能なようにsetのラッパーのみを返す
+  const changeContentDraftById = (wordId, nextContent) => {
+    setContentDraftById((prev) => ({ ...prev, [wordId]: nextContent })); // ここでの[]は配列ではなく、オブジェクトリテラル{...}の用法の一部　[変数]をプロパティ名,キーにできる　こうしないと変数とならない
   };
 
   const startEdit = () => {
@@ -16,20 +16,20 @@ export const useViewerEditState = ({ commitDraftById }) => {
   };
 
   const saveEdit = () => {
-    commitDraftById(draftById);
+    patchWordContentById(contentDraftById);
     setIsEditing(false);
-    setDraftById({}); // 保存後はドラフトを空にするのが安全
+    setContentDraftById({});
   };
 
   const cancelEdit = () => {
     setIsEditing(false);
-    setDraftById({});
+    setContentDraftById({});
   };
 
   return {
     isEditing,
-    draftById,
-    setDraftContent,
+    contentDraftById,
+    changeContentDraftById,
     startEdit,
     saveEdit,
     cancelEdit,
