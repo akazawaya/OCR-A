@@ -12,7 +12,7 @@ from app_ocr.serializers import (
 
 # from app_ocr.permissions import IsOwnerOrReadOnly
 from rest_framework.decorators import action
-from rest_framework import mixins, viewsets
+from rest_framework import viewsets
 from rest_framework import status
 from app_ocr.etc.tools import inspect_file
 
@@ -66,9 +66,7 @@ class PageViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields = ["doc"]
 
 
-class WordViewSet(mixins.UpdateModelMixin, viewsets.ReadOnlyModelViewSet):
-    # UpdateModelMixin を多重継承で足すとPATCH/PUTが生える
-    # ReadOnlyModelViewSetはREAD単体用の合成クラスというだけで他CRUDをロックしているわけではない
+class WordViewSet(viewsets.ModelViewSet):
     queryset = Word.objects.all()
     serializer_class = WordSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
