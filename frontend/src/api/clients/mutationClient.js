@@ -1,9 +1,11 @@
 import { fetchBackend } from "../fetchBackend";
 
-export async function analyzeDocument({ analyzeUrl, formData }) {
-  const { res, data } = await fetchBackend(analyzeUrl, {
+export async function postCollectionItem({ collectionUrl, id, body }) {
+  const url = `${collectionUrl}${id}/`;
+  const { res, data } = await fetchBackend(url, {
     method: "POST",
-    body: formData,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body ?? {}),
     throwOnError: true,
   });
   return { res, data };
@@ -27,4 +29,13 @@ export async function deleteCollectionItem({ collectionUrl, id }) {
     throwOnError: true,
   });
   return res;
+}
+
+export async function analyzeDocument({ analyzeUrl, formData }) {
+  const { res, data } = await fetchBackend(analyzeUrl, {
+    method: "POST",
+    body: formData,
+    throwOnError: true,
+  });
+  return { res, data };
 }
