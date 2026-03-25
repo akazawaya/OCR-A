@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { pageAccessSpec, wordSpec } from "../appConfig";
@@ -74,18 +74,20 @@ const OcrViewerPage = () => {
     documentTitle: "viewer-export",
   });
 
-  const { mutate: deleteRowMutation } = useMutation({
-    mutationFn: ({ id }) =>
-      deleteCollectionItem({ collectionUrl: wordCollectionUrl, id }),
+  const { mutate: deleteWordById } = useMutation({
+    mutationFn: async (wordIds = []) => {
+      for (const id of wordIds) {
+        await deleteCollectionItem({
+          collectionUrl: wordCollectionUrl,
+          id,
+        });
+      }
+    },
     onSuccess: () =>
       queryClient.invalidateQueries({
         queryKey: [wordCollectionUrl, wordQueryString],
       }),
   });
-  const deleteRow = useCallback(
-    (id) => deleteRowMutation({ id }),
-    [deleteRowMutation],
-  );
 
   const { mutate: patchWordContentById } = useMutation({
     mutationFn: async (contentDraftById) => {
@@ -105,11 +107,10 @@ const OcrViewerPage = () => {
       });
     },
   });
-
   return (
     <ViewerProviders
       data={{ pages, words }}
-      mutations={{ patchWordContentById }}
+      mutations={{ patchWordContentById, deleteWordById }}
       pageState={pageState}
     >
       <div className="grid h-full grid-cols-[2fr_1fr] grid-rows-[auto_1fr] gap-2 overflow-hidden p-2">
@@ -131,7 +132,6 @@ const OcrViewerPage = () => {
             }}
             events={{
               onClickColumn: routing.columnsSort,
-              onClickDeleteButton: deleteRow,
             }}
           />
         </div>

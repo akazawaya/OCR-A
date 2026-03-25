@@ -7,7 +7,7 @@ import { useScroll } from "../../logic/layout/useScroll";
 
 export default function ViewerTable({
   data: { columns = [], rows = [] } = {},
-  events: { onClickColumn, onClickDeleteButton } = {},
+  events: { onClickColumn } = {},
 }) {
   const rootRef = useRef(null);
   const viewerPageState = useViewerPageStateContext();
@@ -21,7 +21,7 @@ export default function ViewerTable({
 
   const {
     data: { isEditing, contentDraftById } = {},
-    events: { onChangeContentDraft } = {},
+    events: { onChangeContentDraft, onClickDeleteButton } = {},
   } = viewerEditState;
 
   // page変更に追随してスクロールする

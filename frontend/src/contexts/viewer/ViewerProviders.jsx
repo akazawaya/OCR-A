@@ -14,13 +14,16 @@ import { ViewerEditStateProvider } from "./ViewerEditStateContext";
 export const ViewerProviders = ({
   data: { pages = [], words = [] } = {},
   children,
-  mutations: { patchWordContentById } = {},
+  mutations: { patchWordContentById, deleteWordById } = {},
   pageState: externalPageState,
 }) => {
   const internalPageState = useViewerPageState({ maxPage: pages.length });
   const pageState = externalPageState ?? internalPageState;
   const wordState = useViewerWordState({ pages, words });
-  const editState = useViewerEditState({ patchWordContentById });
+  const editState = useViewerEditState({
+    patchWordContentById,
+    deleteWordById,
+  });
 
   const pageStateValue = useMemo(
     () => ({
@@ -93,6 +96,7 @@ export const ViewerProviders = ({
         onClickEditButton: editState.startEdit,
         onClickSaveButton: editState.saveEdit,
         onClickCancelButton: editState.cancelEdit,
+        onClickDeleteButton: editState.addPendingDeleteId,
       },
     }),
     [
@@ -102,6 +106,7 @@ export const ViewerProviders = ({
       editState.startEdit,
       editState.saveEdit,
       editState.cancelEdit,
+      editState.addPendingDeleteId,
     ],
   );
   // childrenをラップすることで、内側にいるコンポーネントはuseContextでそれぞれのvalueを参照できる
