@@ -82,12 +82,12 @@ class Page(models.Model):
 
 class Word(models.Model):
     page = models.ForeignKey(Page, on_delete=models.CASCADE, related_name="words")
-    bbox = models.JSONField(blank=True, null=True)
+    bbox = models.JSONField()
     content = models.TextField(blank=True, null=True)
     direction = models.PositiveSmallIntegerField(choices=Direction.choices)
     rec_score = models.FloatField(
-        validators=[MinValueValidator(0), MaxValueValidator(1)]
+        null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(1)]
     )
     det_score = models.FloatField(
-        validators=[MinValueValidator(0), MaxValueValidator(1)]
+        null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(1)]
     )
