@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { pageAccessSpec, wordSpec } from "../appConfig";
 import { getCollection } from "../api/clients/collectionClient";
 import {
+  postCollectionItem,
   deleteCollectionItem,
   patchCollectionItem,
 } from "../api/clients/mutationClient";
@@ -74,19 +75,20 @@ const OcrViewerPage = () => {
     documentTitle: "viewer-export",
   });
 
-  const { mutate: deleteWordById } = useMutation({
-    mutationFn: async (wordIds = []) => {
-      for (const id of wordIds) {
-        await deleteCollectionItem({
+  const { mutate: postWordByBbox } = useMutation({
+    mutationFn: async (wordPostInputs) => {
+      for (const { pageId, bbox, direction } of wordPostInputs) {
+        await postCollectionItem({
           collectionUrl: wordCollectionUrl,
-          id,
+          body: { page: pageId, bbox, direction },
         });
       }
     },
-    onSuccess: () =>
+    onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [wordCollectionUrl, wordQueryString],
-      }),
+      });
+    },
   });
 
   const { mutate: patchWordContentById } = useMutation({
@@ -107,10 +109,26 @@ const OcrViewerPage = () => {
       });
     },
   });
+
+  const { mutate: deleteWordById } = useMutation({
+    mutationFn: async (wordIds = []) => {
+      for (const id of wordIds) {
+        await deleteCollectionItem({
+          collectionUrl: wordCollectionUrl,
+          id,
+        });
+      }
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: [wordCollectionUrl, wordQueryString],
+      }),
+  });
+
   return (
     <ViewerProviders
       data={{ pages, words }}
-      mutations={{ patchWordContentById, deleteWordById }}
+      mutations={{ postWordByBbox, patchWordContentById, deleteWordById }}
       pageState={pageState}
     >
       <div className="grid h-full grid-cols-[2fr_1fr] grid-rows-[auto_1fr] gap-2 overflow-hidden p-2">

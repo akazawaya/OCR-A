@@ -14,13 +14,14 @@ import { ViewerEditStateProvider } from "./ViewerEditStateContext";
 export const ViewerProviders = ({
   data: { pages = [], words = [] } = {},
   children,
-  mutations: { patchWordContentById, deleteWordById } = {},
+  mutations: { postWordByBbox, patchWordContentById, deleteWordById } = {},
   pageState: externalPageState,
 }) => {
   const internalPageState = useViewerPageState({ maxPage: pages.length });
   const pageState = externalPageState ?? internalPageState;
   const wordState = useViewerWordState({ pages, words });
   const editState = useViewerEditState({
+    postWordByBbox,
     patchWordContentById,
     deleteWordById,
   });
@@ -92,10 +93,11 @@ export const ViewerProviders = ({
         contentDraftById: editState.contentDraftById,
       },
       events: {
-        onChangeContentDraft: editState.changeContentDraftById,
         onClickEditButton: editState.startEdit,
         onClickSaveButton: editState.saveEdit,
         onClickCancelButton: editState.cancelEdit,
+        // onDragRect的な: editState.addPendingPostByBbox
+        onChangeContentDraft: editState.changeContentDraftById,
         onClickDeleteButton: editState.addPendingDeleteId,
       },
     }),
@@ -103,10 +105,10 @@ export const ViewerProviders = ({
       editState.isEditing,
       editState.contentDraftById,
       editState.changeContentDraftById,
+      editState.addPendingDeleteId,
       editState.startEdit,
       editState.saveEdit,
       editState.cancelEdit,
-      editState.addPendingDeleteId,
     ],
   );
   // childrenをラップすることで、内側にいるコンポーネントはuseContextでそれぞれのvalueを参照できる

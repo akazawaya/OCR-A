@@ -2,10 +2,12 @@ import { useState } from "react";
 // Edit,Save,Cancelのロジック用まとめのhook
 
 export const useViewerEditState = ({
+  postWordByBbox,
   patchWordContentById,
   deleteWordById,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [pendingPostByBbox, setPendingPostByBbox] = useState([]);
   const [contentDraftById, setContentDraftById] = useState({});
   const [pendingDeleteIdSet, setPendingDeleteIdSet] = useState(new Set());
 
@@ -23,28 +25,37 @@ export const useViewerEditState = ({
     });
   };
 
+  const addPendingPostByBbox = (pageId, bbox, direction) => {
+    setPendingPostByBbox((prev) => [...prev, { pageId, bbox, direction }]);
+  };
+
   const startEdit = () => {
     setIsEditing(true);
   };
 
   const saveEdit = () => {
+    postWordByBbox(pendingPostByBbox);
     patchWordContentById(contentDraftById);
     deleteWordById([...pendingDeleteIdSet]);
     setIsEditing(false);
+    setPendingPostByBbox([]);
     setContentDraftById({});
     setPendingDeleteIdSet(new Set());
   };
 
   const cancelEdit = () => {
     setIsEditing(false);
+    setPendingPostByBbox([]);
     setContentDraftById({});
     setPendingDeleteIdSet(new Set());
   };
 
   return {
     isEditing,
+    pendingPostByBbox,
     contentDraftById,
     pendingDeleteIdSet,
+    addPendingPostByBbox,
     changeContentDraftById,
     addPendingDeleteId,
     startEdit,
