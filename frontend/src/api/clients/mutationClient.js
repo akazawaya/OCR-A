@@ -1,8 +1,7 @@
 import { fetchBackend } from "../fetchBackend";
 
-export async function postCollectionItem({ collectionUrl, id, body }) {
-  const url = `${collectionUrl}${id}/`;
-  const { res, data } = await fetchBackend(url, {
+export async function postCollectionItem({ collectionUrl, body }) {
+  const { res, data } = await fetchBackend(collectionUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body ?? {}),
