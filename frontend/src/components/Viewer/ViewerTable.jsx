@@ -20,7 +20,7 @@ export default function ViewerTable({
   } = viewerWordState;
 
   const {
-    data: { isEditing, contentDraftById } = {},
+    data: { isEditing, contentDraftById, pendingDeleteIdSet } = {},
     events: { onChangeContentDraft, onClickDeleteButton } = {},
   } = viewerEditState;
 
@@ -51,6 +51,7 @@ export default function ViewerTable({
         {rows.map((r) => {
           const isSelected = r.id === selectedWordId;
           const isHover = r.id === hoveredWordId;
+          const isPendingDelete = pendingDeleteIdSet.has(r.id);
           return (
             <tr
               key={r.id}
@@ -64,7 +65,9 @@ export default function ViewerTable({
                   ? "bg-red-500/30"
                   : isHover
                     ? "bg-red-500/20"
-                    : "bg-transparent"
+                    : isPendingDelete
+                      ? "bg-gray-400/30"
+                      : "bg-transparent"
               }
             >
               {isEditing && (
@@ -75,7 +78,7 @@ export default function ViewerTable({
                       onClickDeleteButton(r.id);
                     }}
                   >
-                    削除
+                    {isPendingDelete ? "削除取消" : "削除予約"}
                   </button>
                 </td>
               )}
@@ -86,6 +89,7 @@ export default function ViewerTable({
                     r[c.key]
                   ) : (
                     <input
+                      className={isPendingDelete ? "line-through" : ""}
                       value={contentDraftById[r.id] ?? r[c.key]}
                       onChange={(e) =>
                         onChangeContentDraft(r.id, e.target.value)

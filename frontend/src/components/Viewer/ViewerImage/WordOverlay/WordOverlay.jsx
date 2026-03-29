@@ -15,7 +15,6 @@ export default function WordOverlay({ data: { pageId, clientSizePx } = {} }) {
   const viewerWordState = useViewerWordStateContext();
   const viewerEditState = useViewerEditStateContext();
   const viewerDragRectState = useViewerDragRectStateContext();
-
   const {
     data: { pageMetaById, wordsByPageId, hoveredWordId, selectedWordId } = {},
     events: { onHoverWord, onHoverClearWord, onSelectWord } = {},
@@ -24,6 +23,8 @@ export default function WordOverlay({ data: { pageId, clientSizePx } = {} }) {
   const words = wordsByPageId.get(pageId);
   const imageW = meta?.w;
   const imageH = meta?.h;
+
+  const { data: { pendingDeleteIdSet } = {} } = viewerEditState;
 
   const { wordLayout } = useMemo(() => {
     const imageSizePx =
@@ -75,6 +76,7 @@ export default function WordOverlay({ data: { pageId, clientSizePx } = {} }) {
         {wordLayout.map((w) => {
           const isSelected = w.id === selectedWordId;
           const isHover = w.id === hoveredWordId;
+          const isPendingDelete = pendingDeleteIdSet.has(w.id);
           return (
             <polygon
               key={w.id}
@@ -85,7 +87,9 @@ export default function WordOverlay({ data: { pageId, clientSizePx } = {} }) {
                   ? "fill-red-500/30"
                   : isHover
                     ? "fill-red-500/20"
-                    : "fill-transparent"
+                    : isPendingDelete
+                      ? "fill-gray-400/30"
+                      : "fill-transparent"
               }`}
             />
           );
@@ -93,6 +97,7 @@ export default function WordOverlay({ data: { pageId, clientSizePx } = {} }) {
       </svg>
 
       {wordLayout.map((w) => {
+        const isPendingDelete = pendingDeleteIdSet.has(w.id);
         return (
           <span
             key={w.id}
@@ -112,7 +117,7 @@ export default function WordOverlay({ data: { pageId, clientSizePx } = {} }) {
               w.span.mode === "vertical"
                 ? "[text-orientation:upright] [writing-mode:vertical-rl]"
                 : ""
-            }`}
+            } ${isPendingDelete ? "line-through" : ""}`}
             style={{
               ...w.span.style,
               fontSize: `${w.span.fontPx}px`,
