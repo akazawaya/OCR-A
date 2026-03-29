@@ -92,8 +92,9 @@ export const ViewerProviders = ({
     () => ({
       data: {
         isEditing: editState.isEditing,
-        contentDraftById: editState.contentDraftById,
         pendingPostByBbox: editState.pendingPostByBbox,
+        contentDraftById: editState.contentDraftById,
+        pendingDeleteIdSet: editState.pendingDeleteIdSet,
       },
       events: {
         onClickEditButton: editState.startEdit,
@@ -101,19 +102,20 @@ export const ViewerProviders = ({
         onClickCancelButton: editState.cancelEdit,
         onAddPendingPostByBbox: editState.addPendingPostByBbox,
         onChangeContentDraft: editState.changeContentDraftById,
-        onClickDeleteButton: editState.addPendingDeleteId,
+        onClickDeleteButton: editState.togglePendingDeleteId,
       },
     }),
     [
       editState.isEditing,
       editState.contentDraftById,
       editState.pendingPostByBbox,
+      editState.pendingDeleteIdSet,
       editState.startEdit,
       editState.saveEdit,
       editState.cancelEdit,
       editState.addPendingPostByBbox,
       editState.changeContentDraftById,
-      editState.addPendingDeleteId,
+      editState.togglePendingDeleteId,
     ],
   );
 

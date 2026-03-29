@@ -17,10 +17,14 @@ export const useViewerEditState = ({
     setContentDraftById((prev) => ({ ...prev, [wordId]: nextContent }));
   };
 
-  const addPendingDeleteId = (wordId) => {
+  const togglePendingDeleteId = (wordId) => {
     setPendingDeleteIdSet((prev) => {
       const next = new Set(prev);
-      next.add(wordId);
+      if (next.has(wordId)) {
+        next.delete(wordId);
+      } else {
+        next.add(wordId);
+      }
       return next;
     });
   };
@@ -57,7 +61,7 @@ export const useViewerEditState = ({
     pendingDeleteIdSet,
     addPendingPostByBbox,
     changeContentDraftById,
-    addPendingDeleteId,
+    togglePendingDeleteId,
     startEdit,
     saveEdit,
     cancelEdit,
