@@ -71,7 +71,7 @@ export default function ViewerTopBar({
         回転
       </button>
       {renderTextField(rotate, onEnterRotateInput, rotateRef)}
-      <button onClick={onClickPrintButton}>出力</button>
+      {!isEditing ? <button onClick={onClickPrintButton}>出力</button> : <></>}
       {!isEditing ? (
         <button onClick={onClickEditButton}>編集</button>
       ) : (
