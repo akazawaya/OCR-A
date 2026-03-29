@@ -3,10 +3,12 @@ import { useMemo } from "react";
 import { useViewerPageState } from "../../logic/ui/useViewerPageState";
 import { useViewerWordState } from "../../logic/ui/useViewerWordState";
 import { useViewerEditState } from "../../logic/ui/useViewerEditState";
+import { useDragRectState } from "../../logic/drag/useDragRectState";
 
 import { ViewerPageStateProvider } from "./ViewerPageStateContext";
 import { ViewerWordStateProvider } from "./ViewerWordStateContext";
 import { ViewerEditStateProvider } from "./ViewerEditStateContext";
+import { ViewerDragRectStateProvider } from "./ViewerDragRectStateContext";
 
 // Viewer側でProviderを作って内部でhookを呼び、各Contextへvalue, eventを流す
 // useReducerは状態更新ロジックをまとめたいときの状態管理手段なので、
@@ -91,12 +93,13 @@ export const ViewerProviders = ({
       data: {
         isEditing: editState.isEditing,
         contentDraftById: editState.contentDraftById,
+        pendingPostByBbox: editState.pendingPostByBbox,
       },
       events: {
         onClickEditButton: editState.startEdit,
         onClickSaveButton: editState.saveEdit,
         onClickCancelButton: editState.cancelEdit,
-        // onDragRect的な: editState.addPendingPostByBbox
+        onAddPendingPostByBbox: editState.addPendingPostByBbox,
         onChangeContentDraft: editState.changeContentDraftById,
         onClickDeleteButton: editState.addPendingDeleteId,
       },
@@ -104,11 +107,38 @@ export const ViewerProviders = ({
     [
       editState.isEditing,
       editState.contentDraftById,
-      editState.changeContentDraftById,
-      editState.addPendingDeleteId,
+      editState.pendingPostByBbox,
       editState.startEdit,
       editState.saveEdit,
       editState.cancelEdit,
+      editState.addPendingPostByBbox,
+      editState.changeContentDraftById,
+      editState.addPendingDeleteId,
+    ],
+  );
+
+  const dragRectState = useDragRectState();
+
+  const dragRectStateValue = useMemo(
+    () => ({
+      data: {
+        isDragging: dragRectState.data.isDragging,
+        draftRect: dragRectState.data.draftRect,
+      },
+      events: {
+        startDrag: dragRectState.events.startDrag,
+        moveDrag: dragRectState.events.moveDrag,
+        endDrag: dragRectState.events.endDrag,
+        cancelDrag: dragRectState.events.cancelDrag,
+      },
+    }),
+    [
+      dragRectState.data.isDragging,
+      dragRectState.data.draftRect,
+      dragRectState.events.startDrag,
+      dragRectState.events.moveDrag,
+      dragRectState.events.endDrag,
+      dragRectState.events.cancelDrag,
     ],
   );
   // childrenをラップすることで、内側にいるコンポーネントはuseContextでそれぞれのvalueを参照できる
@@ -116,7 +146,9 @@ export const ViewerProviders = ({
     <ViewerPageStateProvider value={pageStateValue}>
       <ViewerWordStateProvider value={wordStateValue}>
         <ViewerEditStateProvider value={editStateValue}>
-          {children}
+          <ViewerDragRectStateProvider value={dragRectStateValue}>
+            {children}
+          </ViewerDragRectStateProvider>
         </ViewerEditStateProvider>
       </ViewerWordStateProvider>
     </ViewerPageStateProvider>

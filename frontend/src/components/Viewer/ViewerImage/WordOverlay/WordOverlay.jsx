@@ -1,16 +1,25 @@
 import { useMemo } from "react";
 
 import { useViewerWordStateContext } from "../../../../contexts/viewer/ViewerWordStateContext";
+import { useViewerEditStateContext } from "../../../../contexts/viewer/ViewerEditStateContext";
+import { useViewerDragRectStateContext } from "../../../../contexts/viewer/ViewerDragRectStateContext";
 import { buildWordOverlayLayout } from "../../../../logic/layout/buildWordOverlayLayout";
+import {
+  buildCancelDragFromPointerEvent,
+  buildMoveDragFromPointerEvent,
+  buildStartDragFromPointerEvent,
+} from "../../../../logic/drag/wordOverlayDragBindings";
+import { buildEndDragAndAddPendingPostByBbox } from "../../../../logic/drag/endDragAndAddPendingPostByBbox";
 
 export default function WordOverlay({ data: { pageId, clientSizePx } = {} }) {
   const viewerWordState = useViewerWordStateContext();
+  const viewerEditState = useViewerEditStateContext();
+  const viewerDragRectState = useViewerDragRectStateContext();
 
   const {
     data: { pageMetaById, wordsByPageId, hoveredWordId, selectedWordId } = {},
     events: { onHoverWord, onHoverClearWord, onSelectWord } = {},
   } = viewerWordState;
-
   const meta = pageMetaById.get(pageId);
   const words = wordsByPageId.get(pageId);
   const imageW = meta?.w;
@@ -19,7 +28,6 @@ export default function WordOverlay({ data: { pageId, clientSizePx } = {} }) {
   const { wordLayout } = useMemo(() => {
     const imageSizePx =
       imageW == null || imageH == null ? null : { w: imageW, h: imageH };
-
     return buildWordOverlayLayout({
       clientSizePx,
       imageSizePx,
@@ -27,9 +35,43 @@ export default function WordOverlay({ data: { pageId, clientSizePx } = {} }) {
     });
   }, [clientSizePx, imageW, imageH, words]);
 
+  const { events: { onAddPendingPostByBbox } = {} } = viewerEditState;
+
+  const { events: { startDrag, moveDrag, endDrag, cancelDrag } = {} } =
+    viewerDragRectState;
+
+  const onPointerDown = buildStartDragFromPointerEvent({
+    imageW,
+    imageH,
+    startDrag,
+  });
+
+  const onPointerMove = buildMoveDragFromPointerEvent({
+    imageW,
+    imageH,
+    moveDrag,
+  });
+
+  const onPointerCancel = buildCancelDragFromPointerEvent({
+    cancelDrag,
+  });
+  const onPointerUp = buildEndDragAndAddPendingPostByBbox({
+    pageId,
+    imageW,
+    imageH,
+    endDrag,
+    addPendingPostByBbox: onAddPendingPostByBbox,
+  });
+
   return (
     <div className="absolute inset-0">
-      <svg viewBox={`0 0 ${imageW ?? 0} ${imageH ?? 0}`}>
+      <svg
+        viewBox={`0 0 ${imageW ?? 0} ${imageH ?? 0}`}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerCancel}
+      >
         {wordLayout.map((w) => {
           const isSelected = w.id === selectedWordId;
           const isHover = w.id === hoveredWordId;
