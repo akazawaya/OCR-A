@@ -93,7 +93,6 @@ export const ViewerProviders = ({
     () => ({
       data: {
         isEditing: editState.isEditing,
-        pendingPostByBbox: editState.pendingPostByBbox,
         contentDraftById: editState.contentDraftById,
         pendingDeleteIdSet: editState.pendingDeleteIdSet,
       },
@@ -109,7 +108,6 @@ export const ViewerProviders = ({
     [
       editState.isEditing,
       editState.contentDraftById,
-      editState.pendingPostByBbox,
       editState.pendingDeleteIdSet,
       editState.startEdit,
       editState.saveEdit,

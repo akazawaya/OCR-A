@@ -23,18 +23,18 @@ export default function WordOverlay({ data: { pageId, clientSizePx } = {} }) {
     events: { onHoverWord, onHoverClearWord, onSelectWord } = {},
   } = viewerWordState;
   const meta = pageMetaById.get(pageId);
-  const words = wordsByPageId.get(pageId);
+  const words = wordsByPageId.get(pageId) ?? [];
   const imageW = meta?.w;
   const imageH = meta?.h;
 
   const {
-    data: { isEditing, pendingPostByBbox, pendingDeleteIdSet } = {},
+    data: { isEditing, pendingDeleteIdSet } = {},
     events: { onAddPendingPostByBbox } = {},
   } = viewerEditState;
 
   const pendingPostsOnPage = useMemo(() => {
-    return pendingPostByBbox.filter((p) => p.pageId === pageId);
-  }, [pendingPostByBbox, pageId]);
+    return words.filter((w) => w.isPendingPost);
+  }, [words]);
 
   const {
     data: { draftRect } = {},
