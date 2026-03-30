@@ -22,7 +22,7 @@ const readPointFromPointerEvent = (event, { imageW, imageH }) => {
   };
 };
 
-const buildBboxFromRect = (rect) => [
+export const buildBboxFromRect = (rect) => [
   [rect.x, rect.y],
   [rect.x + rect.width, rect.y],
   [rect.x + rect.width, rect.y + rect.height],

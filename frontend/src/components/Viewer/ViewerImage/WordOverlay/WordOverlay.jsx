@@ -9,7 +9,10 @@ import {
   buildMoveDragFromPointerEvent,
   buildStartDragFromPointerEvent,
 } from "../../../../logic/drag/wordOverlayDragBindings";
-import { buildEndDragAndAddPendingPostByBbox } from "../../../../logic/drag/endDragAndAddPendingPostByBbox";
+import {
+  buildBboxFromRect,
+  buildEndDragAndAddPendingPostByBbox,
+} from "../../../../logic/drag/endDragAndAddPendingPostByBbox";
 
 export default function WordOverlay({ data: { pageId, clientSizePx } = {} }) {
   const viewerWordState = useViewerWordStateContext();
@@ -24,7 +27,27 @@ export default function WordOverlay({ data: { pageId, clientSizePx } = {} }) {
   const imageW = meta?.w;
   const imageH = meta?.h;
 
-  const { data: { pendingDeleteIdSet } = {} } = viewerEditState;
+  const {
+    data: { isEditing, pendingPostByBbox, pendingDeleteIdSet } = {},
+    events: { onAddPendingPostByBbox } = {},
+  } = viewerEditState;
+
+  const pendingPostsOnPage = useMemo(() => {
+    return pendingPostByBbox.filter((p) => p.pageId === pageId);
+  }, [pendingPostByBbox, pageId]);
+
+  const {
+    data: { draftRect } = {},
+    events: { startDrag, moveDrag, endDrag, cancelDrag } = {},
+  } = viewerDragRectState;
+
+  const buildPolygonPointsFromBbox = (polygon = []) =>
+    polygon.map(([x, y]) => `${x},${y}`).join(" ");
+
+  const draftBbox = useMemo(() => {
+    if (!draftRect) return null;
+    return buildBboxFromRect(draftRect);
+  }, [draftRect]);
 
   const { wordLayout } = useMemo(() => {
     const imageSizePx =
@@ -35,11 +58,6 @@ export default function WordOverlay({ data: { pageId, clientSizePx } = {} }) {
       words,
     });
   }, [clientSizePx, imageW, imageH, words]);
-
-  const { events: { onAddPendingPostByBbox } = {} } = viewerEditState;
-
-  const { events: { startDrag, moveDrag, endDrag, cancelDrag } = {} } =
-    viewerDragRectState;
 
   const onPointerDown = buildStartDragFromPointerEvent({
     imageW,
@@ -68,11 +86,24 @@ export default function WordOverlay({ data: { pageId, clientSizePx } = {} }) {
     <div className="absolute inset-0">
       <svg
         viewBox={`0 0 ${imageW ?? 0} ${imageH ?? 0}`}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerCancel}
+        onPointerDown={isEditing ? onPointerDown : undefined}
+        onPointerMove={isEditing ? onPointerMove : undefined}
+        onPointerUp={isEditing ? onPointerUp : undefined}
+        onPointerCancel={isEditing ? onPointerCancel : undefined}
       >
+        {isEditing && draftBbox && (
+          <polygon
+            points={buildPolygonPointsFromBbox(draftBbox)}
+            className="pointer-events-none fill-green-500/15 stroke-green-500 stroke-4"
+          />
+        )}
+        {pendingPostsOnPage.map((p) => (
+          <polygon
+            points={buildPolygonPointsFromBbox(p.bbox)}
+            className="fill-green-500/15 stroke-green-500 stroke-4"
+          />
+        ))}
+
         {wordLayout.map((w) => {
           const isSelected = w.id === selectedWordId;
           const isHover = w.id === hoveredWordId;
