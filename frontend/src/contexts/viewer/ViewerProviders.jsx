@@ -14,7 +14,7 @@ import { ViewerDragRectStateProvider } from "./ViewerDragRectStateContext";
 // useReducerは状態更新ロジックをまとめたいときの状態管理手段なので、
 // 現状としては、useViewerFooStateそれぞれがuseStateを知っていればそれで充分
 export const ViewerProviders = ({
-  data: { pages = [], words = [] } = {},
+  data: { pages = [], words = [], wordsQueryKey } = {},
   children,
   mutations: { postWordByBbox, patchWordContentById, deleteWordById } = {},
   pageState: externalPageState,
@@ -26,6 +26,7 @@ export const ViewerProviders = ({
     postWordByBbox,
     patchWordContentById,
     deleteWordById,
+    wordsQueryKey,
   });
 
   const pageStateValue = useMemo(

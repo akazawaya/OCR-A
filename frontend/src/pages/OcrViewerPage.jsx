@@ -22,6 +22,7 @@ const OcrViewerPage = () => {
   const routing = useRouting({});
   const { search, primaryKey } = routing;
 
+  const { collectionUrl: pageCollectionUrl } = pageAccessSpec;
   const pageQueryString = useMemo(
     () =>
       buildCollectionQueryString({
@@ -30,6 +31,12 @@ const OcrViewerPage = () => {
       }),
     [search, primaryKey],
   );
+  const pageQueryKey = useMemo(
+    () => [pageCollectionUrl, pageQueryString],
+    [pageCollectionUrl, pageQueryString],
+  );
+
+  const { collectionUrl: wordCollectionUrl } = wordSpec;
   const wordQueryString = useMemo(
     () =>
       buildCollectionQueryString({
@@ -38,10 +45,13 @@ const OcrViewerPage = () => {
       }),
     [search, primaryKey],
   );
+  const wordsQueryKey = useMemo(
+    () => [wordCollectionUrl, wordQueryString],
+    [wordCollectionUrl, wordQueryString],
+  );
 
-  const { collectionUrl: pageCollectionUrl } = pageAccessSpec;
   const { data: pages = [] } = useQuery({
-    queryKey: [pageCollectionUrl, pageQueryString],
+    queryKey: pageQueryKey,
     queryFn: () =>
       getCollection({
         collectionUrl: pageCollectionUrl,
@@ -51,9 +61,8 @@ const OcrViewerPage = () => {
     placeholderData: [],
   });
 
-  const { collectionUrl: wordCollectionUrl } = wordSpec;
   const { data: words = [] } = useQuery({
-    queryKey: [wordCollectionUrl, wordQueryString],
+    queryKey: wordsQueryKey,
     queryFn: () =>
       getCollection({
         collectionUrl: wordCollectionUrl,
@@ -86,7 +95,7 @@ const OcrViewerPage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [wordCollectionUrl, wordQueryString],
+        queryKey: wordsQueryKey,
       });
     },
   });
@@ -105,7 +114,7 @@ const OcrViewerPage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [wordCollectionUrl, wordQueryString],
+        queryKey: wordsQueryKey,
       });
     },
   });
@@ -121,13 +130,13 @@ const OcrViewerPage = () => {
     },
     onSuccess: () =>
       queryClient.invalidateQueries({
-        queryKey: [wordCollectionUrl, wordQueryString],
+        queryKey: wordsQueryKey,
       }),
   });
 
   return (
     <ViewerProviders
-      data={{ pages, words }}
+      data={{ pages, words, wordsQueryKey }}
       mutations={{ postWordByBbox, patchWordContentById, deleteWordById }}
       pageState={pageState}
     >
