@@ -72,7 +72,7 @@ const OcrViewerPage = () => {
     placeholderData: [],
   });
 
-  const wordSchema = wordSpec.ui.table.map(({ key, label }) => ({
+  const wordTableColumns = wordSpec.ui.table.map(({ key, label }) => ({
     key,
     label,
   }));
@@ -154,7 +154,7 @@ const OcrViewerPage = () => {
         <div className="overflow-auto overscroll-contain">
           <ViewerTable
             data={{
-              columns: wordSchema,
+              columns: wordTableColumns,
               rows: words,
             }}
             events={{
