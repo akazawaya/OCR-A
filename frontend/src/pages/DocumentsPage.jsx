@@ -16,7 +16,7 @@ import { useRouting } from "../logic/routing/useRouting";
 import { useFilterState } from "../logic/ui/useFilterState";
 import { buildCollectionQueryString } from "../logic/server/buildCollectionQueryString";
 import DocumentToolbar from "../components/Document/DocumentToolbar";
-import MenuTable from "../components/Document/DocumentTable";
+import DocumentTable from "../components/Document/DocumentTable";
 
 const DocumentsPage = () => {
   const queryClient = useQueryClient();
@@ -77,7 +77,7 @@ const DocumentsPage = () => {
     analyzeMutation({ formData });
   }, [analyzeMutation]);
 
-  const documentColumns = documentSpec.ui.table.map(({ key, label }) => ({
+  const documentTableColumns = documentSpec.ui.table.map(({ key, label }) => ({
     key,
     label,
   }));
@@ -100,8 +100,8 @@ const DocumentsPage = () => {
           onClickAnalyzeButton: analyzeData,
         }}
       />
-      <MenuTable
-        data={{ columns: documentColumns, rows }}
+      <DocumentTable
+        data={{ columns: documentTableColumns, rows }}
         events={{
           onClickColumn: columnsSort,
           onClickRow: dataRouter,
