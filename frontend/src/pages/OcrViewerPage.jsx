@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { pageAccessSpec, wordSpec } from "../appConfig";
@@ -16,6 +16,7 @@ import { ViewerProviders } from "../contexts/viewer/ViewerProviders";
 import ViewerTopBar from "../components/Viewer/ViewerTopBar";
 import ViewerImage from "../components/Viewer/ViewerImage/ViewerImage";
 import ViewerTable from "../components/Viewer/ViewerTable";
+import { ViewerEditHotkeys } from "../components/Viewer/ViewerEditHotkeys";
 
 const OcrViewerPage = () => {
   const queryClient = useQueryClient();
@@ -134,12 +135,14 @@ const OcrViewerPage = () => {
       }),
   });
 
+  const viewerRootRef = useRef(null);
   return (
     <ViewerProviders
       data={{ pages, words, wordsQueryKey }}
       mutations={{ postWordByBbox, patchWordContentById, deleteWordById }}
       pageState={pageState}
     >
+      <ViewerEditHotkeys viewerRootRef={viewerRootRef} />
       <div className="grid h-full grid-cols-[2fr_1fr] grid-rows-[auto_1fr] gap-2 overflow-hidden p-2">
         <div className="col-span-2">
           <ViewerTopBar events={{ onClickPrintButton: openPrintDialog }} />

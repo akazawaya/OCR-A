@@ -103,6 +103,8 @@ export const ViewerProviders = ({
         onAddPendingPostByBbox: editState.addPendingPostByBbox,
         onChangeContentDraft: editState.changeContentDraftById,
         onClickDeleteButton: editState.togglePendingDeleteId,
+        onKeyDownUndo: editState.undo,
+        onKeyDownRedo: editState.redo,
       },
     }),
     [
@@ -115,6 +117,8 @@ export const ViewerProviders = ({
       editState.addPendingPostByBbox,
       editState.changeContentDraftById,
       editState.togglePendingDeleteId,
+      editState.undo,
+      editState.redo,
     ],
   );
 
