@@ -261,7 +261,6 @@ export const useViewerEditState = ({
     isEditing,
     contentDraftById,
     pendingDeleteIdSet,
-    historyState,
     addPendingPostByBbox,
     changeContentDraftById,
     togglePendingDeleteId,
