@@ -40,7 +40,10 @@ class DocumentViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["post"])
     def start_ocr(self, request):
         file = request.FILES.get("file")
-        ext_label, total_pages = inspect_file(file)
+        try:
+            ext_label, total_pages = inspect_file(file)
+        except ValueError as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         doc = DocumentSerializer(
             data={
                 "file": file,

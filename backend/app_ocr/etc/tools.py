@@ -10,11 +10,13 @@ SUPPORT_INPUT_FORMAT = ["jpg", "png", "pdf"]
 # 最低限のメタ情報 拡張子とページ数を返す
 def inspect_file(file):
     ext = Path(file.name).suffix.lstrip(".").lower()
-    ext = exchange_ext(ext)
-    if ext not in SUPPORT_INPUT_FORMAT:
+    try:
+        ext = exchange_ext(ext)
+    except KeyError:
         raise ValueError(
             f"Unsupported file format. Supported formats are {SUPPORT_INPUT_FORMAT}"
         )
+
     file.seek(0)
     pdf = None
     try:
