@@ -1,0 +1,30 @@
+name: Backend CI
+
+on:
+  push:
+    paths:
+      - "backend/**"
+      - "compose.yaml"
+      - ".github/workflows/backend-ci.yaml"
+  pull_request:
+    paths:
+      - "backend/**"
+      - "compose.yaml"
+      - ".github/workflows/backend-ci.yaml"
+jobs:
+  backend-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Start containers
+        run: docker compose up -d --build
+
+      - name: Run pytest
+        run: docker compose exec -T backend uv run pytest -q
+
+      - name: Stop containers
+        if: always()
+        run: docker compose down -v
