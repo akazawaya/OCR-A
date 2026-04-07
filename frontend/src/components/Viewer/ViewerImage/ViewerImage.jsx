@@ -72,7 +72,11 @@ export default function ViewerImage({
             className={containerClass}
             style={containerStyle}
           >
-            <div className={imageClass} style={imageStyle}>
+            <div
+              data-testid={`viewer-image-transform-${p.id}`}
+              className={imageClass}
+              style={imageStyle}
+            >
               <img alt="" src={p.image} width={w} height={h} />
               <WordOverlay data={{ pageId: p.id, clientSizePx: { w, h } }} />
             </div>
