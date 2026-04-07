@@ -1,8 +1,5 @@
 import { useMemo } from "react";
 
-import { useViewerWordStateContext } from "../../../../contexts/viewer/ViewerWordStateContext";
-import { useViewerEditStateContext } from "../../../../contexts/viewer/ViewerEditStateContext";
-import { useViewerDragRectStateContext } from "../../../../contexts/viewer/ViewerDragRectStateContext";
 import { buildWordOverlayLayout } from "../../../../logic/layout/buildWordOverlayLayout";
 import {
   buildCancelDragFromPointerEvent,
@@ -14,32 +11,39 @@ import {
   buildEndDragAndAddPendingPostByBbox,
 } from "../../../../logic/drag/endDragAndAddPendingPostByBbox";
 
-export default function WordOverlay({ data: { pageId, clientSizePx } = {} }) {
-  const viewerWordState = useViewerWordStateContext();
-  const viewerEditState = useViewerEditStateContext();
-  const viewerDragRectState = useViewerDragRectStateContext();
+export default function WordOverlay({
+  data: { pageId, clientSizePx } = {},
+  state = {},
+  events = {},
+}) {
   const {
-    data: { pageMetaById, wordsByPageId, hoveredWordId, selectedWordId } = {},
-    events: { onHoverWord, onHoverClearWord, onSelectWord } = {},
-  } = viewerWordState;
+    pageMetaById = new Map(),
+    wordsByPageId = new Map(),
+    hoveredWordId,
+    selectedWordId,
+    isEditing,
+    pendingDeleteIdSet = new Set(),
+    draftRect,
+  } = state;
+
+  const {
+    onHoverWord,
+    onHoverClearWord,
+    onSelectWord,
+    onAddPendingPostByBbox,
+    startDrag,
+    moveDrag,
+    endDrag,
+    cancelDrag,
+  } = events;
   const meta = pageMetaById.get(pageId);
   const words = wordsByPageId.get(pageId) ?? [];
   const imageW = meta?.w;
   const imageH = meta?.h;
 
-  const {
-    data: { isEditing, pendingDeleteIdSet } = {},
-    events: { onAddPendingPostByBbox } = {},
-  } = viewerEditState;
-
   const pendingPostsOnPage = useMemo(() => {
     return words.filter((w) => w.isPendingPost);
   }, [words]);
-
-  const {
-    data: { draftRect } = {},
-    events: { startDrag, moveDrag, endDrag, cancelDrag } = {},
-  } = viewerDragRectState;
 
   const buildPolygonPointsFromBbox = (polygon = []) =>
     polygon.map(([x, y]) => `${x},${y}`).join(" ");

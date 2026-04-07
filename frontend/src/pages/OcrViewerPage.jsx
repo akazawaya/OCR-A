@@ -12,7 +12,9 @@ import { usePrint } from "../logic/print/usePrint";
 import { useRouting } from "../logic/routing/useRouting";
 import { buildCollectionQueryString } from "../logic/server/buildCollectionQueryString";
 import { useViewerPageState } from "../logic/ui/useViewerPageState";
-import { ViewerProviders } from "../contexts/viewer/ViewerProviders";
+import { useViewerWordState } from "../logic/ui/useViewerWordState";
+import { useViewerEditState } from "../logic/ui/useViewerEditState";
+import { useDragRectState } from "../logic/drag/useDragRectState";
 import ViewerTopBar from "../components/Viewer/ViewerTopBar";
 import ViewerImage from "../components/Viewer/ViewerImage/ViewerImage";
 import ViewerTable from "../components/Viewer/ViewerTable";
@@ -79,6 +81,7 @@ const OcrViewerPage = () => {
   }));
 
   const pageState = useViewerPageState({ maxPage: pages.length });
+  const wordState = useViewerWordState({ pages, words });
   const { printRef, isPrintMode, openPrintDialog } = usePrint({
     pages,
     currentPage: pageState.page,
@@ -135,23 +138,81 @@ const OcrViewerPage = () => {
       }),
   });
 
+  const editState = useViewerEditState({
+    postWordByBbox,
+    patchWordContentById,
+    deleteWordById,
+    wordsQueryKey,
+  });
+  const dragRectState = useDragRectState();
+
   const viewerRootRef = useRef(null);
   return (
-    <ViewerProviders
-      data={{ pages, words, wordsQueryKey }}
-      mutations={{ postWordByBbox, patchWordContentById, deleteWordById }}
-      pageState={pageState}
-    >
-      <ViewerEditHotkeys viewerRootRef={viewerRootRef} />
+    <>
+      <ViewerEditHotkeys
+        viewerRootRef={viewerRootRef}
+        editState={{ isEditing: editState.isEditing }}
+        editEvents={{
+          onKeyDownUndo: editState.undo,
+          onKeyDownRedo: editState.redo,
+        }}
+      />
       <div className="grid h-full grid-cols-[2fr_1fr] grid-rows-[auto_1fr] gap-2 overflow-hidden p-2">
         <div className="col-span-2">
-          <ViewerTopBar events={{ onClickPrintButton: openPrintDialog }} />
+          <ViewerTopBar
+            events={{ onClickPrintButton: openPrintDialog }}
+            pageState={{
+              page: pageState.page,
+              zoom: pageState.zoom,
+              rotate: pageState.rotate,
+              ZOOM_STEP: pageState.ZOOM_STEP,
+              ROTATE_STEP: pageState.ROTATE_STEP,
+            }}
+            pageEvents={{
+              onClickPageStepButton: pageState.setPage,
+              onClickZoomStepButton: pageState.setZoom,
+              onClickRotateStepButton: pageState.setRotate,
+              onEnterPageInput: pageState.commitPage,
+              onEnterZoomInput: pageState.commitZoom,
+              onEnterRotateInput: pageState.commitRotate,
+            }}
+            editState={{ isEditing: editState.isEditing }}
+            editEvents={{
+              onClickEditButton: editState.startEdit,
+              onClickSaveButton: editState.saveEdit,
+              onClickCancelButton: editState.cancelEdit,
+            }}
+          />
         </div>
         <div className="overflow-auto overscroll-contain">
           <ViewerImage
             data={{ pages }}
             printRef={printRef}
             isPrintMode={isPrintMode}
+            page={pageState.page}
+            zoom={pageState.zoom}
+            rotate={pageState.rotate}
+            selectedBy={wordState.selectedBy}
+            selectedWordId={wordState.selectedWordId}
+            wordOverlayState={{
+              pageMetaById: wordState.pageMetaById,
+              wordsByPageId: wordState.wordsByPageId,
+              hoveredWordId: wordState.hoveredWordId,
+              selectedWordId: wordState.selectedWordId,
+              isEditing: editState.isEditing,
+              pendingDeleteIdSet: editState.pendingDeleteIdSet,
+              draftRect: dragRectState.data.draftRect,
+            }}
+            wordOverlayEvents={{
+              onHoverWord: wordState.hoverWord,
+              onHoverClearWord: wordState.clearHoveredWord,
+              onSelectWord: wordState.commitSelectWord,
+              onAddPendingPostByBbox: editState.addPendingPostByBbox,
+              startDrag: dragRectState.events.startDrag,
+              moveDrag: dragRectState.events.moveDrag,
+              endDrag: dragRectState.events.endDrag,
+              cancelDrag: dragRectState.events.cancelDrag,
+            }}
           />
         </div>
         <div className="overflow-auto overscroll-contain">
@@ -163,10 +224,30 @@ const OcrViewerPage = () => {
             events={{
               onClickColumn: routing.columnsSort,
             }}
+            page={pageState.page}
+            wordState={{
+              hoveredWordId: wordState.hoveredWordId,
+              selectedWordId: wordState.selectedWordId,
+              selectedBy: wordState.selectedBy,
+            }}
+            wordEvents={{
+              onHoverWord: wordState.hoverWord,
+              onHoverClearWord: wordState.clearHoveredWord,
+              onSelectWord: wordState.commitSelectWord,
+            }}
+            editState={{
+              isEditing: editState.isEditing,
+              contentDraftById: editState.contentDraftById,
+              pendingDeleteIdSet: editState.pendingDeleteIdSet,
+            }}
+            editEvents={{
+              onChangeContentDraft: editState.changeContentDraftById,
+              onClickDeleteButton: editState.togglePendingDeleteId,
+            }}
           />
         </div>
       </div>
-    </ViewerProviders>
+    </>
   );
 };
 export default OcrViewerPage;

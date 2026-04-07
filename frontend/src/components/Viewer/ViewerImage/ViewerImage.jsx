@@ -1,7 +1,5 @@
 import { useCallback, useRef } from "react";
 
-import { useViewerPageStateContext } from "../../../contexts/viewer/ViewerPageStateContext";
-import { useViewerWordStateContext } from "../../../contexts/viewer/ViewerWordStateContext";
 import { useScroll } from "../../../logic/layout/useScroll";
 import { useClientSizePx } from "../../../logic/layout/useClientSizePx";
 
@@ -11,6 +9,13 @@ export default function ViewerImage({
   data: { pages = [] } = {},
   printRef,
   isPrintMode = false,
+  page,
+  zoom,
+  rotate,
+  selectedBy,
+  selectedWordId,
+  wordOverlayState,
+  wordOverlayEvents,
 }) {
   const rootRef = useRef(null);
   const setRefs = useCallback(
@@ -21,11 +26,6 @@ export default function ViewerImage({
     },
     [printRef],
   );
-  const viewerPageState = useViewerPageStateContext();
-  const viewerWordState = useViewerWordStateContext();
-  const { data: { page, zoom, rotate } = {} } = viewerPageState;
-  const { data: { selectedBy, selectedWordId } = {} } = viewerWordState;
-
   // page変更に追随してスクロールする
   useScroll({ rootRef, targetAttrName: "data-page", targetAttrValue: page });
   const { clientSizePx } = useClientSizePx(rootRef);
@@ -78,7 +78,11 @@ export default function ViewerImage({
               style={imageStyle}
             >
               <img alt="" src={p.image} width={w} height={h} />
-              <WordOverlay data={{ pageId: p.id, clientSizePx: { w, h } }} />
+              <WordOverlay
+                data={{ pageId: p.id, clientSizePx: { w, h } }}
+                state={wordOverlayState}
+                events={wordOverlayEvents}
+              />
             </div>
           </div>
         );

@@ -1,8 +1,5 @@
 import { useEffect, useRef } from "react";
 
-import { useViewerPageStateContext } from "../../contexts/viewer/ViewerPageStateContext";
-import { useViewerEditStateContext } from "../../contexts/viewer/ViewerEditStateContext";
-
 const renderTextField = (foo, commitFoo, inputRef) => (
   // draftでの制御形式は、stateを制御するためのstateというのも変に感じるので、inputRefでの非制御形式を試す
   // 外部の foo が変わったときにinputRef.current.value = ... で表示を同期
@@ -22,25 +19,25 @@ const renderTextField = (foo, commitFoo, inputRef) => (
 
 export default function ViewerTopBar({
   events: { onClickPrintButton } = {},
+  pageState = {},
+  pageEvents = {},
+  editState = {},
+  editEvents = {},
 } = {}) {
-  const viewerPageState = useViewerPageStateContext();
-  const viewerEditState = useViewerEditStateContext();
-  const {
-    data: { page, zoom, rotate, ZOOM_STEP, ROTATE_STEP } = {},
-    events: {
-      onClickPageStepButton,
-      onClickZoomStepButton,
-      onClickRotateStepButton,
-      onEnterPageInput,
-      onEnterZoomInput,
-      onEnterRotateInput,
-    } = {},
-  } = viewerPageState;
+  const { page, zoom, rotate, ZOOM_STEP, ROTATE_STEP } = pageState;
 
   const {
-    data: { isEditing },
-    events: { onClickEditButton, onClickSaveButton, onClickCancelButton },
-  } = viewerEditState;
+    onClickPageStepButton,
+    onClickZoomStepButton,
+    onClickRotateStepButton,
+    onEnterPageInput,
+    onEnterZoomInput,
+    onEnterRotateInput,
+  } = pageEvents;
+
+  const { isEditing } = editState;
+  const { onClickEditButton, onClickSaveButton, onClickCancelButton } =
+    editEvents;
 
   // useRef(null)はfooRef.currentというプロパティを作成
   // fooRef.currentに入るのがDOMの <input> 要素になったとき、そのDOM要素がvalueプロパティを持つ

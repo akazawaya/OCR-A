@@ -1,28 +1,26 @@
 import { useRef } from "react";
 
-import { useViewerPageStateContext } from "../../contexts/viewer/ViewerPageStateContext";
-import { useViewerWordStateContext } from "../../contexts/viewer/ViewerWordStateContext";
-import { useViewerEditStateContext } from "../../contexts/viewer/ViewerEditStateContext";
 import { useScroll } from "../../logic/layout/useScroll";
 
 export default function ViewerTable({
   data: { columns = [], rows = [] } = {},
   events: { onClickColumn } = {},
+  page,
+  wordState = {},
+  wordEvents = {},
+  editState = {},
+  editEvents = {},
 }) {
   const rootRef = useRef(null);
-  const viewerPageState = useViewerPageStateContext();
-  const viewerWordState = useViewerWordStateContext();
-  const viewerEditState = useViewerEditStateContext();
-  const { data: { page } = {} } = viewerPageState;
-  const {
-    data: { hoveredWordId, selectedWordId, selectedBy } = {},
-    events: { onHoverWord, onHoverClearWord, onSelectWord } = {},
-  } = viewerWordState;
+  const { hoveredWordId, selectedWordId, selectedBy } = wordState;
+  const { onHoverWord, onHoverClearWord, onSelectWord } = wordEvents;
 
   const {
-    data: { isEditing, contentDraftById, pendingDeleteIdSet } = {},
-    events: { onChangeContentDraft, onClickDeleteButton } = {},
-  } = viewerEditState;
+    isEditing,
+    contentDraftById = {},
+    pendingDeleteIdSet = new Set(),
+  } = editState;
+  const { onChangeContentDraft, onClickDeleteButton } = editEvents;
 
   // page変更に追随してスクロールする
   useScroll({ rootRef, targetAttrName: "data-page", targetAttrValue: page });

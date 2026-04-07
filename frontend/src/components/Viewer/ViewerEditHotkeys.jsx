@@ -1,13 +1,12 @@
 import { useEffect } from "react";
 
-import { useViewerEditStateContext } from "../../contexts/viewer/ViewerEditStateContext";
-
-export const ViewerEditHotkeys = ({ viewerRootRef }) => {
-  const viewerEditState = useViewerEditStateContext();
-  const {
-    data: { isEditing },
-    events: { onKeyDownUndo, onKeyDownRedo },
-  } = viewerEditState;
+export const ViewerEditHotkeys = ({
+  viewerRootRef,
+  editState = {},
+  editEvents = {},
+}) => {
+  const { isEditing } = editState;
+  const { onKeyDownUndo, onKeyDownRedo } = editEvents;
 
   useEffect(() => {
     const onWindowKeyDown = (e) => {
