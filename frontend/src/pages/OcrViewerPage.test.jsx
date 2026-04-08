@@ -189,4 +189,48 @@ describe("OcrViewerPage", () => {
     await user.click(rotateButton);
     expect(imageTransform.style.getPropertyValue("--rotate")).toBe("90deg");
   });
+
+  test("ViewerTopBarのonEnterPageInputで対象ページへscrollIntoViewされる", async () => {
+    renderOcrViewerPage();
+    let page2;
+    await waitFor(() => {
+      page2 = document.querySelector('[data-page="2"]');
+      expect(page2).not.toBeNull();
+    });
+    const mockScrollIntoView = vi.fn();
+    page2.scrollIntoView = mockScrollIntoView;
+    const pageInput = await screen.findByRole("textbox", { name: "page" });
+    const user = userEvent.setup();
+    await user.clear(pageInput);
+    await user.type(pageInput, "2{Enter}");
+    expect(mockScrollIntoView).toHaveBeenCalled();
+  });
+
+  test("ViewerTopBarのonEnterZoomInputでViewerImageのサイズが更新される", async () => {
+    renderOcrViewerPage();
+    const imageTransform = await screen.findByTestId(
+      "viewer-image-transform-1",
+    );
+    expect(imageTransform.style.width).toBe("1000px");
+    expect(imageTransform.style.height).toBe("800px");
+    const zoomInput = await screen.findByRole("textbox", { name: "zoom" });
+    const user = userEvent.setup();
+    await user.clear(zoomInput);
+    await user.type(zoomInput, "125{Enter}");
+    expect(imageTransform.style.width).toBe("1250px");
+    expect(imageTransform.style.height).toBe("1000px");
+  });
+
+  test("ViewerTopBarのonEnterRotateInputでViewerImageの--rotateが更新される", async () => {
+    renderOcrViewerPage();
+    const imageTransform = await screen.findByTestId(
+      "viewer-image-transform-1",
+    );
+    expect(imageTransform.style.getPropertyValue("--rotate")).toBe("0deg");
+    const rotateInput = await screen.findByRole("textbox", { name: "rotate" });
+    const user = userEvent.setup();
+    await user.clear(rotateInput);
+    await user.type(rotateInput, "90{Enter}");
+    expect(imageTransform.style.getPropertyValue("--rotate")).toBe("90deg");
+  });
 });
