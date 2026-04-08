@@ -86,7 +86,20 @@ const mockPages = [
     height_px: 800,
   },
 ];
-const mockWords = [];
+const mockWords = [
+  {
+    id: 1,
+    page: 1,
+    bbox: [
+      [100, 100],
+      [200, 100],
+      [200, 150],
+      [100, 150],
+    ],
+    content: "テスト語",
+    direction: 1,
+  },
+];
 
 mockGetCollection.mockImplementation(({ collectionUrl }) => {
   if (collectionUrl === "/pages/") {
@@ -232,5 +245,20 @@ describe("OcrViewerPage", () => {
     await user.clear(rotateInput);
     await user.type(rotateInput, "90{Enter}");
     expect(imageTransform.style.getPropertyValue("--rotate")).toBe("90deg");
+  });
+
+  // WordOverlay では zoom による描画更新のみを確認する。
+  // PageScroll は既存の scrollIntoView テストでカバーできているため、ここでは確認しない。
+  // --rotate は viewer-image-transform-* が img と WordOverlay をまとめて回転させるため、ViewerImage 側の確認で十分とする。
+  // また、onEnter による zoom 更新経路も ViewerImage 側でカバーできているため、ここでは onClickZoomStepButton のみを対象とする。
+  test("ViewerTopBarのonClickZoomStepButtonでWordOverlay内spanのfontSizeが更新される", async () => {
+    renderOcrViewerPage();
+    const zoomUpButton = await screen.findByRole("button", { name: "拡大" });
+    const wordSpan = await screen.findByRole("button", { name: "テスト語" });
+    const beforeFontSize = parseFloat(wordSpan.style.fontSize);
+    const user = userEvent.setup();
+    await user.click(zoomUpButton);
+    const afterFontSize = parseFloat(wordSpan.style.fontSize);
+    expect(afterFontSize / beforeFontSize).toBeCloseTo(1.25);
   });
 });
