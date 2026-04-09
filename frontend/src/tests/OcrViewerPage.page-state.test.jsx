@@ -1,26 +1,15 @@
 // @vitest-environment jsdom
 
-import { beforeEach, afterEach, describe, test, expect, vi } from "vitest";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { beforeEach, describe, test, expect, vi } from "vitest";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import OcrViewerPage from "../pages/OcrViewerPage";
-
-function renderOcrViewerPage() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-      mutations: { retry: false },
-    },
-  });
-
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <OcrViewerPage />
-    </QueryClientProvider>,
-  );
-}
+import {
+  defaultMockPages,
+  renderOcrViewerPage,
+  setupDefaultOcrViewerMocks,
+  setupResizeObserverMock,
+} from "./OcrViewerPage.test-utils";
 
 const {
   mockUsePrint,
@@ -70,93 +59,31 @@ vi.mock("../api/clients/mutationClient", () => ({
   patchCollectionItem: mockPatchCollectionItem,
 }));
 
-const mockPages = [
-  {
-    id: 1,
-    page_number: 1,
-    image: "/test_1.png",
-    width_px: 1000,
-    height_px: 800,
-  },
-  {
-    id: 2,
-    page_number: 2,
-    image: "/test_2.png",
-    width_px: 1000,
-    height_px: 800,
-  },
-];
-const mockWords = [
-  {
-    id: 1,
-    page: 1,
-    bbox: [
-      [100, 100],
-      [200, 100],
-      [200, 150],
-      [100, 150],
-    ],
-    content: "テスト語",
-    direction: 1,
-  },
-];
+setupResizeObserverMock();
 
-mockGetCollection.mockImplementation(({ collectionUrl }) => {
-  if (collectionUrl === "/pages/") {
-    return Promise.resolve(mockPages);
-  }
-  if (collectionUrl === "/words/") {
-    return Promise.resolve(mockWords);
-  }
-  return Promise.resolve([]);
+Object.defineProperty(HTMLElement.prototype, "clientWidth", {
+  configurable: true,
+  get() {
+    return defaultMockPages[0].width_px;
+  },
 });
 
-afterEach(() => {
-  cleanup();
+Object.defineProperty(HTMLElement.prototype, "clientHeight", {
+  configurable: true,
+  get() {
+    return defaultMockPages[0].height_px;
+  },
+});
+
+beforeEach(() => {
+  setupDefaultOcrViewerMocks({
+    mockUseRouting,
+    mockUsePrint,
+    mockGetCollection,
+  });
 });
 
 describe("OcrViewerPage", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-
-    Object.defineProperty(HTMLElement.prototype, "clientWidth", {
-      configurable: true,
-      get() {
-        return mockPages[0].width_px;
-      },
-    });
-    Object.defineProperty(HTMLElement.prototype, "clientHeight", {
-      configurable: true,
-      get() {
-        return mockPages[0].height_px;
-      },
-    });
-
-    class MockResizeObserver {
-      constructor(callback) {
-        this.callback = callback;
-      }
-      observe() {
-        this.callback([]);
-      }
-      unobserve() {}
-      disconnect() {}
-    }
-    globalThis.ResizeObserver = MockResizeObserver;
-
-    mockUseRouting.mockReturnValue({
-      search: "",
-      primaryKey: "1",
-      columnsSort: vi.fn(),
-    });
-
-    mockUsePrint.mockReturnValue({
-      printRef: { current: null },
-      isPrintMode: false,
-      openPrintDialog: vi.fn(),
-    });
-  });
-
   test("ViewerTopBarのonClickPageStepButtonで対象ページへscrollIntoViewされる", async () => {
     renderOcrViewerPage();
     const nextButton = await screen.findByRole("button", { name: "次" });
