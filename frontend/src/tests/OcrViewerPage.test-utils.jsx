@@ -3,6 +3,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi } from "vitest";
 
 import OcrViewerPage from "../pages/OcrViewerPage";
+// pageAccessSpec/wordSpec は、setupでVITE_API_BASE_URLをstub済みの想定。
+// ※実際の通信関数はmockすること！
+import { pageAccessSpec, wordSpec } from "../appConfig";
 
 export const defaultMockPages = [
   {
@@ -25,6 +28,7 @@ export const defaultMockWords = [
   {
     id: 1,
     page: 1,
+    page__page_number: 1,
     bbox: [
       [100, 100],
       [200, 100],
@@ -71,10 +75,10 @@ export const setupDefaultOcrViewerMocks = ({
   });
 
   mockGetCollection.mockImplementation(({ collectionUrl }) => {
-    if (collectionUrl === "/pages/") {
+    if (collectionUrl === pageAccessSpec.collectionUrl) {
       return Promise.resolve(structuredClone(pages));
     }
-    if (collectionUrl === "/words/") {
+    if (collectionUrl === wordSpec.collectionUrl) {
       return Promise.resolve(structuredClone(words));
     }
     return Promise.resolve([]);

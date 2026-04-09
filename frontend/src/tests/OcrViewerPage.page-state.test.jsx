@@ -29,18 +29,6 @@ const {
 
 HTMLElement.prototype.scrollIntoView = vi.fn();
 
-vi.mock("../appConfig", () => ({
-  pageAccessSpec: {
-    collectionUrl: "/pages/",
-  },
-  wordSpec: {
-    collectionUrl: "/words/",
-    ui: {
-      table: [],
-    },
-  },
-}));
-
 vi.mock("../logic/print/usePrint", () => ({
   usePrint: mockUsePrint,
 }));
