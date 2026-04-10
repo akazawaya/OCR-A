@@ -6,14 +6,14 @@ export default function ViewerTable({
   data: { columns = [], rows = [] } = {},
   events: { onClickColumn } = {},
   page,
-  wordState = {},
-  wordEvents = {},
+  selectionState = {},
+  selectionEvents = {},
   editState = {},
   editEvents = {},
 }) {
   const rootRef = useRef(null);
-  const { hoveredWordId, selectedWordId, selectedBy } = wordState;
-  const { onHoverWord, onHoverClearWord, onSelectWord } = wordEvents;
+  const { hoveredId, selectedId, selectedBy } = selectionState;
+  const { onHover, onHoverClear, onSelect } = selectionEvents;
 
   const {
     isEditing,
@@ -30,7 +30,7 @@ export default function ViewerTable({
   useScroll({
     rootRef,
     targetAttrName: "data-word",
-    targetAttrValue: selectedWordId,
+    targetAttrValue: selectedId,
     shouldScroll,
   });
 
@@ -47,17 +47,17 @@ export default function ViewerTable({
       </thead>
       <tbody>
         {rows.map((r) => {
-          const isSelected = r.id === selectedWordId;
-          const isHover = r.id === hoveredWordId;
+          const isSelected = r.id === selectedId;
+          const isHover = r.id === hoveredId;
           const isPendingDelete = pendingDeleteIdSet.has(r.id);
           return (
             <tr
               key={r.id}
               data-page={r.page__page_number}
               data-word={r.id}
-              onMouseEnter={() => onHoverWord(r.id)}
-              onMouseLeave={onHoverClearWord}
-              onClick={() => onSelectWord(r.id, "table")}
+              onMouseEnter={() => onHover(r.id)}
+              onMouseLeave={onHoverClear}
+              onClick={() => onSelect(r.id, "table")}
               className={
                 isSelected
                   ? "bg-red-500/30"

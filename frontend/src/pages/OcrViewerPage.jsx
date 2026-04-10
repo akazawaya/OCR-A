@@ -12,7 +12,7 @@ import { usePrint } from "../logic/print/usePrint";
 import { useRouting } from "../logic/routing/useRouting";
 import { buildCollectionQueryString } from "../logic/server/buildCollectionQueryString";
 import { useViewerPageState } from "../logic/ui/useViewerPageState";
-import { useViewerWordState } from "../logic/ui/useViewerWordState";
+import { useSelection } from "../logic/layout/useSelection";
 import { useViewerEditState } from "../logic/ui/useViewerEditState";
 import { useDragRectState } from "../logic/drag/useDragRectState";
 import ViewerTopBar from "../components/Viewer/ViewerTopBar";
@@ -81,7 +81,7 @@ const OcrViewerPage = () => {
   }));
 
   const pageState = useViewerPageState({ maxPage: pages.length });
-  const wordState = useViewerWordState();
+  const selection = useSelection();
   const { printRef, isPrintMode, openPrintDialog } = usePrint({
     pages,
     currentPage: pageState.page,
@@ -192,20 +192,23 @@ const OcrViewerPage = () => {
             page={pageState.page}
             zoom={pageState.zoom}
             rotate={pageState.rotate}
-            selectedBy={wordState.selectedBy}
-            selectedWordId={wordState.selectedWordId}
+            selectionState={{
+              hoveredId: selection.hoveredId,
+              selectedId: selection.selectedId,
+              selectedBy: selection.selectedBy,
+            }}
             wordOverlayState={{
               words,
-              hoveredWordId: wordState.hoveredWordId,
-              selectedWordId: wordState.selectedWordId,
+              hoveredWordId: selection.hoveredId,
+              selectedWordId: selection.selectedId,
               isEditing: editState.isEditing,
               pendingDeleteIdSet: editState.pendingDeleteIdSet,
               draftRect: dragRectState.data.draftRect,
             }}
             wordOverlayEvents={{
-              onHoverWord: wordState.hoverWord,
-              onHoverClearWord: wordState.clearHoveredWord,
-              onSelectWord: wordState.commitSelectWord,
+              onHoverWord: selection.hover,
+              onHoverClearWord: selection.clearHovered,
+              onSelectWord: selection.commitSelect,
               onAddPendingPostByBbox: editState.addPendingPostByBbox,
               startDrag: dragRectState.events.startDrag,
               moveDrag: dragRectState.events.moveDrag,
@@ -224,15 +227,15 @@ const OcrViewerPage = () => {
               onClickColumn: routing.columnsSort,
             }}
             page={pageState.page}
-            wordState={{
-              hoveredWordId: wordState.hoveredWordId,
-              selectedWordId: wordState.selectedWordId,
-              selectedBy: wordState.selectedBy,
+            selectionState={{
+              hoveredId: selection.hoveredId,
+              selectedId: selection.selectedId,
+              selectedBy: selection.selectedBy,
             }}
-            wordEvents={{
-              onHoverWord: wordState.hoverWord,
-              onHoverClearWord: wordState.clearHoveredWord,
-              onSelectWord: wordState.commitSelectWord,
+            selectionEvents={{
+              onHover: selection.hover,
+              onHoverClear: selection.clearHovered,
+              onSelect: selection.commitSelect,
             }}
             editState={{
               isEditing: editState.isEditing,

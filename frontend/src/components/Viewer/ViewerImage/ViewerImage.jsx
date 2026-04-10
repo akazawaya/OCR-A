@@ -12,11 +12,11 @@ export default function ViewerImage({
   page,
   zoom,
   rotate,
-  selectedBy,
-  selectedWordId,
+  selectionState = {},
   wordOverlayState,
   wordOverlayEvents,
 }) {
+  const { selectedBy, selectedId } = selectionState;
   const rootRef = useRef(null);
   const setRefs = useCallback(
     (node) => {
@@ -35,7 +35,7 @@ export default function ViewerImage({
   useScroll({
     rootRef,
     targetAttrName: "data-word",
-    targetAttrValue: selectedWordId,
+    targetAttrValue: selectedId,
     shouldScroll,
   });
 
