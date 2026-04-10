@@ -81,7 +81,7 @@ const OcrViewerPage = () => {
   }));
 
   const pageState = useViewerPageState({ maxPage: pages.length });
-  const wordState = useViewerWordState({ pages, words });
+  const wordState = useViewerWordState();
   const { printRef, isPrintMode, openPrintDialog } = usePrint({
     pages,
     currentPage: pageState.page,
@@ -195,8 +195,7 @@ const OcrViewerPage = () => {
             selectedBy={wordState.selectedBy}
             selectedWordId={wordState.selectedWordId}
             wordOverlayState={{
-              pageMetaById: wordState.pageMetaById,
-              wordsByPageId: wordState.wordsByPageId,
+              words,
               hoveredWordId: wordState.hoveredWordId,
               selectedWordId: wordState.selectedWordId,
               isEditing: editState.isEditing,

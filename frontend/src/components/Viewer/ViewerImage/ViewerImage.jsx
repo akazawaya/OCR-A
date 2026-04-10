@@ -42,15 +42,15 @@ export default function ViewerImage({
   return (
     <div ref={setRefs} data-print-root={isPrintMode ? "true" : undefined}>
       {pages.map((p) => {
-        const baseW = Number(p.width_px) || 0;
-        const baseH = Number(p.height_px) || 0;
+        const imageW = Number(p.width_px) || 0;
+        const imageH = Number(p.height_px) || 0;
         const safeRotate = isPrintMode ? 0 : rotate;
         const zoomScale = isPrintMode ? 1 : zoom / 100;
-        const baseScale = isPrintMode ? 1 : baseW ? limitW / baseW : 1;
+        const baseScale = isPrintMode ? 1 : imageW ? limitW / imageW : 1;
         const finalScale = baseScale * zoomScale;
 
-        const w = baseW * finalScale;
-        const h = baseH * finalScale;
+        const w = imageW * finalScale;
+        const h = imageH * finalScale;
         const containerW = safeRotate === 90 || safeRotate === 270 ? h : w;
         const containerH = safeRotate === 90 || safeRotate === 270 ? w : h;
         const containerClass = isPrintMode ? "relative" : "relative mx-auto";
@@ -79,7 +79,11 @@ export default function ViewerImage({
             >
               <img alt="" src={p.image} width={w} height={h} />
               <WordOverlay
-                data={{ pageId: p.id, clientSizePx: { w, h } }}
+                data={{
+                  pageId: p.id,
+                  clientSizePx: { w, h },
+                  imageSizePx: { w: imageW, h: imageH },
+                }}
                 state={wordOverlayState}
                 events={wordOverlayEvents}
               />

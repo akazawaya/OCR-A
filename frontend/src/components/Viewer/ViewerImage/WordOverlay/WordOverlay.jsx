@@ -12,13 +12,12 @@ import {
 } from "../../../../logic/drag/endDragAndAddPendingPostByBbox";
 
 export default function WordOverlay({
-  data: { pageId, clientSizePx } = {},
+  data: { pageId, clientSizePx, imageSizePx } = {},
   state = {},
   events = {},
 }) {
   const {
-    pageMetaById = new Map(),
-    wordsByPageId = new Map(),
+    words,
     hoveredWordId,
     selectedWordId,
     isEditing,
@@ -36,14 +35,14 @@ export default function WordOverlay({
     endDrag,
     cancelDrag,
   } = events;
-  const meta = pageMetaById.get(pageId);
-  const words = wordsByPageId.get(pageId) ?? [];
-  const imageW = meta?.w;
-  const imageH = meta?.h;
 
+  const imageW = imageSizePx.w;
+  const imageH = imageSizePx.h;
+
+  const wordsOnPage = words.filter((w) => Number(w.page) === Number(pageId));
   const pendingPostsOnPage = useMemo(() => {
-    return words.filter((w) => w.isPendingPost);
-  }, [words]);
+    return wordsOnPage.filter((w) => w.isPendingPost);
+  }, [wordsOnPage]);
 
   const buildPolygonPointsFromBbox = (polygon = []) =>
     polygon.map(([x, y]) => `${x},${y}`).join(" ");
@@ -59,9 +58,9 @@ export default function WordOverlay({
     return buildWordOverlayLayout({
       clientSizePx,
       imageSizePx,
-      words,
+      words: wordsOnPage,
     });
-  }, [clientSizePx, imageW, imageH, words]);
+  }, [clientSizePx, imageW, imageH, wordsOnPage]);
 
   const onPointerDown = buildStartDragFromPointerEvent({
     imageW,
