@@ -1,32 +1,44 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
-import { defineConfig, globalIgnores } from 'eslint/config'
+import js from "@eslint/js";
+import globals from "globals";
+import reactHooks from "eslint-plugin-react-hooks";
+import reactRefresh from "eslint-plugin-react-refresh"; // 基本は無視するが、warnは出しておく
+import { defineConfig, globalIgnores } from "eslint/config";
+import importPlugin from "eslint-plugin-import";
+import jsxA11y from "eslint-plugin-jsx-a11y";
+import eslintConfigPrettier from "eslint-config-prettier";
+import reactPlugin from "eslint-plugin-react";
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(["dist"]),
   {
-    files: ['**/*.{js,jsx}'],
+    files: ["**/*.{js,jsx}"],
     extends: [
       js.configs.recommended,
-      reactHooks.configs['recommended-latest'],
+      reactHooks.configs["recommended-latest"],
       reactRefresh.configs.vite,
+      jsxA11y.flatConfigs.recommended,
+      eslintConfigPrettier,
     ],
+    plugins: {
+      import: importPlugin,
+      react: reactPlugin,
+    },
     languageOptions: {
-      ecmaVersion: 2020,
+      ecmaVersion: "latest",
       globals: globals.browser,
       parserOptions: {
-        ecmaVersion: 'latest',
         ecmaFeatures: { jsx: true },
-        sourceType: 'module',
+        sourceType: "module",
       },
     },
     rules: {
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
-      "no-undef": "error",
-      "no-unused-vars": "error",
-      "react/prop-types": "off",
+      "react-refresh/only-export-components": "warn",
+      "no-irregular-whitespace": ["error", { skipComments: true }],
+      "no-unused-vars": ["error", { varsIgnorePattern: "^_" }],
+      "react/jsx-uses-vars": "error",
+      "import/no-duplicates": "error",
+      "import/newline-after-import": "error",
+      "import/order": ["error", { "newlines-between": "always" }],
     },
   },
-])
+]);

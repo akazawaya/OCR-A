@@ -1,0 +1,88 @@
+x-django-env: &django_env
+  SECRET_KEY: ${SECRET_KEY}
+  DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
+  DB_HOST: db
+  POSTGRES_DB: ${POSTGRES_DB}
+  POSTGRES_USER: ${POSTGRES_USER}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  CELERY_BROKER_URL: redis://broker:6379/0
+  CHANNEL_REDIS_URL: redis://broker:6379/1
+
+x-media-volumes: &media_volumes
+  - media_input:/app/media
+
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend
+          target: /app
+          ignore:
+            - node_modules/
+            - dist/
+        - action: rebuild
+          path: ./frontend/package.json
+        - action: rebuild
+          path: ./frontend/package-lock.json
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+    command:
+      ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
+    
+  backend:
+    build: ./backend
+    depends_on:
+      - db
+      - broker
+    ports:
+      - "8000:8000"
+    develop:
+      watch:
+        - action: sync
+          path: ./backend
+          target: /app
+          ignore:
+            - .venv/ # ホスト側にruffのインタープリター用の.venvが存在する想定で、同期を無視する
+        - action: rebuild
+          path: ./backend/uv.lock
+        - action: rebuild
+          path: ./backend/pyproject.toml  
+    environment:
+      <<: *django_env
+    volumes: *media_volumes
+    command:
+      ["/app/.venv/bin/python", "-m", "uvicorn", "project.asgi:application", "--host", "0.0.0.0", "--port", "8000"]
+
+  worker:
+    build: ./backend
+    depends_on:
+      - db
+      - broker
+    working_dir: /app
+    environment:
+      <<: *django_env
+    volumes: *media_volumes
+    command: 
+      ["/app/.venv/bin/python", "-m", "celery", "-A", "project.celery:app", "worker", "-l", "INFO", "--concurrency", "1"]
+
+
+  broker:
+    image: redis:8.4.0-bookworm
+    
+  db:
+    image: postgres:18.1-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_db:/var/lib/postgresql # 18系からvolumesのマウント先が変更になった点に注意
+
+volumes:
+  postgres_db:
+  media_input:
