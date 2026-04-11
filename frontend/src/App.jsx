@@ -1,25 +1,35 @@
-import './App.css'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
-import Home from './pages/HomePage'
-import Result from './pages/ResultPage'
-import { Box } from "@mui/material";
-import Sidebar from './components/Sidebar/Sidebar';
-import { routes } from './route';
-const drawerWidth = 240;
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+import DocumentsPage from "./pages/DocumentsPage";
+import OcrViewerPage from "./pages/OcrViewerPage";
+import { routePaths } from "./appConfig";
+
+const queryClient = new QueryClient();
+
 function App() {
   return (
-    <BrowserRouter>
-      <Box sx={{ display: "flex" }}>
-        <Sidebar/>
-        <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <div className="h-dvh overflow-hidden">
           <Routes>
-            <Route path={routes.HOME} element={<Home />} />
-            <Route path={routes.RESULT} element={<Result />} />
+            <Route path="/" element={<DocumentsPage />} />
+            <Route
+              path={routePaths.docs.template}
+              element={<DocumentsPage />}
+            />
+            <Route
+              path={routePaths.viewer.template}
+              element={<OcrViewerPage />}
+            />
           </Routes>
-        </Box>
-      </Box>
-    </BrowserRouter>
+        </div>
+      </BrowserRouter>
+
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
   );
 }
 
-export default App
+export default App;

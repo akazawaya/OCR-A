@@ -1,0 +1,28 @@
+pre-commit:
+  parallel: false
+  commands:
+    # --- frontend ---
+    frontend_prettier:
+      root: "frontend"
+      glob: "frontend/**/*.{js,jsx,json,css,md}"
+      run: npx prettier --write "{staged_files}"
+      stage_fixed: true
+
+    frontend_eslint:
+      root: "frontend"
+      glob: "frontend/**/*.{js,jsx}"
+      run: npx eslint --fix "{staged_files}"
+      stage_fixed: true
+
+    # --- backend ---
+    backend_ruff_format:
+      root: "backend"
+      glob: "backend/**/*.py"
+      run: uv run ruff format "{staged_files}"
+      stage_fixed: true
+
+    backend_ruff_fix:
+      root: "backend"
+      glob: "backend/**/*.py"
+      run: uv run ruff check --fix "{staged_files}"
+      stage_fixed: true
