@@ -1,9 +1,9 @@
-from celery import shared_task
-from app_ocr.models import State, Document, Page
-from app_ocr.service.ocr import run_ocr_for_page
-
 from asgiref.sync import async_to_sync
+from celery import shared_task
 from channels.layers import get_channel_layer
+
+from app_ocr.models import Document, Page, State
+from app_ocr.service.ocr import run_ocr_for_page
 
 
 def notify_document_state_changed(document_id, state):

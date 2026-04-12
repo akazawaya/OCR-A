@@ -25,6 +25,9 @@ dev = [
     "ruff>=0.15.8",
 ]
 
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "PLE", "UP"]
+exclude = ["*/migrations/*"]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "project.settings"

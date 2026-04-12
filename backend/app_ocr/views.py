@@ -1,27 +1,23 @@
 from django.contrib.auth.models import User
-from app_ocr.models import FileType, Document, Page, Word
-
-from rest_framework.response import Response
-
-from app_ocr.serializers import (
-    UserSerializer,
-    DocumentSerializer,
-    PageSerializer,
-    WordSerializer,
-)
+from django.db import transaction
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status, viewsets
 
 # from app_ocr.permissions import IsOwnerOrReadOnly
 from rest_framework.decorators import action
-from rest_framework import viewsets
-from rest_framework import status
-from app_ocr.etc.tools import inspect_file
-
-from rest_framework.parsers import MultiPartParser, FormParser
-from django.db import transaction
-
-from django_filters.rest_framework import DjangoFilterBackend
-from app_ocr.filters import DocumentFilter
 from rest_framework.filters import OrderingFilter
+from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.response import Response
+
+from app_ocr.etc.tools import inspect_file
+from app_ocr.filters import DocumentFilter
+from app_ocr.models import Document, FileType, Page, Word
+from app_ocr.serializers import (
+    DocumentSerializer,
+    PageSerializer,
+    UserSerializer,
+    WordSerializer,
+)
 from app_ocr.tasks import dispatch_ocr_pages_task
 
 

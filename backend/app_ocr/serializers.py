@@ -1,7 +1,9 @@
-from rest_framework import serializers
-from app_ocr.models import Document, Page, Word
-from django.contrib.auth.models import User
 from zoneinfo import ZoneInfo
+
+from django.contrib.auth.models import User
+from rest_framework import serializers
+
+from app_ocr.models import Document, Page, Word
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):

@@ -1,7 +1,8 @@
+from functools import lru_cache
+
 import cv2
 import numpy as np
 from yomitoku.ocr import OCR
-from functools import lru_cache
 
 
 def init_engine():

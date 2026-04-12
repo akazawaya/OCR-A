@@ -1,10 +1,11 @@
-from django.db import models
-from django.core.validators import (
-    MinValueValidator,
-    MaxValueValidator,
-    FileExtensionValidator,
-)
 import uuid
+
+from django.core.validators import (
+    FileExtensionValidator,
+    MaxValueValidator,
+    MinValueValidator,
+)
+from django.db import models
 
 
 class FileType(models.IntegerChoices):
