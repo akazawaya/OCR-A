@@ -31,5 +31,6 @@
     "ghcr.io/devcontainers/features/node:1": {
       "version": "22"
     }
-  }
+  },
+  "postCreateCommand": "apt-get update && apt-get install -y nano && npm install -g lefthook"
 }
