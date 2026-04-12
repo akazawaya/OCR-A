@@ -7,6 +7,9 @@
   "service": "backend",
   "runServices": ["backend", "db", "broker", "worker"],
   "workspaceFolder": "/workspace/RestOCR",
+  "remoteEnv": {
+    "PATH": "/app/.venv/bin:${containerEnv:PATH}"
+  },
   "customizations": {
     "vscode": {
       "extensions": [
