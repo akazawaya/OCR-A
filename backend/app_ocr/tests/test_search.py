@@ -1,0 +1,282 @@
+import pytest
+from django.urls import reverse
+
+from app_ocr.models import Document, Page, Word
+
+
+@pytest.fixture
+def search_test_data(tmp_path):
+    def create_document_with_words(file_name, words):
+        file_path = tmp_path / file_name
+        file_path.write_bytes(b"dummy")
+
+        document = Document.objects.create(
+            file=str(file_path),
+            file_name=file_name,
+            file_type=1,
+            total_pages=1,
+        )
+
+        page = Page.objects.create(
+            doc=document,
+            image="dummy.png",
+            page_number=1,
+            width_px=100,
+            height_px=100,
+        )
+
+        word_objects = []
+        for index, content in enumerate(words):
+            word = Word.objects.create(
+                page=page,
+                bbox=[
+                    [index * 10, 0],
+                    [index * 10 + 10, 0],
+                    [index * 10 + 10, 10],
+                    [index * 10, 10],
+                ],
+                content=content,
+                direction=1,
+            )
+            word_objects.append(word)
+
+        return {
+            "document": document,
+            "page": page,
+            "words": word_objects,
+        }
+
+    doc_apple_multiple_word_hits = create_document_with_words(
+        file_name="test.pdf",
+        words=["apple", "apple pie", "apple"],
+    )
+
+    doc_banana_in_file_name_only = create_document_with_words(
+        file_name="banana.pdf",
+        words=["orange", "grape"],
+    )
+
+    doc_banana_in_word_content_only = create_document_with_words(
+        file_name="test.pdf",
+        words=["banana", "melon"],
+    )
+
+    doc_banana_in_both = create_document_with_words(
+        file_name="banana.pdf",
+        words=["apple", "banana", "apple banana"],
+    )
+
+    doc_banana_in_neither = create_document_with_words(
+        file_name="test.pdf",
+        words=["tomato", "potato"],
+    )
+
+    return {
+        "doc_apple_multiple_word_hits": doc_apple_multiple_word_hits,
+        "doc_banana_in_file_name_only": doc_banana_in_file_name_only,
+        "doc_banana_in_word_content_only": doc_banana_in_word_content_only,
+        "doc_banana_in_both": doc_banana_in_both,
+        "doc_banana_in_neither": doc_banana_in_neither,
+    }
+
+
+# 重複idのピックアップ排除
+def test_search_distinct(client, search_test_data):
+    response = client.get(
+        reverse("document-list"),
+        {
+            "keyword": "apple",
+            "field_name": "pages__words__content",
+            "lookup_expr": "icontains",
+        },
+    )
+
+    assert response.status_code == 200
+
+    result_ids = [item["id"] for item in response.data]
+    expected_id = search_test_data["doc_apple_multiple_word_hits"]["document"].id
+
+    assert result_ids.count(expected_id) == 1
+
+
+# 検索対象 file_name / pages__words__content / both の切り替え
+@pytest.mark.parametrize(
+    "field_name, expected_keys",
+    [
+        ("file_name", ["doc_banana_in_file_name_only", "doc_banana_in_both"]),
+        (
+            "pages__words__content",
+            ["doc_banana_in_word_content_only", "doc_banana_in_both"],
+        ),
+        (
+            "both",
+            [
+                "doc_banana_in_file_name_only",
+                "doc_banana_in_word_content_only",
+                "doc_banana_in_both",
+            ],
+        ),
+    ],
+)
+def test_search_by_field_name(client, search_test_data, field_name, expected_keys):
+    response = client.get(
+        reverse("document-list"),
+        {
+            "keyword": "banana",
+            "field_name": field_name,
+            "lookup_expr": "icontains",
+        },
+    )
+
+    assert response.status_code == 200
+
+    result_ids = {item["id"] for item in response.data}
+    expected_ids = {search_test_data[key]["document"].id for key in expected_keys}
+
+    assert result_ids == expected_ids
+
+
+# 単一キーワードの exact / icontains
+@pytest.mark.parametrize(
+    "keyword, lookup_expr, expected_keys",
+    [
+        ("apple", "exact", ["doc_apple_multiple_word_hits"]),
+        ("apple", "icontains", ["doc_apple_multiple_word_hits", "doc_banana_in_both"]),
+        ("banana", "exact", ["doc_banana_in_word_content_only", "doc_banana_in_both"]),
+        (
+            "banana",
+            "icontains",
+            [
+                "doc_banana_in_file_name_only",
+                "doc_banana_in_word_content_only",
+                "doc_banana_in_both",
+            ],
+        ),
+    ],
+)
+def test_search_by_lookup_expr(
+    client,
+    search_test_data,
+    keyword,
+    lookup_expr,
+    expected_keys,
+):
+    response = client.get(
+        reverse("document-list"),
+        {
+            "keyword": keyword,
+            "field_name": "both",
+            "lookup_expr": lookup_expr,
+        },
+    )
+
+    assert response.status_code == 200
+
+    result_ids = {item["id"] for item in response.data}
+    expected_ids = {search_test_data[key]["document"].id for key in expected_keys}
+
+    assert result_ids == expected_ids
+
+
+# 複数キーワードの and / or
+# lookup_exprはexactに固定(深い理由はない)
+@pytest.mark.parametrize(
+    "keyword, keyword_operator, expected_keys",
+    [
+        ("apple banana", "and", ["doc_banana_in_both"]),
+        (
+            "apple banana",
+            "or",
+            [
+                "doc_apple_multiple_word_hits",
+                "doc_banana_in_file_name_only",
+                "doc_banana_in_word_content_only",
+                "doc_banana_in_both",
+            ],
+        ),
+    ],
+)
+def test_search_by_keyword_operator(
+    client,
+    search_test_data,
+    keyword,
+    keyword_operator,
+    expected_keys,
+):
+    response = client.get(
+        reverse("document-list"),
+        {
+            "keyword": keyword,
+            "field_name": "both",
+            "lookup_expr": "exact",
+            "keyword_operator": keyword_operator,
+        },
+    )
+
+    assert response.status_code == 200
+
+    result_ids = {item["id"] for item in response.data}
+    expected_ids = {search_test_data[key]["document"].id for key in expected_keys}
+
+    assert result_ids == expected_ids
+
+
+# 単一の検索キーワードで keyword_operator を指定しても通常動作する
+@pytest.mark.parametrize("keyword_operator", ["and", "or"])
+def test_search_allows_keyword_operator_with_single_keyword(
+    client,
+    keyword_operator,
+):
+    base_response = client.get(
+        reverse("document-list"),
+        {
+            "keyword": "banana",
+            "field_name": "pages__words__content",
+            "lookup_expr": "exact",
+        },
+    )
+    response = client.get(
+        reverse("document-list"),
+        {
+            "keyword": "banana",
+            "field_name": "pages__words__content",
+            "lookup_expr": "exact",
+            "keyword_operator": keyword_operator,
+        },
+    )
+
+    assert base_response.status_code == 200
+    assert response.status_code == 200
+
+    base_ids = {item["id"] for item in base_response.data}
+    result_ids = {item["id"] for item in response.data}
+
+    assert result_ids == base_ids
+
+
+# 完全な仕様外値は 400
+@pytest.mark.parametrize(
+    "params",
+    [
+        {
+            "keyword": "banana",
+            "field_name": "invalid",
+            "lookup_expr": "icontains",
+        },
+        {
+            "keyword": "banana",
+            "field_name": "both",
+            "lookup_expr": "invalid",
+        },
+        {
+            "keyword": "apple banana",
+            "field_name": "both",
+            "lookup_expr": "exact",
+            "keyword_operator": "invalid",
+        },
+    ],
+)
+def test_search_rejects_invalid_params(client, params):
+    response = client.get(reverse("document-list"), params)
+
+    assert response.status_code == 400
