@@ -10,6 +10,8 @@ from app_ocr.models import Document, Page, Word
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures"
 
+pytestmark = pytest.mark.django_db
+
 
 @pytest.fixture
 def api_client():
@@ -51,7 +53,6 @@ def ocr_fixture_data():
     return document, page, word
 
 
-@pytest.mark.django_db
 def test_delete_document_cascades_pages_and_words(api_client, ocr_fixture_data):
     document, page, word = ocr_fixture_data
 
@@ -64,7 +65,6 @@ def test_delete_document_cascades_pages_and_words(api_client, ocr_fixture_data):
 
 
 # 以下はedit時のwordに対するAPIテスト
-@pytest.mark.django_db
 def test_create_word(api_client, ocr_fixture_data):
     _, page, _ = ocr_fixture_data
 
@@ -86,7 +86,6 @@ def test_create_word(api_client, ocr_fixture_data):
     assert created_word.content == "created"
 
 
-@pytest.mark.django_db
 def test_patch_word(api_client, ocr_fixture_data):
     _, _, word = ocr_fixture_data
     response = api_client.patch(
@@ -98,7 +97,6 @@ def test_patch_word(api_client, ocr_fixture_data):
     assert word.content == "next"
 
 
-@pytest.mark.django_db
 def test_delete_word(api_client, ocr_fixture_data):
     _, _, word = ocr_fixture_data
 
