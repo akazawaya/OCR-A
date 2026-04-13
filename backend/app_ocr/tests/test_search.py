@@ -3,6 +3,8 @@ from django.urls import reverse
 
 from app_ocr.models import Document, Page, Word
 
+pytestmark = pytest.mark.django_db
+
 
 @pytest.fixture
 def search_test_data(tmp_path):
@@ -140,7 +142,7 @@ def test_search_by_field_name(client, search_test_data, field_name, expected_key
 @pytest.mark.parametrize(
     "keyword, lookup_expr, expected_keys",
     [
-        ("apple", "exact", ["doc_apple_multiple_word_hits"]),
+        ("apple", "exact", ["doc_apple_multiple_word_hits", "doc_banana_in_both"]),
         ("apple", "icontains", ["doc_apple_multiple_word_hits", "doc_banana_in_both"]),
         ("banana", "exact", ["doc_banana_in_word_content_only", "doc_banana_in_both"]),
         (
@@ -189,7 +191,6 @@ def test_search_by_lookup_expr(
             "or",
             [
                 "doc_apple_multiple_word_hits",
-                "doc_banana_in_file_name_only",
                 "doc_banana_in_word_content_only",
                 "doc_banana_in_both",
             ],

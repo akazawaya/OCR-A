@@ -10,7 +10,7 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 
 from app_ocr.etc.tools import inspect_file
-from app_ocr.filters import DocumentFilter
+from app_ocr.filters import DocumentFilterSet
 from app_ocr.models import Document, FileType, Page, Word
 from app_ocr.serializers import (
     DocumentSerializer,
@@ -31,7 +31,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
     serializer_class = DocumentSerializer
     parser_classes = [MultiPartParser, FormParser]
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_class = DocumentFilter
+    filterset_class = DocumentFilterSet
 
     @action(detail=False, methods=["post"])
     def start_ocr(self, request):
@@ -61,12 +61,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
 class PageViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Page.objects.all()
     serializer_class = PageSerializer
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = ["doc"]
 
 
 class WordViewSet(viewsets.ModelViewSet):
     queryset = Word.objects.all()
     serializer_class = WordSerializer
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = ["page__page_number", "page__doc", "page"]
