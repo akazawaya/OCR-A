@@ -1,9 +1,10 @@
 import { useEffect, useRef } from "react";
 
-const renderTextField = (foo, commitFoo, inputRef) => (
+const renderTextField = (foo, commitFoo, inputRef, ariaLabel) => (
   // draftでの制御形式は、stateを制御するためのstateというのも変に感じるので、inputRefでの非制御形式を試す
   // 外部の foo が変わったときにinputRef.current.value = ... で表示を同期
   <input
+    aria-label={ariaLabel}
     className="w-[3ch] border border-double border-black bg-white text-center"
     ref={inputRef}
     defaultValue={foo}
@@ -55,19 +56,19 @@ export default function ViewerTopBar({
   return (
     <div className="flex justify-center gap-2 bg-gray-200 px-2">
       <button onClick={() => onClickPageStepButton((a) => a - 1)}>戻</button>
-      {renderTextField(page, onEnterPageInput, pageRef)}
+      {renderTextField(page, onEnterPageInput, pageRef, "page")}
       <button onClick={() => onClickPageStepButton((a) => a + 1)}>次</button>
       <button onClick={() => onClickZoomStepButton((a) => a - ZOOM_STEP)}>
         縮小
       </button>
-      {renderTextField(zoom, onEnterZoomInput, zoomRef)}
+      {renderTextField(zoom, onEnterZoomInput, zoomRef, "zoom")}
       <button onClick={() => onClickZoomStepButton((a) => a + ZOOM_STEP)}>
         拡大
       </button>
       <button onClick={() => onClickRotateStepButton((a) => a + ROTATE_STEP)}>
         回転
       </button>
-      {renderTextField(rotate, onEnterRotateInput, rotateRef)}
+      {renderTextField(rotate, onEnterRotateInput, rotateRef, "rotate")}
       {!isEditing ? <button onClick={onClickPrintButton}>出力</button> : <></>}
       {!isEditing ? (
         <button onClick={onClickEditButton}>編集</button>
