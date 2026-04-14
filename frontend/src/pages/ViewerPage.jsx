@@ -20,7 +20,7 @@ import ViewerImage from "../components/Viewer/ViewerImage/ViewerImage";
 import ViewerTable from "../components/Viewer/ViewerTable";
 import { ViewerEditHotkeys } from "../components/Viewer/ViewerEditHotkeys";
 
-const OcrViewerPage = () => {
+const ViewerPage = () => {
   const queryClient = useQueryClient();
   const routing = useRouting({});
   const { search, primaryKey } = routing;
@@ -252,4 +252,4 @@ const OcrViewerPage = () => {
     </>
   );
 };
-export default OcrViewerPage;
+export default ViewerPage;

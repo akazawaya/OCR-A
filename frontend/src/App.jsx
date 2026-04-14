@@ -3,7 +3,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import DocumentsPage from "./pages/DocumentsPage";
-import OcrViewerPage from "./pages/OcrViewerPage";
+import ViewerPage from "./pages/ViewerPage";
 import { routePaths } from "./appConfig";
 
 const queryClient = new QueryClient();
@@ -19,10 +19,7 @@ function App() {
               path={routePaths.docs.template}
               element={<DocumentsPage />}
             />
-            <Route
-              path={routePaths.viewer.template}
-              element={<OcrViewerPage />}
-            />
+            <Route path={routePaths.viewer.template} element={<ViewerPage />} />
           </Routes>
         </div>
       </BrowserRouter>

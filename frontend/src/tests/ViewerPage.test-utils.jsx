@@ -2,7 +2,7 @@ import { render } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi } from "vitest";
 
-import OcrViewerPage from "../pages/OcrViewerPage";
+import ViewerPage from "../pages/ViewerPage";
 // pageAccessSpec/wordSpec は、setupでVITE_API_BASE_URLをstub済みの想定。
 // ※実際の通信関数はmockすること！
 import { pageAccessSpec, wordSpec } from "../appConfig";
@@ -40,7 +40,7 @@ export const defaultMockWords = [
   },
 ];
 
-export const renderOcrViewerPage = () => {
+export const renderViewerPage = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -50,12 +50,12 @@ export const renderOcrViewerPage = () => {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <OcrViewerPage />
+      <ViewerPage />
     </QueryClientProvider>,
   );
 };
 
-export const setupDefaultOcrViewerMocks = ({
+export const setupDefaultViewerMocks = ({
   mockUseRouting,
   mockUsePrint,
   mockGetCollection,

@@ -7,10 +7,10 @@ import "@testing-library/jest-dom/vitest";
 
 import {
   defaultMockWords,
-  renderOcrViewerPage,
-  setupDefaultOcrViewerMocks,
+  renderViewerPage,
+  setupDefaultViewerMocks,
   setupResizeObserverMock,
-} from "./OcrViewerPage.test-utils";
+} from "./ViewerPage.test-utils";
 
 const {
   mockUsePrint,
@@ -52,7 +52,7 @@ setupResizeObserverMock();
 
 beforeEach(() => {
   vi.clearAllMocks();
-  setupDefaultOcrViewerMocks({
+  setupDefaultViewerMocks({
     mockUseRouting,
     mockUsePrint,
     mockGetCollection,
@@ -63,7 +63,7 @@ beforeEach(() => {
   mockPatchCollectionItem.mockResolvedValue({});
 });
 
-describe("OcrViewerPage", () => {
+describe("ViewerPage", () => {
   const enterEditMode = async () => {
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: "編集" }));
@@ -73,7 +73,7 @@ describe("OcrViewerPage", () => {
   const getContentInput = () => screen.getByDisplayValue("テスト語");
 
   test("ViewerTopBarのonClickEditButtonで編集モードへ遷移する", async () => {
-    renderOcrViewerPage();
+    renderViewerPage();
 
     await enterEditMode();
 
@@ -88,7 +88,7 @@ describe("OcrViewerPage", () => {
   });
 
   test("ViewerTopBarのonClickSaveButtonで編集内容が保存される", async () => {
-    renderOcrViewerPage();
+    renderViewerPage();
     const user = await enterEditMode();
 
     const contentInput = getContentInput();
@@ -108,7 +108,7 @@ describe("OcrViewerPage", () => {
   });
 
   test("ViewerTopBarのonClickCancelButtonで編集内容が破棄される", async () => {
-    renderOcrViewerPage();
+    renderViewerPage();
     const user = await enterEditMode();
 
     const contentInput = getContentInput();
@@ -123,7 +123,7 @@ describe("OcrViewerPage", () => {
   });
 
   test("WordOverlayのonAddPendingPostByBboxで仮のWordが追加される", async () => {
-    renderOcrViewerPage();
+    renderViewerPage();
 
     await enterEditMode();
 
@@ -155,7 +155,7 @@ describe("OcrViewerPage", () => {
   });
 
   test("ViewerTableのonChangeContentDraftでWordの下書き内容が更新される", async () => {
-    renderOcrViewerPage();
+    renderViewerPage();
     const user = await enterEditMode();
 
     const contentInput = getContentInput();
@@ -166,7 +166,7 @@ describe("OcrViewerPage", () => {
   });
 
   test("ViewerTableのonClickDeleteButtonで対象Wordが削除予定状態に切り替わる", async () => {
-    renderOcrViewerPage();
+    renderViewerPage();
     const user = await enterEditMode();
 
     await user.click(screen.getByRole("button", { name: "削除予約" }));
@@ -179,7 +179,7 @@ describe("OcrViewerPage", () => {
 
   //　Undo/Redoは削除予約の操作で確認する。
   test("ViewerEditHotkeysのonKeyDownUndoで直前の編集操作が取り消される", async () => {
-    renderOcrViewerPage();
+    renderViewerPage();
     const user = await enterEditMode();
 
     await user.click(screen.getByRole("button", { name: "削除予約" }));
@@ -193,7 +193,7 @@ describe("OcrViewerPage", () => {
   });
 
   test("ViewerEditHotkeysのonKeyDownRedoで取り消した編集操作がやり直される", async () => {
-    renderOcrViewerPage();
+    renderViewerPage();
     const user = await enterEditMode();
 
     await user.click(screen.getByRole("button", { name: "削除予約" }));

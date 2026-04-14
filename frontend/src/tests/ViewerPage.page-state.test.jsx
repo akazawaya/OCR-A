@@ -6,10 +6,10 @@ import userEvent from "@testing-library/user-event";
 
 import {
   defaultMockPages,
-  renderOcrViewerPage,
-  setupDefaultOcrViewerMocks,
+  renderViewerPage,
+  setupDefaultViewerMocks,
   setupResizeObserverMock,
-} from "./OcrViewerPage.test-utils";
+} from "./ViewerPage.test-utils";
 
 const {
   mockUsePrint,
@@ -64,16 +64,16 @@ Object.defineProperty(HTMLElement.prototype, "clientHeight", {
 });
 
 beforeEach(() => {
-  setupDefaultOcrViewerMocks({
+  setupDefaultViewerMocks({
     mockUseRouting,
     mockUsePrint,
     mockGetCollection,
   });
 });
 
-describe("OcrViewerPage", () => {
+describe("ViewerPage", () => {
   test("ViewerTopBarのonClickPageStepButtonで対象ページへscrollIntoViewされる", async () => {
-    renderOcrViewerPage();
+    renderViewerPage();
     const nextButton = await screen.findByRole("button", { name: "次" });
     let page2;
     await waitFor(() => {
@@ -88,7 +88,7 @@ describe("OcrViewerPage", () => {
   });
 
   test("ViewerTopBarのonClickZoomStepButtonでViewerImageのサイズが更新される", async () => {
-    renderOcrViewerPage();
+    renderViewerPage();
     const zoomUpButton = await screen.findByRole("button", { name: "拡大" });
     const zoomDownButton = await screen.findByRole("button", { name: "縮小" });
     const imageTransform = await screen.findByTestId(
@@ -107,7 +107,7 @@ describe("OcrViewerPage", () => {
   });
 
   test("ViewerTopBarのonClickRotateStepButtonでViewerImageの--rotateが更新される", async () => {
-    renderOcrViewerPage();
+    renderViewerPage();
     const rotateButton = await screen.findByRole("button", { name: "回転" });
     const imageTransform = await screen.findByTestId(
       "viewer-image-transform-1",
@@ -119,7 +119,7 @@ describe("OcrViewerPage", () => {
   });
 
   test("ViewerTopBarのonEnterPageInputで対象ページへscrollIntoViewされる", async () => {
-    renderOcrViewerPage();
+    renderViewerPage();
     let page2;
     await waitFor(() => {
       page2 = document.querySelector('[data-page="2"]');
@@ -135,7 +135,7 @@ describe("OcrViewerPage", () => {
   });
 
   test("ViewerTopBarのonEnterZoomInputでViewerImageのサイズが更新される", async () => {
-    renderOcrViewerPage();
+    renderViewerPage();
     const imageTransform = await screen.findByTestId(
       "viewer-image-transform-1",
     );
@@ -150,7 +150,7 @@ describe("OcrViewerPage", () => {
   });
 
   test("ViewerTopBarのonEnterRotateInputでViewerImageの--rotateが更新される", async () => {
-    renderOcrViewerPage();
+    renderViewerPage();
     const imageTransform = await screen.findByTestId(
       "viewer-image-transform-1",
     );
@@ -167,7 +167,7 @@ describe("OcrViewerPage", () => {
   // --rotate は viewer-image-transform-* が img と WordOverlay をまとめて回転させるため、ViewerImage 側の確認で十分とする。
   // また、onEnter による zoom 更新経路も ViewerImage 側でカバーできているため、ここでは onClickZoomStepButton のみを対象とする。
   test("ViewerTopBarのonClickZoomStepButtonでWordOverlay内spanのfontSizeが更新される", async () => {
-    renderOcrViewerPage();
+    renderViewerPage();
     const zoomUpButton = await screen.findByRole("button", { name: "拡大" });
     const wordSpan = await screen.findByRole("button", { name: "テスト語" });
     const beforeFontSize = parseFloat(wordSpan.style.fontSize);
