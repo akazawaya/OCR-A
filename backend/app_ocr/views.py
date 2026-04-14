@@ -61,8 +61,12 @@ class DocumentViewSet(viewsets.ModelViewSet):
 class PageViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Page.objects.all()
     serializer_class = PageSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["doc"]
 
 
 class WordViewSet(viewsets.ModelViewSet):
     queryset = Word.objects.all()
     serializer_class = WordSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["page", "page__doc"]
