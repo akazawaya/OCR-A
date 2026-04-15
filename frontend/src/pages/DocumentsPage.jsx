@@ -13,7 +13,7 @@ import {
   deleteCollectionItem,
 } from "../api/clients/mutationClient";
 import { useRouting } from "../logic/routing/useRouting";
-import { useFilterState } from "../logic/ui/useFilterState";
+import { useSearchState } from "../logic/ui/useSearchState";
 import { buildCollectionQueryString } from "../logic/server/buildCollectionQueryString";
 import DocumentToolbar from "../components/Document/DocumentToolbar";
 import DocumentTable from "../components/Document/DocumentTable";
@@ -22,25 +22,30 @@ const DocumentsPage = () => {
   const queryClient = useQueryClient();
   const { collectionUrl } = documentSpec;
   const { analyzeUrl } = analyzeDocumentAccessSpec;
+  const { searchQuery: draftSearchQuery, updateSearchQuery } = useSearchState();
 
-  const { search, columnsSort, dataRouter } = useRouting({
+  const {
+    search: baseQueryString,
+    columnsSort,
+    dataRouter,
+  } = useRouting({
     routeUrl: (resource) => routePaths.viewer.to(resource.id),
   });
-  const { conditions, updateConditions } = useFilterState();
 
-  const [appliedConditions, setAppliedConditions] = useState(conditions);
-  const applySearch = useCallback(
-    () => setAppliedConditions(conditions),
-    [conditions],
-  );
+  const [appliedSearchQuery, setAppliedSearchQuery] =
+    useState(draftSearchQuery);
+
+  const applySearch = useCallback(() => {
+    setAppliedSearchQuery(draftSearchQuery);
+  }, [draftSearchQuery]);
 
   const documentQueryString = useMemo(
     () =>
       buildCollectionQueryString({
-        baseSearch: search,
-        conditions: appliedConditions,
+        baseQueryString,
+        searchQuery: appliedSearchQuery,
       }),
-    [search, appliedConditions],
+    [baseQueryString, appliedSearchQuery],
   );
 
   const { data: rows } = useQuery({
@@ -90,10 +95,10 @@ const DocumentsPage = () => {
     <div className="flex flex-col gap-2 p-2 text-center">
       <p>DocumentsPage</p>
       <DocumentToolbar
-        data={{ conditions }}
+        data={{ draftSearchQuery }}
         events={{
           onClickSearchButton: applySearch,
-          onChangeConditions: updateConditions,
+          onChangeSearchInput: updateSearchQuery,
           onClickAnalyzeButton: analyzeData,
         }}
       />

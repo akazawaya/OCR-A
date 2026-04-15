@@ -48,14 +48,16 @@ const toggleOrdering = (orderingValue, orderingField) => {
 
 export const useRouting = ({ routeUrl } = {}) => {
   const navigate = useNavigate();
-  const { search } = useLocation();
+  const { search: locationSearch } = useLocation();
   const { primaryKey } = useParams();
-  // useLocation()/useParams()はが返すオブジェクトは、複数プロパティを持つため、分割代入の{}で、必要なプロパティのみを取得する
+  // locationSearch は URI の ? 以降の query string 全体を表す。
+  // 検索条件だけでなく、ordering などの並び替え用 query param も含む。
+  // アプリ側の searchQuery は「検索条件オブジェクト」であり、役割が異なる点に注意
 
   const columnsSort = useCallback(
     (orderingField) => {
       // 破壊的操作(set,delete)を行うため、クロージャとは個別にparamsを作成
-      const queryParams = new URLSearchParams(search || "");
+      const queryParams = new URLSearchParams(locationSearch || "");
       const currentOrderingValue = queryParams.get("ordering") || "";
 
       const nextOrderingValue = toggleOrdering(
@@ -67,7 +69,7 @@ export const useRouting = ({ routeUrl } = {}) => {
 
       navigate({ search: queryParams.toString() }, { replace: true });
     },
-    [search, navigate],
+    [locationSearch, navigate],
   );
 
   const dataRouter = useMemo(
@@ -76,7 +78,7 @@ export const useRouting = ({ routeUrl } = {}) => {
   );
 
   return {
-    search,
+    locationSearch,
     primaryKey,
     columnsSort,
     dataRouter,

@@ -1,0 +1,21 @@
+import { useState } from "react";
+
+const defaultSearchQuery = {
+  keyword: "",
+  fieldName: "both",
+  lookupExpr: "icontains",
+  keywordOperator: "or",
+};
+
+export const useSearchState = () => {
+  const [searchQuery, setSearchQuery] = useState(defaultSearchQuery);
+
+  const updateSearchQuery = (key, value) => {
+    setSearchQuery((prev) => ({ ...prev, [key]: value }));
+  };
+  const resetSearchQuery = () => {
+    setSearchQuery(defaultSearchQuery);
+  };
+
+  return { searchQuery, updateSearchQuery, resetSearchQuery };
+};
