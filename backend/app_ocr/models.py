@@ -1,5 +1,3 @@
-import uuid
-
 from django.core.validators import (
     FileExtensionValidator,
     MaxValueValidator,
@@ -46,16 +44,30 @@ class State(models.IntegerChoices):
 
 
 # Userモデルはdjango.contrib.auth.modelsから自動で作成される
+
+
+# 直書きだと path が import 時に固定文字列として評価されるため、関数で定義する
+def build_document_storage_prefix(doc_id):
+    return f"input/doc-{doc_id}/"
+
+
+def document_file_upload_to(instance, filename):
+    return f"{build_document_storage_prefix(instance.id)}document/{filename}"
+
+
+def page_image_upload_to(instance, filename):
+    return f"{build_document_storage_prefix(instance.doc_id)}pages/{filename}"
+
+
 class Document(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     state = models.PositiveSmallIntegerField(
         choices=State.choices, default=State.QUEUED
     )
     file = models.FileField(
-        upload_to="input/",
+        upload_to=document_file_upload_to,
         validators=[FileExtensionValidator(allowed_extensions=["jpg", "png", "pdf"])],
     )
-    # FileField / ImageField は自動で日付ごとのサブディレクトリを作成する
     file_name = models.CharField(max_length=255)
     file_type = models.PositiveSmallIntegerField(choices=FileType.choices)
     total_pages = models.PositiveSmallIntegerField(default=1)
@@ -67,7 +79,7 @@ class Document(models.Model):
 class Page(models.Model):
     doc = models.ForeignKey(Document, on_delete=models.CASCADE, related_name="pages")
     image = models.ImageField(
-        upload_to=f"input/{uuid.uuid4()}",
+        upload_to=page_image_upload_to,
         null=True,
         blank=True,
         width_field="width_px",

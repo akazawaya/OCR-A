@@ -20,6 +20,14 @@ class DocumentSerializer(serializers.HyperlinkedModelSerializer):
         read_only=True,
     )
 
+    def create(self, validated_data):
+        # file の保存先を doc.id ベースとするため、
+        # 先に Document を保存して id を確定させてから file を保存する
+        uploaded_file = validated_data.pop("file")
+        document = Document.objects.create(**validated_data)
+        document.file.save(uploaded_file.name, uploaded_file, save=True)
+        return document
+
     class Meta:
         model = Document
         fields = [
