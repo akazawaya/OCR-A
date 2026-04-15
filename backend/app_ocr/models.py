@@ -1,3 +1,7 @@
+import shutil
+from pathlib import Path
+
+from django.core.files.storage import FileSystemStorage
 from django.core.validators import (
     FileExtensionValidator,
     MaxValueValidator,
@@ -59,7 +63,29 @@ def page_image_upload_to(instance, filename):
     return f"{build_document_storage_prefix(instance.doc_id)}pages/{filename}"
 
 
+def delete_document_files(document, prefix):
+    storage = document.file.storage
+
+    if isinstance(storage, FileSystemStorage):
+        root_path = Path(storage.location) / prefix
+        if root_path.exists():
+            shutil.rmtree(root_path)
+        return
+
+    raise NotImplementedError("This storage backend is not supported yet.")
+
+
 class Document(models.Model):
+    id = models.BigAutoField(primary_key=True)
+
+    # Document.deleteの実行時、保存ファイルも削除するためのオーバーライド
+    # DRFの削除デフォルトは instance.delete() 経由のため、通常のAPIではこれを通る。
+    # QuerySet.delete() はこのオーバーライドを通らないため注意。
+    def delete(self, *args, **kwargs):
+        prefix = build_document_storage_prefix(self.id)
+        delete_document_files(self, prefix)
+        return super().delete(*args, **kwargs)
+
     created = models.DateTimeField(auto_now_add=True)
     state = models.PositiveSmallIntegerField(
         choices=State.choices, default=State.QUEUED
