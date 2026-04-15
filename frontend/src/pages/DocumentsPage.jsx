@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
@@ -65,17 +65,14 @@ const DocumentsPage = () => {
     mutationFn: ({ formData }) => analyzeDocument({ analyzeUrl, formData }),
   });
 
-  const inputRef = useRef(null);
-  const analyzeData = useCallback(() => {
-    const file = inputRef.current?.files?.[0];
-    if (!file) {
-      alert("ファイルを選択してください");
-      return;
-    }
-    const formData = new FormData();
-    formData.append("file", file);
-    analyzeMutation({ formData });
-  }, [analyzeMutation]);
+  const analyzeData = useCallback(
+    (file) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      analyzeMutation({ formData });
+    },
+    [analyzeMutation],
+  );
 
   const documentTableColumns = documentSpec.ui.table.map(({ key, label }) => ({
     key,
@@ -93,7 +90,7 @@ const DocumentsPage = () => {
     <div className="flex flex-col gap-2 p-2 text-center">
       <p>DocumentsPage</p>
       <DocumentToolbar
-        data={{ conditions, inputRef }}
+        data={{ conditions }}
         events={{
           onClickSearchButton: applySearch,
           onChangeConditions: updateConditions,
