@@ -25,7 +25,11 @@ const DocumentsPage = () => {
   const queryClient = useQueryClient();
   const { collectionUrl } = documentSpec;
   const { analyzeUrl } = analyzeDocumentAccessSpec;
-  const { searchQuery: draftSearchQuery, updateSearchQuery } = useSearchState();
+  const {
+    searchQuery: draftSearchQuery,
+    updateSearchQuery,
+    resetSearchQuery,
+  } = useSearchState();
 
   const [appliedSortQuery, setAppliedSortQuery] = useState({ ordering: "" });
   const [appliedSearchQuery, setAppliedSearchQuery] =
@@ -71,6 +75,11 @@ const DocumentsPage = () => {
 
     navigate({ search: nextQueryString }, { replace: true });
   }, [appliedSortQuery, baseQueryString, draftSearchQuery, navigate]);
+
+  const clearSearch = () => {
+    resetSearchQuery();
+    navigate(routePaths.docs.to());
+  };
 
   const documentQueryString = useMemo(
     () =>
@@ -133,6 +142,7 @@ const DocumentsPage = () => {
         events={{
           onClickSearchButton: applySearch,
           onChangeSearchInput: updateSearchQuery,
+          onClickResetSearchButton: clearSearch,
           onClickAnalyzeButton: analyzeData,
         }}
       />

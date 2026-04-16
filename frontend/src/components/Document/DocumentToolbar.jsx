@@ -5,12 +5,21 @@ import { searchOptionDefs } from "../../logic/urlQuery/searchSpec";
 export default function DocumentToolbar({
   data: { draftSearchQuery = {} } = {},
   events: {
-    onChangeSearchInput,
     onClickSearchButton,
+    onChangeSearchInput,
+    onClickResetSearchButton,
     onClickAnalyzeButton,
   } = {},
 }) {
   const [selectedFile, setSelectedFile] = useState(null);
+
+  const findOptionLabel = (queryKey, value) =>
+    searchOptionDefs[queryKey].find((option) => option.value === value)
+      ?.label ?? "";
+
+  const currentSearchSummary = draftSearchQuery.keyword
+    ? `現在の検索条件: 「${draftSearchQuery.keyword}」 / ${findOptionLabel("fieldName", draftSearchQuery.fieldName)} / ${findOptionLabel("lookupExpr", draftSearchQuery.lookupExpr)} / ${findOptionLabel("keywordOperator", draftSearchQuery.keywordOperator)}`
+    : "現在の検索条件: なし";
 
   const renderRadioSection = (queryKey, sectionLabel) => (
     <div className="flex flex-col gap-2 rounded border border-gray-300 p-3">
@@ -86,12 +95,19 @@ export default function DocumentToolbar({
             >
               検索
             </button>
+            <button
+              className="ml-1 w-fit cursor-pointer rounded-md bg-indigo-500 px-3 py-2 text-white hover:bg-indigo-600"
+              onClick={onClickResetSearchButton}
+            >
+              リセット
+            </button>
           </div>
           <div className="flex gap-1">
             {renderRadioSection("fieldName", "フィールド名")}
             {renderRadioSection("lookupExpr", "検索条件")}
             {renderRadioSection("keywordOperator", "演算子")}
           </div>
+          <p>{currentSearchSummary}</p>
         </div>
       </details>
     </div>
