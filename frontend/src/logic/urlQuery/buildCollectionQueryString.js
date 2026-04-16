@@ -1,3 +1,5 @@
+import { defaultSearchQuery } from "./searchQueryUtils";
+
 const applyKeyValueQuery = (params, query = {}) => {
   if (!query || typeof query !== "object") return;
 
@@ -10,6 +12,15 @@ const applyKeyValueQuery = (params, query = {}) => {
   }
 };
 
+const normalizeSearchQuery = (searchQuery = {}) => ({
+  ...defaultSearchQuery,
+  ...searchQuery,
+  keyword: searchQuery?.keyword?.trim?.() ?? "",
+});
+
+const isEmptySearchQuery = (searchQuery = {}) =>
+  normalizeSearchQuery(searchQuery).keyword === "";
+
 export function buildCollectionQueryString({
   baseQueryString = "",
   routingQuery = {},
@@ -21,18 +32,17 @@ export function buildCollectionQueryString({
   applyKeyValueQuery(params, routingQuery);
   applyKeyValueQuery(params, sortQuery);
 
-  const keyword = searchQuery?.keyword?.trim() || "";
-
-  if (!keyword) {
+  if (isEmptySearchQuery(searchQuery)) {
     params.delete("keyword");
     params.delete("field_name");
     params.delete("lookup_expr");
     params.delete("keyword_operator");
   } else {
-    params.set("keyword", keyword);
-    params.set("field_name", searchQuery.fieldName);
-    params.set("lookup_expr", searchQuery.lookupExpr);
-    params.set("keyword_operator", searchQuery.keywordOperator);
+    const normalizedSearchQuery = normalizeSearchQuery(searchQuery);
+    params.set("keyword", normalizedSearchQuery.keyword);
+    params.set("field_name", normalizedSearchQuery.fieldName);
+    params.set("lookup_expr", normalizedSearchQuery.lookupExpr);
+    params.set("keyword_operator", normalizedSearchQuery.keywordOperator);
   }
 
   const qs = params.toString();

@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { searchOptionDefs } from "../../logic/urlQuery/searchSpec";
+import { searchOptionDefs } from "../../logic/urlQuery/searchQueryUtils";
 
 export default function DocumentToolbar({
   data: { draftSearchQuery = {} } = {},

@@ -13,11 +13,12 @@ import {
   analyzeDocument,
   deleteCollectionItem,
 } from "../api/clients/mutationClient";
-import { useSearchState } from "../logic/urlQuery/useSearchState";
 import { buildCollectionQueryString } from "../logic/urlQuery/buildCollectionQueryString";
+import { defaultSearchQuery } from "../logic/urlQuery/searchQueryUtils";
+import { toggleSortQuery } from "../logic/urlQuery/sortQueryUtils";
+import { useSearchQuery } from "../logic/urlQuery/useSearchQuery";
 import DocumentToolbar from "../components/Document/DocumentToolbar";
 import DocumentTable from "../components/Document/DocumentTable";
-import { toggleOrdering } from "../logic/urlQuery/toggleOrdering";
 
 const DocumentsPage = () => {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ const DocumentsPage = () => {
     searchQuery: draftSearchQuery,
     updateSearchQuery,
     resetSearchQuery,
-  } = useSearchState();
+  } = useSearchQuery();
 
   const [appliedSortQuery, setAppliedSortQuery] = useState({ ordering: "" });
   const [appliedSearchQuery, setAppliedSearchQuery] =
@@ -42,21 +43,20 @@ const DocumentsPage = () => {
 
   const columnsSort = useCallback(
     (orderingField) => {
-      const currentOrderingValue =
-        new URLSearchParams(baseQueryString || "").get("ordering") || "";
-
-      const nextOrderingValue = toggleOrdering(
-        currentOrderingValue,
+      const currentSortQuery = {
+        ordering:
+          new URLSearchParams(baseQueryString || "").get("ordering") || "",
+      };
+      const nextAppliedSortQuery = toggleSortQuery(
+        currentSortQuery,
         orderingField,
       );
-
-      const nextAppliedSortQuery = { ordering: nextOrderingValue };
       setAppliedSortQuery(nextAppliedSortQuery);
 
       const nextQueryString = buildCollectionQueryString({
         baseQueryString,
         searchQuery: appliedSearchQuery,
-        routingQuery: nextAppliedSortQuery,
+        sortQuery: nextAppliedSortQuery,
       });
 
       navigate({ search: nextQueryString }, { replace: true });
@@ -70,7 +70,7 @@ const DocumentsPage = () => {
     const nextQueryString = buildCollectionQueryString({
       baseQueryString,
       searchQuery: draftSearchQuery,
-      routingQuery: appliedSortQuery,
+      sortQuery: appliedSortQuery,
     });
 
     navigate({ search: nextQueryString }, { replace: true });
@@ -78,6 +78,8 @@ const DocumentsPage = () => {
 
   const clearSearch = () => {
     resetSearchQuery();
+    setAppliedSearchQuery(defaultSearchQuery);
+    setAppliedSortQuery({ ordering: "" });
     navigate(routePaths.docs.to());
   };
 
@@ -86,7 +88,7 @@ const DocumentsPage = () => {
       buildCollectionQueryString({
         baseQueryString,
         searchQuery: appliedSearchQuery,
-        routingQuery: appliedSortQuery,
+        sortQuery: appliedSortQuery,
       }),
     [appliedSearchQuery, appliedSortQuery, baseQueryString],
   );
