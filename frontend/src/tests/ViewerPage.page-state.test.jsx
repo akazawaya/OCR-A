@@ -13,14 +13,12 @@ import {
 
 const {
   mockUsePrint,
-  mockUseRouting,
   mockGetCollection,
   mockPostCollectionItem,
   mockDeleteCollectionItem,
   mockPatchCollectionItem,
 } = vi.hoisted(() => ({
   mockUsePrint: vi.fn(),
-  mockUseRouting: vi.fn(),
   mockGetCollection: vi.fn(),
   mockPostCollectionItem: vi.fn(),
   mockDeleteCollectionItem: vi.fn(),
@@ -31,10 +29,6 @@ HTMLElement.prototype.scrollIntoView = vi.fn();
 
 vi.mock("../logic/print/usePrint", () => ({
   usePrint: mockUsePrint,
-}));
-
-vi.mock("../logic/routing/useRouting", () => ({
-  useRouting: mockUseRouting,
 }));
 
 vi.mock("../api/clients/collectionClient", () => ({
@@ -65,7 +59,6 @@ Object.defineProperty(HTMLElement.prototype, "clientHeight", {
 
 beforeEach(() => {
   setupDefaultViewerMocks({
-    mockUseRouting,
     mockUsePrint,
     mockGetCollection,
   });

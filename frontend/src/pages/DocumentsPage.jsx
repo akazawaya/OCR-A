@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import {
   analyzeDocumentAccessSpec,
@@ -13,7 +13,6 @@ import {
   analyzeDocument,
   deleteCollectionItem,
 } from "../api/clients/mutationClient";
-import { useRouting } from "../logic/routing/useRouting";
 import { useSearchState } from "../logic/ui/useSearchState";
 import { buildCollectionQueryString } from "../logic/server/buildCollectionQueryString";
 import DocumentToolbar from "../components/Document/DocumentToolbar";
@@ -22,18 +21,20 @@ import { toggleOrdering } from "../logic/routing/toggleOrdering";
 
 const DocumentsPage = () => {
   const navigate = useNavigate();
+  const { search: baseQueryString } = useLocation();
   const queryClient = useQueryClient();
   const { collectionUrl } = documentSpec;
   const { analyzeUrl } = analyzeDocumentAccessSpec;
   const { searchQuery: draftSearchQuery, updateSearchQuery } = useSearchState();
 
-  const { locationSearch: baseQueryString, dataRouter } = useRouting({
-    routeUrl: (resource) => routePaths.viewer.to(resource.id),
-  });
-
   const [appliedSortQuery, setAppliedSortQuery] = useState({ ordering: "" });
   const [appliedSearchQuery, setAppliedSearchQuery] =
     useState(draftSearchQuery);
+
+  const dataRouter = useCallback(
+    (resource) => navigate(routePaths.viewer.to(resource.id)),
+    [navigate],
+  );
 
   const columnsSort = useCallback(
     (orderingField) => {
@@ -51,12 +52,12 @@ const DocumentsPage = () => {
       const nextQueryString = buildCollectionQueryString({
         baseQueryString,
         searchQuery: appliedSearchQuery,
-        sortQuery: nextAppliedSortQuery,
+        routingQuery: nextAppliedSortQuery,
       });
 
       navigate({ search: nextQueryString }, { replace: true });
     },
-    [baseQueryString, appliedSearchQuery, navigate],
+    [appliedSearchQuery, baseQueryString, navigate],
   );
 
   const applySearch = useCallback(() => {
@@ -65,20 +66,20 @@ const DocumentsPage = () => {
     const nextQueryString = buildCollectionQueryString({
       baseQueryString,
       searchQuery: draftSearchQuery,
-      sortQuery: appliedSortQuery,
+      routingQuery: appliedSortQuery,
     });
 
     navigate({ search: nextQueryString }, { replace: true });
-  }, [baseQueryString, draftSearchQuery, appliedSortQuery, navigate]);
+  }, [appliedSortQuery, baseQueryString, draftSearchQuery, navigate]);
 
   const documentQueryString = useMemo(
     () =>
       buildCollectionQueryString({
         baseQueryString,
         searchQuery: appliedSearchQuery,
-        sortQuery: appliedSortQuery,
+        routingQuery: appliedSortQuery,
       }),
-    [baseQueryString, appliedSearchQuery, appliedSortQuery],
+    [appliedSearchQuery, appliedSortQuery, baseQueryString],
   );
 
   const { data: rows } = useQuery({

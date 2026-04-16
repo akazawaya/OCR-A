@@ -1,5 +1,6 @@
 import { useMemo, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocation, useParams } from "react-router-dom";
 
 import { pageAccessSpec, wordSpec } from "../appConfig";
 import { getCollection } from "../api/clients/collectionClient";
@@ -9,7 +10,6 @@ import {
   patchCollectionItem,
 } from "../api/clients/mutationClient";
 import { usePrint } from "../logic/print/usePrint";
-import { useRouting } from "../logic/routing/useRouting";
 import { buildCollectionQueryString } from "../logic/server/buildCollectionQueryString";
 import { useViewerPageState } from "../logic/ui/useViewerPageState";
 import { useSelection } from "../logic/layout/useSelection";
@@ -22,15 +22,16 @@ import { ViewerEditHotkeys } from "../components/Viewer/ViewerEditHotkeys";
 
 const ViewerPage = () => {
   const queryClient = useQueryClient();
-  const routing = useRouting({});
-  const { search, primaryKey } = routing;
+  const { search } = useLocation();
+  // この search はURIの?以降のqueryString全体のため、searchQueryと混同しないように注意
+  const { primaryKey } = useParams();
 
   const { collectionUrl: pageCollectionUrl } = pageAccessSpec;
   const pageQueryString = useMemo(
     () =>
       buildCollectionQueryString({
-        baseSearch: search,
-        extraParams: { doc: primaryKey },
+        baseQueryString: search,
+        routingQuery: { doc: primaryKey },
       }),
     [search, primaryKey],
   );
@@ -43,8 +44,8 @@ const ViewerPage = () => {
   const wordQueryString = useMemo(
     () =>
       buildCollectionQueryString({
-        baseSearch: search,
-        extraParams: { page__doc: primaryKey, doc: null },
+        baseQueryString: search,
+        routingQuery: { page__doc: primaryKey, doc: null },
       }),
     [search, primaryKey],
   );
@@ -222,9 +223,6 @@ const ViewerPage = () => {
             data={{
               columns: wordTableColumns,
               rows: words,
-            }}
-            events={{
-              onClickColumn: routing.columnsSort,
             }}
             page={pageState.page}
             selectionState={{

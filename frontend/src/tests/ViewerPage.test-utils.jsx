@@ -1,5 +1,6 @@
 import { render } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { vi } from "vitest";
 
 import ViewerPage from "../pages/ViewerPage";
@@ -50,24 +51,24 @@ export const renderViewerPage = () => {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <ViewerPage />
+      <MemoryRouter initialEntries={["/documents/1/viewer"]}>
+        <Routes>
+          <Route
+            path="/documents/:primaryKey/viewer"
+            element={<ViewerPage />}
+          />
+        </Routes>
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 };
 
 export const setupDefaultViewerMocks = ({
-  mockUseRouting,
   mockUsePrint,
   mockGetCollection,
   pages = defaultMockPages,
   words = defaultMockWords,
 } = {}) => {
-  mockUseRouting.mockReturnValue({
-    search: "",
-    primaryKey: "1",
-    columnsSort: vi.fn(),
-  });
-
   mockUsePrint.mockReturnValue({
     printRef: { current: null },
     isPrintMode: false,
