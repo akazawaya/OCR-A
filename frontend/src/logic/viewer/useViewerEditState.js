@@ -47,7 +47,7 @@ export const useViewerEditState = ({
 
   // 編集中の差分管理:
   // patch / delete の pending は local state で保持する
-  // post の pending は、未保存データを UI に反映するため query cache で保持する
+  // post の pending は、未保存データを表示に反映するため query cache で保持する
   const [contentDraftById, setContentDraftById] = useState({});
   const [pendingDeleteIdSet, setPendingDeleteIdSet] = useState(new Set());
   const [historyState, historyDispatch] = useReducer(
@@ -220,10 +220,10 @@ export const useViewerEditState = ({
       case "SET_PENDING_DELETE": {
         const { wordId, next } = entry.payload;
         setPendingDeleteIdSet((state) => {
-          const set = new Set(state);
-          if (next) set.add(wordId);
-          else set.delete(wordId);
-          return set;
+          const nextSet = new Set(state);
+          if (next) nextSet.add(wordId);
+          else nextSet.delete(wordId);
+          return nextSet;
         });
         return;
       }
@@ -242,9 +242,8 @@ export const useViewerEditState = ({
   };
 
   const undo = () => {
-    const entry = historyState.past[historyState.past.length - 1];
+    const entry = historyState.past.at(-1);
     if (!entry) return;
-
     applyUndoEntry(entry);
     historyDispatch({ type: "UNDO" });
   };
@@ -252,21 +251,20 @@ export const useViewerEditState = ({
   const redo = () => {
     const entry = historyState.future[0];
     if (!entry) return;
-
     applyRedoEntry(entry);
     historyDispatch({ type: "REDO" });
   };
 
   return {
     isEditing,
-    contentDraftById,
-    pendingDeleteIdSet,
-    addPendingPostByBbox,
-    changeContentDraftById,
-    togglePendingDeleteId,
     startEdit,
     saveEdit,
     cancelEdit,
+    changeContentDraftById,
+    togglePendingDeleteId,
+    addPendingPostByBbox,
+    pendingDeleteIdSet,
+    contentDraftById,
     undo,
     redo,
   };

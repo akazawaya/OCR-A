@@ -10,10 +10,10 @@ import {
   patchCollectionItem,
 } from "../api/clients/mutationClient";
 import { usePrint } from "../logic/print/usePrint";
-import { buildCollectionQueryString } from "../logic/server/buildCollectionQueryString";
-import { useViewerPageState } from "../logic/ui/useViewerPageState";
+import { buildCollectionQueryString } from "../logic/urlQuery/buildCollectionQueryString";
+import { useViewerPageState } from "../logic/viewer/useViewerPageState";
 import { useSelection } from "../logic/layout/useSelection";
-import { useViewerEditState } from "../logic/ui/useViewerEditState";
+import { useViewerEditState } from "../logic/viewer/useViewerEditState";
 import { useDragRectState } from "../logic/drag/useDragRectState";
 import ViewerTopBar from "../components/Viewer/ViewerTopBar";
 import ViewerImage from "../components/Viewer/ViewerImage/ViewerImage";

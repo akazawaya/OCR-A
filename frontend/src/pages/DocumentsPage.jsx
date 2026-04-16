@@ -13,11 +13,11 @@ import {
   analyzeDocument,
   deleteCollectionItem,
 } from "../api/clients/mutationClient";
-import { useSearchState } from "../logic/ui/useSearchState";
-import { buildCollectionQueryString } from "../logic/server/buildCollectionQueryString";
+import { useSearchState } from "../logic/urlQuery/useSearchState";
+import { buildCollectionQueryString } from "../logic/urlQuery/buildCollectionQueryString";
 import DocumentToolbar from "../components/Document/DocumentToolbar";
 import DocumentTable from "../components/Document/DocumentTable";
-import { toggleOrdering } from "../logic/routing/toggleOrdering";
+import { toggleOrdering } from "../logic/urlQuery/toggleOrdering";
 
 const DocumentsPage = () => {
   const navigate = useNavigate();
