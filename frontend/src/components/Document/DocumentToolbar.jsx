@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { searchOptionDefs } from "../../logic/urlQuery/searchSpec";
+
 export default function DocumentToolbar({
   data: { draftSearchQuery = {} } = {},
   events: {
@@ -9,30 +11,31 @@ export default function DocumentToolbar({
   } = {},
 }) {
   const [selectedFile, setSelectedFile] = useState(null);
+
+  const renderRadioSection = (queryKey, sectionLabel) => (
+    <div className="flex flex-col gap-2 rounded border border-gray-300 p-3">
+      <p className="text-sm font-bold text-gray-700">{sectionLabel}</p>
+
+      <div className="flex flex-col gap-2">
+        {searchOptionDefs[queryKey].map((option) => (
+          <label key={option.value} className="flex items-center gap-2">
+            <input
+              type="radio"
+              name={queryKey}
+              value={option.value}
+              checked={draftSearchQuery[queryKey] === option.value}
+              onChange={(e) => onChangeSearchInput(queryKey, e.target.value)}
+            />
+            <span>{option.label}</span>
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <div className="mx-auto flex w-fit flex-col rounded-md border border-gray-200 bg-white p-4">
-      <details className="flex flex-col items-center">
-        <summary className="w-fit cursor-pointer list-none rounded-md bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-600">
-          検索メニュー
-        </summary>
-
-        <div className="mt-2 flex gap-2">
-          <input
-            type="text"
-            value={draftSearchQuery.keyword}
-            className="w-fit rounded border border-gray-300 bg-gray-100 p-2 text-left leading-2 text-gray-700 transition-colors duration-200 outline-none focus:border-indigo-500 focus:bg-transparent focus:ring-2 focus:ring-indigo-200"
-            onChange={(e) => onChangeSearchInput("keyword", e.target.value)}
-          />
-          <button
-            className="w-fit cursor-pointer rounded-md bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-600"
-            onClick={onClickSearchButton}
-          >
-            検索
-          </button>
-        </div>
-      </details>
-
-      <div className="mt-2 flex items-center gap-2">
+      <div className="mb-2 flex items-center gap-2">
         <input
           id="document-file-input"
           type="file"
@@ -64,6 +67,33 @@ export default function DocumentToolbar({
           OCR実行
         </button>
       </div>
+      <details className="flex flex-col items-center">
+        <summary className="w-fit cursor-pointer list-none rounded-md bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-600">
+          検索メニュー
+        </summary>
+
+        <div className="mt-2 flex flex-col items-center gap-2">
+          <div className="flex items-center">
+            <input
+              type="text"
+              value={draftSearchQuery.keyword}
+              className="w-fit rounded border border-gray-300 bg-gray-100 p-2 text-left leading-2 text-gray-700 transition-colors duration-200 outline-none focus:border-indigo-500 focus:bg-transparent focus:ring-2 focus:ring-indigo-200"
+              onChange={(e) => onChangeSearchInput("keyword", e.target.value)}
+            />
+            <button
+              className="ml-1 w-fit cursor-pointer rounded-md bg-indigo-500 px-3 py-2 text-white hover:bg-indigo-600"
+              onClick={onClickSearchButton}
+            >
+              検索
+            </button>
+          </div>
+          <div className="flex gap-1">
+            {renderRadioSection("fieldName", "フィールド名")}
+            {renderRadioSection("lookupExpr", "検索条件")}
+            {renderRadioSection("keywordOperator", "演算子")}
+          </div>
+        </div>
+      </details>
     </div>
   );
 }

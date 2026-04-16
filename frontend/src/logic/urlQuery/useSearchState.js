@@ -1,11 +1,6 @@
 import { useState } from "react";
 
-const defaultSearchQuery = {
-  keyword: "",
-  fieldName: "both",
-  lookupExpr: "icontains",
-  keywordOperator: "or",
-};
+import { defaultSearchQuery } from "./searchSpec";
 
 export const useSearchState = () => {
   const [searchQuery, setSearchQuery] = useState(defaultSearchQuery);
