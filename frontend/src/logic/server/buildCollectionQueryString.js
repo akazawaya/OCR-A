@@ -1,19 +1,25 @@
+const applyKeyValueQuery = (params, query = {}) => {
+  if (!query || typeof query !== "object") return;
+
+  for (const [key, value] of Object.entries(query)) {
+    if (value === null || value === undefined || value === "") {
+      params.delete(key);
+    } else {
+      params.set(key, String(value));
+    }
+  }
+};
+
 export function buildCollectionQueryString({
   baseQueryString = "",
   routingQuery = {},
-  searchQuery = null,
+  searchQuery = {},
+  sortQuery = {},
 } = {}) {
   const params = new URLSearchParams(baseQueryString || "");
 
-  if (routingQuery && typeof routingQuery === "object") {
-    for (const [key, value] of Object.entries(routingQuery)) {
-      if (value === null || value === undefined || value === "") {
-        params.delete(key);
-      } else {
-        params.set(key, String(value));
-      }
-    }
-  }
+  applyKeyValueQuery(params, routingQuery);
+  applyKeyValueQuery(params, sortQuery);
 
   const keyword = searchQuery?.keyword?.trim() || "";
 
