@@ -23,6 +23,7 @@ dev = [
     "django-stubs",
     "djangorestframework-stubs",
     "httpie>=3.2.4",
+    "pytest-cov>=7.1.0",
     "pytest-django>=4.12.0",
     "ruff>=0.15.8",
 ]
