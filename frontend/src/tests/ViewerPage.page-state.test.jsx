@@ -65,7 +65,7 @@ beforeEach(() => {
 });
 
 describe("ViewerPage", () => {
-  test("ViewerTopBarのonClickPageStepButtonで対象ページへscrollIntoViewされる", async () => {
+  test("次ページボタンを押すと対象ページへスクロールする", async () => {
     renderViewerPage();
     const nextButton = await screen.findByRole("button", { name: "次" });
     let page2;
@@ -80,7 +80,7 @@ describe("ViewerPage", () => {
     expect(mockScrollIntoView).toHaveBeenCalled();
   });
 
-  test("ViewerTopBarのonClickZoomStepButtonでViewerImageのサイズが更新される", async () => {
+  test("拡大・縮小ボタンを押すと画像サイズが更新される", async () => {
     renderViewerPage();
     const zoomUpButton = await screen.findByRole("button", { name: "拡大" });
     const zoomDownButton = await screen.findByRole("button", { name: "縮小" });
@@ -99,7 +99,7 @@ describe("ViewerPage", () => {
     expect(imageTransform.style.height).toBe("800px");
   });
 
-  test("ViewerTopBarのonClickRotateStepButtonでViewerImageの--rotateが更新される", async () => {
+  test("回転ボタンを押すと画像の回転角度が更新される", async () => {
     renderViewerPage();
     const rotateButton = await screen.findByRole("button", { name: "回転" });
     const imageTransform = await screen.findByTestId(
@@ -111,7 +111,7 @@ describe("ViewerPage", () => {
     expect(imageTransform.style.getPropertyValue("--rotate")).toBe("90deg");
   });
 
-  test("ViewerTopBarのonEnterPageInputで対象ページへscrollIntoViewされる", async () => {
+  test("ページ番号を入力してEnterを押すと対象ページへスクロールする", async () => {
     renderViewerPage();
     let page2;
     await waitFor(() => {
@@ -127,7 +127,7 @@ describe("ViewerPage", () => {
     expect(mockScrollIntoView).toHaveBeenCalled();
   });
 
-  test("ViewerTopBarのonEnterZoomInputでViewerImageのサイズが更新される", async () => {
+  test("倍率を入力してEnterを押すと画像サイズが更新される", async () => {
     renderViewerPage();
     const imageTransform = await screen.findByTestId(
       "viewer-image-transform-1",
@@ -142,7 +142,7 @@ describe("ViewerPage", () => {
     expect(imageTransform.style.height).toBe("1000px");
   });
 
-  test("ViewerTopBarのonEnterRotateInputでViewerImageの--rotateが更新される", async () => {
+  test("回転角度を入力してEnterを押すと画像の回転角度が更新される", async () => {
     renderViewerPage();
     const imageTransform = await screen.findByTestId(
       "viewer-image-transform-1",
@@ -159,7 +159,7 @@ describe("ViewerPage", () => {
   // PageScroll は既存の scrollIntoView テストでカバーできているため、ここでは確認しない。
   // --rotate は viewer-image-transform-* が img と WordOverlay をまとめて回転させるため、ViewerImage 側の確認で十分とする。
   // また、onEnter による zoom 更新経路も ViewerImage 側でカバーできているため、ここでは onClickZoomStepButton のみを対象とする。
-  test("ViewerTopBarのonClickZoomStepButtonでWordOverlay内spanのfontSizeが更新される", async () => {
+  test("拡大ボタンを押すとOCR結果の文字サイズが更新される", async () => {
     renderViewerPage();
     const zoomUpButton = await screen.findByRole("button", { name: "拡大" });
     const wordSpan = await screen.findByRole("button", { name: "テスト語" });

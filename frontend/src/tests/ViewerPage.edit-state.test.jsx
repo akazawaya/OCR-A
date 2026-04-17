@@ -65,7 +65,7 @@ describe("ViewerPage", () => {
 
   const getContentInput = () => screen.getByDisplayValue("テスト語");
 
-  test("ViewerTopBarのonClickEditButtonで編集モードへ遷移する", async () => {
+  test("編集ボタンを押すと編集モードへ遷移する", async () => {
     renderViewerPage();
 
     await enterEditMode();
@@ -80,7 +80,7 @@ describe("ViewerPage", () => {
     expect(getContentInput()).toBeInTheDocument();
   });
 
-  test("ViewerTopBarのonClickSaveButtonで編集内容が保存される", async () => {
+  test("保存ボタンを押すと編集内容が保存される", async () => {
     renderViewerPage();
     const user = await enterEditMode();
 
@@ -100,7 +100,7 @@ describe("ViewerPage", () => {
     expect(screen.queryByRole("button", { name: "保存" })).toBeNull();
   });
 
-  test("ViewerTopBarのonClickCancelButtonで編集内容が破棄される", async () => {
+  test("中止ボタンを押すと編集内容が破棄される", async () => {
     renderViewerPage();
     const user = await enterEditMode();
 
@@ -115,7 +115,7 @@ describe("ViewerPage", () => {
     expect(screen.queryByDisplayValue("更新後")).toBeNull();
   });
 
-  test("WordOverlayのonAddPendingPostByBboxで仮のWordが追加される", async () => {
+  test("ドラッグで範囲選択すると仮のWordが追加される", async () => {
     renderViewerPage();
 
     await enterEditMode();
@@ -147,7 +147,7 @@ describe("ViewerPage", () => {
     });
   });
 
-  test("ViewerTableのonChangeContentDraftでWordの下書き内容が更新される", async () => {
+  test("内容を入力するとWordの下書き内容が更新される", async () => {
     renderViewerPage();
     const user = await enterEditMode();
 
@@ -158,7 +158,7 @@ describe("ViewerPage", () => {
     expect(screen.getByDisplayValue("下書き更新")).toBeInTheDocument();
   });
 
-  test("ViewerTableのonClickDeleteButtonで対象Wordが削除予定状態に切り替わる", async () => {
+  test("削除予約ボタンを押すと対象Wordが削除予定状態に切り替わる", async () => {
     renderViewerPage();
     const user = await enterEditMode();
 
@@ -171,7 +171,7 @@ describe("ViewerPage", () => {
   });
 
   //　Undo/Redoは削除予約の操作で確認する。
-  test("ViewerEditHotkeysのonKeyDownUndoで直前の編集操作が取り消される", async () => {
+  test("Undo操作で直前の編集操作が取り消される", async () => {
     renderViewerPage();
     const user = await enterEditMode();
 
@@ -185,7 +185,7 @@ describe("ViewerPage", () => {
     expect(getContentInput()).not.toHaveClass("line-through");
   });
 
-  test("ViewerEditHotkeysのonKeyDownRedoで取り消した編集操作がやり直される", async () => {
+  test("Redo操作で取り消した編集操作がやり直される", async () => {
     renderViewerPage();
     const user = await enterEditMode();
 
