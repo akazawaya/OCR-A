@@ -32,31 +32,23 @@
  * - overlay描画用のアイテム配列（<polygon>用 + <span>用）
  *
  * 特筆事項:
- * 内部関数について
- * - bboxToRect: bboxからspan配置用のrect(画像座標系)を算出する
  * - measureTextPx: canvasで文字幅計測
  * - decideWritingMode: 縦書き/横書きの判定(縦書きは排除を検討中)
  * - fitFontPxHorizontal/Vertical: bbox内に収めるためのfontPxの計算
  *
  */
 
+import {
+  bboxToRect,
+  bboxToPolygonPoints,
+  rectToSpanStyle,
+} from "../transforms/bboxTransforms";
+
 const getAppFontFamily = () => {
   return getComputedStyle(document.documentElement)
     .getPropertyValue("--app-font-family")
     .trim();
 };
-
-// x, yの最大値/最小値からrect{ left, top, width, height }を得る
-// この値を基にrectStyleに変換して、spanの絶対座標に使う
-function bboxToRect(bbox) {
-  const xs = bbox.map(([x]) => x);
-  const ys = bbox.map(([, y]) => y);
-  const left = Math.min(...xs);
-  const top = Math.min(...ys);
-  const right = Math.max(...xs);
-  const bottom = Math.max(...ys);
-  return { left, top, width: right - left, height: bottom - top };
-}
 
 // span上に描画される文字の大きさを調整する(はみ出さないようにする）ため、
 // まず、レンダリング時の大きさを想定して、同等のフォント設定を与えた時の文字幅(px)を計測する。
@@ -105,8 +97,6 @@ function fitFontPxVertical(rect, scale, text) {
   return Math.max(1, Math.min(boxWPx, boxHPx / n) * 0.95);
 }
 
-const toPercent = (v, base) => `${(v / base) * 100}%`;
-
 export const buildWordOverlayLayout = ({
   clientSizePx,
   imageSizePx,
@@ -126,29 +116,21 @@ export const buildWordOverlayLayout = ({
   const items = [];
 
   for (const w of words) {
-    const bbox = w.bbox ?? [];
-    if (!bbox.length) continue;
+    const bbox = w.bbox;
 
     const rect = bboxToRect(bbox);
+    const rectStyle = rectToSpanStyle(rect, imageSizePx);
 
-    const rectStyle = {
-      left: toPercent(rect.left, imageSizePx.w),
-      top: toPercent(rect.top, imageSizePx.h),
-      width: toPercent(rect.width, imageSizePx.w),
-      height: toPercent(rect.height, imageSizePx.h),
-    };
-
-    const text = `${w.content ?? ""} `;
+    const text = `${w.content} `;
     const mode = decideWritingMode(rect);
     const fontPx =
       mode === "vertical"
         ? fitFontPxVertical(rect, scale, text)
         : fitFontPxHorizontal(rect, scale, text, fontFamily);
-    const points = bbox.map(([x, y]) => `${x},${y}`).join(" ");
 
     items.push({
       id: w.id,
-      polygon: { points },
+      polygon: { points: bboxToPolygonPoints(bbox) },
       span: { style: rectStyle, text, mode, fontPx },
     });
   }

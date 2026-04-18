@@ -1,3 +1,5 @@
+import { rectToBbox } from "../transforms/bboxTransforms";
+
 /**
  * endDragAndAddPendingPostByBbox.js
  *
@@ -21,13 +23,6 @@ const readPointFromPointerEvent = (event, { imageW, imageH }) => {
     y: clampedY * scaleY,
   };
 };
-
-export const buildBboxFromRect = (rect) => [
-  [rect.x, rect.y],
-  [rect.x + rect.width, rect.y],
-  [rect.x + rect.width, rect.y + rect.height],
-  [rect.x, rect.y + rect.height],
-];
 
 const inferDirectionFromRect = (rect) => {
   const safeWidth = rect.width === 0 ? 1 : rect.width;
@@ -55,7 +50,7 @@ export const buildEndDragAndAddPendingPostByBbox = ({
 
     if (!isCreatableRect(rect)) return;
 
-    const bbox = buildBboxFromRect(rect);
+    const bbox = rectToBbox(rect);
     const direction = inferDirectionFromRect(rect);
 
     addPendingPostByBbox(pageId, bbox, direction);

@@ -199,7 +199,7 @@ const ViewerPage = () => {
               selectedBy: selection.selectedBy,
             }}
             wordOverlayState={{
-              words,
+              words: words,
               hoveredWordId: selection.hoveredId,
               selectedWordId: selection.selectedId,
               isEditing: editState.isEditing,

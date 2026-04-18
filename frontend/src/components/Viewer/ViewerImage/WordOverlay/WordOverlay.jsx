@@ -6,10 +6,11 @@ import {
   buildMoveDragFromPointerEvent,
   buildStartDragFromPointerEvent,
 } from "../../../../logic/drag/wordOverlayDragBindings";
+import { buildEndDragAndAddPendingPostByBbox } from "../../../../logic/drag/endDragAndAddPendingPostByBbox";
 import {
-  buildBboxFromRect,
-  buildEndDragAndAddPendingPostByBbox,
-} from "../../../../logic/drag/endDragAndAddPendingPostByBbox";
+  bboxToPolygonPoints,
+  rectToBbox,
+} from "../../../../logic/transforms/bboxTransforms";
 
 export default function WordOverlay({
   data: { pageId, clientSizePx, imageSizePx } = {},
@@ -44,12 +45,9 @@ export default function WordOverlay({
     return wordsOnPage.filter((w) => w.isPendingPost);
   }, [wordsOnPage]);
 
-  const buildPolygonPointsFromBbox = (polygon = []) =>
-    polygon.map(([x, y]) => `${x},${y}`).join(" ");
-
   const draftBbox = useMemo(() => {
     if (!draftRect) return null;
-    return buildBboxFromRect(draftRect);
+    return rectToBbox(draftRect);
   }, [draftRect]);
 
   const { wordLayout } = useMemo(() => {
@@ -96,13 +94,13 @@ export default function WordOverlay({
       >
         {isEditing && draftBbox && (
           <polygon
-            points={buildPolygonPointsFromBbox(draftBbox)}
+            points={bboxToPolygonPoints(draftBbox)}
             className="pointer-events-none fill-green-500/15 stroke-green-500 stroke-4"
           />
         )}
         {pendingPostsOnPage.map((p) => (
           <polygon
-            points={buildPolygonPointsFromBbox(p.bbox)}
+            points={bboxToPolygonPoints(p.bbox)}
             className="fill-green-500/15 stroke-green-500 stroke-4"
           />
         ))}
