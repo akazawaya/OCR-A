@@ -13,10 +13,10 @@ def inspect_file(file):
     ext = Path(file.name).suffix.lstrip(".").lower()
     try:
         ext = exchange_ext(ext)
-    except KeyError:
+    except KeyError as err:
         raise ValueError(
             f"Unsupported file format. Supported formats are {SUPPORT_INPUT_FORMAT}"
-        )
+        ) from err
 
     file.seek(0)
     pdf = None
