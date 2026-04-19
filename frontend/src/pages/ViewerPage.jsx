@@ -195,7 +195,7 @@ const ViewerPage = () => {
             }}
           />
         </div>
-        <div className="overflow-auto overscroll-contain">
+        <div className="overflow-auto overscroll-contain [scrollbar-gutter:stable]">
           <ViewerImage
             data={{ pages }}
             isPrintMode={isPrintMode}
