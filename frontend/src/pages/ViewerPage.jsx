@@ -177,6 +177,7 @@ const ViewerPage = () => {
             }}
             editState={{ isEditing: editState.isEditing }}
             events={{ onClickPrintButton: openPrintDialog }}
+            maxPage={pages.length}
             pageEvents={{
               onClickPageStepButton: pageState.setPage,
               onClickZoomStepButton: pageState.setZoom,

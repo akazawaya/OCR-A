@@ -24,6 +24,7 @@ export default function ViewerTopBar({
   pageEvents = {},
   editState = {},
   editEvents = {},
+  maxPage = 1,
 } = {}) {
   const { page, zoom, rotate, ZOOM_STEP, ROTATE_STEP } = pageState;
 
@@ -56,7 +57,7 @@ export default function ViewerTopBar({
   return (
     <div className="flex justify-center gap-2 bg-gray-200 px-2">
       <button onClick={() => onClickPageStepButton((a) => a - 1)}>戻</button>
-      {renderTextField(page, onEnterPageInput, pageRef, "page")}
+      {renderTextField(page, onEnterPageInput, pageRef, "page")}/ {maxPage}
       <button onClick={() => onClickPageStepButton((a) => a + 1)}>次</button>
       <button onClick={() => onClickZoomStepButton((a) => a - ZOOM_STEP)}>
         縮小
