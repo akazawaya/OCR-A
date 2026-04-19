@@ -125,7 +125,7 @@ describe("DocumentsPage query", () => {
     ).toBeInTheDocument();
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole("columnheader", { name: "名前" }));
+    await user.click(screen.getByRole("columnheader", { name: /^名前/ }));
 
     const rows = screen.getAllByRole("row").slice(1);
     const orderedFileNames = rows.map(
@@ -137,7 +137,7 @@ describe("DocumentsPage query", () => {
       "gamma-alpha.pdf",
     ]);
 
-    await user.click(screen.getByRole("columnheader", { name: "名前" }));
+    await user.click(screen.getByRole("columnheader", { name: /^名前/ }));
 
     const rowsAfterDesc = screen.getAllByRole("row").slice(1);
     const descOrderedFileNames = rowsAfterDesc.map(
@@ -160,7 +160,7 @@ describe("DocumentsPage query", () => {
     ).toBeInTheDocument();
 
     const user = userEvent.setup();
-    const nameHeader = screen.getByRole("columnheader", { name: "名前" });
+    const nameHeader = screen.getByRole("columnheader", { name: /^名前/ });
 
     await user.click(nameHeader);
     expect(screen.getByTestId("location-display")).toHaveTextContent(
