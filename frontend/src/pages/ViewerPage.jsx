@@ -80,6 +80,9 @@ const ViewerPage = () => {
     () => sortViewerWords({ words, pages }),
     [words, pages],
   );
+  const pageNumberByPageId = useMemo(() => {
+    return new Map(pages.map((page) => [String(page.id), page.page_number]));
+  }, [pages]);
 
   const wordTableColumns = wordSpec.ui.table.map(({ key, label }) => ({
     key,
@@ -149,7 +152,7 @@ const ViewerPage = () => {
     patchWordContentById,
     deleteWordById,
     wordsQueryKey,
-    pages,
+    pageNumberByPageId,
   });
   const dragRectState = useDragRectState();
 
