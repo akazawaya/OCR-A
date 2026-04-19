@@ -42,6 +42,7 @@ export const useViewerEditState = ({
   patchWordContentById,
   deleteWordById,
   wordsQueryKey,
+  pages,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
 
@@ -69,6 +70,10 @@ export const useViewerEditState = ({
   };
   const addPendingPostByBbox = (pageId, bbox, direction) => {
     queryClient.setQueryData(wordsQueryKey, (oldWords) => {
+      const pageNumber = pages.find(
+        (page) => String(page.id) === String(pageId),
+      ).page_number;
+
       const nextDisplayId =
         Math.max(0, ...oldWords.map((w) => w.displayId ?? w.id ?? 0)) + 1;
 
@@ -80,6 +85,7 @@ export const useViewerEditState = ({
         bbox,
         direction,
         content: "",
+        page__page_number: pageNumber,
       };
 
       historyDispatch({

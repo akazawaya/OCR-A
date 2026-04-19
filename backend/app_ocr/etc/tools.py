@@ -81,27 +81,3 @@ def exchange_ext(ext):
         "pdf": "pdf",
     }
     return ALIAS[ext]
-
-
-# wordのデフォルトソートを整理する関数
-def _bbox_bounds(points):
-    xs = [p[0] for p in points]
-    ys = [p[1] for p in points]
-    return min(xs), min(ys), max(xs), max(ys)
-
-
-def _sort_key(w):
-    points = w.get("points")
-    x_min, y_min, x_max, _y_max = _bbox_bounds(points)
-    direction = w.get("direction")
-
-    if direction == "horizontal":
-        # 横書き: 上→下、左→右
-        return (y_min, x_min, -x_max)
-
-    # 縦書き: 右→左、上→下
-    return (-x_max, y_min, x_min)
-
-
-def default_word_sort(words):
-    return sorted(words, key=_sort_key)

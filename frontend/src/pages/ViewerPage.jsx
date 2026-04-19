@@ -12,6 +12,7 @@ import {
 import { usePrint } from "../logic/print/usePrint";
 import { buildCollectionQueryString } from "../logic/urlQuery/buildCollectionQueryString";
 import { useViewerPageState } from "../logic/viewer/useViewerPageState";
+import { sortViewerWords } from "../logic/viewer/sortViewerWords";
 import { useSelection } from "../logic/layout/useSelection";
 import { useViewerEditState } from "../logic/viewer/useViewerEditState";
 import { useDragRectState } from "../logic/drag/useDragRectState";
@@ -75,6 +76,10 @@ const ViewerPage = () => {
     enabled: Boolean(wordCollectionUrl),
     placeholderData: [],
   });
+  const sortedWords = useMemo(
+    () => sortViewerWords({ words, pages }),
+    [words, pages],
+  );
 
   const wordTableColumns = wordSpec.ui.table.map(({ key, label }) => ({
     key,
@@ -144,6 +149,7 @@ const ViewerPage = () => {
     patchWordContentById,
     deleteWordById,
     wordsQueryKey,
+    pages,
   });
   const dragRectState = useDragRectState();
 
@@ -199,7 +205,7 @@ const ViewerPage = () => {
               selectedBy: selection.selectedBy,
             }}
             wordOverlayState={{
-              words: words,
+              words: sortedWords,
               hoveredWordId: selection.hoveredId,
               selectedWordId: selection.selectedId,
               isEditing: editState.isEditing,
@@ -222,7 +228,7 @@ const ViewerPage = () => {
           <ViewerTable
             data={{
               columns: wordTableColumns,
-              rows: words,
+              rows: sortedWords,
             }}
             page={pageState.page}
             selectionState={{
