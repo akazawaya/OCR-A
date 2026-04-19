@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { searchOptionDefs } from "../../logic/urlQuery/searchQueryUtils";
 
@@ -8,10 +8,17 @@ export default function DocumentToolbar({
     onClickSearchButton,
     onChangeSearchInput,
     onClickResetSearchButton,
-    onClickAnalyzeButton,
+    onClickAnalyzeButton: _onClickAnalyzeButton,
   } = {},
 }) {
   const [selectedFile, setSelectedFile] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const onClickAnalyzeButton = async () => {
+    await _onClickAnalyzeButton(selectedFile);
+    setSelectedFile(null);
+    fileInputRef.current.value = "";
+  };
 
   const findOptionLabel = (queryKey, value) =>
     searchOptionDefs[queryKey].find((option) => option.value === value)
@@ -49,6 +56,7 @@ export default function DocumentToolbar({
           className="hidden"
           id="document-file-input"
           onChange={(e) => setSelectedFile(e.target.files[0])}
+          ref={fileInputRef}
           type="file"
         />
         <label
