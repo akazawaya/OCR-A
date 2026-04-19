@@ -1,18 +1,24 @@
 export default function DocumentTable({
-  data = {},
+  data: { columns = [], rows = [], ordering = "" } = {},
   events: { onClickColumn, onClickRow = null, onClickDeleteButton } = {},
 }) {
-  const { columns = [], rows = [] } = data;
-
+  const buildSortMark = (ordering, columnKey) => {
+    if (ordering === columnKey) return "▲";
+    if (ordering === `-${columnKey}`) return "▼";
+    return "⇅";
+  };
   return (
     <table className="mx-auto">
       <thead>
         <tr>
-          {columns.map((c) => (
-            <th key={c.key} onClick={() => onClickColumn(c.key)}>
-              {c.label}
-            </th>
-          ))}
+          {columns.map((c) => {
+            const sortMark = buildSortMark(ordering, c.key);
+            return (
+              <th key={c.key} onClick={() => onClickColumn(c.key)}>
+                {c.label} {sortMark}
+              </th>
+            );
+          })}
         </tr>
       </thead>
       <tbody>

@@ -149,7 +149,11 @@ const DocumentsPage = () => {
         }}
       />
       <DocumentTable
-        data={{ columns: documentTableColumns, rows }}
+        data={{
+          columns: documentTableColumns,
+          rows,
+          ordering: appliedSortQuery.ordering,
+        }}
         events={{
           onClickColumn: columnsSort,
           onClickRow: dataRouter,
