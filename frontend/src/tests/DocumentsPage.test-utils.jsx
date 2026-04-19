@@ -48,17 +48,17 @@ export const renderDocumentsPage = ({ initialEntry = "/documents" } = {}) => {
       <MemoryRouter initialEntries={[initialEntry]}>
         <Routes>
           <Route
-            path="/documents"
             element={
               <>
                 <DocumentsPage />
                 <LocationProbe />
               </>
             }
+            path="/documents"
           />
           <Route
-            path="/documents/:primaryKey/viewer"
             element={<LocationProbe />}
+            path="/documents/:primaryKey/viewer"
           />
         </Routes>
       </MemoryRouter>

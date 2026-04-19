@@ -52,12 +52,6 @@ export default function ViewerTable({
           const isPendingDelete = pendingDeleteIdSet.has(r.id);
           return (
             <tr
-              key={r.id}
-              data-page={r.page__page_number}
-              data-word={r.id}
-              onMouseEnter={() => onHover(r.id)}
-              onMouseLeave={onHoverClear}
-              onClick={() => onSelect(r.id, "table")}
               className={
                 isSelected
                   ? "bg-red-500/30"
@@ -67,6 +61,12 @@ export default function ViewerTable({
                       ? "bg-gray-400/30"
                       : "bg-transparent"
               }
+              data-page={r.page__page_number}
+              data-word={r.id}
+              key={r.id}
+              onClick={() => onSelect(r.id, "table")}
+              onMouseEnter={() => onHover(r.id)}
+              onMouseLeave={onHoverClear}
             >
               {isEditing && (
                 <td>
@@ -88,10 +88,10 @@ export default function ViewerTable({
                   ) : (
                     <input
                       className={isPendingDelete ? "line-through" : ""}
-                      value={contentDraftById[r.id] ?? r[c.key]}
                       onChange={(e) =>
                         onChangeContentDraft(r.id, e.target.value)
                       }
+                      value={contentDraftById[r.id] ?? r[c.key]}
                     />
                   )}
                 </td>

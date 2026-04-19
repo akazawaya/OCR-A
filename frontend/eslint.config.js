@@ -39,6 +39,7 @@ export default defineConfig([
       "import/no-duplicates": "error",
       "import/newline-after-import": "error",
       "import/order": ["error", { "newlines-between": "always" }],
+      "react/jsx-sort-props": "warn",
     },
   },
 ]);

@@ -122,8 +122,8 @@ const renderViewerPage = (initialEntry) => {
       <MemoryRouter initialEntries={[initialEntry]}>
         <Routes>
           <Route
-            path="/documents/:primaryKey/viewer"
             element={<ViewerPage />}
+            path="/documents/:primaryKey/viewer"
           />
         </Routes>
       </MemoryRouter>

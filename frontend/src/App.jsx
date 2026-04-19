@@ -14,12 +14,12 @@ function App() {
       <BrowserRouter>
         <div className="h-dvh overflow-hidden">
           <Routes>
-            <Route path="/" element={<DocumentsPage />} />
+            <Route element={<DocumentsPage />} path="/" />
             <Route
-              path={routePaths.docs.template}
               element={<DocumentsPage />}
+              path={routePaths.docs.template}
             />
-            <Route path={routePaths.viewer.template} element={<ViewerPage />} />
+            <Route element={<ViewerPage />} path={routePaths.viewer.template} />
           </Routes>
         </div>
       </BrowserRouter>

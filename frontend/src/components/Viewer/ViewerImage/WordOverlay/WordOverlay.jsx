@@ -86,22 +86,22 @@ export default function WordOverlay({
   return (
     <div className="absolute inset-0">
       <svg
-        viewBox={`0 0 ${imageW ?? 0} ${imageH ?? 0}`}
+        onPointerCancel={isEditing ? onPointerCancel : undefined}
         onPointerDown={isEditing ? onPointerDown : undefined}
         onPointerMove={isEditing ? onPointerMove : undefined}
         onPointerUp={isEditing ? onPointerUp : undefined}
-        onPointerCancel={isEditing ? onPointerCancel : undefined}
+        viewBox={`0 0 ${imageW ?? 0} ${imageH ?? 0}`}
       >
         {isEditing && draftBbox && (
           <polygon
-            points={bboxToPolygonPoints(draftBbox)}
             className="pointer-events-none fill-green-500/15 stroke-green-500 stroke-4"
+            points={bboxToPolygonPoints(draftBbox)}
           />
         )}
         {pendingPostsOnPage.map((p) => (
           <polygon
-            points={bboxToPolygonPoints(p.bbox)}
             className="fill-green-500/15 stroke-green-500 stroke-4"
+            points={bboxToPolygonPoints(p.bbox)}
           />
         ))}
 
@@ -111,9 +111,6 @@ export default function WordOverlay({
           const isPendingDelete = pendingDeleteIdSet.has(w.id);
           return (
             <polygon
-              key={w.id}
-              data-word={w.id}
-              points={w.polygon.points}
               className={`stroke-red-500 stroke-4 ${
                 isSelected
                   ? "fill-red-500/30"
@@ -123,6 +120,9 @@ export default function WordOverlay({
                       ? "fill-gray-400/30"
                       : "fill-transparent"
               }`}
+              data-word={w.id}
+              key={w.id}
+              points={w.polygon.points}
             />
           );
         })}
@@ -132,28 +132,28 @@ export default function WordOverlay({
         const isPendingDelete = pendingDeleteIdSet.has(w.id);
         return (
           <span
-            key={w.id}
+            className={`absolute leading-none whitespace-nowrap text-transparent ${
+              w.span.mode === "vertical"
+                ? "[text-orientation:upright] [writing-mode:vertical-rl]"
+                : ""
+            } ${isPendingDelete ? "line-through" : ""}`}
             data-word={w.id}
-            onMouseEnter={() => onHoverWord(w.id)}
-            onMouseLeave={onHoverClearWord}
+            key={w.id}
             onClick={() => onSelectWord(w.id, "image")}
-            role="button"
-            tabIndex={0}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
                 onSelectWord(w.id, "image");
               } // 現状意味がないので強化検討対象
             }}
-            className={`absolute leading-none whitespace-nowrap text-transparent ${
-              w.span.mode === "vertical"
-                ? "[text-orientation:upright] [writing-mode:vertical-rl]"
-                : ""
-            } ${isPendingDelete ? "line-through" : ""}`}
+            onMouseEnter={() => onHoverWord(w.id)}
+            onMouseLeave={onHoverClearWord}
+            role="button"
             style={{
               ...w.span.style,
               fontSize: `${w.span.fontPx}px`,
             }}
+            tabIndex={0}
           >
             {w.span.text}
           </span>

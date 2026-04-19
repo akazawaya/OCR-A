@@ -40,7 +40,7 @@ export default function ViewerImage({
   });
 
   return (
-    <div ref={setRefs} data-print-root={isPrintMode ? "true" : undefined}>
+    <div data-print-root={isPrintMode ? "true" : undefined} ref={setRefs}>
       {pages.map((p) => {
         const imageW = Number(p.width_px) || 0;
         const imageH = Number(p.height_px) || 0;
@@ -66,26 +66,26 @@ export default function ViewerImage({
 
         return (
           <div
-            key={p.id}
+            className={containerClass}
             data-page={p.page_number}
             data-print-page={isPrintMode ? "true" : undefined}
-            className={containerClass}
+            key={p.id}
             style={containerStyle}
           >
             <div
-              data-testid={`viewer-image-transform-${p.id}`}
               className={imageClass}
+              data-testid={`viewer-image-transform-${p.id}`}
               style={imageStyle}
             >
-              <img alt="" src={p.image} width={w} height={h} />
+              <img alt="" height={h} src={p.image} width={w} />
               <WordOverlay
                 data={{
                   pageId: p.id,
                   clientSizePx: { w, h },
                   imageSizePx: { w: imageW, h: imageH },
                 }}
-                state={wordOverlayState}
                 events={wordOverlayEvents}
+                state={wordOverlayState}
               />
             </div>
           </div>

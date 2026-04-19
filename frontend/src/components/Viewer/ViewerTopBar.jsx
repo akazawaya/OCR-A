@@ -6,7 +6,6 @@ const renderTextField = (foo, commitFoo, inputRef, ariaLabel) => (
   <input
     aria-label={ariaLabel}
     className="w-[3ch] border border-double border-black bg-white text-center"
-    ref={inputRef}
     defaultValue={foo}
     onKeyDown={(e) => {
       if (e.key !== "Enter") return; //  return何もなし　でその処理を打ち切る意味になる
@@ -15,6 +14,7 @@ const renderTextField = (foo, commitFoo, inputRef, ariaLabel) => (
       const display = commitFoo(e.target.value);
       if (display != null) e.target.value = display;
     }}
+    ref={inputRef}
   />
 );
 
