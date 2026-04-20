@@ -2,11 +2,11 @@ import { useMemo } from "react";
 
 import { buildWordOverlayLayout } from "../../../../logic/layout/buildWordOverlayLayout";
 import {
-  buildCancelDragFromPointerEvent,
-  buildMoveDragFromPointerEvent,
   buildStartDragFromPointerEvent,
-} from "../../../../logic/drag/wordOverlayDragBindings";
-import { buildEndDragAndAddPendingPostByBbox } from "../../../../logic/drag/endDragAndAddPendingPostByBbox";
+  buildMoveDragFromPointerEvent,
+  buildEndlDragFromPointerEvent,
+  buildCancelDragFromPointerEvent,
+} from "../../../../logic/drag/dragBindings";
 import {
   bboxToPolygonPoints,
   rectToBbox,
@@ -75,7 +75,7 @@ export default function WordOverlay({
   const onPointerCancel = buildCancelDragFromPointerEvent({
     cancelDrag,
   });
-  const onPointerUp = buildEndDragAndAddPendingPostByBbox({
+  const onPointerUp = buildEndlDragFromPointerEvent({
     pageId,
     imageW,
     imageH,

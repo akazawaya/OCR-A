@@ -1,11 +1,12 @@
 /**
- * wordOverlayDragBindings.js
+ * dragBindings.js
  *
  * 責務:
  * - PointerEvent から点を読み取り、useDragRect に渡す
  * - down / move / cancel のイベントハンドラを組み立てる
- * - bbox 化や word 追加は、endDragのイベントハンドラのendDragAndAddPendingPostByBbox に任せる
+ * - EndDragでは bbox 化と word 追加を行う
  */
+import { rectToBbox } from "../transforms/bboxTransforms";
 
 const readPointFromPointerEvent = (event, { imageW, imageH }) => {
   const rect = event.currentTarget.getBoundingClientRect();
@@ -43,5 +44,31 @@ export const buildMoveDragFromPointerEvent = ({ imageW, imageH, moveDrag }) => {
 export const buildCancelDragFromPointerEvent = ({ cancelDrag }) => {
   return () => {
     cancelDrag();
+  };
+};
+
+export const buildEndlDragFromPointerEvent = ({
+  endDrag,
+  pageId,
+  imageW,
+  imageH,
+  addPendingPostByBbox,
+}) => {
+  return (event) => {
+    if (!pageId) return;
+
+    const point = readPointFromPointerEvent(event, { imageW, imageH });
+    const rect = endDrag(point);
+
+    if (!rect) return;
+    if (rect.width <= 5 || rect.height <= 5) return;
+
+    const bbox = rectToBbox(rect);
+
+    const safeWidth = rect.width === 0 ? 1 : rect.width;
+    const aspect = rect.height / safeWidth;
+    const direction = aspect >= 2 ? 2 : 1;
+
+    addPendingPostByBbox(pageId, bbox, direction);
   };
 };
