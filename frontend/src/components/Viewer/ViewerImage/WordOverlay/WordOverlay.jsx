@@ -2,15 +2,10 @@ import { useMemo } from "react";
 
 import { buildWordOverlayLayout } from "../../../../logic/layout/buildWordOverlayLayout";
 import {
-  buildStartDragFromPointerEvent,
-  buildMoveDragFromPointerEvent,
-  buildEndlDragFromPointerEvent,
-  buildCancelDragFromPointerEvent,
-} from "../../../../logic/drag/dragBindings";
-import {
   bboxToPolygonPoints,
   rectToBbox,
 } from "../../../../logic/transforms/bboxTransforms";
+import { useDragRectState } from "../../../../logic/drag/useDragRectState";
 
 export default function WordOverlay({
   data: { pageId, clientSizePx, imageSizePx } = {},
@@ -23,7 +18,6 @@ export default function WordOverlay({
     selectedWordId,
     isEditing,
     pendingDeleteIdSet = new Set(),
-    draftRect,
   } = state;
 
   const {
@@ -31,11 +25,20 @@ export default function WordOverlay({
     onHoverClearWord,
     onSelectWord,
     onAddPendingPostByBbox,
-    startDrag,
-    moveDrag,
-    endDrag,
-    cancelDrag,
   } = events;
+
+  const {
+    draftRect,
+    onPointerDown,
+    onPointerMove,
+    onPointerUp,
+    onPointerCancel,
+  } = useDragRectState({
+    imageW: imageSizePx.w,
+    imageH: imageSizePx.h,
+    pageId,
+    onAddPendingPostByBbox,
+  });
 
   const imageW = imageSizePx.w;
   const imageH = imageSizePx.h;
@@ -59,29 +62,6 @@ export default function WordOverlay({
       words: wordsOnPage,
     });
   }, [clientSizePx, imageW, imageH, wordsOnPage]);
-
-  const onPointerDown = buildStartDragFromPointerEvent({
-    imageW,
-    imageH,
-    startDrag,
-  });
-
-  const onPointerMove = buildMoveDragFromPointerEvent({
-    imageW,
-    imageH,
-    moveDrag,
-  });
-
-  const onPointerCancel = buildCancelDragFromPointerEvent({
-    cancelDrag,
-  });
-  const onPointerUp = buildEndlDragFromPointerEvent({
-    pageId,
-    imageW,
-    imageH,
-    endDrag,
-    addPendingPostByBbox: onAddPendingPostByBbox,
-  });
 
   return (
     <div className="absolute inset-0">

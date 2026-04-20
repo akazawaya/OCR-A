@@ -15,7 +15,6 @@ import { useViewerPageState } from "../logic/viewer/useViewerPageState";
 import { sortViewerWords } from "../logic/viewer/sortViewerWords";
 import { useSelection } from "../logic/layout/useSelection";
 import { useViewerEditState } from "../logic/viewer/useViewerEditState";
-import { useDragRectState } from "../logic/drag/useDragRectState";
 import ViewerTopBar from "../components/Viewer/ViewerTopBar";
 import ViewerImage from "../components/Viewer/ViewerImage/ViewerImage";
 import ViewerTable from "../components/Viewer/ViewerTable";
@@ -154,7 +153,6 @@ const ViewerPage = () => {
     wordsQueryKey,
     pageNumberByPageId,
   });
-  const dragRectState = useDragRectState();
 
   const viewerRootRef = useRef(null);
   return (
@@ -212,10 +210,6 @@ const ViewerPage = () => {
               onHoverClearWord: selection.clearHovered,
               onSelectWord: selection.commitSelect,
               onAddPendingPostByBbox: editState.addPendingPostByBbox,
-              startDrag: dragRectState.events.startDrag,
-              moveDrag: dragRectState.events.moveDrag,
-              endDrag: dragRectState.events.endDrag,
-              cancelDrag: dragRectState.events.cancelDrag,
             }}
             wordOverlayState={{
               words: sortedWords,
@@ -223,7 +217,6 @@ const ViewerPage = () => {
               selectedWordId: selection.selectedId,
               isEditing: editState.isEditing,
               pendingDeleteIdSet: editState.pendingDeleteIdSet,
-              draftRect: dragRectState.data.draftRect,
             }}
             zoom={pageState.zoom}
           />

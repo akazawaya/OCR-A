@@ -39,6 +39,13 @@ export const bboxToRect = (bbox) => {
   };
 };
 
+export const rectFromPoints = (startPoint, endPoint) => ({
+  x: Math.min(startPoint.x, endPoint.x),
+  y: Math.min(startPoint.y, endPoint.y),
+  width: Math.abs(endPoint.x - startPoint.x),
+  height: Math.abs(endPoint.y - startPoint.y),
+});
+
 export const rectToBbox = (rect) => {
   return [
     [rect.x, rect.y],

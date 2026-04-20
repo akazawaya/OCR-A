@@ -2,75 +2,97 @@
  * useDragRectState.js
  *
  * 責務:
- * - point から drag 中の rect を作る
+ * - point から drag 中の rect を読み取る
+ * - WordOverlay 用の pointer event を処理する
  */
 
 import { useState } from "react";
 
-const buildRectFromPoints = (startPoint, endPoint) => ({
-  x: Math.min(startPoint.x, endPoint.x),
-  y: Math.min(startPoint.y, endPoint.y),
-  width: Math.abs(endPoint.x - startPoint.x),
-  height: Math.abs(endPoint.y - startPoint.y),
-});
+import { rectFromPoints, rectToBbox } from "../transforms/bboxTransforms";
 
-export const useDragRectState = () => {
-  const [isDragging, setIsDragging] = useState(false);
+const readPointFromPointerEvent = (event, { imageW, imageH }) => {
+  const rect = event.currentTarget.getBoundingClientRect();
+  const rawX = event.clientX - rect.left;
+  const rawY = event.clientY - rect.top;
+
+  const scaleX = rect.width === 0 ? 0 : imageW / rect.width;
+  const scaleY = rect.height === 0 ? 0 : imageH / rect.height;
+
+  return {
+    x: rawX * scaleX,
+    y: rawY * scaleY,
+  };
+};
+
+export const useDragRectState = ({
+  imageW,
+  imageH,
+  pageId,
+  onAddPendingPostByBbox,
+} = {}) => {
   const [startPoint, setStartPoint] = useState(null);
   const [currentPoint, setCurrentPoint] = useState(null);
 
+  const clearDragState = () => {
+    setStartPoint(null);
+    setCurrentPoint(null);
+  };
+
   const draftRect =
     startPoint && currentPoint
-      ? buildRectFromPoints(startPoint, currentPoint)
+      ? rectFromPoints(startPoint, currentPoint)
       : null;
 
-  const startDrag = (point) => {
+  const onPointerDown = (event) => {
+    const point = readPointFromPointerEvent(event, { imageW, imageH });
     if (!point) return;
-    setIsDragging(true);
     setStartPoint(point);
     setCurrentPoint(point);
   };
 
-  const moveDrag = (point) => {
+  const onPointerMove = (event) => {
+    const point = readPointFromPointerEvent(event, { imageW, imageH });
     if (!point || !startPoint) return;
     setCurrentPoint(point);
   };
 
-  const endDrag = (point) => {
-    const endPoint = point ?? currentPoint;
-
-    if (!startPoint || !endPoint) {
-      setIsDragging(false);
-      setStartPoint(null);
-      setCurrentPoint(null);
-      return null;
-    }
-
-    const rect = buildRectFromPoints(startPoint, endPoint);
-
-    setIsDragging(false);
-    setStartPoint(null);
-    setCurrentPoint(null);
-
-    return rect;
+  const onPointerCancel = () => {
+    clearDragState();
   };
 
-  const cancelDrag = () => {
-    setIsDragging(false);
-    setStartPoint(null);
-    setCurrentPoint(null);
+  const onPointerUp = (event) => {
+    if (!pageId) {
+      clearDragState();
+      return;
+    }
+    if (!onAddPendingPostByBbox) {
+      clearDragState();
+      return;
+    }
+    const endPoint = readPointFromPointerEvent(event, { imageW, imageH });
+    if (!startPoint || !endPoint) {
+      clearDragState();
+      return;
+    }
+
+    const rect = rectFromPoints(startPoint, endPoint);
+    clearDragState();
+
+    if (rect.width <= 5 || rect.height <= 5) return;
+
+    const bbox = rectToBbox(rect);
+    const safeWidth = rect.width === 0 ? 1 : rect.width;
+    const aspect = rect.height / safeWidth;
+    const direction = aspect >= 2 ? 2 : 1;
+
+    onAddPendingPostByBbox(pageId, bbox, direction);
   };
 
   return {
-    data: {
-      isDragging,
-      draftRect,
-    },
-    events: {
-      startDrag,
-      moveDrag,
-      endDrag,
-      cancelDrag,
-    },
+    draftRect,
+    onPointerDown,
+    onPointerMove,
+    onPointerCancel,
+    onPointerUp,
   };
 };
