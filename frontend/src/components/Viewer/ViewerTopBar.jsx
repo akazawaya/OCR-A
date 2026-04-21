@@ -4,6 +4,7 @@ const renderTextField = (foo, commitFoo, inputRef, ariaLabel) => (
   // draftでの制御形式は、stateを制御するためのstateというのも変に感じるので、inputRefでの非制御形式を試す
   // 外部の foo が変わったときにinputRef.current.value = ... で表示を同期
   <input
+    ref={inputRef}
     aria-label={ariaLabel}
     className="w-[3ch] border border-double border-black bg-white text-center"
     defaultValue={foo}
@@ -14,11 +15,10 @@ const renderTextField = (foo, commitFoo, inputRef, ariaLabel) => (
       const display = commitFoo(e.target.value);
       if (display != null) e.target.value = display;
     }}
-    ref={inputRef}
   />
 );
 
-export default function ViewerTopBar({
+const ViewerTopBar = ({
   data: {
     maxPage = 1,
     page,
@@ -40,7 +40,7 @@ export default function ViewerTopBar({
     onEnterZoomInput,
     onEnterRotateInput,
   } = {},
-} = {}) {
+} = {}) => {
   // useRef(null)はfooRef.currentというプロパティを作成
   // fooRef.currentに入るのがDOMの <input> 要素になったとき、そのDOM要素がvalueプロパティを持つ
   const pageRef = useRef(null);
@@ -81,4 +81,6 @@ export default function ViewerTopBar({
       )}
     </div>
   );
-}
+};
+
+export default ViewerTopBar;

@@ -1,6 +1,6 @@
 import { fetchBackend } from "../fetchBackend";
 
-export async function postCollectionItem({ collectionUrl, body }) {
+export const postCollectionItem = async ({ collectionUrl, body }) => {
   const { res, data } = await fetchBackend(collectionUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -8,9 +8,9 @@ export async function postCollectionItem({ collectionUrl, body }) {
     throwOnError: true,
   });
   return { res, data };
-}
+};
 
-export async function patchCollectionItem({ collectionUrl, id, body }) {
+export const patchCollectionItem = async ({ collectionUrl, id, body }) => {
   const url = `${collectionUrl}${id}/`;
   const { res, data } = await fetchBackend(url, {
     method: "PATCH",
@@ -19,22 +19,22 @@ export async function patchCollectionItem({ collectionUrl, id, body }) {
     throwOnError: true,
   });
   return { res, data };
-}
+};
 
-export async function deleteCollectionItem({ collectionUrl, id }) {
+export const deleteCollectionItem = async ({ collectionUrl, id }) => {
   const url = `${collectionUrl}${id}/`;
   const { res } = await fetchBackend(url, {
     method: "DELETE",
     throwOnError: true,
   });
   return res;
-}
+};
 
-export async function analyzeDocument({ analyzeUrl, formData }) {
+export const analyzeDocument = async ({ analyzeUrl, formData }) => {
   const { res, data } = await fetchBackend(analyzeUrl, {
     method: "POST",
     body: formData,
     throwOnError: true,
   });
   return { res, data };
-}
+};

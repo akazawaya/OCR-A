@@ -1,7 +1,7 @@
-export default function DocumentTable({
+const DocumentTable = ({
   data: { columns = [], rows = [], ordering = "" } = {},
   events: { onClickColumn, onClickRow = null, onClickDeleteButton } = {},
-}) {
+}) => {
   const buildSortMark = (ordering, columnKey) => {
     if (ordering === columnKey) return "▲";
     if (ordering === `-${columnKey}`) return "▼";
@@ -42,4 +42,6 @@ export default function DocumentTable({
       </tbody>
     </table>
   );
-}
+};
+
+export default DocumentTable;

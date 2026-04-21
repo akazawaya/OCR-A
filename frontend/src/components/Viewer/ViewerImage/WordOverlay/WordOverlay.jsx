@@ -7,7 +7,7 @@ import {
 } from "../../../../logic/transforms/bboxTransforms";
 import { useDragRectState } from "../../../../logic/drag/useDragRectState";
 
-export default function WordOverlay({
+const WordOverlay = ({
   data: {
     pageId,
     clientSizePx,
@@ -24,7 +24,7 @@ export default function WordOverlay({
     onSelectWord,
     onAddPendingPostByBbox,
   } = {},
-}) {
+}) => {
   const {
     draftRect,
     onPointerDown,
@@ -64,11 +64,11 @@ export default function WordOverlay({
   return (
     <div className="absolute inset-0">
       <svg
+        viewBox={`0 0 ${imageW ?? 0} ${imageH ?? 0}`}
         onPointerCancel={isEditing ? onPointerCancel : undefined}
         onPointerDown={isEditing ? onPointerDown : undefined}
         onPointerMove={isEditing ? onPointerMove : undefined}
         onPointerUp={isEditing ? onPointerUp : undefined}
-        viewBox={`0 0 ${imageW ?? 0} ${imageH ?? 0}`}
       >
         {isEditing && draftBbox && (
           <polygon
@@ -89,6 +89,7 @@ export default function WordOverlay({
           const isPendingDelete = pendingDeleteIdSet.has(w.id);
           return (
             <polygon
+              key={w.id}
               className={`stroke-red-500 stroke-4 ${
                 isSelected
                   ? "fill-red-500/30"
@@ -99,7 +100,6 @@ export default function WordOverlay({
                       : "fill-transparent"
               }`}
               data-word={w.id}
-              key={w.id}
               points={w.polygon.points}
             />
           );
@@ -110,13 +110,19 @@ export default function WordOverlay({
         const isPendingDelete = pendingDeleteIdSet.has(w.id);
         return (
           <span
+            key={w.id}
             className={`absolute leading-none whitespace-nowrap text-transparent ${
               w.span.mode === "vertical"
                 ? "[text-orientation:upright] [writing-mode:vertical-rl]"
                 : ""
             } ${isPendingDelete ? "line-through" : ""}`}
             data-word={w.id}
-            key={w.id}
+            role="button"
+            style={{
+              ...w.span.style,
+              fontSize: `${w.span.fontPx}px`,
+            }}
+            tabIndex={0}
             onClick={() => onSelectWord(w.id, "image")}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
@@ -126,12 +132,6 @@ export default function WordOverlay({
             }}
             onMouseEnter={() => onHoverWord(w.id)}
             onMouseLeave={onHoverClearWord}
-            role="button"
-            style={{
-              ...w.span.style,
-              fontSize: `${w.span.fontPx}px`,
-            }}
-            tabIndex={0}
           >
             {w.span.text}
           </span>
@@ -139,4 +139,6 @@ export default function WordOverlay({
       })}
     </div>
   );
-}
+};
+
+export default WordOverlay;

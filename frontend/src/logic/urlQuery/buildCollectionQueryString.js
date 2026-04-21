@@ -21,12 +21,12 @@ const normalizeSearchQuery = (searchQuery = {}) => ({
 const isEmptySearchQuery = (searchQuery = {}) =>
   normalizeSearchQuery(searchQuery).keyword === "";
 
-export function buildCollectionQueryString({
+export const buildCollectionQueryString = ({
   baseQueryString = "",
   routingQuery = {},
   searchQuery = {},
   sortQuery = {},
-} = {}) {
+} = {}) => {
   const params = new URLSearchParams(baseQueryString || "");
 
   applyKeyValueQuery(params, routingQuery);
@@ -47,4 +47,4 @@ export function buildCollectionQueryString({
 
   const qs = params.toString();
   return qs ? `?${qs}` : "";
-}
+};

@@ -8,7 +8,7 @@
 // optionsには通常のfetchオプションに加えて、throwOnErrorを追加→trueの場合、エラー時に例外を上位にthrowする（fetchBackendがfor文の内側など、下位側に属する時に使用）
 // 呼び出し先では、　try {...} catch {空}で完結できる想定
 
-export async function fetchBackend(url, options = {}) {
+export const fetchBackend = async (url, options = {}) => {
   const { throwOnError = false, ...fetchOptions } = options; //fetchBackendをfor文で回す様なとき、上位のfor/try-catchに対して中断&エラー伝達が可能になる様にする
   const headers = {
     Accept: "application/json",
@@ -33,4 +33,4 @@ export async function fetchBackend(url, options = {}) {
     if (throwOnError) throw e; // 上位にeを投げる
     return { res: null, data: null };
   }
-}
+};

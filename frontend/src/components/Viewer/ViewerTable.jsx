@@ -2,7 +2,7 @@ import { useRef } from "react";
 
 import { useScroll } from "../../logic/layout/useScroll";
 
-export default function ViewerTable({
+const ViewerTable = ({
   data: {
     columns = [],
     rows = [],
@@ -22,7 +22,7 @@ export default function ViewerTable({
     onChangeContentDraft,
     onClickDeleteButton,
   } = {},
-}) {
+}) => {
   const rootRef = useRef(null);
 
   // page変更に追随してスクロールする
@@ -55,6 +55,7 @@ export default function ViewerTable({
           const isPendingDelete = pendingDeleteIdSet.has(r.id);
           return (
             <tr
+              key={r.id}
               className={
                 isSelected
                   ? "bg-red-500/30"
@@ -66,7 +67,6 @@ export default function ViewerTable({
               }
               data-page={r.page__page_number}
               data-word={r.id}
-              key={r.id}
               onClick={() => onSelect(r.id, "table")}
               onMouseEnter={() => onHover(r.id)}
               onMouseLeave={onHoverClear}
@@ -91,10 +91,10 @@ export default function ViewerTable({
                   ) : (
                     <input
                       className={isPendingDelete ? "line-through" : ""}
+                      value={contentDraftById[r.id] ?? r[c.key]}
                       onChange={(e) =>
                         onChangeContentDraft(r.id, e.target.value)
                       }
-                      value={contentDraftById[r.id] ?? r[c.key]}
                     />
                   )}
                 </td>
@@ -105,4 +105,6 @@ export default function ViewerTable({
       </tbody>
     </table>
   );
-}
+};
+
+export default ViewerTable;

@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 
 import { searchOptionDefs } from "../../logic/urlQuery/searchQueryUtils";
 
-export default function DocumentToolbar({
+const DocumentToolbar = ({
   data: { draftSearchQuery = {} } = {},
   events: {
     onClickSearchButton,
@@ -10,7 +10,7 @@ export default function DocumentToolbar({
     onClickResetSearchButton,
     onClickAnalyzeButton: _onClickAnalyzeButton,
   } = {},
-}) {
+}) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
 
@@ -34,13 +34,13 @@ export default function DocumentToolbar({
 
       <div className="flex flex-col gap-2">
         {searchOptionDefs[queryKey].map((option) => (
-          <label className="flex items-center gap-2" key={option.value}>
+          <label key={option.value} className="flex items-center gap-2">
             <input
               checked={draftSearchQuery[queryKey] === option.value}
               name={queryKey}
-              onChange={(e) => onChangeSearchInput(queryKey, e.target.value)}
               type="radio"
               value={option.value}
+              onChange={(e) => onChangeSearchInput(queryKey, e.target.value)}
             />
             <span>{option.label}</span>
           </label>
@@ -53,11 +53,11 @@ export default function DocumentToolbar({
     <div className="mx-auto flex w-fit flex-col rounded-md border border-gray-200 bg-white p-4">
       <div className="mb-2 flex items-center gap-2">
         <input
+          ref={fileInputRef}
           className="hidden"
           id="document-file-input"
-          onChange={(e) => setSelectedFile(e.target.files[0])}
-          ref={fileInputRef}
           type="file"
+          onChange={(e) => setSelectedFile(e.target.files[0])}
         />
         <label
           className="flex min-h-24 w-64 cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-center hover:border-indigo-500 hover:bg-indigo-50"
@@ -93,9 +93,9 @@ export default function DocumentToolbar({
           <div className="flex items-center">
             <input
               className="w-fit rounded border border-gray-300 bg-gray-100 p-2 text-left leading-2 text-gray-700 transition-colors duration-200 outline-none focus:border-indigo-500 focus:bg-transparent focus:ring-2 focus:ring-indigo-200"
-              onChange={(e) => onChangeSearchInput("keyword", e.target.value)}
               type="text"
               value={draftSearchQuery.keyword}
+              onChange={(e) => onChangeSearchInput("keyword", e.target.value)}
             />
             <button
               className="ml-1 w-fit cursor-pointer rounded-md bg-indigo-500 px-3 py-2 text-white hover:bg-indigo-600"
@@ -120,4 +120,6 @@ export default function DocumentToolbar({
       </details>
     </div>
   );
-}
+};
+
+export default DocumentToolbar;

@@ -5,7 +5,7 @@ import { useClientSizePx } from "../../../logic/layout/useClientSizePx";
 
 import WordOverlay from "./WordOverlay/WordOverlay";
 
-export default function ViewerImage({
+const ViewerImage = ({
   data: {
     pages = [],
     printRef,
@@ -18,7 +18,7 @@ export default function ViewerImage({
   } = {},
   wordOverlayData,
   wordOverlayEvents,
-}) {
+}) => {
   const rootRef = useRef(null);
   const setRefs = useCallback(
     (node) => {
@@ -42,7 +42,7 @@ export default function ViewerImage({
   });
 
   return (
-    <div data-print-root={isPrintMode ? "true" : undefined} ref={setRefs}>
+    <div ref={setRefs} data-print-root={isPrintMode ? "true" : undefined}>
       {pages.map((p) => {
         const imageW = Number(p.width_px) || 0;
         const imageH = Number(p.height_px) || 0;
@@ -68,10 +68,10 @@ export default function ViewerImage({
 
         return (
           <div
+            key={p.id}
             className={containerClass}
             data-page={p.page_number}
             data-print-page={isPrintMode ? "true" : undefined}
-            key={p.id}
             style={containerStyle}
           >
             <div
@@ -95,4 +95,6 @@ export default function ViewerImage({
       })}
     </div>
   );
-}
+};
+
+export default ViewerImage;
