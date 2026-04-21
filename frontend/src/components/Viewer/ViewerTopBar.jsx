@@ -19,28 +19,28 @@ const renderTextField = (foo, commitFoo, inputRef, ariaLabel) => (
 );
 
 export default function ViewerTopBar({
-  events: { onClickPrintButton } = {},
-  pageState = {},
-  pageEvents = {},
-  editState = {},
-  editEvents = {},
-  maxPage = 1,
-} = {}) {
-  const { page, zoom, rotate, ZOOM_STEP, ROTATE_STEP } = pageState;
-
-  const {
+  data: {
+    maxPage = 1,
+    page,
+    zoom,
+    rotate,
+    ZOOM_STEP,
+    ROTATE_STEP,
+    isEditing,
+  } = {},
+  events: {
+    onClickPrintButton,
+    onClickEditButton,
+    onClickSaveButton,
+    onClickCancelButton,
     onClickPageStepButton,
     onClickZoomStepButton,
     onClickRotateStepButton,
     onEnterPageInput,
     onEnterZoomInput,
     onEnterRotateInput,
-  } = pageEvents;
-
-  const { isEditing } = editState;
-  const { onClickEditButton, onClickSaveButton, onClickCancelButton } =
-    editEvents;
-
+  } = {},
+} = {}) {
   // useRef(null)はfooRef.currentというプロパティを作成
   // fooRef.currentに入るのがDOMの <input> 要素になったとき、そのDOM要素がvalueプロパティを持つ
   const pageRef = useRef(null);

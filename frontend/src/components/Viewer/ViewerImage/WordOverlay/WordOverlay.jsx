@@ -8,25 +8,23 @@ import {
 import { useDragRectState } from "../../../../logic/drag/useDragRectState";
 
 export default function WordOverlay({
-  data: { pageId, clientSizePx, imageSizePx } = {},
-  state = {},
-  events = {},
-}) {
-  const {
-    words,
+  data: {
+    pageId,
+    clientSizePx,
+    imageSizePx,
+    words = [],
     hoveredWordId,
     selectedWordId,
     isEditing,
     pendingDeleteIdSet = new Set(),
-  } = state;
-
-  const {
+  } = {},
+  events: {
     onHoverWord,
     onHoverClearWord,
     onSelectWord,
     onAddPendingPostByBbox,
-  } = events;
-
+  } = {},
+}) {
   const {
     draftRect,
     onPointerDown,

@@ -158,25 +158,30 @@ const ViewerPage = () => {
   return (
     <>
       <ViewerEditHotkeys
-        editEvents={{
+        data={{ isEditing: editState.isEditing }}
+        events={{
           onKeyDownUndo: editState.undo,
           onKeyDownRedo: editState.redo,
         }}
-        editState={{ isEditing: editState.isEditing }}
         viewerRootRef={viewerRootRef}
       />
       <div className="grid h-full grid-cols-[2fr_1fr] grid-rows-[auto_1fr] gap-2 overflow-hidden p-2">
         <div className="col-span-2">
           <ViewerTopBar
-            editEvents={{
+            data={{
+              maxPage: pages.length,
+              page: pageState.page,
+              zoom: pageState.zoom,
+              rotate: pageState.rotate,
+              ZOOM_STEP: pageState.ZOOM_STEP,
+              ROTATE_STEP: pageState.ROTATE_STEP,
+              isEditing: editState.isEditing,
+            }}
+            events={{
+              onClickPrintButton: openPrintDialog,
               onClickEditButton: editState.startEdit,
               onClickSaveButton: editState.saveEdit,
               onClickCancelButton: editState.cancelEdit,
-            }}
-            editState={{ isEditing: editState.isEditing }}
-            events={{ onClickPrintButton: openPrintDialog }}
-            maxPage={pages.length}
-            pageEvents={{
               onClickPageStepButton: pageState.setPage,
               onClickZoomStepButton: pageState.setZoom,
               onClickRotateStepButton: pageState.setRotate,
@@ -184,26 +189,26 @@ const ViewerPage = () => {
               onEnterZoomInput: pageState.commitZoom,
               onEnterRotateInput: pageState.commitRotate,
             }}
-            pageState={{
-              page: pageState.page,
-              zoom: pageState.zoom,
-              rotate: pageState.rotate,
-              ZOOM_STEP: pageState.ZOOM_STEP,
-              ROTATE_STEP: pageState.ROTATE_STEP,
-            }}
           />
         </div>
         <div className="overflow-auto overscroll-contain [scrollbar-gutter:stable]">
           <ViewerImage
-            data={{ pages }}
-            isPrintMode={isPrintMode}
-            page={pageState.page}
-            printRef={printRef}
-            rotate={pageState.rotate}
-            selectionState={{
-              hoveredId: selection.hoveredId,
+            data={{
+              pages,
+              isPrintMode,
+              page: pageState.page,
+              printRef,
+              rotate: pageState.rotate,
+              zoom: pageState.zoom,
               selectedId: selection.selectedId,
               selectedBy: selection.selectedBy,
+            }}
+            wordOverlayData={{
+              words: sortedWords,
+              hoveredWordId: selection.hoveredId,
+              selectedWordId: selection.selectedId,
+              isEditing: editState.isEditing,
+              pendingDeleteIdSet: editState.pendingDeleteIdSet,
             }}
             wordOverlayEvents={{
               onHoverWord: selection.hover,
@@ -211,14 +216,6 @@ const ViewerPage = () => {
               onSelectWord: selection.commitSelect,
               onAddPendingPostByBbox: editState.addPendingPostByBbox,
             }}
-            wordOverlayState={{
-              words: sortedWords,
-              hoveredWordId: selection.hoveredId,
-              selectedWordId: selection.selectedId,
-              isEditing: editState.isEditing,
-              pendingDeleteIdSet: editState.pendingDeleteIdSet,
-            }}
-            zoom={pageState.zoom}
           />
         </div>
         <div className="overflow-auto overscroll-contain">
@@ -226,26 +223,20 @@ const ViewerPage = () => {
             data={{
               columns: wordTableColumns,
               rows: sortedWords,
-            }}
-            editEvents={{
-              onChangeContentDraft: editState.changeContentDraftById,
-              onClickDeleteButton: editState.togglePendingDeleteId,
-            }}
-            editState={{
+              page: pageState.page,
+              hoveredId: selection.hoveredId,
+              selectedId: selection.selectedId,
+              selectedBy: selection.selectedBy,
               isEditing: editState.isEditing,
               contentDraftById: editState.contentDraftById,
               pendingDeleteIdSet: editState.pendingDeleteIdSet,
             }}
-            page={pageState.page}
-            selectionEvents={{
+            events={{
+              onChangeContentDraft: editState.changeContentDraftById,
+              onClickDeleteButton: editState.togglePendingDeleteId,
               onHover: selection.hover,
               onHoverClear: selection.clearHovered,
               onSelect: selection.commitSelect,
-            }}
-            selectionState={{
-              hoveredId: selection.hoveredId,
-              selectedId: selection.selectedId,
-              selectedBy: selection.selectedBy,
             }}
           />
         </div>

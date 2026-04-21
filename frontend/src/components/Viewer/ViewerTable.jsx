@@ -3,24 +3,27 @@ import { useRef } from "react";
 import { useScroll } from "../../logic/layout/useScroll";
 
 export default function ViewerTable({
-  data: { columns = [], rows = [] } = {},
-  events: { onClickColumn } = {},
-  page,
-  selectionState = {},
-  selectionEvents = {},
-  editState = {},
-  editEvents = {},
-}) {
-  const rootRef = useRef(null);
-  const { hoveredId, selectedId, selectedBy } = selectionState;
-  const { onHover, onHoverClear, onSelect } = selectionEvents;
-
-  const {
+  data: {
+    columns = [],
+    rows = [],
+    page,
+    hoveredId,
+    selectedId,
+    selectedBy,
     isEditing,
     contentDraftById = {},
     pendingDeleteIdSet = new Set(),
-  } = editState;
-  const { onChangeContentDraft, onClickDeleteButton } = editEvents;
+  } = {},
+  events: {
+    onClickColumn,
+    onHover,
+    onHoverClear,
+    onSelect,
+    onChangeContentDraft,
+    onClickDeleteButton,
+  } = {},
+}) {
+  const rootRef = useRef(null);
 
   // page変更に追随してスクロールする
   useScroll({ rootRef, targetAttrName: "data-page", targetAttrValue: page });

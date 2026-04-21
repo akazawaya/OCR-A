@@ -1,13 +1,9 @@
 import { useEffect } from "react";
 
 export const ViewerEditHotkeys = ({
-  viewerRootRef,
-  editState = {},
-  editEvents = {},
+  data: { isEditing, viewerRootRef } = {},
+  events: { onKeyDownUndo, onKeyDownRedo } = {},
 }) => {
-  const { isEditing } = editState;
-  const { onKeyDownUndo, onKeyDownRedo } = editEvents;
-
   useEffect(() => {
     const onWindowKeyDown = (e) => {
       if (!isEditing) return;

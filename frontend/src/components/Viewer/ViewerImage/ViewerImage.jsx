@@ -6,17 +6,19 @@ import { useClientSizePx } from "../../../logic/layout/useClientSizePx";
 import WordOverlay from "./WordOverlay/WordOverlay";
 
 export default function ViewerImage({
-  data: { pages = [] } = {},
-  printRef,
-  isPrintMode = false,
-  page,
-  zoom,
-  rotate,
-  selectionState = {},
-  wordOverlayState,
+  data: {
+    pages = [],
+    printRef,
+    isPrintMode = false,
+    page,
+    zoom,
+    rotate,
+    selectedBy,
+    selectedId,
+  } = {},
+  wordOverlayData,
   wordOverlayEvents,
 }) {
-  const { selectedBy, selectedId } = selectionState;
   const rootRef = useRef(null);
   const setRefs = useCallback(
     (node) => {
@@ -80,12 +82,12 @@ export default function ViewerImage({
               <img alt="" height={h} src={p.image} width={w} />
               <WordOverlay
                 data={{
+                  ...wordOverlayData,
                   pageId: p.id,
                   clientSizePx: { w, h },
                   imageSizePx: { w: imageW, h: imageH },
                 }}
                 events={wordOverlayEvents}
-                state={wordOverlayState}
               />
             </div>
           </div>
