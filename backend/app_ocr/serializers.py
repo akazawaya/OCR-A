@@ -3,6 +3,12 @@ from zoneinfo import ZoneInfo
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
+from app_ocr.input_constraints import (
+    ALLOWED_UPLOAD_FILE_EXTENSIONS,
+    MAX_UPLOAD_FILE_NAME_LENGTH,
+    MAX_UPLOAD_FILE_SIZE,
+    UPLOAD_FILE_EXTENSION_ALIASES,
+)
 from app_ocr.models import Document, Page, Word
 
 
@@ -39,6 +45,30 @@ class DocumentSerializer(serializers.HyperlinkedModelSerializer):
             "file_type",
             "total_pages",
         ]
+
+
+class DocumentUploadSerializer(serializers.Serializer):
+    file = serializers.FileField()
+
+    def validate_file(self, file):
+        ext = file.name.rsplit(".", 1)[-1].lower() if "." in file.name else ""
+        ext = UPLOAD_FILE_EXTENSION_ALIASES.get(ext, ext)
+        if ext not in ALLOWED_UPLOAD_FILE_EXTENSIONS:
+            raise serializers.ValidationError(
+                "Unsupported file extension.",
+                code="unsupported_extension",
+            )
+        if file.size > MAX_UPLOAD_FILE_SIZE:
+            raise serializers.ValidationError(
+                "File size is too large.",
+                code="file_too_large",
+            )
+        if len(file.name) > MAX_UPLOAD_FILE_NAME_LENGTH:
+            raise serializers.ValidationError(
+                "File name is too long.",
+                code="file_name_too_long",
+            )
+        return file
 
 
 class PageSerializer(serializers.HyperlinkedModelSerializer):

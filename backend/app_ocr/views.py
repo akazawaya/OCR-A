@@ -14,6 +14,7 @@ from app_ocr.filters import DocumentFilterSet
 from app_ocr.models import Document, FileType, Page, Word
 from app_ocr.serializers import (
     DocumentSerializer,
+    DocumentUploadSerializer,
     PageSerializer,
     UserSerializer,
     WordSerializer,
@@ -36,6 +37,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["post"])
     def start_ocr(self, request):
         file = request.FILES.get("file")
+        upload_serializer = DocumentUploadSerializer(data={"file": file})
+        upload_serializer.is_valid(raise_exception=True)
         try:
             ext_label, total_pages = inspect_file(file)
         except ValueError as e:

@@ -4,7 +4,11 @@ import cv2
 import numpy as np
 import pypdfium2
 
-SUPPORT_INPUT_FORMAT = ["jpg", "png", "pdf"]
+from app_ocr.input_constraints import (
+    ALLOWED_UPLOAD_FILE_EXTENSIONS,
+    UPLOAD_FILE_EXTENSION_ALIASES,
+)
+
 # filesizeはDjangoのバリデーターで十分であると判断
 
 
@@ -15,7 +19,8 @@ def inspect_file(file):
         ext = exchange_ext(ext)
     except KeyError as err:
         raise ValueError(
-            f"Unsupported file format. Supported formats are {SUPPORT_INPUT_FORMAT}"
+            "Unsupported file format. Supported formats are "
+            f"{sorted(ALLOWED_UPLOAD_FILE_EXTENSIONS)}"
         ) from err
 
     file.seek(0)
@@ -41,9 +46,18 @@ def render_page(file, page_number, input_ext, output_ext=".png", dpi=300):
     if page_number < 1:
         raise ValueError("page_number must be 1-based (>= 1)")
 
-    if input_ext not in SUPPORT_INPUT_FORMAT:
+    try:
+        input_ext = exchange_ext(input_ext)
+    except KeyError as err:
         raise ValueError(
-            f"Unsupported file format. Supported formats are {SUPPORT_INPUT_FORMAT}"
+            "Unsupported file format. Supported formats are "
+            f"{sorted(ALLOWED_UPLOAD_FILE_EXTENSIONS)}"
+        ) from err
+
+    if input_ext not in ALLOWED_UPLOAD_FILE_EXTENSIONS:
+        raise ValueError(
+            "Unsupported file format. Supported formats are "
+            f"{sorted(ALLOWED_UPLOAD_FILE_EXTENSIONS)}"
         )
     file.seek(0)
     pdf = None
@@ -74,10 +88,7 @@ def exchange_ext(ext):
     拡張子の表記ゆれを吸収する関数
         Returns:は3文字(深い理由はない)
     """
-    ALIAS = {
-        "jpeg": "jpg",
-        "jpg": "jpg",
-        "png": "png",
-        "pdf": "pdf",
-    }
-    return ALIAS[ext]
+    ext = UPLOAD_FILE_EXTENSION_ALIASES.get(ext, ext)
+    if ext in ALLOWED_UPLOAD_FILE_EXTENSIONS:
+        return ext
+    raise KeyError(ext)

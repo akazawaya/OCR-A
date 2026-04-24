@@ -9,6 +9,8 @@ from django.core.validators import (
 )
 from django.db import models
 
+from app_ocr.input_constraints import ALLOWED_UPLOAD_FILE_EXTENSIONS
+
 
 class FileType(models.IntegerChoices):
     # name, value, label で各要素にアクセス可能
@@ -92,7 +94,11 @@ class Document(models.Model):
     )
     file = models.FileField(
         upload_to=document_file_upload_to,
-        validators=[FileExtensionValidator(allowed_extensions=["jpg", "png", "pdf"])],
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=sorted(ALLOWED_UPLOAD_FILE_EXTENSIONS)
+            )
+        ],
     )
     file_name = models.CharField(max_length=255)
     file_type = models.PositiveSmallIntegerField(choices=FileType.choices)
@@ -114,7 +120,9 @@ class Page(models.Model):
     state = models.PositiveSmallIntegerField(
         choices=State.choices, default=State.QUEUED
     )
-    page_number = models.PositiveSmallIntegerField(default=1)
+    page_number = models.PositiveSmallIntegerField(
+        default=1, validators=[MinValueValidator(1)]
+    )
     width_px = models.PositiveIntegerField(null=True, blank=True)
     height_px = models.PositiveIntegerField(null=True, blank=True)
 
@@ -125,8 +133,12 @@ class Word(models.Model):
     content = models.TextField(blank=True, null=True)
     direction = models.PositiveSmallIntegerField(choices=Direction.choices)
     rec_score = models.FloatField(
-        null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(1)]
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(1)],
     )
     det_score = models.FloatField(
-        null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(1)]
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(1)],
     )
