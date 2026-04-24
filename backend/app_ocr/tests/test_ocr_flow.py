@@ -9,7 +9,9 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from app_ocr.etc.tools import inspect_file, render_page
+from app_ocr.input_constraints import MAX_UPLOAD_FILE_SIZE
 from app_ocr.models import Document
+from app_ocr.serializers import DocumentUploadSerializer
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures"
 
@@ -137,6 +139,42 @@ def test_render_page_rejects_unsupported_input_ext():
 
 
 """
+test_document_upload_serializer_rejects
+DocumentUploadSerializer の file フィールドに対する
+バリデーション（拡張子・サイズ・ファイル名長）をテストする
+"""
+
+
+def test_document_upload_serializer_rejects_unsupported_extension():
+    serializer = DocumentUploadSerializer(
+        data={"file": make_dummy_file("test.txt", "text/plain")}
+    )
+
+    assert not serializer.is_valid()
+    assert serializer.errors["file"][0].code == "unsupported_extension"
+
+
+def test_document_upload_serializer_rejects_too_large_file():
+    file = SimpleUploadedFile(
+        "too_large.jpg",
+        b"a" * (MAX_UPLOAD_FILE_SIZE + 1),
+        content_type="image/jpeg",
+    )
+    serializer = DocumentUploadSerializer(data={"file": file})
+
+    assert not serializer.is_valid()
+    assert serializer.errors["file"][0].code == "file_too_large"
+
+
+def test_document_upload_serializer_rejects_too_long_file_name():
+    file = make_dummy_file(f"{'a' * 101}.jpg", "image/jpeg")
+    serializer = DocumentUploadSerializer(data={"file": file})
+
+    assert not serializer.is_valid()
+    assert serializer.errors["file"][0].code == "file_name_too_long"
+
+
+"""
 test_start_ocr
 postの確認テスト
 -擬似ファイルをpostし、拡張子チェックが正常に働くことを確認
@@ -144,7 +182,7 @@ postの確認テスト
 -PDFはページ数取得（実ファイル依存）があるため、inspect_fileの挙動はmockではなく実ファイルで検証する
 
 -実ファイルをPOSTし、Document が作成されることを確認する。
--成功時は 202 ACCEPTED を返し、response で返された id の Document がDBに存在することを確認する。
+-成功時は 202 を返し、response で返された id の Document がDBに存在することを確認する。
 """
 
 
