@@ -8,6 +8,15 @@
 // optionsには通常のfetchオプションに加えて、throwOnErrorを追加→trueの場合、エラー時に例外を上位にthrowする（fetchBackendがfor文の内側など、下位側に属する時に使用）
 // 呼び出し先では、　try {...} catch {空}で完結できる想定
 
+const buildHttpError = ({ res, data, url }) => {
+  const error = new Error(`HTTP Error:${res.status}`);
+  error.name = "HttpError";
+  error.status = res.status;
+  error.data = data;
+  error.url = url;
+  return error;
+};
+
 export const fetchBackend = async (url, options = {}) => {
   const { throwOnError = false, ...fetchOptions } = options; //fetchBackendをfor文で回す様なとき、上位のfor/try-catchに対して中断&エラー伝達が可能になる様にする
   const headers = {
@@ -24,11 +33,15 @@ export const fetchBackend = async (url, options = {}) => {
       console.log(`HTTP Error:${res.status}`);
       if (throwOnError) {
         // 例外にして上位のfor/try-catchで中断できるようにする
-        throw new Error(`HTTP Error:${res.status}`);
+        throw buildHttpError({ res, data, url });
       }
     }
     return { res, data };
   } catch (e) {
+    if (e.name === "HttpError") {
+      if (throwOnError) throw e;
+      return { res: null, data: null };
+    }
     console.log(`Network Error: ${e.message}`);
     if (throwOnError) throw e; // 上位にeを投げる
     return { res: null, data: null };

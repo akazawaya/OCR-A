@@ -13,6 +13,7 @@ import {
   analyzeDocument,
   deleteCollectionItem,
 } from "../api/clients/mutationClient";
+import { getUploadErrorMessage } from "../logic/upload/getUploadErrorMessage";
 import { buildCollectionQueryString } from "../logic/urlQuery/buildCollectionQueryString";
 import { defaultSearchQuery } from "../logic/urlQuery/searchQueryUtils";
 import { toggleSortQuery } from "../logic/urlQuery/sortQueryUtils";
@@ -113,6 +114,9 @@ const DocumentsPage = () => {
 
   const { mutate: analyzeMutation } = useMutation({
     mutationFn: ({ formData }) => analyzeDocument({ analyzeUrl, formData }),
+    onError: (error) => {
+      window.alert(getUploadErrorMessage(error));
+    },
   });
 
   const analyzeData = useCallback(

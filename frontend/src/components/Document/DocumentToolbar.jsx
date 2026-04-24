@@ -79,7 +79,7 @@ const DocumentToolbar = ({
         <button
           className="w-fit rounded-md bg-indigo-500 p-2 text-white enabled:cursor-pointer enabled:hover:bg-indigo-600 disabled:cursor-not-allowed disabled:bg-gray-400"
           disabled={!selectedFile}
-          onClick={() => onClickAnalyzeButton(selectedFile)}
+          onClick={onClickAnalyzeButton}
         >
           OCR実行
         </button>
