@@ -55,17 +55,17 @@ class DocumentUploadSerializer(serializers.Serializer):
         ext = UPLOAD_FILE_EXTENSION_ALIASES.get(ext, ext)
         if ext not in ALLOWED_UPLOAD_FILE_EXTENSIONS:
             raise serializers.ValidationError(
-                "Unsupported file extension.",
+                "拡張子が非対応です。",
                 code="unsupported_extension",
             )
         if file.size > MAX_UPLOAD_FILE_SIZE:
             raise serializers.ValidationError(
-                "File size is too large.",
+                "ファイルサイズが大きすぎます。",
                 code="file_too_large",
             )
         if len(file.name) > MAX_UPLOAD_FILE_NAME_LENGTH:
             raise serializers.ValidationError(
-                "File name is too long.",
+                "ファイル名が長すぎます。",
                 code="file_name_too_long",
             )
         return file

@@ -151,6 +151,7 @@ def test_document_upload_serializer_rejects_unsupported_extension():
     )
 
     assert not serializer.is_valid()
+    assert str(serializer.errors["file"][0]) == "拡張子が非対応です。"
     assert serializer.errors["file"][0].code == "unsupported_extension"
 
 
@@ -163,6 +164,7 @@ def test_document_upload_serializer_rejects_too_large_file():
     serializer = DocumentUploadSerializer(data={"file": file})
 
     assert not serializer.is_valid()
+    assert str(serializer.errors["file"][0]) == "ファイルサイズが大きすぎます。"
     assert serializer.errors["file"][0].code == "file_too_large"
 
 
@@ -171,6 +173,7 @@ def test_document_upload_serializer_rejects_too_long_file_name():
     serializer = DocumentUploadSerializer(data={"file": file})
 
     assert not serializer.is_valid()
+    assert str(serializer.errors["file"][0]) == "ファイル名が長すぎます。"
     assert serializer.errors["file"][0].code == "file_name_too_long"
 
 
