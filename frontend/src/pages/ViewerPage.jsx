@@ -176,10 +176,14 @@ const ViewerPage = () => {
               ZOOM_STEP: pageState.ZOOM_STEP,
               ROTATE_STEP: pageState.ROTATE_STEP,
               isEditing: editState.isEditing,
+              canUndo: editState.canUndo,
+              canRedo: editState.canRedo,
             }}
             events={{
               onClickPrintButton: openPrintDialog,
               onClickEditButton: editState.startEdit,
+              onClickUndoButton: editState.undo,
+              onClickRedoButton: editState.redo,
               onClickSaveButton: editState.saveEdit,
               onClickCancelButton: editState.cancelEdit,
               onClickPageStepButton: pageState.setPage,

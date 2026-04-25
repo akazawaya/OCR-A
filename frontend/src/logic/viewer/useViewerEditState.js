@@ -259,6 +259,9 @@ export const useViewerEditState = ({
     historyDispatch({ type: "REDO" });
   };
 
+  const canUndo = historyState.past.length > 0;
+  const canRedo = historyState.future.length > 0;
+
   return {
     isEditing,
     startEdit,
@@ -269,6 +272,8 @@ export const useViewerEditState = ({
     addPendingPostByBbox,
     pendingDeleteIdSet,
     contentDraftById,
+    canUndo,
+    canRedo,
     undo,
     redo,
   };

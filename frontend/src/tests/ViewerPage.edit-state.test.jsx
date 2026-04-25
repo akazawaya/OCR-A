@@ -72,6 +72,8 @@ describe("ViewerPage", () => {
 
     expect(screen.queryByRole("button", { name: "編集" })).toBeNull();
     expect(screen.queryByRole("button", { name: "出力" })).toBeNull();
+    expect(screen.getByRole("button", { name: "元に戻す" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "やり直す" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "保存" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "中止" })).toBeInTheDocument();
     expect(
@@ -169,9 +171,28 @@ describe("ViewerPage", () => {
     ).toBeInTheDocument();
     expect(getContentInput()).toHaveClass("line-through");
   });
-
   //　Undo/Redoは削除予約の操作で確認する。
-  test("Undo操作で直前の編集操作が取り消される", async () => {
+  test("Undo/Redoボタンで削除予約の切り替えを戻せる", async () => {
+    renderViewerPage();
+    const user = await enterEditMode();
+
+    await user.click(screen.getByRole("button", { name: "削除予約" }));
+    await user.click(screen.getByRole("button", { name: "元に戻す" }));
+
+    expect(
+      screen.getByRole("button", { name: "削除予約" }),
+    ).toBeInTheDocument();
+    expect(getContentInput()).not.toHaveClass("line-through");
+
+    await user.click(screen.getByRole("button", { name: "やり直す" }));
+
+    expect(
+      screen.getByRole("button", { name: "削除取消" }),
+    ).toBeInTheDocument();
+    expect(getContentInput()).toHaveClass("line-through");
+  });
+
+  test("Undoコマンドで直前の編集操作が取り消される", async () => {
     renderViewerPage();
     const user = await enterEditMode();
 
@@ -185,7 +206,7 @@ describe("ViewerPage", () => {
     expect(getContentInput()).not.toHaveClass("line-through");
   });
 
-  test("Redo操作で取り消した編集操作がやり直される", async () => {
+  test("Redoコマンドで取り消した編集操作がやり直される", async () => {
     renderViewerPage();
     const user = await enterEditMode();
 

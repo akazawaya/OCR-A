@@ -27,12 +27,16 @@ const ViewerTopBar = ({
     ZOOM_STEP,
     ROTATE_STEP,
     isEditing,
+    canUndo = false,
+    canRedo = false,
   } = {},
   events: {
     onClickPrintButton,
     onClickEditButton,
     onClickSaveButton,
     onClickCancelButton,
+    onClickUndoButton,
+    onClickRedoButton,
     onClickPageStepButton,
     onClickZoomStepButton,
     onClickRotateStepButton,
@@ -53,6 +57,9 @@ const ViewerTopBar = ({
     zoomRef.current.value = zoom;
     rotateRef.current.value = rotate;
   }, [page, zoom, rotate]);
+
+  const actionButtonClassName =
+    "enabled:cursor-pointer enabled:hover:bg-gray-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400";
 
   return (
     <div className="flex justify-center gap-2 bg-gray-200 px-2">
@@ -75,6 +82,20 @@ const ViewerTopBar = ({
         <button onClick={onClickEditButton}>編集</button>
       ) : (
         <>
+          <button
+            className={actionButtonClassName}
+            disabled={!canUndo}
+            onClick={onClickUndoButton}
+          >
+            元に戻す
+          </button>
+          <button
+            className={actionButtonClassName}
+            disabled={!canRedo}
+            onClick={onClickRedoButton}
+          >
+            やり直す
+          </button>
           <button onClick={onClickSaveButton}>保存</button>
           <button onClick={onClickCancelButton}>中止</button>
         </>
