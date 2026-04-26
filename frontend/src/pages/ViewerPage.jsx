@@ -98,10 +98,10 @@ const ViewerPage = () => {
 
   const { mutate: postWordByBbox } = useMutation({
     mutationFn: async (wordPostInputs) => {
-      for (const { pageId, bbox, direction } of wordPostInputs) {
+      for (const { pageId, bbox, direction, content } of wordPostInputs) {
         await postCollectionItem({
           collectionUrl: wordCollectionUrl,
-          body: { page: pageId, bbox, direction },
+          body: { page: pageId, bbox, direction, content },
         });
       }
     },

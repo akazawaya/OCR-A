@@ -66,6 +66,7 @@ export const useViewerEditState = ({
         pageId: w.page,
         bbox: w.bbox,
         direction: w.direction,
+        content: contentDraftById[w.id] ?? w.content ?? "",
       }));
   };
   const addPendingPostByBbox = (pageId, bbox, direction) => {
