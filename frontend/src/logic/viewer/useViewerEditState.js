@@ -70,73 +70,71 @@ export const useViewerEditState = ({
   };
   const addPendingPostByBbox = (pageId, bbox, direction) => {
     const pageNumber = pageNumberByPageId.get(String(pageId));
+    const currentWords = queryClient.getQueryData(wordsQueryKey) ?? [];
+    const nextDisplayId =
+      Math.max(0, ...currentWords.map((w) => w.displayId ?? w.id ?? 0)) + 1;
 
-    queryClient.setQueryData(wordsQueryKey, (oldWords) => {
-      const nextDisplayId =
-        Math.max(0, ...oldWords.map((w) => w.displayId ?? w.id ?? 0)) + 1;
+    const previewWord = {
+      id: `preview:${crypto.randomUUID()}`,
+      displayId: nextDisplayId,
+      isPendingPost: true,
+      page: pageId,
+      bbox,
+      direction,
+      content: "",
+      page__page_number: pageNumber,
+    };
 
-      const previewWord = {
-        id: `preview:${crypto.randomUUID()}`,
-        displayId: nextDisplayId,
-        isPendingPost: true,
-        page: pageId,
-        bbox,
-        direction,
-        content: "",
-        page__page_number: pageNumber,
-      };
+    queryClient.setQueryData(wordsQueryKey, (oldWords = []) => [
+      ...oldWords,
+      previewWord,
+    ]);
 
-      historyDispatch({
-        type: "PUSH",
-        entry: {
-          type: "ADD_PENDING_POST",
-          payload: { word: previewWord },
-        },
-      });
-      return [...oldWords, previewWord];
+    historyDispatch({
+      type: "PUSH",
+      entry: {
+        type: "ADD_PENDING_POST",
+        payload: { word: previewWord },
+      },
     });
   };
 
   const changeContentDraftById = (wordId, nextContent) => {
-    setContentDraftById((prev) => {
-      const prevContent = prev[wordId];
-      historyDispatch({
-        type: "PUSH",
-        entry: {
-          type: "CHANGE_CONTENT_DRAFT",
-          payload: { wordId, prev: prevContent, next: nextContent },
-        },
-      });
-      return { ...prev, [wordId]: nextContent };
+    const prevContent = contentDraftById[wordId];
+    if (prevContent === nextContent) return;
+    setContentDraftById((prev) => ({ ...prev, [wordId]: nextContent }));
+    historyDispatch({
+      type: "PUSH",
+      entry: {
+        type: "CHANGE_CONTENT_DRAFT",
+        payload: { wordId, prev: prevContent, next: nextContent },
+      },
     });
   };
 
   const togglePendingDeleteId = (wordId) => {
-    setPendingDeleteIdSet((prev) => {
-      const wasPendingDelete = prev.has(wordId);
-      const willBePendingDelete = !wasPendingDelete;
+    const wasPendingDelete = pendingDeleteIdSet.has(wordId);
+    const willBePendingDelete = !wasPendingDelete;
 
-      const next = new Set(prev);
-      if (wasPendingDelete) {
-        next.delete(wordId);
-      } else {
-        next.add(wordId);
-      }
+    const next = new Set(pendingDeleteIdSet);
+    if (wasPendingDelete) {
+      next.delete(wordId);
+    } else {
+      next.add(wordId);
+    }
+    setPendingDeleteIdSet(next);
 
-      historyDispatch({
-        type: "PUSH",
-        entry: {
-          type: "SET_PENDING_DELETE",
-          // 最終的にそのIDをどういう状態にしたかを表すため、TOGGLEではなくSETが相応しい
-          payload: {
-            wordId,
-            prev: wasPendingDelete,
-            next: willBePendingDelete,
-          },
+    historyDispatch({
+      type: "PUSH",
+      entry: {
+        type: "SET_PENDING_DELETE",
+        // 最終的にそのIDをどういう状態にしたかを表すため、TOGGLEではなくSETが相応しい
+        payload: {
+          wordId,
+          prev: wasPendingDelete,
+          next: willBePendingDelete,
         },
-      });
-
-      return next;
+      },
     });
   };
 
