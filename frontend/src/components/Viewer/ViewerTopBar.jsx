@@ -63,12 +63,15 @@ const ViewerTopBar = ({
   }, [page, zoom, rotate]);
 
   const actionButtonClassName =
-    "rounded-md border enabled:border-black enabled:cursor-pointer enabled:hover:bg-gray-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400";
+    "rounded-md border border-black cursor-pointer hover:bg-gray-100";
+  const _actionButtonDisabledStateClassName =
+    "disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 disabled:hover:bg-gray-100";
+  const actionButtonWithDisabledClassName = `${actionButtonClassName} ${_actionButtonDisabledStateClassName}`;
 
   return (
     <div className="flex justify-center gap-2 bg-gray-200 px-2">
       <button
-        className={actionButtonClassName}
+        className={actionButtonWithDisabledClassName}
         disabled={!canGoPrevPage}
         onClick={() => onClickPageStepButton((a) => a - 1)}
       >
@@ -76,14 +79,14 @@ const ViewerTopBar = ({
       </button>
       {renderTextField(page, onEnterPageInput, pageRef, "page")}/ {maxPage}
       <button
-        className={actionButtonClassName}
+        className={actionButtonWithDisabledClassName}
         disabled={!canGoNextPage}
         onClick={() => onClickPageStepButton((a) => a + 1)}
       >
         次
       </button>
       <button
-        className={actionButtonClassName}
+        className={actionButtonWithDisabledClassName}
         disabled={!canZoomOut}
         onClick={() => onClickZoomStepButton((a) => a - ZOOM_STEP)}
       >
@@ -91,37 +94,55 @@ const ViewerTopBar = ({
       </button>
       {renderTextField(zoom, onEnterZoomInput, zoomRef, "zoom")}
       <button
-        className={actionButtonClassName}
+        className={actionButtonWithDisabledClassName}
         disabled={!canZoomIn}
         onClick={() => onClickZoomStepButton((a) => a + ZOOM_STEP)}
       >
         拡大
       </button>
-      <button onClick={() => onClickRotateStepButton((a) => a + ROTATE_STEP)}>
+      <button
+        className={actionButtonClassName}
+        onClick={() => onClickRotateStepButton((a) => a + ROTATE_STEP)}
+      >
         回転
       </button>
       {renderTextField(rotate, onEnterRotateInput, rotateRef, "rotate")}
-      {!isEditing ? <button onClick={onClickPrintButton}>出力</button> : <></>}
       {!isEditing ? (
-        <button onClick={onClickEditButton}>編集</button>
+        <button className={actionButtonClassName} onClick={onClickPrintButton}>
+          出力
+        </button>
+      ) : (
+        <></>
+      )}
+      {!isEditing ? (
+        <button className={actionButtonClassName} onClick={onClickEditButton}>
+          編集
+        </button>
       ) : (
         <>
           <button
-            className={actionButtonClassName}
+            className={actionButtonWithDisabledClassName}
             disabled={!canUndo}
             onClick={onClickUndoButton}
           >
             元に戻す
           </button>
           <button
-            className={actionButtonClassName}
+            className={actionButtonWithDisabledClassName}
             disabled={!canRedo}
             onClick={onClickRedoButton}
           >
             やり直す
           </button>
-          <button onClick={onClickSaveButton}>保存</button>
-          <button onClick={onClickCancelButton}>中止</button>
+          <button className={actionButtonClassName} onClick={onClickSaveButton}>
+            保存
+          </button>
+          <button
+            className={actionButtonClassName}
+            onClick={onClickCancelButton}
+          >
+            中止
+          </button>
         </>
       )}
     </div>
