@@ -96,10 +96,8 @@ export const useViewerEditState = ({
     });
   };
 
-  const changeContentDraftById = (wordId, nextContent) => {
-    const prevContent = contentDraftById[wordId];
+  const changeContentDraftById = (wordId, nextContent, prevContent) => {
     if (prevContent === nextContent) return;
-    setContentDraftById((prev) => ({ ...prev, [wordId]: nextContent }));
     historyDispatch({
       type: "PUSH",
       entry: {
@@ -107,6 +105,7 @@ export const useViewerEditState = ({
         payload: { wordId, prev: prevContent, next: nextContent },
       },
     });
+    setContentDraftById((prev) => ({ ...prev, [wordId]: nextContent }));
   };
 
   const togglePendingDeleteId = (wordId) => {

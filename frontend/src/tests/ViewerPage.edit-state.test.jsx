@@ -149,7 +149,56 @@ describe("ViewerPage", () => {
     });
   });
 
-  test("内容を入力するとWordの下書き内容が更新される", async () => {
+  test("新規追加したWordの内容は保存時にpostへ含まれる", async () => {
+    renderViewerPage();
+    const user = await enterEditMode();
+
+    const svg = document.querySelector("svg");
+    expect(svg).not.toBeNull();
+    svg.getBoundingClientRect = () => ({
+      left: 0,
+      top: 0,
+      width: 1000,
+      height: 800,
+      right: 1000,
+      bottom: 800,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+
+    fireEvent.pointerDown(svg, { clientX: 10, clientY: 20 });
+    fireEvent.pointerMove(svg, { clientX: 110, clientY: 120 });
+    fireEvent.pointerUp(svg, { clientX: 110, clientY: 120 });
+
+    await waitFor(() => {
+      expect(screen.getAllByRole("button", { name: "削除予約" })).toHaveLength(
+        2,
+      );
+    });
+
+    const previewContentInput = screen
+      .getAllByRole("textbox")
+      .find((input) => input.value === "");
+    expect(previewContentInput).toBeDefined();
+    await user.type(previewContentInput, "追加語");
+    await user.click(screen.getByRole("button", { name: "保存" }));
+
+    await waitFor(() =>
+      expect(mockPostCollectionItem).toHaveBeenCalledTimes(1),
+    );
+    expect(mockPostCollectionItem).toHaveBeenCalledWith({
+      collectionUrl: expect.stringContaining("/words/"),
+      body: {
+        page: 1,
+        bbox: expect.any(Array),
+        direction: expect.any(Number),
+        content: "追加語",
+      },
+    });
+  });
+
+  test("内容を入力するとinputの表示が更新される", async () => {
     renderViewerPage();
     const user = await enterEditMode();
 
@@ -158,6 +207,52 @@ describe("ViewerPage", () => {
     await user.type(contentInput, "下書き更新");
 
     expect(screen.getByDisplayValue("下書き更新")).toBeInTheDocument();
+  });
+
+  test("内容変更はEnterで確定するまでUndo履歴に積まれない", async () => {
+    renderViewerPage();
+    const user = await enterEditMode();
+
+    const contentInput = getContentInput();
+    await user.clear(contentInput);
+    await user.type(contentInput, "更新後");
+
+    expect(screen.getByRole("button", { name: "元に戻す" })).toBeDisabled();
+
+    await user.keyboard("{Enter}");
+
+    expect(screen.getByRole("button", { name: "元に戻す" })).toBeEnabled();
+  });
+
+  test("内容変更はblurでも確定される", async () => {
+    renderViewerPage();
+    const user = await enterEditMode();
+
+    const contentInput = getContentInput();
+    await user.clear(contentInput);
+    await user.type(contentInput, "更新後");
+
+    expect(screen.getByRole("button", { name: "元に戻す" })).toBeDisabled();
+
+    fireEvent.blur(contentInput);
+
+    expect(screen.getByRole("button", { name: "元に戻す" })).toBeEnabled();
+  });
+
+  test("Enterで確定した内容変更はUndoで全文が戻る", async () => {
+    renderViewerPage();
+    const user = await enterEditMode();
+
+    const contentInput = getContentInput();
+    await user.clear(contentInput);
+    await user.type(contentInput, "更新後");
+    await user.keyboard("{Enter}");
+
+    document.activeElement.blur();
+    fireEvent.keyDown(window, { key: "z", ctrlKey: true });
+
+    expect(screen.getByDisplayValue("テスト語")).toBeInTheDocument();
+    expect(screen.queryByDisplayValue("更新後")).toBeNull();
   });
 
   test("削除予約ボタンを押すと対象Wordが削除予定状態に切り替わる", async () => {

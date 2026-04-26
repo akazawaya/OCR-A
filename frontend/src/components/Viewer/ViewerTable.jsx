@@ -1,6 +1,37 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useScroll } from "../../logic/layout/useScroll";
+
+const ContentEditInput = ({
+  content,
+  className,
+  onChangeContentDraft,
+} = {}) => {
+  const [editingContent, setEditingContent] = useState(content);
+
+  useEffect(() => {
+    setEditingContent(content);
+  }, [content]);
+
+  const finalizeEdit = () => {
+    onChangeContentDraft(editingContent, content);
+  };
+
+  return (
+    <input
+      className={className}
+      value={editingContent}
+      onBlur={finalizeEdit}
+      onChange={(e) => setEditingContent(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.isComposing) return;
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        finalizeEdit();
+      }}
+    />
+  );
+};
 
 const ViewerTable = ({
   data: {
@@ -89,11 +120,11 @@ const ViewerTable = ({
                   {!isEditing || c.key !== "content" ? (
                     r[c.key]
                   ) : (
-                    <input
+                    <ContentEditInput
                       className={isPendingDelete ? "line-through" : ""}
-                      value={contentDraftById[r.id] ?? r[c.key]}
-                      onChange={(e) =>
-                        onChangeContentDraft(r.id, e.target.value)
+                      content={contentDraftById[r.id] ?? r[c.key]}
+                      onChangeContentDraft={(nextContent, prevContent) =>
+                        onChangeContentDraft(r.id, nextContent, prevContent)
                       }
                     />
                   )}
