@@ -90,7 +90,7 @@ const WordOverlay = ({
           return (
             <polygon
               key={w.id}
-              className={`stroke-red-500 stroke-4 ${
+              className={`scroll-mt-30 stroke-red-500 stroke-4 ${
                 isSelected
                   ? "fill-red-500/30"
                   : isHover

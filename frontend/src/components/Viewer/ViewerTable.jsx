@@ -87,7 +87,7 @@ const ViewerTable = ({
           return (
             <tr
               key={r.id}
-              className={
+              className={`scroll-mt-30 ${
                 isSelected
                   ? "bg-red-500/30"
                   : isHover
@@ -95,7 +95,7 @@ const ViewerTable = ({
                     : isPendingDelete
                       ? "bg-gray-400/30"
                       : "bg-transparent"
-              }
+              }`}
               data-page={r.page__page_number}
               data-word={r.id}
               onClick={() => onSelect(r.id, "table")}
