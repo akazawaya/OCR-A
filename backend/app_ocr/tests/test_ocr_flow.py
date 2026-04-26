@@ -193,6 +193,7 @@ postの確認テスト
     "filename, content_type, expected_status",
     [
         ("test.jpg", "image/jpeg", status.HTTP_202_ACCEPTED),
+        ("test.jpeg", "image/jpeg", status.HTTP_202_ACCEPTED),
         ("test.png", "image/png", status.HTTP_202_ACCEPTED),
         ("test.txt", "text/plain", status.HTTP_400_BAD_REQUEST),
         ("test.tiff", "image/tiff", status.HTTP_400_BAD_REQUEST),
