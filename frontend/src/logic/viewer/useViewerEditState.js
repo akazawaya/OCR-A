@@ -70,13 +70,9 @@ export const useViewerEditState = ({
   };
   const addPendingPostByBbox = (pageId, bbox, direction) => {
     const pageNumber = pageNumberByPageId.get(String(pageId));
-    const currentWords = queryClient.getQueryData(wordsQueryKey) ?? [];
-    const nextDisplayId =
-      Math.max(0, ...currentWords.map((w) => w.displayId ?? w.id ?? 0)) + 1;
 
     const previewWord = {
       id: `preview:${crypto.randomUUID()}`,
-      displayId: nextDisplayId,
       isPendingPost: true,
       page: pageId,
       bbox,
