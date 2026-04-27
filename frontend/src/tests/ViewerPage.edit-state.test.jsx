@@ -122,7 +122,10 @@ describe("ViewerPage", () => {
 
     await enterEditMode();
 
-    const svg = document.querySelector("svg");
+    const imageTransform = await screen.findByTestId(
+      "viewer-image-transform-1",
+    );
+    const svg = imageTransform.querySelector("svg");
     expect(svg).not.toBeNull();
     // jsdom には実ブラウザのようなレイアウト計算がないため、
     // ドラッグ時の座標変換に使う getBoundingClientRect を固定する
@@ -153,7 +156,10 @@ describe("ViewerPage", () => {
     renderViewerPage();
     const user = await enterEditMode();
 
-    const svg = document.querySelector("svg");
+    const imageTransform = await screen.findByTestId(
+      "viewer-image-transform-1",
+    );
+    const svg = imageTransform.querySelector("svg");
     expect(svg).not.toBeNull();
     svg.getBoundingClientRect = () => ({
       left: 0,

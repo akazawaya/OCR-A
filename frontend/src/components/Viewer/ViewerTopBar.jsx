@@ -1,4 +1,17 @@
 import { useEffect, useRef } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ZoomOut,
+  ZoomIn,
+  RotateCw,
+  Printer,
+  Pencil,
+  Undo2,
+  Redo2,
+  Save,
+  X,
+} from "lucide-react";
 
 const renderTextField = (foo, commitFoo, inputRef, ariaLabel) => (
   // draftでの制御形式は、stateを制御するためのstateというのも変に感じるので、inputRefでの非制御形式を試す
@@ -63,98 +76,123 @@ const ViewerTopBar = ({
   }, [page, zoom, rotate]);
 
   const actionButtonClassName =
-    "rounded-md border border-black cursor-pointer hover:bg-gray-100";
-  const _actionButtonDisabledStateClassName =
+    "inline-flex h-8 w-5 items-center justify-center rounded-md border border-black bg-white cursor-pointer hover:bg-gray-100";
+  const actionButtonDisabledStateClassName =
     "disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 disabled:hover:bg-gray-100";
-  const actionButtonWithDisabledClassName = `${actionButtonClassName} ${_actionButtonDisabledStateClassName}`;
+  const actionButtonWithDisabledClassName = `${actionButtonClassName} ${actionButtonDisabledStateClassName}`;
+  const iconClassName = "h-4 w-4";
+
+  const renderIconButton = ({
+    label,
+    icon: Icon,
+    className,
+    disabled,
+    onClick,
+  }) => (
+    <button
+      aria-label={label}
+      className={className}
+      disabled={disabled}
+      title={label}
+      onClick={onClick}
+    >
+      <Icon className={iconClassName} />
+    </button>
+  );
 
   return (
-    <div className="flex justify-center gap-5 border bg-gray-200 px-2 py-1">
-      <div className="flex items-center gap-1">
-        <button
-          className={actionButtonWithDisabledClassName}
-          disabled={!canGoPrevPage}
-          onClick={() => onClickPageStepButton((a) => a - 1)}
-        >
-          戻
-        </button>
+    <div className="flex items-center justify-center gap-5 border bg-gray-200 px-2 py-1">
+      <div className="flex items-center gap-0.5">
+        {renderIconButton({
+          label: "前のページ",
+          icon: ChevronLeft,
+          className: actionButtonWithDisabledClassName,
+          disabled: !canGoPrevPage,
+          onClick: () => onClickPageStepButton((a) => a - 1),
+        })}
         {renderTextField(page, onEnterPageInput, pageRef, "page")}/ {maxPage}
-        <button
-          className={actionButtonWithDisabledClassName}
-          disabled={!canGoNextPage}
-          onClick={() => onClickPageStepButton((a) => a + 1)}
-        >
-          次
-        </button>
+        {renderIconButton({
+          label: "次のページ",
+          icon: ChevronRight,
+          className: actionButtonWithDisabledClassName,
+          disabled: !canGoNextPage,
+          onClick: () => onClickPageStepButton((a) => a + 1),
+        })}
       </div>
-      <div className="flex items-center gap-1">
-        <button
-          className={actionButtonWithDisabledClassName}
-          disabled={!canZoomOut}
-          onClick={() => onClickZoomStepButton((a) => a - ZOOM_STEP)}
-        >
-          縮小
-        </button>
+      <div className="flex items-center gap-0.5">
+        {renderIconButton({
+          label: "縮小",
+          icon: ZoomOut,
+          className: actionButtonWithDisabledClassName,
+          disabled: !canZoomOut,
+          onClick: () => onClickZoomStepButton((a) => a - ZOOM_STEP),
+        })}
         {renderTextField(zoom, onEnterZoomInput, zoomRef, "zoom")}
-        <button
-          className={actionButtonWithDisabledClassName}
-          disabled={!canZoomIn}
-          onClick={() => onClickZoomStepButton((a) => a + ZOOM_STEP)}
-        >
-          拡大
-        </button>
+        {renderIconButton({
+          label: "拡大",
+          icon: ZoomIn,
+          className: actionButtonWithDisabledClassName,
+          disabled: !canZoomIn,
+          onClick: () => onClickZoomStepButton((a) => a + ZOOM_STEP),
+        })}
       </div>
-      <div className="flex items-center gap-1">
-        <button
-          className={actionButtonClassName}
-          onClick={() => onClickRotateStepButton((a) => a + ROTATE_STEP)}
-        >
-          回転
-        </button>
+      <div className="flex items-center gap-0.5">
+        {renderIconButton({
+          label: "回転",
+          icon: RotateCw,
+          className: actionButtonClassName,
+          onClick: () => onClickRotateStepButton((a) => a + ROTATE_STEP),
+        })}
         {renderTextField(rotate, onEnterRotateInput, rotateRef, "rotate")}
       </div>
       {!isEditing ? (
-        <button className={actionButtonClassName} onClick={onClickPrintButton}>
-          出力
-        </button>
+        renderIconButton({
+          label: "出力",
+          icon: Printer,
+          className: actionButtonClassName,
+          onClick: onClickPrintButton,
+        })
       ) : (
         <></>
       )}
       {!isEditing ? (
-        <button className={actionButtonClassName} onClick={onClickEditButton}>
-          編集
-        </button>
+        renderIconButton({
+          label: "編集",
+          icon: Pencil,
+          className: actionButtonClassName,
+          onClick: onClickEditButton,
+        })
       ) : (
         <>
-          <div className="flex items-center gap-1">
-            <button
-              className={actionButtonWithDisabledClassName}
-              disabled={!canUndo}
-              onClick={onClickUndoButton}
-            >
-              元に戻す
-            </button>
-            <button
-              className={actionButtonWithDisabledClassName}
-              disabled={!canRedo}
-              onClick={onClickRedoButton}
-            >
-              やり直す
-            </button>
+          <div className="flex items-center gap-0.5">
+            {renderIconButton({
+              label: "元に戻す",
+              icon: Undo2,
+              className: actionButtonWithDisabledClassName,
+              disabled: !canUndo,
+              onClick: onClickUndoButton,
+            })}
+            {renderIconButton({
+              label: "やり直す",
+              icon: Redo2,
+              className: actionButtonWithDisabledClassName,
+              disabled: !canRedo,
+              onClick: onClickRedoButton,
+            })}
           </div>
-          <div className="flex items-center gap-1">
-            <button
-              className={actionButtonClassName}
-              onClick={onClickSaveButton}
-            >
-              保存
-            </button>
-            <button
-              className={actionButtonClassName}
-              onClick={onClickCancelButton}
-            >
-              中止
-            </button>
+          <div className="flex items-center gap-2">
+            {renderIconButton({
+              label: "保存",
+              icon: Save,
+              className: actionButtonClassName,
+              onClick: onClickSaveButton,
+            })}
+            {renderIconButton({
+              label: "中止",
+              icon: X,
+              className: actionButtonClassName,
+              onClick: onClickCancelButton,
+            })}
           </div>
         </>
       )}

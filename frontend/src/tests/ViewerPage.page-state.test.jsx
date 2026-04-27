@@ -68,7 +68,9 @@ beforeEach(() => {
 describe("ViewerPage", () => {
   test("次ページボタンを押すと対象ページへスクロールする", async () => {
     renderViewerPage();
-    const nextButton = await screen.findByRole("button", { name: "次" });
+    const nextButton = await screen.findByRole("button", {
+      name: "次のページ",
+    });
     let page2;
     await waitFor(() => {
       page2 = document.querySelector('[data-page="2"]');
@@ -175,8 +177,12 @@ describe("ViewerPage", () => {
     renderViewerPage();
     const user = userEvent.setup();
 
-    const prevButton = await screen.findByRole("button", { name: "戻" });
-    const nextButton = await screen.findByRole("button", { name: "次" });
+    const prevButton = await screen.findByRole("button", {
+      name: "前のページ",
+    });
+    const nextButton = await screen.findByRole("button", {
+      name: "次のページ",
+    });
     const zoomDownButton = await screen.findByRole("button", { name: "縮小" });
     const zoomUpButton = await screen.findByRole("button", { name: "拡大" });
 
