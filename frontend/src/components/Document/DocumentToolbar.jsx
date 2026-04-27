@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { Upload } from "lucide-react";
 
 import { searchOptionDefs } from "../../logic/urlQuery/searchQueryUtils";
 
@@ -64,12 +65,13 @@ const DocumentToolbar = ({
           htmlFor="document-file-input"
         >
           {!selectedFile ? (
-            <>
+            <div className="flex h-full flex-col items-center justify-center">
+              <Upload />
               <span className="font-medium text-gray-700">ファイルを選択</span>
               <span className="text-sm text-gray-500">
                 またはドラッグ＆ドロップ
               </span>
-            </>
+            </div>
           ) : (
             <span className="mt-1 max-w-full text-sm font-semibold break-all text-gray-800">
               {selectedFile.name}
