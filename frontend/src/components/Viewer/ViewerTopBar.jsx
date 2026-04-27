@@ -14,19 +14,23 @@ import {
 } from "lucide-react";
 
 const renderTextField = (foo, commitFoo, inputRef, ariaLabel) => (
-  // draftでの制御形式は、stateを制御するためのstateというのも変に感じるので、inputRefでの非制御形式を試す
   // 外部の foo が変わったときにinputRef.current.value = ... で表示を同期
   <input
     ref={inputRef}
     aria-label={ariaLabel}
     className="w-[3ch] border border-double border-black bg-white text-center"
     defaultValue={foo}
+    onBlur={(e) => {
+      const display = commitFoo(e.currentTarget.value);
+      if (display != null) e.currentTarget.value = display;
+    }}
     onKeyDown={(e) => {
-      if (e.key !== "Enter") return; //  return何もなし　でその処理を打ち切る意味になる
+      if (e.key !== "Enter") return;
+      if (e.nativeEvent.isComposing) return;
       // commitFoo側の整合化によりstateが変わらず、表示更新が発生しないことを避けるために
       // EnterのタイミングcommitFoo の返り値をinputに書き戻す
-      const display = commitFoo(e.target.value);
-      if (display != null) e.target.value = display;
+      const display = commitFoo(e.currentTarget.value);
+      if (display != null) e.currentTarget.value = display;
     }}
   />
 );

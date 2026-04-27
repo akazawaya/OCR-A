@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { beforeEach, describe, test, expect, vi } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
 
@@ -156,6 +156,23 @@ describe("ViewerPage", () => {
     await user.clear(rotateInput);
     await user.type(rotateInput, "90{Enter}");
     expect(imageTransform.style.getPropertyValue("--rotate")).toBe("90deg");
+  });
+
+  test("ページ番号を入力してblurすると対象ページへスクロールする", async () => {
+    renderViewerPage();
+    let page2;
+    await waitFor(() => {
+      page2 = document.querySelector('[data-page="2"]');
+      expect(page2).not.toBeNull();
+    });
+    const mockScrollIntoView = vi.fn();
+    page2.scrollIntoView = mockScrollIntoView;
+    const pageInput = await screen.findByRole("textbox", { name: "page" });
+    const user = userEvent.setup();
+    await user.clear(pageInput);
+    await user.type(pageInput, "2");
+    fireEvent.blur(pageInput);
+    await waitFor(() => expect(mockScrollIntoView).toHaveBeenCalled());
   });
 
   // WordOverlay では zoom による描画更新のみを確認する。
