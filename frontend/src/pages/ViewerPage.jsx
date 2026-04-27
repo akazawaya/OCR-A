@@ -152,6 +152,12 @@ const ViewerPage = () => {
     deleteWordById,
     wordsQueryKey,
     pageNumberByPageId,
+    page: pageState.page,
+    maxPage: pages.length,
+    zoom: pageState.zoom,
+    zoomStep: pageState.ZOOM_STEP,
+    minZoom: pageState.MIN_ZOOM,
+    maxZoom: pageState.MAX_ZOOM,
   });
 
   const viewerRootRef = useRef(null);
@@ -178,6 +184,10 @@ const ViewerPage = () => {
               isEditing: editState.isEditing,
               canUndo: editState.canUndo,
               canRedo: editState.canRedo,
+              canGoPrevPage: editState.canGoPrevPage,
+              canGoNextPage: editState.canGoNextPage,
+              canZoomOut: editState.canZoomOut,
+              canZoomIn: editState.canZoomIn,
             }}
             events={{
               onClickPrintButton: openPrintDialog,

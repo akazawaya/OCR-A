@@ -43,6 +43,12 @@ export const useViewerEditState = ({
   deleteWordById,
   wordsQueryKey,
   pageNumberByPageId,
+  page,
+  maxPage,
+  zoom,
+  zoomStep,
+  minZoom,
+  maxZoom,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
 
@@ -255,6 +261,10 @@ export const useViewerEditState = ({
 
   const canUndo = historyState.past.length > 0;
   const canRedo = historyState.future.length > 0;
+  const canGoPrevPage = page > 1;
+  const canGoNextPage = page < maxPage;
+  const canZoomOut = zoom - zoomStep >= minZoom;
+  const canZoomIn = zoom + zoomStep <= maxZoom;
 
   return {
     isEditing,
@@ -268,6 +278,10 @@ export const useViewerEditState = ({
     contentDraftById,
     canUndo,
     canRedo,
+    canGoPrevPage,
+    canGoNextPage,
+    canZoomOut,
+    canZoomIn,
     undo,
     redo,
   };

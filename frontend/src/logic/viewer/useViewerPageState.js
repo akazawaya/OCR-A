@@ -96,6 +96,8 @@ export const useViewerPageState = ({ maxPage }) => {
     commitPage,
     commitZoom,
     commitRotate,
+    MIN_ZOOM,
+    MAX_ZOOM,
     ZOOM_STEP,
     ROTATE_STEP,
   };

@@ -29,6 +29,10 @@ const ViewerTopBar = ({
     isEditing,
     canUndo = false,
     canRedo = false,
+    canGoPrevPage = false,
+    canGoNextPage = false,
+    canZoomOut = false,
+    canZoomIn = false,
   } = {},
   events: {
     onClickPrintButton,
@@ -59,18 +63,38 @@ const ViewerTopBar = ({
   }, [page, zoom, rotate]);
 
   const actionButtonClassName =
-    "enabled:cursor-pointer enabled:hover:bg-gray-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400";
+    "rounded-md border enabled:border-black enabled:cursor-pointer enabled:hover:bg-gray-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400";
 
   return (
     <div className="flex justify-center gap-2 bg-gray-200 px-2">
-      <button onClick={() => onClickPageStepButton((a) => a - 1)}>戻</button>
+      <button
+        className={actionButtonClassName}
+        disabled={!canGoPrevPage}
+        onClick={() => onClickPageStepButton((a) => a - 1)}
+      >
+        戻
+      </button>
       {renderTextField(page, onEnterPageInput, pageRef, "page")}/ {maxPage}
-      <button onClick={() => onClickPageStepButton((a) => a + 1)}>次</button>
-      <button onClick={() => onClickZoomStepButton((a) => a - ZOOM_STEP)}>
+      <button
+        className={actionButtonClassName}
+        disabled={!canGoNextPage}
+        onClick={() => onClickPageStepButton((a) => a + 1)}
+      >
+        次
+      </button>
+      <button
+        className={actionButtonClassName}
+        disabled={!canZoomOut}
+        onClick={() => onClickZoomStepButton((a) => a - ZOOM_STEP)}
+      >
         縮小
       </button>
       {renderTextField(zoom, onEnterZoomInput, zoomRef, "zoom")}
-      <button onClick={() => onClickZoomStepButton((a) => a + ZOOM_STEP)}>
+      <button
+        className={actionButtonClassName}
+        disabled={!canZoomIn}
+        onClick={() => onClickZoomStepButton((a) => a + ZOOM_STEP)}
+      >
         拡大
       </button>
       <button onClick={() => onClickRotateStepButton((a) => a + ROTATE_STEP)}>

@@ -3,6 +3,7 @@
 import { beforeEach, describe, test, expect, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import "@testing-library/jest-dom/vitest";
 
 import {
   defaultMockPages,
@@ -168,5 +169,43 @@ describe("ViewerPage", () => {
     await user.click(zoomUpButton);
     const afterFontSize = parseFloat(wordSpan.style.fontSize);
     expect(afterFontSize / beforeFontSize).toBeCloseTo(1.25);
+  });
+
+  test("ページ移動と拡大縮小ボタンは境界でdisabledになる", async () => {
+    renderViewerPage();
+    const user = userEvent.setup();
+
+    const prevButton = await screen.findByRole("button", { name: "戻" });
+    const nextButton = await screen.findByRole("button", { name: "次" });
+    const zoomDownButton = await screen.findByRole("button", { name: "縮小" });
+    const zoomUpButton = await screen.findByRole("button", { name: "拡大" });
+
+    expect(prevButton).toBeDisabled();
+    expect(nextButton).toBeEnabled();
+    expect(zoomDownButton).toBeEnabled();
+    expect(zoomUpButton).toBeEnabled();
+
+    await user.click(nextButton);
+    expect(prevButton).toBeEnabled();
+    expect(nextButton).toBeDisabled();
+
+    await user.click(zoomDownButton);
+    await user.click(zoomDownButton);
+    await user.click(zoomDownButton);
+    expect(zoomDownButton).toBeDisabled();
+    expect(zoomUpButton).toBeEnabled();
+
+    await user.click(zoomUpButton);
+    await user.click(zoomUpButton);
+    await user.click(zoomUpButton);
+    await user.click(zoomUpButton);
+    await user.click(zoomUpButton);
+    await user.click(zoomUpButton);
+    await user.click(zoomUpButton);
+    await user.click(zoomUpButton);
+    await user.click(zoomUpButton);
+    await user.click(zoomUpButton);
+    await user.click(zoomUpButton);
+    expect(zoomUpButton).toBeDisabled();
   });
 });
