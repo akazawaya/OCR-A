@@ -222,7 +222,6 @@ const ViewerPage = () => {
               hoveredWordId: selection.hoveredId,
               selectedWordId: selection.selectedId,
               isEditing: editState.isEditing,
-              pendingDeleteIdSet: editState.pendingDeleteIdSet,
             }}
             wordOverlayEvents={{
               onHoverWord: selection.hover,
@@ -243,11 +242,10 @@ const ViewerPage = () => {
               selectedBy: selection.selectedBy,
               isEditing: editState.isEditing,
               contentDraftById: editState.contentDraftById,
-              pendingDeleteIdSet: editState.pendingDeleteIdSet,
             }}
             events={{
               onChangeContentDraft: editState.changeContentDraftById,
-              onClickDeleteButton: editState.togglePendingDeleteId,
+              onClickDeleteButton: editState.addPendingDeleteById,
               onHover: selection.hover,
               onHoverClear: selection.clearHovered,
               onSelect: selection.commitSelect,

@@ -76,9 +76,7 @@ describe("ViewerPage", () => {
     expect(screen.getByRole("button", { name: "やり直す" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "保存" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "中止" })).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "削除予約" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "削除" })).toBeInTheDocument();
     expect(getContentInput()).toBeInTheDocument();
   });
 
@@ -146,9 +144,7 @@ describe("ViewerPage", () => {
     fireEvent.pointerUp(svg, { clientX: 110, clientY: 120 });
 
     await waitFor(() => {
-      expect(screen.getAllByRole("button", { name: "削除予約" })).toHaveLength(
-        2,
-      );
+      expect(screen.getAllByRole("button", { name: "削除" })).toHaveLength(2);
     });
   });
 
@@ -178,9 +174,7 @@ describe("ViewerPage", () => {
     fireEvent.pointerUp(svg, { clientX: 110, clientY: 120 });
 
     await waitFor(() => {
-      expect(screen.getAllByRole("button", { name: "削除予約" })).toHaveLength(
-        2,
-      );
+      expect(screen.getAllByRole("button", { name: "削除" })).toHaveLength(2);
     });
 
     const previewContentInput = screen
@@ -261,64 +255,81 @@ describe("ViewerPage", () => {
     expect(screen.queryByDisplayValue("更新後")).toBeNull();
   });
 
-  test("削除予約ボタンを押すと対象Wordが削除予定状態に切り替わる", async () => {
+  test("削除ボタンを押すと対象Wordが即時に一覧から消える", async () => {
     renderViewerPage();
     const user = await enterEditMode();
 
-    await user.click(screen.getByRole("button", { name: "削除予約" }));
+    await user.click(screen.getByRole("button", { name: "削除" }));
 
-    expect(
-      screen.getByRole("button", { name: "削除取消" }),
-    ).toBeInTheDocument();
-    expect(getContentInput()).toHaveClass("line-through");
+    expect(screen.queryByDisplayValue("テスト語")).toBeNull();
+    expect(screen.getByRole("button", { name: "元に戻す" })).toBeEnabled();
   });
-  //　Undo/Redoは削除予約の操作で確認する。
-  test("Undo/Redoボタンで削除予約の切り替えを戻せる", async () => {
+
+  test("削除したWordは保存時にdeleteへ含まれる", async () => {
     renderViewerPage();
     const user = await enterEditMode();
 
-    await user.click(screen.getByRole("button", { name: "削除予約" }));
+    await user.click(screen.getByRole("button", { name: "削除" }));
+    await user.click(screen.getByRole("button", { name: "保存" }));
+
+    await waitFor(() =>
+      expect(mockDeleteCollectionItem).toHaveBeenCalledWith({
+        collectionUrl: expect.stringContaining("/words/"),
+        id: 1,
+      }),
+    );
+  });
+
+  test("中止ボタンで削除操作も破棄される", async () => {
+    renderViewerPage();
+    const user = await enterEditMode();
+
+    await user.click(screen.getByRole("button", { name: "削除" }));
+    expect(screen.queryByDisplayValue("テスト語")).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "中止" }));
+
+    expect(screen.getByRole("button", { name: "編集" })).toBeInTheDocument();
+    expect(screen.getAllByText("テスト語").length).toBeGreaterThan(0);
+    expect(mockDeleteCollectionItem).not.toHaveBeenCalled();
+  });
+
+  // Undo/Redoは削除操作で確認する。
+  test("Undo/Redoボタンで削除操作を戻せる", async () => {
+    renderViewerPage();
+    const user = await enterEditMode();
+
+    await user.click(screen.getByRole("button", { name: "削除" }));
     await user.click(screen.getByRole("button", { name: "元に戻す" }));
 
-    expect(
-      screen.getByRole("button", { name: "削除予約" }),
-    ).toBeInTheDocument();
-    expect(getContentInput()).not.toHaveClass("line-through");
+    expect(screen.getByDisplayValue("テスト語")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "削除" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "やり直す" }));
 
-    expect(
-      screen.getByRole("button", { name: "削除取消" }),
-    ).toBeInTheDocument();
-    expect(getContentInput()).toHaveClass("line-through");
+    expect(screen.queryByDisplayValue("テスト語")).toBeNull();
   });
 
   test("Undoコマンドで直前の編集操作が取り消される", async () => {
     renderViewerPage();
     const user = await enterEditMode();
 
-    await user.click(screen.getByRole("button", { name: "削除予約" }));
+    await user.click(screen.getByRole("button", { name: "削除" }));
     document.activeElement.blur();
     fireEvent.keyDown(window, { key: "z", ctrlKey: true });
 
-    expect(
-      screen.getByRole("button", { name: "削除予約" }),
-    ).toBeInTheDocument();
-    expect(getContentInput()).not.toHaveClass("line-through");
+    expect(screen.getByDisplayValue("テスト語")).toBeInTheDocument();
   });
 
   test("Redoコマンドで取り消した編集操作がやり直される", async () => {
     renderViewerPage();
     const user = await enterEditMode();
 
-    await user.click(screen.getByRole("button", { name: "削除予約" }));
+    await user.click(screen.getByRole("button", { name: "削除" }));
     document.activeElement.blur();
     fireEvent.keyDown(window, { key: "z", ctrlKey: true });
     fireEvent.keyDown(window, { key: "y", ctrlKey: true });
 
-    expect(
-      screen.getByRole("button", { name: "削除取消" }),
-    ).toBeInTheDocument();
-    expect(getContentInput()).toHaveClass("line-through");
+    expect(screen.queryByDisplayValue("テスト語")).toBeNull();
   });
 });

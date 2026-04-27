@@ -16,7 +16,6 @@ const WordOverlay = ({
     hoveredWordId,
     selectedWordId,
     isEditing,
-    pendingDeleteIdSet = new Set(),
   } = {},
   events: {
     onHoverWord,
@@ -86,7 +85,6 @@ const WordOverlay = ({
         {wordLayout.map((w) => {
           const isSelected = w.id === selectedWordId;
           const isHover = w.id === hoveredWordId;
-          const isPendingDelete = pendingDeleteIdSet.has(w.id);
           return (
             <polygon
               key={w.id}
@@ -95,9 +93,7 @@ const WordOverlay = ({
                   ? "fill-red-500/30"
                   : isHover
                     ? "fill-red-500/20"
-                    : isPendingDelete
-                      ? "fill-gray-400/30"
-                      : "fill-transparent"
+                    : "fill-transparent"
               }`}
               data-word={w.id}
               points={w.polygon.points}
@@ -108,7 +104,6 @@ const WordOverlay = ({
 
       {wordLayout.map((w) => {
         const isHover = w.id === hoveredWordId;
-        const isPendingDelete = pendingDeleteIdSet.has(w.id);
         return (
           <span
             key={w.id}
@@ -116,7 +111,7 @@ const WordOverlay = ({
               w.span.mode === "vertical"
                 ? "[text-orientation:upright] [writing-mode:vertical-rl]"
                 : ""
-            } ${isPendingDelete ? "line-through" : ""}${isHover ? "text-white [text-shadow:0_0_2px_black,0_0_4px_black]" : "text-transparent"}`}
+            } ${isHover ? "text-white [text-shadow:0_0_2px_black,0_0_4px_black]" : "text-transparent"}`}
             data-word={w.id}
             role="button"
             style={{

@@ -43,7 +43,6 @@ const ViewerTable = ({
     selectedBy,
     isEditing,
     contentDraftById = {},
-    pendingDeleteIdSet = new Set(),
   } = {},
   events: {
     onClickColumn,
@@ -83,7 +82,6 @@ const ViewerTable = ({
         {rows.map((r) => {
           const isSelected = r.id === selectedId;
           const isHover = r.id === hoveredId;
-          const isPendingDelete = pendingDeleteIdSet.has(r.id);
           return (
             <tr
               key={r.id}
@@ -92,9 +90,7 @@ const ViewerTable = ({
                   ? "bg-red-500/30"
                   : isHover
                     ? "bg-red-500/20"
-                    : isPendingDelete
-                      ? "bg-gray-400/30"
-                      : "bg-transparent"
+                    : "bg-transparent"
               }`}
               data-page={r.page__page_number}
               data-word={r.id}
@@ -110,7 +106,7 @@ const ViewerTable = ({
                       onClickDeleteButton(r.id);
                     }}
                   >
-                    {isPendingDelete ? "削除取消" : "削除予約"}
+                    削除
                   </button>
                 </td>
               )}
@@ -121,7 +117,7 @@ const ViewerTable = ({
                     r[c.key]
                   ) : (
                     <ContentEditInput
-                      className={isPendingDelete ? "line-through" : ""}
+                      className=""
                       content={contentDraftById[r.id] ?? r[c.key]}
                       onChangeContentDraft={(nextContent, prevContent) =>
                         onChangeContentDraft(r.id, nextContent, prevContent)

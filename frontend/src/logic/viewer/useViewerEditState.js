@@ -114,27 +114,26 @@ export const useViewerEditState = ({
     setContentDraftById((prev) => ({ ...prev, [wordId]: nextContent }));
   };
 
-  const togglePendingDeleteId = (wordId) => {
-    const wasPendingDelete = pendingDeleteIdSet.has(wordId);
-    const willBePendingDelete = !wasPendingDelete;
+  const addPendingDeleteById = (wordId) => {
+    let deletedWord = null;
+    queryClient.setQueryData(wordsQueryKey, (oldWords = []) => {
+      deletedWord = oldWords.find((w) => w.id === wordId) ?? null;
+      return oldWords.filter((w) => w.id !== wordId);
+    });
+    if (!deletedWord) return;
 
-    const next = new Set(pendingDeleteIdSet);
-    if (wasPendingDelete) {
-      next.delete(wordId);
-    } else {
-      next.add(wordId);
-    }
-    setPendingDeleteIdSet(next);
+    setPendingDeleteIdSet((state) => {
+      const next = new Set(state);
+      next.add(deletedWord.id);
+      return next;
+    });
 
     historyDispatch({
       type: "PUSH",
       entry: {
-        type: "SET_PENDING_DELETE",
-        // 最終的にそのIDをどういう状態にしたかを表すため、TOGGLEではなくSETが相応しい
+        type: "ADD_PENDING_DELETE",
         payload: {
-          wordId,
-          prev: wasPendingDelete,
-          next: willBePendingDelete,
+          word: deletedWord,
         },
       },
     });
@@ -166,10 +165,28 @@ export const useViewerEditState = ({
   };
 
   const cancelEdit = () => {
-    setIsEditing(false);
-    queryClient.setQueryData(wordsQueryKey, (oldWords) => {
-      return oldWords.filter((w) => !w.isPendingPost);
+    [...historyState.past].reverse().forEach((entry) => {
+      switch (entry.type) {
+        case "ADD_PENDING_DELETE": {
+          const { word } = entry.payload;
+          queryClient.setQueryData(wordsQueryKey, (oldWords = []) => {
+            if (oldWords.some((w) => w.id === word.id)) return oldWords;
+            return [...oldWords, word];
+          });
+          return;
+        }
+        case "ADD_PENDING_POST": {
+          const { word } = entry.payload;
+          queryClient.setQueryData(wordsQueryKey, (oldWords = []) => {
+            return oldWords.filter((w) => w.id !== word.id);
+          });
+          return;
+        }
+        default:
+          return;
+      }
     });
+    setIsEditing(false);
     historyDispatch({ type: "RESET" });
     setContentDraftById({});
     setPendingDeleteIdSet(new Set());
@@ -186,12 +203,15 @@ export const useViewerEditState = ({
         return;
       }
 
-      case "SET_PENDING_DELETE": {
-        const { wordId, prev } = entry.payload;
+      case "ADD_PENDING_DELETE": {
+        const { word } = entry.payload;
+        queryClient.setQueryData(wordsQueryKey, (oldWords = []) => {
+          if (oldWords.some((w) => w.id === word.id)) return oldWords;
+          return [...oldWords, word];
+        });
         setPendingDeleteIdSet((state) => {
           const next = new Set(state);
-          if (prev) next.add(wordId);
-          else next.delete(wordId);
+          next.delete(word.id);
           return next;
         });
         return;
@@ -221,13 +241,15 @@ export const useViewerEditState = ({
         return;
       }
 
-      case "SET_PENDING_DELETE": {
-        const { wordId, next } = entry.payload;
+      case "ADD_PENDING_DELETE": {
+        const { word } = entry.payload;
+        queryClient.setQueryData(wordsQueryKey, (oldWords = []) =>
+          oldWords.filter((w) => w.id !== word.id),
+        );
         setPendingDeleteIdSet((state) => {
-          const nextSet = new Set(state);
-          if (next) nextSet.add(wordId);
-          else nextSet.delete(wordId);
-          return nextSet;
+          const next = new Set(state);
+          next.add(word.id);
+          return next;
         });
         return;
       }
@@ -272,9 +294,8 @@ export const useViewerEditState = ({
     saveEdit,
     cancelEdit,
     changeContentDraftById,
-    togglePendingDeleteId,
+    addPendingDeleteById,
     addPendingPostByBbox,
-    pendingDeleteIdSet,
     contentDraftById,
     canUndo,
     canRedo,
