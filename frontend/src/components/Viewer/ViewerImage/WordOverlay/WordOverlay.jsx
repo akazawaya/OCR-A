@@ -107,15 +107,16 @@ const WordOverlay = ({
       </svg>
 
       {wordLayout.map((w) => {
+        const isHover = w.id === hoveredWordId;
         const isPendingDelete = pendingDeleteIdSet.has(w.id);
         return (
           <span
             key={w.id}
-            className={`absolute leading-none whitespace-nowrap text-transparent ${
+            className={`absolute leading-none whitespace-nowrap ${
               w.span.mode === "vertical"
                 ? "[text-orientation:upright] [writing-mode:vertical-rl]"
                 : ""
-            } ${isPendingDelete ? "line-through" : ""}`}
+            } ${isPendingDelete ? "line-through" : ""}${isHover ? "text-white [text-shadow:0_0_2px_black,0_0_4px_black]" : "text-transparent"}`}
             data-word={w.id}
             role="button"
             style={{
