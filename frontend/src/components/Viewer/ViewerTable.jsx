@@ -42,7 +42,6 @@ const ViewerTable = ({
     selectedId,
     selectedBy,
     isEditing,
-    contentDraftById = {},
   } = {},
   events: {
     onClickColumn,
@@ -118,7 +117,7 @@ const ViewerTable = ({
                   ) : (
                     <ContentEditInput
                       className=""
-                      content={contentDraftById[r.id] ?? r[c.key]}
+                      content={r[c.key]}
                       onChangeContentDraft={(nextContent, prevContent) =>
                         onChangeContentDraft(r.id, nextContent, prevContent)
                       }

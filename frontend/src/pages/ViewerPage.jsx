@@ -241,7 +241,6 @@ const ViewerPage = () => {
               selectedId: selection.selectedId,
               selectedBy: selection.selectedBy,
               isEditing: editState.isEditing,
-              contentDraftById: editState.contentDraftById,
             }}
             events={{
               onChangeContentDraft: editState.changeContentDraftById,

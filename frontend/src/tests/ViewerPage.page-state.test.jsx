@@ -27,6 +27,7 @@ const {
 }));
 
 HTMLElement.prototype.scrollIntoView = vi.fn();
+Element.prototype.scrollIntoView = vi.fn();
 
 vi.mock("../logic/print/usePrint", () => ({
   usePrint: mockUsePrint,
@@ -188,6 +189,20 @@ describe("ViewerPage", () => {
     await user.click(zoomUpButton);
     const afterFontSize = parseFloat(wordSpan.style.fontSize);
     expect(afterFontSize / beforeFontSize).toBeCloseTo(1.25);
+  });
+
+  test("内容をEnterで確定するとWordOverlayの表示語も更新される", async () => {
+    renderViewerPage();
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "編集" }));
+    const contentInput = screen.getByDisplayValue("テスト語");
+    await user.clear(contentInput);
+    await user.type(contentInput, "更新後");
+    await user.keyboard("{Enter}");
+
+    expect(screen.getByRole("button", { name: "更新後" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "テスト語" })).toBeNull();
   });
 
   test("ページ移動と拡大縮小ボタンは境界でdisabledになる", async () => {

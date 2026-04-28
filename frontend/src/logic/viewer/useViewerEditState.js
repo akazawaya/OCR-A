@@ -1,4 +1,4 @@
-import { useReducer, useState } from "react";
+import { useMemo, useReducer, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 // Edit,Save,Cancelのロジック用まとめのhook
 
@@ -37,6 +37,55 @@ const historyReducer = (state, action) => {
   }
 };
 
+const buildSaveChangesFromHistory = (pastEntries = []) => {
+  const patchStateById = new Map();
+  const pendingPostWordMap = new Map();
+  const pendingDeleteIdSet = new Set();
+
+  pastEntries.forEach((pastEntry) => {
+    switch (pastEntry.type) {
+      case "ADD_PENDING_POST": {
+        const { word } = pastEntry.payload;
+        pendingPostWordMap.set(word.id, word);
+        return;
+      }
+      case "CHANGE_CONTENT_DRAFT": {
+        const { wordId, prev, next } = pastEntry.payload;
+        if (pendingPostWordMap.has(wordId)) {
+          const word = pendingPostWordMap.get(wordId);
+          pendingPostWordMap.set(wordId, { ...word, content: next });
+        }
+
+        const contentChange = patchStateById.get(wordId);
+        if (!contentChange) {
+          patchStateById.set(wordId, { firstPrev: prev, lastNext: next });
+        } else {
+          contentChange.lastNext = next;
+        }
+        return;
+      }
+      case "ADD_PENDING_DELETE": {
+        const { word } = pastEntry.payload;
+
+        if (pendingPostWordMap.has(word.id)) {
+          pendingPostWordMap.delete(word.id);
+          return;
+        }
+        pendingDeleteIdSet.add(word.id);
+        return;
+      }
+    }
+  });
+
+  const contentDraftById = Object.fromEntries(
+    [...patchStateById.entries()]
+      .filter(([, { firstPrev, lastNext }]) => firstPrev !== lastNext)
+      .map(([wordId, { lastNext }]) => [wordId, lastNext]),
+  );
+
+  return { pendingPostWordMap, contentDraftById, pendingDeleteIdSet };
+};
+
 export const useViewerEditState = ({
   postWordByBbox,
   patchWordContentById,
@@ -51,30 +100,17 @@ export const useViewerEditState = ({
   maxZoom,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
-
-  // 編集中の差分管理:
-  // patch / delete の pending は local state で保持する
-  // post の pending は、未保存データを表示に反映するため query cache で保持する
-  const [contentDraftById, setContentDraftById] = useState({});
-  const [pendingDeleteIdSet, setPendingDeleteIdSet] = useState(new Set());
   const [historyState, historyDispatch] = useReducer(
     historyReducer,
     initialHistoryState,
   );
+  const { pendingPostWordMap, pendingDeleteIdSet, contentDraftById } = useMemo(
+    () => buildSaveChangesFromHistory(historyState.past),
+    [historyState.past],
+  );
 
   const queryClient = useQueryClient();
-  const buildPendingPostPayload = () => {
-    const words = queryClient.getQueryData(wordsQueryKey);
 
-    return words
-      .filter((w) => w.isPendingPost)
-      .map((w) => ({
-        pageId: w.page,
-        bbox: w.bbox,
-        direction: w.direction,
-        content: contentDraftById[w.id] ?? w.content ?? "",
-      }));
-  };
   const addPendingPostByBbox = (pageId, bbox, direction) => {
     const pageNumber = pageNumberByPageId.get(String(pageId));
 
@@ -104,6 +140,12 @@ export const useViewerEditState = ({
 
   const changeContentDraftById = (wordId, nextContent, prevContent) => {
     if (prevContent === nextContent) return;
+    queryClient.setQueryData(wordsQueryKey, (oldWords = []) =>
+      oldWords.map((word) =>
+        word.id === wordId ? { ...word, content: nextContent } : word,
+      ),
+    );
+
     historyDispatch({
       type: "PUSH",
       entry: {
@@ -111,7 +153,6 @@ export const useViewerEditState = ({
         payload: { wordId, prev: prevContent, next: nextContent },
       },
     });
-    setContentDraftById((prev) => ({ ...prev, [wordId]: nextContent }));
   };
 
   const addPendingDeleteById = (wordId) => {
@@ -121,12 +162,6 @@ export const useViewerEditState = ({
       return oldWords.filter((w) => w.id !== wordId);
     });
     if (!deletedWord) return;
-
-    setPendingDeleteIdSet((state) => {
-      const next = new Set(state);
-      next.add(deletedWord.id);
-      return next;
-    });
 
     historyDispatch({
       type: "PUSH",
@@ -139,92 +174,32 @@ export const useViewerEditState = ({
     });
   };
 
-  const startEdit = () => {
-    setIsEditing(true);
-  };
-
-  const isPreviewId = (id) =>
-    typeof id === "string" && id.startsWith("preview:");
-
-  const saveEdit = () => {
-    const pendingPostPayload = buildPendingPostPayload();
-    const persistedContentDraftById = Object.fromEntries(
-      Object.entries(contentDraftById).filter(([id]) => !isPreviewId(id)),
-    );
-    const persistedDeleteIds = [...pendingDeleteIdSet].filter(
-      (id) => !isPreviewId(id),
-    );
-
-    postWordByBbox(pendingPostPayload);
-    patchWordContentById(persistedContentDraftById);
-    deleteWordById(persistedDeleteIds);
-    setIsEditing(false);
-    historyDispatch({ type: "RESET" });
-    setContentDraftById({});
-    setPendingDeleteIdSet(new Set());
-  };
-
-  const cancelEdit = () => {
-    [...historyState.past].reverse().forEach((entry) => {
-      switch (entry.type) {
-        case "ADD_PENDING_DELETE": {
-          const { word } = entry.payload;
-          queryClient.setQueryData(wordsQueryKey, (oldWords = []) => {
-            if (oldWords.some((w) => w.id === word.id)) return oldWords;
-            return [...oldWords, word];
-          });
-          return;
-        }
-        case "ADD_PENDING_POST": {
-          const { word } = entry.payload;
-          queryClient.setQueryData(wordsQueryKey, (oldWords = []) => {
-            return oldWords.filter((w) => w.id !== word.id);
-          });
-          return;
-        }
-        default:
-          return;
-      }
-    });
-    setIsEditing(false);
-    historyDispatch({ type: "RESET" });
-    setContentDraftById({});
-    setPendingDeleteIdSet(new Set());
-  };
-
   const applyUndoEntry = (entry) => {
     switch (entry.type) {
       case "CHANGE_CONTENT_DRAFT": {
         const { wordId, prev } = entry.payload;
-        setContentDraftById((state) => ({
-          ...state,
-          [wordId]: prev,
-        }));
+        queryClient.setQueryData(wordsQueryKey, (oldWords = []) =>
+          oldWords.map((word) =>
+            word.id === wordId ? { ...word, content: prev } : word,
+          ),
+        );
         return;
       }
-
       case "ADD_PENDING_DELETE": {
         const { word } = entry.payload;
         queryClient.setQueryData(wordsQueryKey, (oldWords = []) => {
           if (oldWords.some((w) => w.id === word.id)) return oldWords;
           return [...oldWords, word];
         });
-        setPendingDeleteIdSet((state) => {
-          const next = new Set(state);
-          next.delete(word.id);
-          return next;
-        });
         return;
       }
-
       case "ADD_PENDING_POST": {
         const { word } = entry.payload;
-        queryClient.setQueryData(wordsQueryKey, (oldWords) => {
+        queryClient.setQueryData(wordsQueryKey, (oldWords = []) => {
           return oldWords.filter((w) => w.id !== word.id);
         });
         return;
       }
-
       default:
         return;
     }
@@ -234,37 +209,68 @@ export const useViewerEditState = ({
     switch (entry.type) {
       case "CHANGE_CONTENT_DRAFT": {
         const { wordId, next } = entry.payload;
-        setContentDraftById((state) => ({
-          ...state,
-          [wordId]: next,
-        }));
+        queryClient.setQueryData(wordsQueryKey, (oldWords = []) =>
+          oldWords.map((word) =>
+            word.id === wordId ? { ...word, content: next } : word,
+          ),
+        );
         return;
       }
-
       case "ADD_PENDING_DELETE": {
         const { word } = entry.payload;
         queryClient.setQueryData(wordsQueryKey, (oldWords = []) =>
           oldWords.filter((w) => w.id !== word.id),
         );
-        setPendingDeleteIdSet((state) => {
-          const next = new Set(state);
-          next.add(word.id);
-          return next;
-        });
         return;
       }
-
       case "ADD_PENDING_POST": {
         const { word } = entry.payload;
-        queryClient.setQueryData(wordsQueryKey, (oldWords) => {
+        queryClient.setQueryData(wordsQueryKey, (oldWords = []) => {
+          if (oldWords.some((w) => w.id === word.id)) return oldWords;
           return [...oldWords, word];
         });
         return;
       }
-
       default:
         return;
     }
+  };
+
+  const startEdit = () => {
+    setIsEditing(true);
+  };
+
+  const isPreviewId = (id) =>
+    typeof id === "string" && id.startsWith("preview:");
+
+  const saveEdit = () => {
+    const postPayload = [...pendingPostWordMap.values()].map((w) => ({
+      pageId: w.page,
+      bbox: w.bbox,
+      direction: w.direction,
+      content: w.content ?? "",
+    }));
+
+    const deleteIds = [...pendingDeleteIdSet].filter((id) => !isPreviewId(id));
+    const deleteIdSet = new Set([...pendingDeleteIdSet].map(String));
+
+    const patchPayload = Object.fromEntries(
+      Object.entries(contentDraftById).filter(([id]) => {
+        return !isPreviewId(id) && !deleteIdSet.has(String(id));
+      }),
+    );
+
+    postWordByBbox(postPayload);
+    patchWordContentById(patchPayload);
+    deleteWordById(deleteIds);
+    setIsEditing(false);
+    historyDispatch({ type: "RESET" });
+  };
+
+  const cancelEdit = () => {
+    [...historyState.past].reverse().forEach((entry) => applyUndoEntry(entry));
+    setIsEditing(false);
+    historyDispatch({ type: "RESET" });
   };
 
   const undo = () => {
@@ -296,7 +302,6 @@ export const useViewerEditState = ({
     changeContentDraftById,
     addPendingDeleteById,
     addPendingPostByBbox,
-    contentDraftById,
     canUndo,
     canRedo,
     canGoPrevPage,
