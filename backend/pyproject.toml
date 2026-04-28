@@ -35,3 +35,16 @@ exclude = ["*/migrations/*"]
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "project.settings"
 python_files = ["test_*.py",]
+
+[tool.coverage.run]
+branch = true
+source = ["app_ocr"]
+omit = [
+  "*/migrations/*",
+  "*/tests/*",
+  "*/__init__.py",
+  "*/admin.py",
+  "*/apps.py",
+  "*/urls.py",
+  "*/routing.py",
+]
