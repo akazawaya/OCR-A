@@ -1,0 +1,33 @@
+name: Frontend CI
+
+on:
+  push:
+    paths:
+      - "frontend/**"
+      - "compose.yaml"
+      - ".github/workflows/frontend-ci.yaml"
+  pull_request:
+    paths:
+      - "frontend/**"
+      - "compose.yaml"
+      - ".github/workflows/frontend-ci.yaml"
+jobs:
+  frontend-test:
+    runs-on: ubuntu-latest
+    env:
+      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Build frontend image
+        run: docker compose build frontend
+
+      - name: Run vitest
+        run: docker compose run --rm frontend npx vitest run -q
+
+      - name: Stop containers
+        if: always()
+        run: docker compose down -v
