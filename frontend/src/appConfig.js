@@ -39,10 +39,9 @@ export const wordAccessSpec = makeAccessSpec({
   schemaKey: "Word",
   collection: "words",
 });
-export const analyzeDocumentAccessSpec = {
-  analyzeUrl: API_BASE_URL + "documents/start_ocr/",
+export const documentOcrAccessSpec = {
+  startOcrUrl: API_BASE_URL + "documents/ocr/",
 };
-
 // 表示するフィールド/列を選ぶ（表示名の翻訳も兼ねる）
 const documentUiSpec = Object.freeze({
   table: [

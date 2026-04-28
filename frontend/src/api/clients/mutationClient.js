@@ -30,8 +30,8 @@ export const deleteCollectionItem = async ({ collectionUrl, id }) => {
   return res;
 };
 
-export const analyzeDocument = async ({ analyzeUrl, formData }) => {
-  const { res, data } = await fetchBackend(analyzeUrl, {
+export const startOcrDocument = async ({ startOcrUrl, formData }) => {
+  const { res, data } = await fetchBackend(startOcrUrl, {
     method: "POST",
     body: formData,
     throwOnError: true,

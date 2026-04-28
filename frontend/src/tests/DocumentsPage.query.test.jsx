@@ -12,10 +12,10 @@ import {
   renderDocumentsPage,
 } from "./DocumentsPage.test-utils";
 
-const { mockGetCollection, mockAnalyzeDocument, mockDeleteCollectionItem } =
+const { mockGetCollection, mockStartOcrDocument, mockDeleteCollectionItem } =
   vi.hoisted(() => ({
     mockGetCollection: vi.fn(),
-    mockAnalyzeDocument: vi.fn(),
+    mockStartOcrDocument: vi.fn(),
     mockDeleteCollectionItem: vi.fn(),
   }));
 
@@ -30,7 +30,7 @@ vi.mock("../api/clients/collectionClient", () => ({
 }));
 
 vi.mock("../api/clients/mutationClient", () => ({
-  analyzeDocument: mockAnalyzeDocument,
+  startOcrDocument: mockStartOcrDocument,
   deleteCollectionItem: mockDeleteCollectionItem,
 }));
 
@@ -66,7 +66,7 @@ const sortDocuments = (documents, queryString) => {
 };
 
 beforeEach(() => {
-  mockAnalyzeDocument.mockResolvedValue({});
+  mockStartOcrDocument.mockResolvedValue({});
   mockDeleteCollectionItem.mockResolvedValue({});
   mockGetCollection.mockImplementation(({ collectionUrl, queryString }) => {
     if (collectionUrl !== documentAccessSpec.collectionUrl) {

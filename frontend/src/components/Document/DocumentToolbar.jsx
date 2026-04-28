@@ -9,14 +9,14 @@ const DocumentToolbar = ({
     onClickSearchButton,
     onChangeSearchInput,
     onClickResetSearchButton,
-    onClickAnalyzeButton: _onClickAnalyzeButton,
+    onClickStartOcrButton: _onClickStartOcrButton,
   } = {},
 }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
 
-  const onClickAnalyzeButton = async () => {
-    await _onClickAnalyzeButton(selectedFile);
+  const onClickStartOcrButton = async () => {
+    await _onClickStartOcrButton(selectedFile);
     setSelectedFile(null);
     fileInputRef.current.value = "";
   };
@@ -81,7 +81,7 @@ const DocumentToolbar = ({
         <button
           className="w-fit rounded-md bg-indigo-500 p-2 text-white enabled:cursor-pointer enabled:hover:bg-indigo-600 disabled:cursor-not-allowed disabled:bg-gray-400"
           disabled={!selectedFile}
-          onClick={onClickAnalyzeButton}
+          onClick={onClickStartOcrButton}
         >
           OCR実行
         </button>

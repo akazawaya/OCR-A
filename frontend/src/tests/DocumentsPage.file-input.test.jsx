@@ -7,10 +7,10 @@ import "@testing-library/jest-dom/vitest";
 
 import { renderDocumentsPage } from "./DocumentsPage.test-utils";
 
-const { mockGetCollection, mockAnalyzeDocument, mockDeleteCollectionItem } =
+const { mockGetCollection, mockStartOcrDocument, mockDeleteCollectionItem } =
   vi.hoisted(() => ({
     mockGetCollection: vi.fn(),
-    mockAnalyzeDocument: vi.fn(),
+    mockStartOcrDocument: vi.fn(),
     mockDeleteCollectionItem: vi.fn(),
   }));
 
@@ -25,7 +25,7 @@ vi.mock("../api/clients/collectionClient", () => ({
 }));
 
 vi.mock("../api/clients/mutationClient", () => ({
-  analyzeDocument: mockAnalyzeDocument,
+  startOcrDocument: mockStartOcrDocument,
   deleteCollectionItem: mockDeleteCollectionItem,
 }));
 
@@ -36,7 +36,7 @@ beforeEach(() => {
 
 describe("DocumentsPage file input", () => {
   test("正常系:選択ファイルがOCR実行へ送信される", async () => {
-    mockAnalyzeDocument.mockResolvedValue({});
+    mockStartOcrDocument.mockResolvedValue({});
     const user = userEvent.setup();
     const { container } = renderDocumentsPage();
     const fileInput = container.querySelector("#document-file-input");
@@ -50,8 +50,8 @@ describe("DocumentsPage file input", () => {
 
     await user.click(screen.getByRole("button", { name: "OCR実行" }));
 
-    await waitFor(() => expect(mockAnalyzeDocument).toHaveBeenCalledTimes(1));
-    const [{ formData }] = mockAnalyzeDocument.mock.calls[0];
+    await waitFor(() => expect(mockStartOcrDocument).toHaveBeenCalledTimes(1));
+    const [{ formData }] = mockStartOcrDocument.mock.calls[0];
     expect(formData.get("file")).toBeInstanceOf(File);
     expect(formData.get("file").name).toBe("sample.jpg");
   });
@@ -59,7 +59,7 @@ describe("DocumentsPage file input", () => {
   test("異常系:送信失敗時にエラーをアラート表示する", async () => {
     const alertSpy = vi.fn();
     vi.stubGlobal("alert", alertSpy);
-    mockAnalyzeDocument.mockRejectedValue(new Error("dummy"));
+    mockStartOcrDocument.mockRejectedValue(new Error("dummy"));
 
     const user = userEvent.setup();
     const { container } = renderDocumentsPage();

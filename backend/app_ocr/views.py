@@ -34,7 +34,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = DocumentFilterSet
 
-    @action(detail=False, methods=["post"])
+    @action(detail=False, methods=["post"], url_path="ocr")
     def start_ocr(self, request):
         file = request.FILES.get("file")
         upload_serializer = DocumentUploadSerializer(data={"file": file})

@@ -3,14 +3,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import {
-  analyzeDocumentAccessSpec,
+  documentOcrAccessSpec,
   documentSpec,
   routePaths,
   WS_BASE_URL,
 } from "../appConfig";
 import { getCollection } from "../api/clients/collectionClient";
 import {
-  analyzeDocument,
+  startOcrDocument,
   deleteCollectionItem,
 } from "../api/clients/mutationClient";
 import { getUploadErrorMessage } from "../logic/upload/getUploadErrorMessage";
@@ -26,7 +26,7 @@ const DocumentsPage = () => {
   const { search: baseQueryString } = useLocation();
   const queryClient = useQueryClient();
   const { collectionUrl } = documentSpec;
-  const { analyzeUrl } = analyzeDocumentAccessSpec;
+  const { startOcrUrl } = documentOcrAccessSpec;
   const {
     searchQuery: draftSearchQuery,
     updateSearchQuery,
@@ -112,20 +112,20 @@ const DocumentsPage = () => {
     [deleteRowMutation],
   );
 
-  const { mutate: analyzeMutation } = useMutation({
-    mutationFn: ({ formData }) => analyzeDocument({ analyzeUrl, formData }),
+  const { mutate: startOcrMutation } = useMutation({
+    mutationFn: ({ formData }) => startOcrDocument({ startOcrUrl, formData }),
     onError: (error) => {
       window.alert(getUploadErrorMessage(error));
     },
   });
 
-  const analyzeData = useCallback(
+  const startOcr = useCallback(
     (file) => {
       const formData = new FormData();
       formData.append("file", file);
-      analyzeMutation({ formData });
+      startOcrMutation({ formData });
     },
-    [analyzeMutation],
+    [startOcrMutation],
   );
 
   const documentTableColumns = documentSpec.ui.table.map(({ key, label }) => ({
@@ -149,7 +149,7 @@ const DocumentsPage = () => {
           onClickSearchButton: applySearch,
           onChangeSearchInput: updateSearchQuery,
           onClickResetSearchButton: clearSearch,
-          onClickAnalyzeButton: analyzeData,
+          onClickStartOcrButton: startOcr,
         }}
       />
       <DocumentTable
