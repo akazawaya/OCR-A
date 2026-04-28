@@ -113,8 +113,8 @@ const ViewerPage = () => {
   });
 
   const { mutate: patchWordContentById } = useMutation({
-    mutationFn: async (contentDraftById) => {
-      const snapshot = { ...(contentDraftById ?? {}) };
+    mutationFn: async (wordPatchInputs) => {
+      const snapshot = { ...(wordPatchInputs ?? {}) };
       const entries = Object.entries(snapshot);
       for (const [wordId, content] of entries) {
         await patchCollectionItem({
@@ -132,8 +132,8 @@ const ViewerPage = () => {
   });
 
   const { mutate: deleteWordById } = useMutation({
-    mutationFn: async (wordIds = []) => {
-      for (const id of wordIds) {
+    mutationFn: async (wordDeleteIds = []) => {
+      for (const id of wordDeleteIds) {
         await deleteCollectionItem({
           collectionUrl: wordCollectionUrl,
           id,

@@ -77,13 +77,13 @@ const buildSaveChangesFromHistory = (pastEntries = []) => {
     }
   });
 
-  const contentDraftById = Object.fromEntries(
+  const pendingPatchContentById = Object.fromEntries(
     [...patchStateById.entries()]
       .filter(([, { firstPrev, lastNext }]) => firstPrev !== lastNext)
       .map(([wordId, { lastNext }]) => [wordId, lastNext]),
   );
 
-  return { pendingPostWordMap, contentDraftById, pendingDeleteIdSet };
+  return { pendingPostWordMap, pendingPatchContentById, pendingDeleteIdSet };
 };
 
 export const useViewerEditState = ({
@@ -104,10 +104,11 @@ export const useViewerEditState = ({
     historyReducer,
     initialHistoryState,
   );
-  const { pendingPostWordMap, pendingDeleteIdSet, contentDraftById } = useMemo(
-    () => buildSaveChangesFromHistory(historyState.past),
-    [historyState.past],
-  );
+  const { pendingPostWordMap, pendingDeleteIdSet, pendingPatchContentById } =
+    useMemo(
+      () => buildSaveChangesFromHistory(historyState.past),
+      [historyState.past],
+    );
 
   const queryClient = useQueryClient();
 
@@ -255,7 +256,7 @@ export const useViewerEditState = ({
     const deleteIdSet = new Set([...pendingDeleteIdSet].map(String));
 
     const patchPayload = Object.fromEntries(
-      Object.entries(contentDraftById).filter(([id]) => {
+      Object.entries(pendingPatchContentById).filter(([id]) => {
         return !isPreviewId(id) && !deleteIdSet.has(String(id));
       }),
     );
