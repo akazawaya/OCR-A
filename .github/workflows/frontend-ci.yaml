@@ -26,7 +26,7 @@ jobs:
         run: docker compose build frontend
 
       - name: Run vitest
-        run: docker compose run --rm frontend npx vitest run -q
+        run: docker compose run --rm frontend npx vitest run
 
       - name: Stop containers
         if: always()
