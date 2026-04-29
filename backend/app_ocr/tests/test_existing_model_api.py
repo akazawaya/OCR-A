@@ -64,43 +64,41 @@ def test_delete_document_cascades_pages_and_words(api_client, ocr_fixture_data):
     assert not Word.objects.filter(id=word.id).exists()
 
 
-# 以下はedit時のwordに対するAPIテスト
-def test_create_word(api_client, ocr_fixture_data):
-    _, page, _ = ocr_fixture_data
+class TestWordApi:
+    def test_create_sets_page_and_word_content(self, api_client, ocr_fixture_data):
+        _, page, _ = ocr_fixture_data
 
-    response = api_client.post(
-        reverse("word-list"),
-        data={
-            "page": page.id,
-            "bbox": [[0, 0], [10, 0], [10, 10], [0, 10]],
-            "direction": 1,
-            "content": "created",
-        },
-    )
+        response = api_client.post(
+            reverse("word-list"),
+            data={
+                "page": page.id,
+                "bbox": [[0, 0], [10, 0], [10, 10], [0, 10]],
+                "direction": 1,
+                "content": "created",
+            },
+        )
 
-    assert response.status_code == status.HTTP_201_CREATED
-    assert Word.objects.count() == 2
+        assert response.status_code == status.HTTP_201_CREATED
+        assert Word.objects.count() == 2
 
-    created_word = Word.objects.order_by("-id").first()
-    assert created_word.page_id == page.id
-    assert created_word.content == "created"
+        created_word = Word.objects.order_by("-id").first()
+        assert created_word.page_id == page.id
+        assert created_word.content == "created"
 
+    def test_patch_updates_word_content(self, api_client, ocr_fixture_data):
+        _, _, word = ocr_fixture_data
+        response = api_client.patch(
+            reverse("word-detail", args=[word.id]), data={"content": "next"}
+        )
+        assert response.status_code == status.HTTP_200_OK
 
-def test_patch_word(api_client, ocr_fixture_data):
-    _, _, word = ocr_fixture_data
-    response = api_client.patch(
-        reverse("word-detail", args=[word.id]), data={"content": "next"}
-    )
-    assert response.status_code == status.HTTP_200_OK
+        word.refresh_from_db()
+        assert word.content == "next"
 
-    word.refresh_from_db()
-    assert word.content == "next"
+    def test_delete_word(self, api_client, ocr_fixture_data):
+        _, _, word = ocr_fixture_data
 
+        response = api_client.delete(reverse("word-detail", args=[word.id]))
 
-def test_delete_word(api_client, ocr_fixture_data):
-    _, _, word = ocr_fixture_data
-
-    response = api_client.delete(reverse("word-detail", args=[word.id]))
-
-    assert response.status_code == status.HTTP_204_NO_CONTENT
-    assert not Word.objects.filter(id=word.id).exists()
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert not Word.objects.filter(id=word.id).exists()
