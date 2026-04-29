@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest.mock import call, patch
 
 import cv2
 import numpy as np
@@ -10,8 +11,13 @@ from rest_framework.test import APIClient
 
 from app_ocr.etc.tools import inspect_file, render_page
 from app_ocr.input_constraints import MAX_UPLOAD_FILE_SIZE
-from app_ocr.models import Document
+from app_ocr.models import Document, FileType, Page, State
 from app_ocr.serializers import DocumentUploadSerializer
+from app_ocr.tasks import (
+    dispatch_ocr_pages_task,
+    notify_document_state_changed,
+    ocr_page_task,
+)
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures"
 
@@ -236,3 +242,134 @@ def test_start_ocr_creates_document(
 
     assert response.status_code == status.HTTP_202_ACCEPTED
     assert document.id == created_document_id
+
+
+"""
+test_tasks
+test_tasks系のテスト
+1. notify_document_state_changed
+2. dispatch_ocr_pages_task
+3. ocr_page_task 成功系
+4. ocr_page_task 失敗系
+
+"""
+
+
+def test_notify_document_state_changed_sends_group_message():
+    with (
+        patch("app_ocr.tasks.get_channel_layer") as mock_get_channel_layer,
+        patch("app_ocr.tasks.async_to_sync") as mock_async_to_sync,
+    ):
+        mock_channel_layer = mock_get_channel_layer.return_value
+        mock_group_send = mock_async_to_sync.return_value
+
+        notify_document_state_changed(document_id=1, state=State.SUCCESS)
+
+    mock_async_to_sync.assert_called_once_with(mock_channel_layer.group_send)
+    mock_group_send.assert_called_once_with(
+        "broadcast",
+        {
+            "type": "document_state_changed",
+            "document_id": 1,
+            "state": State.SUCCESS,
+        },
+    )
+
+
+@pytest.mark.django_db
+def test_dispatch_ocr_pages_task_sets_processing_and_dispatches_each_page():
+    with (
+        patch("app_ocr.tasks.notify_document_state_changed") as mock_notify,
+        patch("app_ocr.tasks.ocr_page_task.delay") as mock_delay,
+    ):
+        doc = Document.objects.create(
+            file_name="sample.pdf",
+            file_type=FileType.PDF,
+            total_pages=3,
+        )
+
+        dispatch_ocr_pages_task(document_id=doc.id)
+
+    doc.refresh_from_db()
+
+    assert doc.state == State.PROCESSING
+    mock_notify.assert_called_once_with(
+        document_id=doc.id,
+        state=State.PROCESSING,
+    )
+    mock_delay.assert_has_calls(
+        [
+            call(doc.id, 1),
+            call(doc.id, 2),
+            call(doc.id, 3),
+        ]
+    )
+    assert mock_delay.call_count == 3
+
+
+@pytest.mark.django_db
+def test_ocr_page_task_marks_document_success_when_all_pages_finish():
+    with (
+        patch("app_ocr.tasks.run_ocr_for_page"),
+        patch("app_ocr.tasks.notify_document_state_changed") as mock_notify,
+    ):
+        doc = Document.objects.create(
+            file_name="sample.pdf",
+            file_type=FileType.PDF,
+            total_pages=2,
+        )
+        page1 = Page.objects.create(doc=doc, page_number=1)
+        page2 = Page.objects.create(doc=doc, page_number=2)
+
+        ocr_page_task(document_id=doc.id, page_number=page1.page_number)
+
+        doc.refresh_from_db()
+        page1.refresh_from_db()
+        page2.refresh_from_db()
+
+        assert page1.state == State.SUCCESS
+        assert page2.state != State.SUCCESS
+        assert doc.state != State.SUCCESS
+        mock_notify.assert_not_called()
+
+        ocr_page_task(document_id=doc.id, page_number=page2.page_number)
+
+    doc.refresh_from_db()
+    page2.refresh_from_db()
+
+    assert page2.state == State.SUCCESS
+    assert doc.state == State.SUCCESS
+    mock_notify.assert_called_once_with(
+        document_id=doc.id,
+        state=State.SUCCESS,
+    )
+
+
+@pytest.mark.django_db
+def test_ocr_page_task_marks_failed_when_run_ocr_raises():
+    with (
+        patch(
+            "app_ocr.tasks.run_ocr_for_page",
+            side_effect=RuntimeError("ocr failed"),
+        ),
+        patch("app_ocr.tasks.notify_document_state_changed") as mock_notify,
+    ):
+        doc = Document.objects.create(
+            file_name="sample.pdf",
+            file_type=FileType.PDF,
+            total_pages=1,
+        )
+        page = Page.objects.create(doc=doc, page_number=1)
+
+        with pytest.raises(RuntimeError):
+            ocr_page_task(document_id=doc.id, page_number=page.page_number)
+
+    doc.refresh_from_db()
+    page.refresh_from_db()
+
+    assert page.state == State.FAILED
+    assert doc.state == State.FAILED
+    mock_notify.assert_called_once_with(
+        document_id=doc.id,
+        state=State.FAILED,
+    )
