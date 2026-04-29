@@ -10,14 +10,15 @@ class OcrProgressConsumer(WebsocketConsumer):
         self.group_name = "broadcast"
         async_to_sync(self.channel_layer.group_add)(self.group_name, self.channel_name)
 
-    # close_codeが未使用だが、disconnectはChannels側からdisconnect(self, close_code)の形で呼ばれるので必須
+    # close_codeが未使用だが、
+    # disconnectはChannels側からdisconnect(self, close_code)の形で呼ばれるので必須
     def disconnect(self, close_code):
         async_to_sync(self.channel_layer.group_discard)(
             self.group_name, self.channel_name
         )
 
-    # worker: {"type": "document_state_changed", "document_id": 1, "state": "SUCCESS"}　のようなpayloadを送信
-    # ※現状、このイベントは再fetchのトリガーとしてのみ使っており、payloadの内容自体は利用していない。
+    # {"type": "foo", "document_id": 1, "state": "SUCCESS"}　のようなpayloadを送信
+    # ※現状、このイベントはトリガーとしてのみ使っており、payloadの内容自体は未使用
     def document_state_changed(self, event):
         payload = {
             "type": "document_state_changed",
