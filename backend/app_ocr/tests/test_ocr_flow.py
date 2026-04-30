@@ -1,5 +1,6 @@
+import json
 from pathlib import Path
-from unittest.mock import call, patch
+from unittest.mock import Mock, call, patch
 
 import cv2
 import numpy as np
@@ -9,6 +10,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from app_ocr.consumers import OcrProgressConsumer
 from app_ocr.etc.tools import inspect_file, render_page
 from app_ocr.input_constraints import MAX_UPLOAD_FILE_SIZE
 from app_ocr.models import Document, FileType, Page, State
@@ -329,3 +331,49 @@ class TestTasks:
             document_id=doc.id,
             state=State.FAILED,
         )
+
+
+class TestConsumer:
+    def test_connect_accepts_and_joins_broadcast_group(self):
+        consumer = OcrProgressConsumer()
+        consumer.accept = Mock()
+        consumer.channel_layer = Mock()
+        consumer.channel_name = "test-channel"
+
+        with patch("app_ocr.consumers.async_to_sync") as mock_async_to_sync:
+            mock_group_add = mock_async_to_sync.return_value
+            consumer.connect()
+
+        consumer.accept.assert_called_once()
+        assert consumer.group_name == "broadcast"
+        mock_async_to_sync.assert_called_once_with(consumer.channel_layer.group_add)
+        mock_group_add.assert_called_once_with("broadcast", "test-channel")
+
+    def test_disconnect_leaves_broadcast_group(self):
+        consumer = OcrProgressConsumer()
+        consumer.group_name = "broadcast"
+        consumer.channel_layer = Mock()
+        consumer.channel_name = "test-channel"
+
+        with patch("app_ocr.consumers.async_to_sync") as mock_async_to_sync:
+            mock_group_discard = mock_async_to_sync.return_value
+            consumer.disconnect(close_code=1000)
+
+        mock_async_to_sync.assert_called_once_with(consumer.channel_layer.group_discard)
+        mock_group_discard.assert_called_once_with("broadcast", "test-channel")
+
+    # payloadの中身は暫定かつ未使用のため、そこまで深掘りしない
+    def test_document_state_changed_sends_websocket_message(self):
+        consumer = OcrProgressConsumer()
+        consumer.send = Mock()
+        consumer.document_state_changed(
+            {
+                "document_id": 1,
+                "state": "SUCCESS",
+            }
+        )
+
+        consumer.send.assert_called_once()
+        sent_payload = json.loads(consumer.send.call_args.kwargs["text_data"])
+
+        assert sent_payload["type"] == "document_state_changed"
