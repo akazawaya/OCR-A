@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 
-import { buildPrintPageStyle, selectPrintTargetPage } from "./printUtils";
-
 export const usePrint = ({
   pages = [],
   currentPage,
@@ -20,14 +18,23 @@ export const usePrint = ({
   }, [printCycle]);
 
   const printTargetPage = useMemo(
-    () => selectPrintTargetPage(pages, currentPage),
+    () =>
+      pages.find((p) => Number(p.page_number) === Number(currentPage)) ??
+      pages[0],
     [pages, currentPage],
   );
 
-  const printPageStyle = useMemo(
-    () => buildPrintPageStyle(printTargetPage),
-    [printTargetPage],
-  );
+  const printPageStyle = useMemo(() => {
+    if (!printTargetPage) return null;
+    const width = Number(printTargetPage.width_px);
+    const height = Number(printTargetPage.height_px);
+    return `
+    @page {
+      size: ${width}px ${height}px;
+      margin: 0;
+    }
+  `;
+  }, [printTargetPage]);
 
   const openPrintDialog = useReactToPrint({
     contentRef: printRef,
