@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import Mock, call, patch
 
 import cv2
@@ -12,9 +13,11 @@ from rest_framework.test import APIClient
 
 from app_ocr.consumers import OcrProgressConsumer
 from app_ocr.etc.tools import inspect_file, render_page
+from app_ocr.etc.yomitoku_adapter import get_engine, init_engine, yomitoku_ocr
 from app_ocr.input_constraints import MAX_UPLOAD_FILE_SIZE
-from app_ocr.models import Document, FileType, Page, State
+from app_ocr.models import Document, FileType, Page, State, Word
 from app_ocr.serializers import DocumentUploadSerializer
+from app_ocr.service.ocr import run_ocr_for_page
 from app_ocr.tasks import (
     dispatch_ocr_pages_task,
     notify_document_state_changed,
@@ -377,3 +380,100 @@ class TestConsumer:
         sent_payload = json.loads(consumer.send.call_args.kwargs["text_data"])
 
         assert sent_payload["type"] == "document_state_changed"
+
+
+@pytest.mark.django_db
+def test_run_ocr_for_page_creates_page_and_words_from_ocr_result():
+    with (
+        patch("app_ocr.service.ocr.get_engine") as mock_get_engine,
+        patch("app_ocr.service.ocr.yomitoku_ocr") as mock_yomitoku_ocr,
+    ):
+        mock_ocr = object()
+        mock_get_engine.return_value = mock_ocr
+        mock_yomitoku_ocr.return_value = [
+            {
+                "points": [[0, 0], [10, 0], [10, 10], [0, 10]],
+                "content": "test",
+                "direction": "horizontal",
+                "rec_score": 0.9,
+                "det_score": 0.8,
+            }
+        ]
+
+        file = make_uploaded_file_from_fixture("table.jpg", "image/jpeg")
+        doc = Document.objects.create(
+            file=file,
+            file_name="table.jpg",
+            file_type=FileType.JPG,
+            total_pages=1,
+        )
+
+        result = run_ocr_for_page(document_id=doc.id, page_number=1)
+
+    page = Page.objects.get(doc=doc, page_number=1)
+    word = Word.objects.get(page=page)
+
+    assert result["doc_id"] == doc.id
+    assert result["page_number"] == 1
+    assert result["page_id"] == page.id
+    assert result["word_count"] == 1
+    assert word.content == "test"
+    assert word.rec_score == 0.9
+    assert word.det_score == 0.8
+
+    mock_yomitoku_ocr.assert_called_once_with(
+        img_bytes=page.image.read(),
+        ocr_instance=mock_ocr,
+    )
+
+
+class TestYomitokuAdapter:
+    def test_init_engine_creates_ocr_with_auto_device(self):
+        with patch("app_ocr.etc.yomitoku_adapter.OCR") as mock_ocr:
+            init_engine()
+        mock_ocr.assert_called_once_with(visualize=False, device="auto")
+
+    def test_get_engine_uses_cached_engine(self):
+        get_engine.cache_clear()
+        with patch("app_ocr.etc.yomitoku_adapter.init_engine") as mock_init_engine:
+            mock_init_engine.return_value = object()
+
+            first = get_engine()
+            second = get_engine()
+
+        assert first is second
+        mock_init_engine.assert_called_once()
+
+        get_engine.cache_clear()
+
+    def test_yomitoku_ocr_returns_word_dicts(self):
+        file = make_uploaded_file_from_fixture("table.jpg", "image/jpeg")
+        img_bytes = file.read()
+        word = SimpleNamespace(
+            points=[[0, 0], [10, 0], [10, 10], [0, 10]],
+            content="test",
+            direction="horizontal",
+            det_score=0.8,
+            rec_score=0.9,
+        )
+        ocr_instance = Mock(
+            return_value=(
+                SimpleNamespace(words=[word]),
+                None,
+            )
+        )
+        result = yomitoku_ocr(img_bytes=img_bytes, ocr_instance=ocr_instance)
+        assert result == [
+            {
+                "points": word.points,
+                "content": "test",
+                "direction": "horizontal",
+                "det_score": 0.8,
+                "rec_score": 0.9,
+            }
+        ]
+        ocr_instance.assert_called_once()
+
+    def test_yomitoku_ocr_rejects_invalid_image_bytes(self):
+        with pytest.raises(ValueError, match="failed to read"):
+            yomitoku_ocr(img_bytes=b"invalid", ocr_instance=Mock())
