@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { beforeEach, describe, test, expect, vi } from "vitest";
+import { beforeEach, describe, test, expect, vi, afterEach } from "vitest";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
@@ -11,6 +11,7 @@ import {
   setupDefaultViewerMocks,
   setupResizeObserverMock,
 } from "./ViewerPage.test-utils";
+import { setupCanvasTextMeasureMock } from "./mockCanvasTextMeasure";
 
 const {
   mockUsePrint,
@@ -59,11 +60,18 @@ Object.defineProperty(HTMLElement.prototype, "clientHeight", {
   },
 });
 
+let getContextSpy;
+
 beforeEach(() => {
   setupDefaultViewerMocks({
     mockUsePrint,
     mockGetCollection,
   });
+  getContextSpy = setupCanvasTextMeasureMock();
+});
+
+afterEach(() => {
+  getContextSpy?.mockRestore();
 });
 
 describe("ViewerPage", () => {

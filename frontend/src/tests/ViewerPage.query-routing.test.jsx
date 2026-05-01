@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
@@ -13,6 +13,7 @@ import {
   queryRoutingMockPages,
   queryRoutingMockWords,
 } from "./ViewerPage.test-utils";
+import { setupCanvasTextMeasureMock } from "./mockCanvasTextMeasure";
 
 const {
   mockUsePrint,
@@ -70,7 +71,9 @@ Object.defineProperty(HTMLElement.prototype, "clientHeight", {
   },
 });
 
+let getContextSpy;
 beforeEach(() => {
+  getContextSpy = setupCanvasTextMeasureMock();
   globalThis.ResizeObserver = MockResizeObserver;
 
   mockUsePrint.mockReturnValue({
@@ -107,6 +110,10 @@ beforeEach(() => {
 
     return Promise.resolve([]);
   });
+});
+
+afterEach(() => {
+  getContextSpy?.mockRestore();
 });
 
 const renderViewerPage = (initialEntry) => {
