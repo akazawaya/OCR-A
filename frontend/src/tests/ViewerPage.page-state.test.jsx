@@ -19,12 +19,14 @@ const {
   mockPostCollectionItem,
   mockDeleteCollectionItem,
   mockPatchCollectionItem,
+  mockOpenPrintDialog,
 } = vi.hoisted(() => ({
   mockUsePrint: vi.fn(),
   mockGetCollection: vi.fn(),
   mockPostCollectionItem: vi.fn(),
   mockDeleteCollectionItem: vi.fn(),
   mockPatchCollectionItem: vi.fn(),
+  mockOpenPrintDialog: vi.fn(),
 }));
 
 HTMLElement.prototype.scrollIntoView = vi.fn();
@@ -66,6 +68,7 @@ beforeEach(() => {
   setupDefaultViewerMocks({
     mockUsePrint,
     mockGetCollection,
+    mockOpenPrintDialog,
   });
   getContextSpy = setupCanvasTextMeasureMock();
 });
@@ -253,5 +256,19 @@ describe("ViewerPage", () => {
     await user.click(zoomUpButton);
     await user.click(zoomUpButton);
     expect(zoomUpButton).toBeDisabled();
+  });
+
+  test("編集時は出力ボタンが表示されない", async () => {
+    renderViewerPage();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "編集" }));
+    expect(screen.queryByRole("button", { name: "出力" })).toBeNull();
+  });
+
+  test("非編集時は出力ボタンを押すとopenPrintDialogが呼ばれる", async () => {
+    renderViewerPage();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "出力" }));
+    expect(mockOpenPrintDialog).toHaveBeenCalledTimes(1);
   });
 });

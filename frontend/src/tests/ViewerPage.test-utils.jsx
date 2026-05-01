@@ -116,13 +116,14 @@ export const renderViewerPage = () => {
 export const setupDefaultViewerMocks = ({
   mockUsePrint,
   mockGetCollection,
+  mockOpenPrintDialog = vi.fn(),
   pages = defaultMockPages,
   words = defaultMockWords,
 } = {}) => {
   mockUsePrint.mockReturnValue({
     printRef: { current: null },
     isPrintMode: false,
-    openPrintDialog: vi.fn(),
+    openPrintDialog: mockOpenPrintDialog,
   });
 
   mockGetCollection.mockImplementation(({ collectionUrl }) => {
