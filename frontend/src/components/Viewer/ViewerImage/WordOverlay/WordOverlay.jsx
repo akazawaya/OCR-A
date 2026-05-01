@@ -77,6 +77,7 @@ const WordOverlay = ({
         )}
         {pendingPostsOnPage.map((p) => (
           <polygon
+            key={p.id}
             className="fill-green-500/15 stroke-green-500 stroke-4"
             points={bboxToPolygonPoints(p.bbox)}
           />
