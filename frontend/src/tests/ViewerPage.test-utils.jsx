@@ -121,7 +121,7 @@ export const setupDefaultViewerMocks = ({
   words = defaultMockWords,
 } = {}) => {
   mockUsePrint.mockReturnValue({
-    printRef: { current: null },
+    contentRef: { current: null },
     isPrintMode: false,
     openPrintDialog: mockOpenPrintDialog,
   });

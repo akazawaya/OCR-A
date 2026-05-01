@@ -90,7 +90,10 @@ const ViewerPage = () => {
 
   const pageState = useViewerPageState({ maxPage: pages.length });
   const selection = useSelection();
-  const { printRef, isPrintMode, openPrintDialog } = usePrint({
+  const viewerRootRef = useRef(null);
+  const contentRef = useRef(null);
+  const { isPrintMode, openPrintDialog } = usePrint({
+    contentRef,
     pages,
     currentPage: pageState.page,
     documentTitle: "viewer-export",
@@ -159,8 +162,6 @@ const ViewerPage = () => {
     minZoom: pageState.MIN_ZOOM,
     maxZoom: pageState.MAX_ZOOM,
   });
-
-  const viewerRootRef = useRef(null);
   return (
     <>
       <ViewerEditHotkeys
@@ -211,7 +212,7 @@ const ViewerPage = () => {
               pages,
               isPrintMode,
               page: pageState.page,
-              printRef,
+              contentRef,
               rotate: pageState.rotate,
               zoom: pageState.zoom,
               selectedId: selection.selectedId,

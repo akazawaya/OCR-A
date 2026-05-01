@@ -77,7 +77,7 @@ beforeEach(() => {
   globalThis.ResizeObserver = MockResizeObserver;
 
   mockUsePrint.mockReturnValue({
-    printRef: { current: null },
+    contentRef: { current: null },
     isPrintMode: false,
     openPrintDialog: vi.fn(),
   });

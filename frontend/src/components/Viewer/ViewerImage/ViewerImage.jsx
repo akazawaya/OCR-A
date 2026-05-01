@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useRef } from "react";
 
 import { useScroll } from "../../../logic/layout/useScroll";
 import { useClientSizePx } from "../../../logic/layout/useClientSizePx";
@@ -7,8 +7,8 @@ import WordOverlay from "./WordOverlay/WordOverlay";
 
 const ViewerImage = ({
   data: {
+    contentRef,
     pages = [],
-    printRef,
     isPrintMode = false,
     page,
     zoom,
@@ -19,15 +19,8 @@ const ViewerImage = ({
   wordOverlayData,
   wordOverlayEvents,
 }) => {
-  const rootRef = useRef(null);
-  const setRefs = useCallback(
-    (node) => {
-      rootRef.current = node;
-      if (typeof printRef === "function") printRef(node);
-      else if (printRef) printRef.current = node;
-    },
-    [printRef],
-  );
+  const localRef = useRef(null);
+  const rootRef = contentRef ?? localRef;
   // page変更に追随してスクロールする
   useScroll({ rootRef, targetAttrName: "data-page", targetAttrValue: page });
   const { clientSizePx } = useClientSizePx(rootRef);
@@ -42,7 +35,7 @@ const ViewerImage = ({
   });
 
   return (
-    <div ref={setRefs} data-print-root={isPrintMode ? "true" : undefined}>
+    <div ref={rootRef} data-print-root={isPrintMode ? "true" : undefined}>
       {pages.map((p) => {
         const imageW = Number(p.width_px) || 0;
         const imageH = Number(p.height_px) || 0;

@@ -2,11 +2,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 
 export const usePrint = ({
+  contentRef,
   pages = [],
   currentPage,
   documentTitle = "viewer-export",
 } = {}) => {
-  const printRef = useRef(null);
   const printPromiseResolveRef = useRef(null);
   const [isPrintMode, setIsPrintMode] = useState(false);
   const [printCycle, setPrintCycle] = useState(0);
@@ -37,7 +37,7 @@ export const usePrint = ({
   }, [printTargetPage]);
 
   const openPrintDialog = useReactToPrint({
-    contentRef: printRef,
+    contentRef,
     documentTitle,
     pageStyle: printPageStyle,
     onBeforePrint: () =>
@@ -56,5 +56,5 @@ export const usePrint = ({
     },
   });
 
-  return { printRef, isPrintMode, openPrintDialog };
+  return { isPrintMode, openPrintDialog };
 };
