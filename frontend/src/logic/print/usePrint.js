@@ -9,13 +9,12 @@ export const usePrint = ({
 } = {}) => {
   const printPromiseResolveRef = useRef(null);
   const [isPrintMode, setIsPrintMode] = useState(false);
-  const [printCycle, setPrintCycle] = useState(0);
 
   useEffect(() => {
-    if (printCycle > 0 && printPromiseResolveRef.current) {
+    if (isPrintMode && printPromiseResolveRef.current) {
       printPromiseResolveRef.current();
     }
-  }, [printCycle]);
+  }, [isPrintMode]);
 
   const printTargetPage = useMemo(
     () =>
@@ -44,7 +43,6 @@ export const usePrint = ({
       new Promise((resolve) => {
         printPromiseResolveRef.current = resolve;
         setIsPrintMode(true);
-        setPrintCycle((cycle) => cycle + 1);
       }),
     onAfterPrint: () => {
       printPromiseResolveRef.current = null;
