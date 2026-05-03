@@ -87,4 +87,20 @@ describe("usePrint", () => {
     });
     expect(result.current.isPrintMode).toBe(false);
   });
+
+  test("printPageStyleで対象ページがない時は参照ガードとしてnullを返す", async () => {
+    renderHook(() =>
+      usePrint({
+        contentRef: { current: null },
+        currentPage: 99,
+        pages: [
+          { page_number: 1, width_px: 100, height_px: 200 },
+          { page_number: 2, width_px: 300, height_px: 400 },
+        ],
+      }),
+    );
+
+    const options = mockUseReactToPrint.mock.calls[0][0];
+    expect(options.pageStyle).toBeNull();
+  });
 });
