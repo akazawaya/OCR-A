@@ -13,7 +13,6 @@ import {
   startOcrDocument,
   deleteCollectionItem,
 } from "../api/clients/mutationClient";
-import { getUploadErrorMessage } from "../logic/upload/getUploadErrorMessage";
 import { buildCollectionQueryString } from "../logic/urlQuery/buildCollectionQueryString";
 import { defaultSearchQuery } from "../logic/urlQuery/searchQueryUtils";
 import { toggleSortQuery } from "../logic/urlQuery/sortQueryUtils";
@@ -115,7 +114,7 @@ const DocumentsPage = () => {
   const { mutate: startOcrMutation } = useMutation({
     mutationFn: ({ formData }) => startOcrDocument({ startOcrUrl, formData }),
     onError: (error) => {
-      window.alert(getUploadErrorMessage(error));
+      window.alert(error.data.file[0]);
     },
   });
 
