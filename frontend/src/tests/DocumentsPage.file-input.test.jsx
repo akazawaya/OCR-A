@@ -59,7 +59,10 @@ describe("DocumentsPage file input", () => {
   test("異常系:送信失敗時にエラーをアラート表示する", async () => {
     const alertSpy = vi.fn();
     vi.stubGlobal("alert", alertSpy);
-    mockStartOcrDocument.mockRejectedValue(new Error("dummy"));
+    mockStartOcrDocument.mockRejectedValue({
+      data: { file: ["拡張子が非対応です。"] },
+      message: "HTTP Error:400",
+    });
 
     const user = userEvent.setup();
     const { container } = renderDocumentsPage();
@@ -70,6 +73,8 @@ describe("DocumentsPage file input", () => {
     await user.upload(fileInput, file);
     await user.click(screen.getByRole("button", { name: "OCR実行" }));
 
-    await waitFor(() => expect(alertSpy).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(alertSpy).toHaveBeenCalledWith("拡張子が非対応です。"),
+    );
   });
 });
