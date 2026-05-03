@@ -95,7 +95,7 @@ describe("DocumentsPage query", () => {
     expect(screen.queryByRole("cell", { name: "gamma-alpha.pdf" })).toBeNull();
   });
 
-  test(": 検索後にリセットすると入力値が初期値に戻る", async () => {
+  test("searchQuery:検索後にリセットすると入力値が初期値に戻る", async () => {
     renderDocumentsPage();
 
     const user = userEvent.setup();
@@ -150,7 +150,7 @@ describe("DocumentsPage query", () => {
     ]);
   });
 
-  test("sortQuery: 同じ列をクリックすると昇順→降順→解除となる", async () => {
+  test("sortQuery:同じ列をクリックすると昇順→降順→解除となる", async () => {
     renderDocumentsPage({
       initialEntry: "/documents?ordering=created",
     });
@@ -178,7 +178,7 @@ describe("DocumentsPage query", () => {
     );
   });
 
-  test("routingQuery: 行クリックでviewerへページ遷移する", async () => {
+  test("routingQuery:行クリックでviewerへページ遷移する", async () => {
     renderDocumentsPage();
 
     const targetCell = await screen.findByRole("cell", {
