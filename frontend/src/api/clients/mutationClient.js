@@ -4,7 +4,7 @@ export const postCollectionItem = async ({ collectionUrl, body }) => {
   const { res, data } = await fetchBackend(collectionUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body ?? {}),
+    body: JSON.stringify(body),
     throwOnError: true,
   });
   return { res, data };
@@ -15,7 +15,7 @@ export const patchCollectionItem = async ({ collectionUrl, id, body }) => {
   const { res, data } = await fetchBackend(url, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body ?? {}),
+    body: JSON.stringify(body),
     throwOnError: true,
   });
   return { res, data };
