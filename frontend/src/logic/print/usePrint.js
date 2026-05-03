@@ -17,9 +17,7 @@ export const usePrint = ({
   }, [isPrintMode]);
 
   const printTargetPage = useMemo(
-    () =>
-      pages.find((p) => Number(p.page_number) === Number(currentPage)) ??
-      pages[0],
+    () => pages.find((p) => Number(p.page_number) === Number(currentPage)),
     [pages, currentPage],
   );
 
