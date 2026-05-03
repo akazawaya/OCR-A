@@ -11,14 +11,8 @@ export const bboxToPolygonPoints = (bbox) => {
 };
 
 export const bboxToBounds = (bbox) => {
-  const xs = bbox.map(([x]) => {
-    const num = Number(x);
-    return Number.isFinite(num) ? num : 0;
-  });
-  const ys = bbox.map(([, y]) => {
-    const num = Number(y);
-    return Number.isFinite(num) ? num : 0;
-  });
+  const xs = bbox.map(([x]) => Number(x));
+  const ys = bbox.map(([, y]) => Number(y));
 
   return {
     xMin: Math.min(...xs),
