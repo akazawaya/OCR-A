@@ -16,13 +16,11 @@ import {
 import { setupCanvasTextMeasureMock } from "./mockCanvasTextMeasure";
 
 const {
-  mockUsePrint,
   mockGetCollection,
   mockPostCollectionItem,
   mockDeleteCollectionItem,
   mockPatchCollectionItem,
 } = vi.hoisted(() => ({
-  mockUsePrint: vi.fn(),
   mockGetCollection: vi.fn(),
   mockPostCollectionItem: vi.fn(),
   mockDeleteCollectionItem: vi.fn(),
@@ -42,10 +40,6 @@ class MockResizeObserver {
 
   disconnect() {}
 }
-
-vi.mock("../logic/print/usePrint", () => ({
-  usePrint: mockUsePrint,
-}));
 
 vi.mock("../api/clients/collectionClient", () => ({
   getCollection: mockGetCollection,
@@ -76,11 +70,6 @@ beforeEach(() => {
   getContextSpy = setupCanvasTextMeasureMock();
   globalThis.ResizeObserver = MockResizeObserver;
 
-  mockUsePrint.mockReturnValue({
-    contentRef: { current: null },
-    isPrintMode: false,
-    openPrintDialog: vi.fn(),
-  });
   mockPostCollectionItem.mockResolvedValue({});
   mockDeleteCollectionItem.mockResolvedValue({});
   mockPatchCollectionItem.mockResolvedValue({});

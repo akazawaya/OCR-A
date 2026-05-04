@@ -13,13 +13,11 @@ import {
 } from "./ViewerPage.test-utils";
 
 const {
-  mockUsePrint,
   mockGetCollection,
   mockPostCollectionItem,
   mockDeleteCollectionItem,
   mockPatchCollectionItem,
 } = vi.hoisted(() => ({
-  mockUsePrint: vi.fn(),
   mockGetCollection: vi.fn(),
   mockPostCollectionItem: vi.fn(),
   mockDeleteCollectionItem: vi.fn(),
@@ -27,10 +25,6 @@ const {
 }));
 
 Element.prototype.scrollIntoView = vi.fn();
-
-vi.mock("../logic/print/usePrint", () => ({
-  usePrint: mockUsePrint,
-}));
 
 vi.mock("../api/clients/collectionClient", () => ({
   getCollection: mockGetCollection,
@@ -47,7 +41,6 @@ setupResizeObserverMock();
 beforeEach(() => {
   vi.clearAllMocks();
   setupDefaultViewerMocks({
-    mockUsePrint,
     mockGetCollection,
     words: defaultMockWords,
   });
