@@ -13,23 +13,14 @@ import {
 } from "./ViewerPage.test-utils";
 import { setupCanvasTextMeasureMock } from "./mockCanvasTextMeasure";
 
-const {
-  mockUsePrint,
-  mockGetCollection,
-  mockPostCollectionItem,
-  mockDeleteCollectionItem,
-  mockPatchCollectionItem,
-  mockOpenPrintDialog,
-} = vi.hoisted(() => ({
-  mockUsePrint: vi.fn(),
-  mockGetCollection: vi.fn(),
-  mockPostCollectionItem: vi.fn(),
-  mockDeleteCollectionItem: vi.fn(),
-  mockPatchCollectionItem: vi.fn(),
-  mockOpenPrintDialog: vi.fn(),
-}));
+const { mockUsePrint, mockGetCollection, mockOpenPrintDialog } = vi.hoisted(
+  () => ({
+    mockUsePrint: vi.fn(),
+    mockGetCollection: vi.fn(),
+    mockOpenPrintDialog: vi.fn(),
+  }),
+);
 
-HTMLElement.prototype.scrollIntoView = vi.fn();
 Element.prototype.scrollIntoView = vi.fn();
 
 vi.mock("../logic/print/usePrint", () => ({
@@ -38,12 +29,6 @@ vi.mock("../logic/print/usePrint", () => ({
 
 vi.mock("../api/clients/collectionClient", () => ({
   getCollection: mockGetCollection,
-}));
-
-vi.mock("../api/clients/mutationClient", () => ({
-  postCollectionItem: mockPostCollectionItem,
-  deleteCollectionItem: mockDeleteCollectionItem,
-  patchCollectionItem: mockPatchCollectionItem,
 }));
 
 setupResizeObserverMock();

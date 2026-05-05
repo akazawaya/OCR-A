@@ -12,12 +12,10 @@ import {
   renderDocumentsPage,
 } from "./DocumentsPage.test-utils";
 
-const { mockGetCollection, mockStartOcrDocument, mockDeleteCollectionItem } =
-  vi.hoisted(() => ({
-    mockGetCollection: vi.fn(),
-    mockStartOcrDocument: vi.fn(),
-    mockDeleteCollectionItem: vi.fn(),
-  }));
+const { mockGetCollection, mockDeleteCollectionItem } = vi.hoisted(() => ({
+  mockGetCollection: vi.fn(),
+  mockDeleteCollectionItem: vi.fn(),
+}));
 
 class MockWebSocket {
   close() {}
@@ -30,12 +28,10 @@ vi.mock("../api/clients/collectionClient", () => ({
 }));
 
 vi.mock("../api/clients/mutationClient", () => ({
-  startOcrDocument: mockStartOcrDocument,
   deleteCollectionItem: mockDeleteCollectionItem,
 }));
 
 beforeEach(() => {
-  mockStartOcrDocument.mockResolvedValue({});
   mockDeleteCollectionItem.mockResolvedValue({});
 
   let documents = structuredClone(defaultMockDocuments);

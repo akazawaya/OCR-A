@@ -24,8 +24,6 @@ const {
   mockPatchCollectionItem: vi.fn(),
 }));
 
-Element.prototype.scrollIntoView = vi.fn();
-
 vi.mock("../api/clients/collectionClient", () => ({
   getCollection: mockGetCollection,
 }));

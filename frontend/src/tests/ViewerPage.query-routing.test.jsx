@@ -15,16 +15,8 @@ import {
 } from "./ViewerPage.test-utils";
 import { setupCanvasTextMeasureMock } from "./mockCanvasTextMeasure";
 
-const {
-  mockGetCollection,
-  mockPostCollectionItem,
-  mockDeleteCollectionItem,
-  mockPatchCollectionItem,
-} = vi.hoisted(() => ({
+const { mockGetCollection } = vi.hoisted(() => ({
   mockGetCollection: vi.fn(),
-  mockPostCollectionItem: vi.fn(),
-  mockDeleteCollectionItem: vi.fn(),
-  mockPatchCollectionItem: vi.fn(),
 }));
 
 class MockResizeObserver {
@@ -45,12 +37,6 @@ vi.mock("../api/clients/collectionClient", () => ({
   getCollection: mockGetCollection,
 }));
 
-vi.mock("../api/clients/mutationClient", () => ({
-  postCollectionItem: mockPostCollectionItem,
-  deleteCollectionItem: mockDeleteCollectionItem,
-  patchCollectionItem: mockPatchCollectionItem,
-}));
-
 Object.defineProperty(HTMLElement.prototype, "clientWidth", {
   configurable: true,
   get() {
@@ -69,10 +55,6 @@ let getContextSpy;
 beforeEach(() => {
   getContextSpy = setupCanvasTextMeasureMock();
   globalThis.ResizeObserver = MockResizeObserver;
-
-  mockPostCollectionItem.mockResolvedValue({});
-  mockDeleteCollectionItem.mockResolvedValue({});
-  mockPatchCollectionItem.mockResolvedValue({});
   mockGetCollection.mockImplementation(({ collectionUrl, queryString }) => {
     const params = new URLSearchParams(queryString || "");
 

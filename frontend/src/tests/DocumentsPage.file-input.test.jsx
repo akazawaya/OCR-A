@@ -7,12 +7,10 @@ import "@testing-library/jest-dom/vitest";
 
 import { renderDocumentsPage } from "./DocumentsPage.test-utils";
 
-const { mockGetCollection, mockStartOcrDocument, mockDeleteCollectionItem } =
-  vi.hoisted(() => ({
-    mockGetCollection: vi.fn(),
-    mockStartOcrDocument: vi.fn(),
-    mockDeleteCollectionItem: vi.fn(),
-  }));
+const { mockGetCollection, mockStartOcrDocument } = vi.hoisted(() => ({
+  mockGetCollection: vi.fn(),
+  mockStartOcrDocument: vi.fn(),
+}));
 
 class MockWebSocket {
   close() {}
@@ -26,12 +24,10 @@ vi.mock("../api/clients/collectionClient", () => ({
 
 vi.mock("../api/clients/mutationClient", () => ({
   startOcrDocument: mockStartOcrDocument,
-  deleteCollectionItem: mockDeleteCollectionItem,
 }));
 
 beforeEach(() => {
   mockGetCollection.mockResolvedValue([]);
-  mockDeleteCollectionItem.mockResolvedValue({});
 });
 
 describe("DocumentsPage file input", () => {

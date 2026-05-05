@@ -12,16 +12,8 @@ import {
 } from "./ViewerPage.test-utils";
 import { setupCanvasTextMeasureMock } from "./mockCanvasTextMeasure";
 
-const {
-  mockGetCollection,
-  mockPostCollectionItem,
-  mockDeleteCollectionItem,
-  mockPatchCollectionItem,
-} = vi.hoisted(() => ({
+const { mockGetCollection } = vi.hoisted(() => ({
   mockGetCollection: vi.fn(),
-  mockPostCollectionItem: vi.fn(),
-  mockDeleteCollectionItem: vi.fn(),
-  mockPatchCollectionItem: vi.fn(),
 }));
 
 const sortMockPage = {
@@ -34,12 +26,6 @@ const sortMockPage = {
 
 vi.mock("../api/clients/collectionClient", () => ({
   getCollection: mockGetCollection,
-}));
-
-vi.mock("../api/clients/mutationClient", () => ({
-  postCollectionItem: mockPostCollectionItem,
-  deleteCollectionItem: mockDeleteCollectionItem,
-  patchCollectionItem: mockPatchCollectionItem,
 }));
 
 setupResizeObserverMock();
@@ -62,9 +48,6 @@ let getContextSpy;
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockPostCollectionItem.mockResolvedValue({});
-  mockDeleteCollectionItem.mockResolvedValue({});
-  mockPatchCollectionItem.mockResolvedValue({});
   getContextSpy = setupCanvasTextMeasureMock();
 });
 

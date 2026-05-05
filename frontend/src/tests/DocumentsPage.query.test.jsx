@@ -12,12 +12,9 @@ import {
   renderDocumentsPage,
 } from "./DocumentsPage.test-utils";
 
-const { mockGetCollection, mockStartOcrDocument, mockDeleteCollectionItem } =
-  vi.hoisted(() => ({
-    mockGetCollection: vi.fn(),
-    mockStartOcrDocument: vi.fn(),
-    mockDeleteCollectionItem: vi.fn(),
-  }));
+const { mockGetCollection } = vi.hoisted(() => ({
+  mockGetCollection: vi.fn(),
+}));
 
 class MockWebSocket {
   close() {}
@@ -27,11 +24,6 @@ vi.stubGlobal("WebSocket", MockWebSocket);
 
 vi.mock("../api/clients/collectionClient", () => ({
   getCollection: mockGetCollection,
-}));
-
-vi.mock("../api/clients/mutationClient", () => ({
-  startOcrDocument: mockStartOcrDocument,
-  deleteCollectionItem: mockDeleteCollectionItem,
 }));
 
 const filterDocumentsBySearch = (documents, queryString) => {
@@ -66,8 +58,6 @@ const sortDocuments = (documents, queryString) => {
 };
 
 beforeEach(() => {
-  mockStartOcrDocument.mockResolvedValue({});
-  mockDeleteCollectionItem.mockResolvedValue({});
   mockGetCollection.mockImplementation(({ collectionUrl, queryString }) => {
     if (collectionUrl !== documentAccessSpec.collectionUrl) {
       return Promise.resolve([]);
