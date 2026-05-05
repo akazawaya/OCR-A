@@ -7,17 +7,13 @@ export const useSelection = () => {
   const [selectedBy, setSelectedBy] = useState(null); // コンポーネント間で相互にやり取りをする際の起点を示す
 
   const hover = useCallback((id) => {
-    const num = Number(id);
-    if (!Number.isFinite(num)) return;
-    setHoveredId(num);
+    setHoveredId(id);
   }, []);
 
   const clearHovered = useCallback(() => setHoveredId(null), []);
 
   const commitSelect = useCallback((id, by) => {
-    const num = Number(id);
-    if (!Number.isFinite(num)) return;
-    setSelectedId(num);
+    setSelectedId(id);
     setSelectedBy(by);
   }, []);
 
