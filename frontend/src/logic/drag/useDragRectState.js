@@ -45,14 +45,13 @@ export const useDragRectState = ({
 
   const onPointerDown = (event) => {
     const point = readPointFromPointerEvent(event, { imageW, imageH });
-    if (!point) return;
     setStartPoint(point);
     setCurrentPoint(point);
   };
 
   const onPointerMove = (event) => {
     const point = readPointFromPointerEvent(event, { imageW, imageH });
-    if (!point || !startPoint) return;
+    if (!startPoint) return;
     setCurrentPoint(point);
   };
 
@@ -61,16 +60,8 @@ export const useDragRectState = ({
   };
 
   const onPointerUp = (event) => {
-    if (!pageId) {
-      clearDragState();
-      return;
-    }
-    if (!onAddPendingPostByBbox) {
-      clearDragState();
-      return;
-    }
     const endPoint = readPointFromPointerEvent(event, { imageW, imageH });
-    if (!startPoint || !endPoint) {
+    if (!startPoint) {
       clearDragState();
       return;
     }
@@ -81,8 +72,7 @@ export const useDragRectState = ({
     if (rect.width <= 5 || rect.height <= 5) return;
 
     const bbox = rectToBbox(rect);
-    const safeWidth = rect.width === 0 ? 1 : rect.width;
-    const aspect = rect.height / safeWidth;
+    const aspect = rect.height / rect.width;
     const direction = aspect >= 2 ? 2 : 1;
 
     onAddPendingPostByBbox(pageId, bbox, direction);
