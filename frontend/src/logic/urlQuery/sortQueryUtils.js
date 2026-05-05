@@ -1,5 +1,5 @@
 export const toggleSortQuery = (sortQuery = {}, orderingField) => {
-  const orderingValue = sortQuery?.ordering ?? "";
+  const orderingValue = sortQuery?.ordering;
 
   if (orderingValue === orderingField) {
     return { ordering: `-${orderingField}` };

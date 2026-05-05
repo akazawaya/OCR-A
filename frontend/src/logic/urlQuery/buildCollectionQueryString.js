@@ -1,8 +1,6 @@
 import { defaultSearchQuery } from "./searchQueryUtils";
 
 const applyKeyValueQuery = (params, query = {}) => {
-  if (!query || typeof query !== "object") return;
-
   for (const [key, value] of Object.entries(query)) {
     if (value === null || value === undefined || value === "") {
       params.delete(key);
@@ -12,33 +10,37 @@ const applyKeyValueQuery = (params, query = {}) => {
   }
 };
 
-const normalizeSearchQuery = (searchQuery = {}) => ({
-  ...defaultSearchQuery,
-  ...searchQuery,
-  keyword: searchQuery?.keyword?.trim?.() ?? "",
-});
+const normalizeSearchQuery = (searchQuery = defaultSearchQuery) => {
+  const mergedSearchQuery = {
+    ...defaultSearchQuery,
+    ...searchQuery,
+  };
 
-const isEmptySearchQuery = (searchQuery = {}) =>
-  normalizeSearchQuery(searchQuery).keyword === "";
+  return {
+    ...mergedSearchQuery,
+    keyword: mergedSearchQuery.keyword.trim(),
+  };
+};
 
 export const buildCollectionQueryString = ({
   baseQueryString = "",
   routingQuery = {},
-  searchQuery = {},
+  searchQuery = defaultSearchQuery,
   sortQuery = {},
 } = {}) => {
-  const params = new URLSearchParams(baseQueryString || "");
+  const params = new URLSearchParams(baseQueryString);
 
   applyKeyValueQuery(params, routingQuery);
   applyKeyValueQuery(params, sortQuery);
 
-  if (isEmptySearchQuery(searchQuery)) {
+  const normalizedSearchQuery = normalizeSearchQuery(searchQuery);
+
+  if (normalizedSearchQuery.keyword === "") {
     params.delete("keyword");
     params.delete("field_name");
     params.delete("lookup_expr");
     params.delete("keyword_operator");
   } else {
-    const normalizedSearchQuery = normalizeSearchQuery(searchQuery);
     params.set("keyword", normalizedSearchQuery.keyword);
     params.set("field_name", normalizedSearchQuery.fieldName);
     params.set("lookup_expr", normalizedSearchQuery.lookupExpr);
