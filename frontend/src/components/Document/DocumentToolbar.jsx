@@ -22,8 +22,7 @@ const DocumentToolbar = ({
   };
 
   const findOptionLabel = (queryKey, value) =>
-    searchOptionDefs[queryKey].find((option) => option.value === value)
-      ?.label ?? "";
+    searchOptionDefs[queryKey].find((option) => option.value === value).label;
 
   const currentSearchSummary = draftSearchQuery.keyword
     ? `現在の検索条件: 「${draftSearchQuery.keyword}」 / ${findOptionLabel("fieldName", draftSearchQuery.fieldName)} / ${findOptionLabel("lookupExpr", draftSearchQuery.lookupExpr)} / ${findOptionLabel("keywordOperator", draftSearchQuery.keywordOperator)}`
