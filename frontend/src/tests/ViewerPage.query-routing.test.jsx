@@ -9,10 +9,7 @@ import "@testing-library/jest-dom/vitest";
 import ViewerPage from "../pages/ViewerPage";
 import { pageAccessSpec, wordAccessSpec } from "../appConfig";
 
-import {
-  queryRoutingMockPages,
-  queryRoutingMockWords,
-} from "./ViewerPage.test-utils";
+import { queryRoutingMockPages, queryRoutingMockWords } from "./msw/fixture";
 import { setupCanvasTextMeasureMock } from "./mockCanvasTextMeasure";
 
 const { mockGetCollection } = vi.hoisted(() => ({

@@ -7,10 +7,8 @@ import "@testing-library/jest-dom/vitest";
 
 import { documentAccessSpec } from "../appConfig";
 
-import {
-  defaultMockDocuments,
-  renderDocumentsPage,
-} from "./DocumentsPage.test-utils";
+import { defaultMockDocuments } from "./msw/fixture";
+import { renderDocumentsPage } from "./DocumentsPage.test-utils";
 
 const { mockGetCollection } = vi.hoisted(() => ({
   mockGetCollection: vi.fn(),

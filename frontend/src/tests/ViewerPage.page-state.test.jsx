@@ -5,8 +5,8 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
 
+import { defaultMockPages } from "./msw/fixture";
 import {
-  defaultMockPages,
   renderViewerPage,
   setupDefaultViewerMocks,
   setupResizeObserverMock,

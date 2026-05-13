@@ -4,11 +4,11 @@ import { beforeEach, describe, expect, test, vi, afterEach } from "vitest";
 import { screen, within } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 
+import { sortMockWords } from "./msw/fixture";
 import {
   renderViewerPage,
   setupDefaultViewerMocks,
   setupResizeObserverMock,
-  sortMockWords,
 } from "./ViewerPage.test-utils";
 import { setupCanvasTextMeasureMock } from "./mockCanvasTextMeasure";
 

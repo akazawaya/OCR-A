@@ -2,7 +2,7 @@ import { beforeAll, beforeEach, afterEach, afterAll, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 import { setupServer } from "msw/node";
 
-import { handlers } from "./handlers";
+import { handlers } from "./msw/handlers";
 
 const server = setupServer(...handlers);
 
