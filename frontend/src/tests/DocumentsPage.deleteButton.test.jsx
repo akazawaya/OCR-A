@@ -32,40 +32,9 @@ vi.mock("../api/clients/mutationClient", () => ({
 }));
 
 beforeEach(() => {
-  mockDeleteCollectionItem.mockResolvedValue({});
-
   let documents = structuredClone(defaultMockDocuments);
-  mockGetCollection.mockImplementation(({ collectionUrl, queryString }) => {
-    if (collectionUrl !== documentAccessSpec.collectionUrl) {
-      return Promise.resolve([]);
-    }
-
-    const params = new URLSearchParams(queryString || "");
-    const keyword = (params.get("keyword") || "").trim().toLowerCase();
-    const fieldName = params.get("field_name") || "both";
-    const ordering = params.get("ordering") || "";
-
-    let nextDocuments = documents;
-    if (keyword) {
-      nextDocuments = nextDocuments.filter((document) => {
-        const fileName = String(document.file_name || "").toLowerCase();
-        const state = String(document.state || "").toLowerCase();
-
-        if (fieldName === "file_name") return fileName.includes(keyword);
-        return fileName.includes(keyword) || state.includes(keyword);
-      });
-    }
-
-    if (ordering) {
-      const isDesc = ordering.startsWith("-");
-      const field = isDesc ? ordering.slice(1) : ordering;
-      const sorted = [...nextDocuments].sort((a, b) =>
-        String(a[field] || "").localeCompare(String(b[field] || "")),
-      );
-      nextDocuments = isDesc ? sorted.reverse() : sorted;
-    }
-
-    return Promise.resolve(nextDocuments);
+  mockGetCollection.mockImplementation(() => {
+    return Promise.resolve(documents);
   });
 
   mockDeleteCollectionItem.mockImplementation(async ({ id }) => {
