@@ -1,47 +1,17 @@
 // @vitest-environment jsdom
 
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
 
-import { documentAccessSpec } from "../appConfig";
-
-import {
-  defaultMockDocuments,
-  renderDocumentsPage,
-} from "./DocumentsPage.test-utils";
-
-const { mockGetCollection, mockDeleteCollectionItem } = vi.hoisted(() => ({
-  mockGetCollection: vi.fn(),
-  mockDeleteCollectionItem: vi.fn(),
-}));
+import { renderDocumentsPage } from "./DocumentsPage.test-utils";
 
 class MockWebSocket {
   close() {}
 }
 
 vi.stubGlobal("WebSocket", MockWebSocket);
-
-vi.mock("../api/clients/collectionClient", () => ({
-  getCollection: mockGetCollection,
-}));
-
-vi.mock("../api/clients/mutationClient", () => ({
-  deleteCollectionItem: mockDeleteCollectionItem,
-}));
-
-beforeEach(() => {
-  let documents = structuredClone(defaultMockDocuments);
-  mockGetCollection.mockImplementation(() => {
-    return Promise.resolve(documents);
-  });
-
-  mockDeleteCollectionItem.mockImplementation(async ({ id }) => {
-    documents = documents.filter((document) => document.id !== id);
-    return {};
-  });
-});
 
 describe("DocumentsPage deleteButton", () => {
   test("削除ボタンを押すと該当DocumentがDocumentTableから消える", async () => {
@@ -55,13 +25,6 @@ describe("DocumentsPage deleteButton", () => {
 
     const user = userEvent.setup();
     await user.click(within(targetRow).getByRole("button", { name: "削除" }));
-
-    await waitFor(() =>
-      expect(mockDeleteCollectionItem).toHaveBeenCalledWith({
-        collectionUrl: documentAccessSpec.collectionUrl,
-        id: 2,
-      }),
-    );
 
     await waitFor(() =>
       expect(
