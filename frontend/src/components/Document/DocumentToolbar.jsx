@@ -50,7 +50,7 @@ const DocumentToolbar = ({
   );
 
   return (
-    <div className="mx-auto flex w-fit flex-col items-center rounded-md border border-gray-200 bg-white p-4">
+    <div className="mx-auto flex w-fit flex-col items-center rounded-md border border-gray-400 bg-white p-2">
       <div className="mb-2 flex items-center gap-2">
         <input
           ref={fileInputRef}
@@ -85,40 +85,36 @@ const DocumentToolbar = ({
           OCR実行
         </button>
       </div>
-      <details className="flex flex-col items-center">
-        <summary className="w-fit cursor-pointer list-none rounded-md bg-indigo-500 px-2 py-1 text-white hover:bg-indigo-600">
-          検索メニュー
-        </summary>
 
-        <div className="mt-2 flex flex-col items-center gap-2">
-          <div className="flex items-center gap-1">
-            <input
-              className="w-fit rounded border border-gray-300 bg-gray-100 p-1 text-left leading-1 text-gray-700 transition-colors duration-200 outline-none focus:border-indigo-500 focus:bg-transparent focus:ring-2 focus:ring-indigo-200"
-              type="text"
-              value={draftSearchQuery.keyword}
-              onChange={(e) => onChangeSearchInput("keyword", e.target.value)}
-            />
-            <button
-              className="w-fit cursor-pointer rounded-md bg-indigo-500 px-2 py-1 text-white hover:bg-indigo-600"
-              onClick={onClickSearchButton}
-            >
-              検索
-            </button>
-            <button
-              className="w-fit cursor-pointer rounded-md bg-indigo-500 px-2 py-1 text-white hover:bg-indigo-600"
-              onClick={onClickResetSearchButton}
-            >
-              リセット
-            </button>
-          </div>
-          <div className="flex gap-1">
-            {renderRadioSection("fieldName", "フィールド名")}
-            {renderRadioSection("lookupExpr", "検索条件")}
-            {renderRadioSection("keywordOperator", "演算子")}
-          </div>
-          <p className="text-sm">{currentSearchSummary}</p>
+      <div className="mt-2 flex flex-col items-center gap-1 rounded border border-gray-300 p-2">
+        <p>検索メニュー</p>
+        <div className="flex items-center gap-1">
+          <input
+            className="w-fit rounded border border-gray-300 bg-gray-100 p-1 text-left leading-1 text-gray-700 transition-colors duration-200 outline-none focus:border-indigo-500 focus:bg-transparent focus:ring-2 focus:ring-indigo-200"
+            type="text"
+            value={draftSearchQuery.keyword}
+            onChange={(e) => onChangeSearchInput("keyword", e.target.value)}
+          />
+          <button
+            className="w-fit cursor-pointer rounded-md bg-indigo-500 px-2 py-1 text-white hover:bg-indigo-600"
+            onClick={onClickSearchButton}
+          >
+            検索
+          </button>
+          <button
+            className="w-fit cursor-pointer rounded-md bg-indigo-500 px-2 py-1 text-white hover:bg-indigo-600"
+            onClick={onClickResetSearchButton}
+          >
+            リセット
+          </button>
         </div>
-      </details>
+        <div className="flex gap-1">
+          {renderRadioSection("fieldName", "フィールド名")}
+          {renderRadioSection("lookupExpr", "検索条件")}
+          {renderRadioSection("keywordOperator", "演算子")}
+        </div>
+        <p className="text-sm">{currentSearchSummary}</p>
+      </div>
     </div>
   );
 };
