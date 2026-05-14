@@ -78,7 +78,7 @@ describe("DocumentsPage query", () => {
 
     expect(
       await screen.findByRole("cell", { name: "beta-report.pdf" }),
-    ).toBeInTheDocument();
+    ).toBeVisible();
     expect(screen.queryByRole("cell", { name: "alpha-report.pdf" })).toBeNull();
     expect(screen.queryByRole("cell", { name: "gamma-alpha.pdf" })).toBeNull();
   });
@@ -95,7 +95,7 @@ describe("DocumentsPage query", () => {
     await user.click(screen.getByLabelText("AND"));
     await user.click(screen.getByRole("button", { name: "検索" }));
 
-    expect(screen.getByDisplayValue("beta")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("beta")).toBeVisible();
 
     await user.click(screen.getByRole("button", { name: "リセット" }));
 
@@ -110,7 +110,7 @@ describe("DocumentsPage query", () => {
 
     expect(
       await screen.findByRole("cell", { name: "alpha-report.pdf" }),
-    ).toBeInTheDocument();
+    ).toBeVisible();
 
     const user = userEvent.setup();
     await user.click(screen.getByRole("columnheader", { name: /^名前/ }));
@@ -145,7 +145,7 @@ describe("DocumentsPage query", () => {
 
     expect(
       await screen.findByRole("cell", { name: "alpha-report.pdf" }),
-    ).toBeInTheDocument();
+    ).toBeVisible();
 
     const user = userEvent.setup();
     const nameHeader = screen.getByRole("columnheader", { name: /^名前/ });

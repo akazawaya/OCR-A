@@ -65,10 +65,10 @@ describe("ViewerPage", () => {
     expect(screen.queryByRole("button", { name: "出力" })).toBeNull();
     expect(screen.getByRole("button", { name: "元に戻す" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "やり直す" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "保存" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "中止" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "削除" })).toBeInTheDocument();
-    expect(getContentInput()).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "保存" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "中止" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "削除" })).toBeVisible();
+    expect(getContentInput()).toBeVisible();
   });
 
   test("保存ボタンを押すと編集内容が保存される", async () => {
@@ -87,7 +87,7 @@ describe("ViewerPage", () => {
         body: { content: "更新後" },
       });
     });
-    expect(screen.getByRole("button", { name: "編集" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "編集" })).toBeVisible();
     expect(screen.queryByRole("button", { name: "保存" })).toBeNull();
   });
 
@@ -101,7 +101,7 @@ describe("ViewerPage", () => {
     await user.click(screen.getByRole("button", { name: "中止" }));
 
     expect(mockPatchCollectionItem).not.toHaveBeenCalled();
-    expect(screen.getByRole("button", { name: "編集" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "編集" })).toBeVisible();
     expect(screen.getAllByText("テスト語").length).toBeGreaterThan(0);
     expect(screen.queryByDisplayValue("更新後")).toBeNull();
   });
@@ -197,7 +197,7 @@ describe("ViewerPage", () => {
     await user.clear(contentInput);
     await user.type(contentInput, "下書き更新");
 
-    expect(screen.getByDisplayValue("下書き更新")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("下書き更新")).toBeVisible();
   });
 
   test("内容変更はEnterで確定するまでUndo履歴に積まれない", async () => {
@@ -242,7 +242,7 @@ describe("ViewerPage", () => {
     document.activeElement.blur();
     fireEvent.keyDown(window, { key: "z", ctrlKey: true });
 
-    expect(screen.getByDisplayValue("テスト語")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("テスト語")).toBeVisible();
     expect(screen.queryByDisplayValue("更新後")).toBeNull();
   });
 
@@ -280,7 +280,7 @@ describe("ViewerPage", () => {
 
     await user.click(screen.getByRole("button", { name: "中止" }));
 
-    expect(screen.getByRole("button", { name: "編集" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "編集" })).toBeVisible();
     expect(screen.getAllByText("テスト語").length).toBeGreaterThan(0);
     expect(mockDeleteCollectionItem).not.toHaveBeenCalled();
   });
@@ -293,8 +293,8 @@ describe("ViewerPage", () => {
     await user.click(screen.getByRole("button", { name: "削除" }));
     await user.click(screen.getByRole("button", { name: "元に戻す" }));
 
-    expect(screen.getByDisplayValue("テスト語")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "削除" })).toBeInTheDocument();
+    expect(screen.getByDisplayValue("テスト語")).toBeVisible();
+    expect(screen.getByRole("button", { name: "削除" })).toBeVisible();
 
     await user.click(screen.getByRole("button", { name: "やり直す" }));
 
@@ -309,7 +309,7 @@ describe("ViewerPage", () => {
     document.activeElement.blur();
     fireEvent.keyDown(window, { key: "z", ctrlKey: true });
 
-    expect(screen.getByDisplayValue("テスト語")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("テスト語")).toBeVisible();
   });
 
   test("Redoコマンドで取り消した編集操作がやり直される", async () => {

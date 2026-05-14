@@ -33,9 +33,7 @@ describe("DocumentsPage deleteButton", () => {
     );
     expect(
       screen.getByRole("cell", { name: "alpha-report.pdf" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("cell", { name: "gamma-alpha.pdf" }),
-    ).toBeInTheDocument();
+    ).toBeVisible();
+    expect(screen.getByRole("cell", { name: "gamma-alpha.pdf" })).toBeVisible();
   });
 });

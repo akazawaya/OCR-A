@@ -114,11 +114,11 @@ describe("ViewerPage routing query", () => {
 
     expect(
       await screen.findByTestId("viewer-image-transform-101"),
-    ).toBeInTheDocument();
+    ).toBeVisible();
     expect(screen.queryByTestId("viewer-image-transform-201")).toBeNull();
     expect(
       await screen.findByRole("button", { name: "alpha word" }),
-    ).toBeInTheDocument();
+    ).toBeVisible();
     expect(screen.queryByRole("button", { name: "beta word" })).toBeNull();
 
     expect(mockGetCollection).toHaveBeenCalledWith({

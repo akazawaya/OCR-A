@@ -41,7 +41,7 @@ describe("DocumentsPage file input", () => {
     expect(fileInput).not.toBeNull();
     await user.upload(fileInput, file);
 
-    expect(screen.getByText("sample.jpg")).toBeInTheDocument();
+    expect(screen.getByText("sample.jpg")).toBeVisible();
     expect(screen.getByRole("button", { name: "OCR実行" })).toBeEnabled();
 
     await user.click(screen.getByRole("button", { name: "OCR実行" }));

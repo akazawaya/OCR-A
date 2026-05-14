@@ -197,7 +197,7 @@ describe("ViewerPage", () => {
     await user.type(contentInput, "更新後");
     await user.keyboard("{Enter}");
 
-    expect(screen.getByRole("button", { name: "更新後" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "更新後" })).toBeVisible();
     expect(screen.queryByRole("button", { name: "テスト語" })).toBeNull();
   });
 
