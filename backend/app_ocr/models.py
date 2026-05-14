@@ -9,7 +9,10 @@ from django.core.validators import (
 )
 from django.db import models
 
-from app_ocr.input_constraints import ALLOWED_UPLOAD_FILE_EXTENSIONS
+from app_ocr.input_constraints import (
+    ALLOWED_UPLOAD_FILE_EXTENSIONS,
+    MAX_UPLOAD_FILE_NAME_LENGTH,
+)
 
 
 class FileType(models.IntegerChoices):
@@ -100,7 +103,7 @@ class Document(models.Model):
             )
         ],
     )
-    file_name = models.CharField(max_length=255)
+    file_name = models.CharField(max_length=MAX_UPLOAD_FILE_NAME_LENGTH)
     file_type = models.PositiveSmallIntegerField(choices=FileType.choices)
     total_pages = models.PositiveSmallIntegerField(default=1)
 
