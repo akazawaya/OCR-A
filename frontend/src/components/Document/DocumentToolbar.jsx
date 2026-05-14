@@ -4,7 +4,7 @@ import { Upload } from "lucide-react";
 import { searchOptionDefs } from "../../logic/urlQuery/searchQueryUtils";
 
 const DocumentToolbar = ({
-  data: { draftSearchQuery = {} } = {},
+  data: { draftSearchQuery, appliedSearchQuery },
   events: {
     onClickSearchButton,
     onChangeSearchInput,
@@ -24,8 +24,8 @@ const DocumentToolbar = ({
   const findOptionLabel = (queryKey, value) =>
     searchOptionDefs[queryKey].find((option) => option.value === value).label;
 
-  const currentSearchSummary = draftSearchQuery.keyword
-    ? `現在の検索条件: 「${draftSearchQuery.keyword}」 / ${findOptionLabel("fieldName", draftSearchQuery.fieldName)} / ${findOptionLabel("lookupExpr", draftSearchQuery.lookupExpr)} / ${findOptionLabel("keywordOperator", draftSearchQuery.keywordOperator)}`
+  const currentSearchSummary = appliedSearchQuery.keyword
+    ? `現在の検索条件: 「${appliedSearchQuery.keyword}」 / ${findOptionLabel("fieldName", appliedSearchQuery.fieldName)} / ${findOptionLabel("lookupExpr", appliedSearchQuery.lookupExpr)} / ${findOptionLabel("keywordOperator", appliedSearchQuery.keywordOperator)}`
     : "現在の検索条件: なし";
 
   const renderRadioSection = (queryKey, sectionLabel) => (

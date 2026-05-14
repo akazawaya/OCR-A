@@ -143,7 +143,7 @@ const DocumentsPage = () => {
     <div className="flex flex-col gap-2 p-2 text-center">
       <p>DocumentsPage</p>
       <DocumentToolbar
-        data={{ draftSearchQuery }}
+        data={{ draftSearchQuery, appliedSearchQuery }}
         events={{
           onClickSearchButton: applySearch,
           onChangeSearchInput: updateSearchQuery,
