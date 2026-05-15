@@ -25,11 +25,13 @@ const readPointFromPointerEvent = (event, { imageW, imageH }) => {
 };
 
 export const useDragRectState = ({
-  imageW,
-  imageH,
+  imageSizePx = {},
   pageId,
   onAddPendingPostByBbox,
 } = {}) => {
+  const imageW = imageSizePx.w;
+  const imageH = imageSizePx.h;
+
   const [startPoint, setStartPoint] = useState(null);
   const [currentPoint, setCurrentPoint] = useState(null);
 

@@ -41,8 +41,7 @@ describe("useDragRectState", () => {
   test("onPointerDownでdraftRectが初期化される", () => {
     const { result } = renderHook(() =>
       useDragRectState({
-        imageW: 100,
-        imageH: 100,
+        imageSizePx: { w: 100, h: 100 },
         pageId,
         onAddPendingPostByBbox,
       }),
@@ -65,8 +64,7 @@ describe("useDragRectState", () => {
   test("onPointerMoveでdraftRectが更新される", () => {
     const { result } = renderHook(() =>
       useDragRectState({
-        imageW: 100,
-        imageH: 100,
+        imageSizePx: { w: 100, h: 100 },
         pageId,
         onAddPendingPostByBbox,
       }),
@@ -95,8 +93,7 @@ describe("useDragRectState", () => {
   test("onPointerCancelでdraftRectがnullになる", () => {
     const { result } = renderHook(() =>
       useDragRectState({
-        imageW: 100,
-        imageH: 100,
+        imageSizePx: { w: 100, h: 100 },
         pageId,
         onAddPendingPostByBbox,
       }),
@@ -124,8 +121,7 @@ describe("useDragRectState", () => {
   test("onPointerUpでdraftRectがnullになり、条件を満たすとonAddPendingPostByBboxが呼ばれる", () => {
     const { result } = renderHook(() =>
       useDragRectState({
-        imageW: 100,
-        imageH: 100,
+        imageSizePx: { w: 100, h: 100 },
         pageId,
         onAddPendingPostByBbox,
       }),

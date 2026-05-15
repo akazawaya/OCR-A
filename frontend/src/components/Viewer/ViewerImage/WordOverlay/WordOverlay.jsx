@@ -31,14 +31,10 @@ const WordOverlay = ({
     onPointerUp,
     onPointerCancel,
   } = useDragRectState({
-    imageW: imageSizePx.w,
-    imageH: imageSizePx.h,
+    imageSizePx,
     pageId,
     onAddPendingPostByBbox,
   });
-
-  const imageW = imageSizePx.w;
-  const imageH = imageSizePx.h;
 
   const wordsOnPage = words.filter((w) => Number(w.page) === Number(pageId));
   const pendingPostsOnPage = useMemo(() => {
@@ -51,19 +47,17 @@ const WordOverlay = ({
   }, [draftRect]);
 
   const { wordLayout } = useMemo(() => {
-    const imageSizePx =
-      imageW == null || imageH == null ? null : { w: imageW, h: imageH };
     return buildWordOverlayLayout({
       clientSizePx,
       imageSizePx,
       words: wordsOnPage,
     });
-  }, [clientSizePx, imageW, imageH, wordsOnPage]);
+  }, [clientSizePx, imageSizePx, wordsOnPage]);
 
   return (
     <div className="absolute inset-0">
       <svg
-        viewBox={`0 0 ${imageW ?? 0} ${imageH ?? 0}`}
+        viewBox={`0 0 ${imageSizePx.w} ${imageSizePx.h}`}
         onPointerCancel={isEditing ? onPointerCancel : undefined}
         onPointerDown={isEditing ? onPointerDown : undefined}
         onPointerMove={isEditing ? onPointerMove : undefined}
