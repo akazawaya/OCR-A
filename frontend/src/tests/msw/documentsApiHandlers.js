@@ -46,7 +46,7 @@ const sortDocuments = (documents, queryString) => {
   return isDesc ? sorted.reverse() : sorted;
 };
 
-export const handlers = [
+export const documentsApiHandlers = [
   http.get("http://test.dummy/documents/", ({ request }) => {
     const queryString = new URL(request.url).search;
 

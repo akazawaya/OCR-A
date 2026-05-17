@@ -9,7 +9,7 @@ import { renderDocumentsPage } from "./DocumentsPage.test-utils";
 import {
   getReceivedOcrRequestFile,
   resetReceivedOcrRequestFile,
-} from "./msw/handlers";
+} from "./msw/documentsApiHandlers";
 
 beforeEach(() => {
   resetReceivedOcrRequestFile();
