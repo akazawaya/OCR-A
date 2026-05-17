@@ -1,71 +1,11 @@
 // @vitest-environment jsdom
 
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { describe, expect, test } from "vitest";
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
 
-import { documentAccessSpec } from "../appConfig";
-
-import { defaultMockDocuments } from "./msw/fixture";
 import { renderDocumentsPage } from "./DocumentsPage.test-utils";
-
-const { mockGetCollection } = vi.hoisted(() => ({
-  mockGetCollection: vi.fn(),
-}));
-
-class MockWebSocket {
-  close() {}
-}
-
-vi.stubGlobal("WebSocket", MockWebSocket);
-
-vi.mock("../api/clients/collectionClient", () => ({
-  getCollection: mockGetCollection,
-}));
-
-const filterDocumentsBySearch = (documents, queryString) => {
-  const params = new URLSearchParams(queryString || "");
-  const keyword = (params.get("keyword") || "").trim().toLowerCase();
-  const fieldName = params.get("field_name") || "both";
-
-  if (!keyword) return documents;
-
-  return documents.filter((document) => {
-    const fileName = String(document.file_name || "").toLowerCase();
-    const state = String(document.state || "").toLowerCase();
-
-    if (fieldName === "file_name") return fileName.includes(keyword);
-    return fileName.includes(keyword) || state.includes(keyword);
-  });
-};
-
-const sortDocuments = (documents, queryString) => {
-  const params = new URLSearchParams(queryString || "");
-  const ordering = params.get("ordering") || "";
-
-  if (!ordering) return documents;
-
-  const isDesc = ordering.startsWith("-");
-  const field = isDesc ? ordering.slice(1) : ordering;
-  const sorted = [...documents].sort((a, b) =>
-    String(a[field] || "").localeCompare(String(b[field] || "")),
-  );
-
-  return isDesc ? sorted.reverse() : sorted;
-};
-
-beforeEach(() => {
-  mockGetCollection.mockImplementation(({ collectionUrl, queryString }) => {
-    if (collectionUrl !== documentAccessSpec.collectionUrl) {
-      return Promise.resolve([]);
-    }
-
-    const searched = filterDocumentsBySearch(defaultMockDocuments, queryString);
-    const sorted = sortDocuments(searched, queryString);
-    return Promise.resolve(sorted);
-  });
-});
 
 describe("DocumentsPage query", () => {
   test("searchQuery:検索条件の絞り込みにより該当データのみDocumentsTableに残る", async () => {

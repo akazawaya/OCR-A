@@ -16,9 +16,44 @@ export const resetReceivedOcrRequestFile = () => {
   receivedOcrRequestFile = null;
 };
 
+// 検索に関しては、DOMツリーへの反映確認を責務とする。
+// 詳細な検索仕様の検証は backend 側で担う。
+// frontend テストでは lookup_expr / keyword_operator / field_name は再現せず、
+// keyword による file_name の部分一致のみを簡易的に再現する。
+const filterDocumentsBySearch = (documents, queryString) => {
+  const params = new URLSearchParams(queryString || "");
+  const keyword = (params.get("keyword") || "").trim().toLowerCase();
+
+  if (!keyword) return documents;
+
+  return documents.filter((document) =>
+    String(document.file_name).toLowerCase().includes(keyword),
+  );
+};
+
+const sortDocuments = (documents, queryString) => {
+  const params = new URLSearchParams(queryString || "");
+  const ordering = params.get("ordering") || "";
+
+  if (!ordering) return documents;
+
+  const isDesc = ordering.startsWith("-");
+  const field = isDesc ? ordering.slice(1) : ordering;
+  const sorted = [...documents].sort((a, b) =>
+    String(a[field] || "").localeCompare(String(b[field] || "")),
+  );
+
+  return isDesc ? sorted.reverse() : sorted;
+};
+
 export const handlers = [
-  http.get(`http://test.dummy/documents/`, () => {
-    return HttpResponse.json(documents);
+  http.get("http://test.dummy/documents/", ({ request }) => {
+    const queryString = new URL(request.url).search;
+
+    const searched = filterDocumentsBySearch(documents, queryString);
+    const sorted = sortDocuments(searched, queryString);
+
+    return HttpResponse.json(sorted);
   }),
 
   http.delete(`http://test.dummy/documents/:id/`, ({ params }) => {
