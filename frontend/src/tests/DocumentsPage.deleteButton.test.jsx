@@ -1,17 +1,11 @@
 // @vitest-environment jsdom
 
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
 
 import { renderDocumentsPage } from "./DocumentsPage.test-utils";
-
-class MockWebSocket {
-  close() {}
-}
-
-vi.stubGlobal("WebSocket", MockWebSocket);
 
 describe("DocumentsPage deleteButton", () => {
   test("削除ボタンを押すと該当DocumentがDocumentTableから消える", async () => {
