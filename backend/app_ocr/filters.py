@@ -17,7 +17,7 @@ class ParamChoiceFilter(filters.ChoiceFilter):
 
 
 class DocumentFilterSet(filters.FilterSet):
-    keyword = filters.CharFilter(method="filter_keyword")
+    keyword = filters.CharFilter(method="filter_by_keyword")
     field_name = ParamChoiceFilter(
         choices=[
             ("file_name", "file_name"),
@@ -45,7 +45,7 @@ class DocumentFilterSet(filters.FilterSet):
         model = Document
         fields = []
 
-    def filter_keyword(self, queryset, name, value):
+    def filter_by_keyword(self, queryset, name, value):
         field_name = self.form.cleaned_data.get("field_name") or "both"
         lookup_expr = self.form.cleaned_data.get("lookup_expr") or "icontains"
         keyword_operator = self.form.cleaned_data.get("keyword_operator") or "or"
