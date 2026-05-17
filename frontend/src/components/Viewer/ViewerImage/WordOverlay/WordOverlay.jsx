@@ -57,6 +57,7 @@ const WordOverlay = ({
   return (
     <div className="absolute inset-0">
       <svg
+        aria-label="文字範囲選択エリア"
         viewBox={`0 0 ${imageSizePx.w} ${imageSizePx.h}`}
         onPointerCancel={isEditing ? onPointerCancel : undefined}
         onPointerDown={isEditing ? onPointerDown : undefined}

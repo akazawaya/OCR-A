@@ -68,8 +68,9 @@ const ViewerImage = ({
             style={containerStyle}
           >
             <div
+              aria-label={`画像表示エリア ${p.page_number}ページ目`}
               className={imageClass}
-              data-testid={`viewer-image-transform-${p.id}`}
+              role="group"
               style={imageStyle}
             >
               <img alt="" height={h} src={p.image} width={w} />

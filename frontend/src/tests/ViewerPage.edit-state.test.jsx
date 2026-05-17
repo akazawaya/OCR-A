@@ -5,7 +5,6 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
 
-import { defaultMockWords } from "./msw/fixture";
 import {
   renderViewerPage,
   setupDefaultViewerMocks,
@@ -13,19 +12,13 @@ import {
 } from "./ViewerPage.test-utils";
 
 const {
-  mockGetCollection,
   mockPostCollectionItem,
   mockDeleteCollectionItem,
   mockPatchCollectionItem,
 } = vi.hoisted(() => ({
-  mockGetCollection: vi.fn(),
   mockPostCollectionItem: vi.fn(),
   mockDeleteCollectionItem: vi.fn(),
   mockPatchCollectionItem: vi.fn(),
-}));
-
-vi.mock("../api/clients/collectionClient", () => ({
-  getCollection: mockGetCollection,
 }));
 
 vi.mock("../api/clients/mutationClient", () => ({
@@ -38,10 +31,7 @@ setupResizeObserverMock();
 
 beforeEach(() => {
   vi.clearAllMocks();
-  setupDefaultViewerMocks({
-    mockGetCollection,
-    words: defaultMockWords,
-  });
+  setupDefaultViewerMocks();
   mockPostCollectionItem.mockResolvedValue({});
   mockDeleteCollectionItem.mockResolvedValue({});
   mockPatchCollectionItem.mockResolvedValue({});
@@ -111,10 +101,8 @@ describe("ViewerPage", () => {
 
     await enterEditMode();
 
-    const imageTransform = await screen.findByTestId(
-      "viewer-image-transform-1",
-    );
-    const svg = imageTransform.querySelector("svg");
+    // svgにはpage属性を付与していないため、単に先頭のsvgを取る
+    const svg = (await screen.findAllByLabelText("文字範囲選択エリア"))[0];
     expect(svg).not.toBeNull();
     // jsdom には実ブラウザのようなレイアウト計算がないため、
     // ドラッグ時の座標変換に使う getBoundingClientRect を固定する
@@ -143,10 +131,7 @@ describe("ViewerPage", () => {
     renderViewerPage();
     const user = await enterEditMode();
 
-    const imageTransform = await screen.findByTestId(
-      "viewer-image-transform-1",
-    );
-    const svg = imageTransform.querySelector("svg");
+    const svg = (await screen.findAllByLabelText("文字範囲選択エリア"))[0];
     expect(svg).not.toBeNull();
     svg.getBoundingClientRect = () => ({
       left: 0,

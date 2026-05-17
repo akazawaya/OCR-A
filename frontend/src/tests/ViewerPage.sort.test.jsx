@@ -1,58 +1,27 @@
 // @vitest-environment jsdom
 
-import { beforeEach, describe, expect, test, vi, afterEach } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { screen, within } from "@testing-library/react";
+
 import "@testing-library/jest-dom/vitest";
+import { sortMockPages, sortMockWords } from "./msw/fixture";
+import { setMockPages } from "./msw/pagesApiHandlers";
+import { setMockWords } from "./msw/wordsApiHandlers";
+import { renderViewerPage } from "./ViewerPage.test-utils";
 
-import { sortMockWords } from "./msw/fixture";
-import {
-  renderViewerPage,
-  setupDefaultViewerMocks,
-  setupResizeObserverMock,
-} from "./ViewerPage.test-utils";
-import { setupCanvasTextMeasureMock } from "./mockCanvasTextMeasure";
-
-const { mockGetCollection } = vi.hoisted(() => ({
-  mockGetCollection: vi.fn(),
-}));
-
-const sortMockPage = {
-  id: 101,
-  page_number: 1,
-  image: "/sort-page-1.png",
-  width_px: 1000,
-  height_px: 800,
-};
-
-vi.mock("../api/clients/collectionClient", () => ({
-  getCollection: mockGetCollection,
-}));
-
-setupResizeObserverMock();
-
-Object.defineProperty(HTMLElement.prototype, "clientWidth", {
-  configurable: true,
-  get() {
-    return sortMockPage.width_px;
-  },
-});
-
-Object.defineProperty(HTMLElement.prototype, "clientHeight", {
-  configurable: true,
-  get() {
-    return sortMockPage.height_px;
-  },
-});
-
-let getContextSpy;
+class MockResizeObserver {
+  constructor(callback) {
+    this.callback = callback;
+  }
+  observe() {
+    this.callback();
+  }
+  disconnect() {}
+}
 
 beforeEach(() => {
   vi.clearAllMocks();
-  getContextSpy = setupCanvasTextMeasureMock();
-});
-
-afterEach(() => {
-  getContextSpy?.mockRestore();
+  globalThis.ResizeObserver = MockResizeObserver;
 });
 
 describe("ViewerPage sort", () => {
@@ -77,12 +46,8 @@ describe("ViewerPage sort", () => {
 
   test("sortMockWordsの比較規則どおりにViewerTableの並びが決まる", async () => {
     for (const { key, expected } of sortCases) {
-      setupDefaultViewerMocks({
-        mockGetCollection,
-        pages: [sortMockPage],
-        words: sortMockWords[key],
-      });
-
+      setMockPages(sortMockPages);
+      setMockWords(sortMockWords[key]);
       const { unmount } = renderViewerPage();
 
       await screen.findByRole("cell", { name: expected[0] });

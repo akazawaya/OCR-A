@@ -1,87 +1,31 @@
 // @vitest-environment jsdom
 
-import { beforeEach, describe, expect, test, vi, afterEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, test } from "vitest";
+import { render, screen, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
+
 import "@testing-library/jest-dom/vitest";
-
 import ViewerPage from "../pages/ViewerPage";
-import { pageAccessSpec, wordAccessSpec } from "../appConfig";
 
+import { setMockPages } from "./msw/pagesApiHandlers";
+import { setMockWords } from "./msw/wordsApiHandlers";
 import { queryRoutingMockPages, queryRoutingMockWords } from "./msw/fixture";
-import { setupCanvasTextMeasureMock } from "./mockCanvasTextMeasure";
-
-const { mockGetCollection } = vi.hoisted(() => ({
-  mockGetCollection: vi.fn(),
-}));
 
 class MockResizeObserver {
   constructor(callback) {
     this.callback = callback;
   }
-
   observe() {
-    this.callback([]);
+    this.callback();
   }
-
-  unobserve() {}
-
   disconnect() {}
 }
 
-vi.mock("../api/clients/collectionClient", () => ({
-  getCollection: mockGetCollection,
-}));
-
-Object.defineProperty(HTMLElement.prototype, "clientWidth", {
-  configurable: true,
-  get() {
-    return 1000;
-  },
-});
-
-Object.defineProperty(HTMLElement.prototype, "clientHeight", {
-  configurable: true,
-  get() {
-    return 800;
-  },
-});
-
-let getContextSpy;
 beforeEach(() => {
-  getContextSpy = setupCanvasTextMeasureMock();
   globalThis.ResizeObserver = MockResizeObserver;
-  mockGetCollection.mockImplementation(({ collectionUrl, queryString }) => {
-    const params = new URLSearchParams(queryString || "");
-
-    if (collectionUrl === pageAccessSpec.collectionUrl) {
-      const doc = params.get("doc");
-      return Promise.resolve(
-        queryRoutingMockPages.filter((page) => page.doc === doc),
-      );
-    }
-
-    if (collectionUrl === wordAccessSpec.collectionUrl) {
-      const doc = params.get("page__doc");
-      const keyword = (params.get("keyword") || "").toLowerCase();
-      return Promise.resolve(
-        queryRoutingMockWords.filter((word) => {
-          const sameDoc = word.page__doc === doc;
-          const matchesKeyword =
-            !keyword || word.content.toLowerCase().includes(keyword);
-
-          return sameDoc && matchesKeyword;
-        }),
-      );
-    }
-
-    return Promise.resolve([]);
-  });
-});
-
-afterEach(() => {
-  getContextSpy?.mockRestore();
+  setMockPages(queryRoutingMockPages);
+  setMockWords(queryRoutingMockWords);
 });
 
 const renderViewerPage = (initialEntry) => {
@@ -107,27 +51,15 @@ const renderViewerPage = (initialEntry) => {
 };
 
 describe("ViewerPage routing query", () => {
-  test("routingQuery: 遷移先のprimaryKeyにより対象documentだけに絞り込まれる", async () => {
-    renderViewerPage(
-      "/documents/1/viewer?keyword=alpha&field_name=both&lookup_expr=icontains&keyword_operator=or",
-    );
+  test("routingQuery: 遷移先のprimaryKeyにより表示データの絞り込みが発生する", async () => {
+    renderViewerPage("/documents/1/viewer");
 
+    // 絞り込みの確認は ViewerTableの<tr>を想定する
+    const table = screen.getByRole("table");
     expect(
-      await screen.findByTestId("viewer-image-transform-101"),
+      await within(table).findByRole("row", { name: /alpha word/i }),
     ).toBeVisible();
-    expect(screen.queryByTestId("viewer-image-transform-201")).toBeNull();
-    expect(
-      await screen.findByRole("button", { name: "alpha word" }),
-    ).toBeVisible();
-    expect(screen.queryByRole("button", { name: "beta word" })).toBeNull();
 
-    expect(mockGetCollection).toHaveBeenCalledWith({
-      collectionUrl: pageAccessSpec.collectionUrl,
-      queryString: "?doc=1",
-    });
-    expect(mockGetCollection).toHaveBeenCalledWith({
-      collectionUrl: wordAccessSpec.collectionUrl,
-      queryString: "?page__doc=1",
-    });
+    expect(within(table).queryByRole("row", { name: /beta word/i })).toBeNull();
   });
 });

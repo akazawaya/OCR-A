@@ -13,22 +13,15 @@ import {
 } from "./ViewerPage.test-utils";
 import { setupCanvasTextMeasureMock } from "./mockCanvasTextMeasure";
 
-const { mockUsePrint, mockGetCollection, mockOpenPrintDialog } = vi.hoisted(
-  () => ({
-    mockUsePrint: vi.fn(),
-    mockGetCollection: vi.fn(),
-    mockOpenPrintDialog: vi.fn(),
-  }),
-);
+const { mockUsePrint, mockOpenPrintDialog } = vi.hoisted(() => ({
+  mockUsePrint: vi.fn(),
+  mockOpenPrintDialog: vi.fn(),
+}));
 
 Element.prototype.scrollIntoView = vi.fn();
 
 vi.mock("../logic/print/usePrint", () => ({
   usePrint: mockUsePrint,
-}));
-
-vi.mock("../api/clients/collectionClient", () => ({
-  getCollection: mockGetCollection,
 }));
 
 setupResizeObserverMock();
@@ -52,7 +45,6 @@ let getContextSpy;
 beforeEach(() => {
   setupDefaultViewerMocks({
     mockUsePrint,
-    mockGetCollection,
     mockOpenPrintDialog,
   });
   getContextSpy = setupCanvasTextMeasureMock();
@@ -84,10 +76,9 @@ describe("ViewerPage", () => {
     renderViewerPage();
     const zoomUpButton = await screen.findByRole("button", { name: "拡大" });
     const zoomDownButton = await screen.findByRole("button", { name: "縮小" });
-    const imageTransform = await screen.findByTestId(
-      "viewer-image-transform-1",
-    );
-    expect(mockGetCollection).toHaveBeenCalled();
+    const imageTransform = await screen.findByRole("group", {
+      name: "画像表示エリア 1ページ目",
+    });
     expect(imageTransform.style.width).toBe("1000px");
     expect(imageTransform.style.height).toBe("800px");
     const user = userEvent.setup();
@@ -102,9 +93,9 @@ describe("ViewerPage", () => {
   test("回転ボタンを押すと画像の回転角度が更新される", async () => {
     renderViewerPage();
     const rotateButton = await screen.findByRole("button", { name: "回転" });
-    const imageTransform = await screen.findByTestId(
-      "viewer-image-transform-1",
-    );
+    const imageTransform = await screen.findByRole("group", {
+      name: "画像表示エリア 1ページ目",
+    });
     expect(imageTransform.style.getPropertyValue("--rotate")).toBe("0deg");
     const user = userEvent.setup();
     await user.click(rotateButton);
@@ -129,9 +120,9 @@ describe("ViewerPage", () => {
 
   test("倍率を入力してEnterを押すと画像サイズが更新される", async () => {
     renderViewerPage();
-    const imageTransform = await screen.findByTestId(
-      "viewer-image-transform-1",
-    );
+    const imageTransform = await screen.findByRole("group", {
+      name: "画像表示エリア 1ページ目",
+    });
     expect(imageTransform.style.width).toBe("1000px");
     expect(imageTransform.style.height).toBe("800px");
     const zoomInput = await screen.findByRole("textbox", { name: "zoom" });
@@ -144,9 +135,9 @@ describe("ViewerPage", () => {
 
   test("回転角度を入力してEnterを押すと画像の回転角度が更新される", async () => {
     renderViewerPage();
-    const imageTransform = await screen.findByTestId(
-      "viewer-image-transform-1",
-    );
+    const imageTransform = await screen.findByRole("group", {
+      name: "画像表示エリア 1ページ目",
+    });
     expect(imageTransform.style.getPropertyValue("--rotate")).toBe("0deg");
     const rotateInput = await screen.findByRole("textbox", { name: "rotate" });
     const user = userEvent.setup();

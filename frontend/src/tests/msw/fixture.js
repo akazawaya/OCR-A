@@ -7,15 +7,17 @@ export const defaultMockDocuments = [
 export const defaultMockPages = [
   {
     id: 1,
+    doc: "1",
     page_number: 1,
-    image: "/test_1.png",
+    image: "/test_1-1.png",
     width_px: 1000,
     height_px: 800,
   },
   {
     id: 2,
+    doc: "1",
     page_number: 2,
-    image: "/test_2.png",
+    image: "/test_1-2.png",
     width_px: 1000,
     height_px: 800,
   },
@@ -26,6 +28,7 @@ export const defaultMockWords = [
     id: 1,
     page: 1,
     page__page_number: 1,
+    page__doc: "1",
     bbox: [
       [100, 100],
       [200, 100],
@@ -87,7 +90,20 @@ export const queryRoutingMockWords = [
   },
 ];
 
-// idに関わらずsortの順番が機能することを確認するためのwordMock
+// idに関わらずsortの順番が機能することを確認するためのpage, wordMock
+
+export const sortMockPages = [
+  {
+    id: 101,
+    doc: "1",
+    page_number: 1,
+    image: "/sort-page-1.png",
+    width_px: 1000,
+    height_px: 800,
+  },
+];
+
+// 想定:
 // horizontalVsVerticalでh1が優先
 // horizontalTopBottomでtopが優先
 // horizontalLeftRightでleftが優先

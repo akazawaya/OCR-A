@@ -4,12 +4,11 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { vi } from "vitest";
 
 import ViewerPage from "../pages/ViewerPage";
+
+import { resetMockPages } from "./msw/pagesApiHandlers";
+import { resetMockWords } from "./msw/wordsApiHandlers";
 // pageAccessSpec/wordSpec は、setupでVITE_API_BASE_URLをstub済みの想定。
 // ※実際の通信関数はmockすること！
-import { pageAccessSpec, wordSpec } from "../appConfig";
-
-import { defaultMockPages, defaultMockWords } from "./msw/fixture";
-
 export const renderViewerPage = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -34,11 +33,10 @@ export const renderViewerPage = () => {
 
 export const setupDefaultViewerMocks = ({
   mockUsePrint,
-  mockGetCollection,
   mockOpenPrintDialog = vi.fn(),
-  pages = defaultMockPages,
-  words = defaultMockWords,
 } = {}) => {
+  resetMockPages();
+  resetMockWords();
   if (mockUsePrint) {
     mockUsePrint.mockReturnValue({
       contentRef: { current: null },
@@ -46,16 +44,6 @@ export const setupDefaultViewerMocks = ({
       openPrintDialog: mockOpenPrintDialog,
     });
   }
-
-  mockGetCollection.mockImplementation(({ collectionUrl }) => {
-    if (collectionUrl === pageAccessSpec.collectionUrl) {
-      return Promise.resolve(structuredClone(pages));
-    }
-    if (collectionUrl === wordSpec.collectionUrl) {
-      return Promise.resolve(structuredClone(words));
-    }
-    return Promise.resolve([]);
-  });
 };
 
 class MockResizeObserver {
@@ -68,7 +56,6 @@ class MockResizeObserver {
   }
 
   unobserve() {}
-
   disconnect() {}
 }
 
