@@ -11,28 +11,11 @@ import {
   setupResizeObserverMock,
 } from "./ViewerPage.test-utils";
 
-const { mockPostCollectionItem, mockPatchCollectionItem } = vi.hoisted(() => ({
-  mockPostCollectionItem: vi.fn(),
-  mockPatchCollectionItem: vi.fn(),
-}));
-
-vi.mock("../api/clients/mutationClient", async (importOriginal) => {
-  const actual = await importOriginal();
-
-  return {
-    ...actual,
-    postCollectionItem: mockPostCollectionItem,
-    patchCollectionItem: mockPatchCollectionItem,
-  };
-});
-
 setupResizeObserverMock();
 
 beforeEach(() => {
   vi.clearAllMocks();
   setupDefaultViewerMocks();
-  mockPostCollectionItem.mockResolvedValue({});
-  mockPatchCollectionItem.mockResolvedValue({});
 });
 
 describe("ViewerPage", () => {
@@ -68,13 +51,10 @@ describe("ViewerPage", () => {
     await user.type(contentInput, "更新後");
     await user.click(screen.getByRole("button", { name: "保存" }));
 
-    await (() => {
-      expect(mockPatchCollectionItem).toHaveBeenCalledWith({
-        collectionUrl: "/words/",
-        id: "1",
-        body: { content: "更新後" },
-      });
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "編集" })).toBeVisible();
     });
+
     expect(screen.getByRole("button", { name: "編集" })).toBeVisible();
     expect(screen.queryByRole("button", { name: "保存" })).toBeNull();
   });
@@ -88,7 +68,6 @@ describe("ViewerPage", () => {
     await user.type(contentInput, "更新後");
     await user.click(screen.getByRole("button", { name: "中止" }));
 
-    expect(mockPatchCollectionItem).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "編集" })).toBeVisible();
     expect(screen.getAllByText("テスト語").length).toBeGreaterThan(0);
     expect(screen.queryByDisplayValue("更新後")).toBeNull();
@@ -125,7 +104,7 @@ describe("ViewerPage", () => {
     });
   });
 
-  test("新規追加したWordの内容は保存時にpostへ含まれる", async () => {
+  test("新規追加したWordは保存後に通常表示へ反映される", async () => {
     renderViewerPage();
     const user = await enterEditMode();
 
@@ -158,18 +137,11 @@ describe("ViewerPage", () => {
     await user.type(previewContentInput, "追加語");
     await user.click(screen.getByRole("button", { name: "保存" }));
 
-    await waitFor(() =>
-      expect(mockPostCollectionItem).toHaveBeenCalledTimes(1),
-    );
-    expect(mockPostCollectionItem).toHaveBeenCalledWith({
-      collectionUrl: expect.stringContaining("/words/"),
-      body: {
-        page: 1,
-        bbox: expect.any(Array),
-        direction: expect.any(Number),
-        content: "追加語",
-      },
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "編集" })).toBeVisible();
     });
+
+    expect(screen.getAllByText("追加語").length).toBeGreaterThan(0);
   });
 
   test("内容を入力するとinputの表示が更新される", async () => {

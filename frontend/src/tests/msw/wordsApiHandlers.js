@@ -28,6 +28,56 @@ export const wordsApiHandlers = [
     return HttpResponse.json(word);
   }),
 
+  http.patch(`http://test.dummy/words/:id/`, ({ params, request }) => {
+    const id = Number(params.id);
+    const wordIndex = words.findIndex((w) => w.id === id);
+    if (wordIndex === -1) {
+      return new HttpResponse(null, { status: 404 });
+    }
+
+    return request.json().then((data) => {
+      words[wordIndex] = { ...words[wordIndex], ...data };
+      return HttpResponse.json(words[wordIndex]);
+    });
+  }),
+
+  http.post("http://test.dummy/words/", async ({ request }) => {
+    const body = await request.json();
+
+    const nextId = Math.max(0, ...words.map((word) => Number(word.id))) + 1;
+
+    const createdWord = {
+      id: nextId,
+      page: body.page,
+      page__page_number: 1,
+      page__doc: "1",
+      bbox: body.bbox,
+      direction: body.direction,
+      content: body.content ?? "",
+    };
+
+    words = [...words, createdWord];
+
+    return HttpResponse.json(createdWord, { status: 201 });
+  }),
+
+  http.patch("http://test.dummy/words/:id/", async ({ params, request }) => {
+    const id = Number(params.id);
+    const body = await request.json();
+    const index = words.findIndex((word) => Number(word.id) === id);
+
+    if (index === -1) {
+      return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    }
+
+    words[index] = {
+      ...words[index],
+      ...body,
+    };
+
+    return HttpResponse.json(words[index]);
+  }),
+
   http.delete(`http://test.dummy/words/:id/`, ({ params }) => {
     const id = Number(params.id);
     words = words.filter((p) => p.id !== id);
