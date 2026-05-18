@@ -11,21 +11,20 @@ import {
   setupResizeObserverMock,
 } from "./ViewerPage.test-utils";
 
-const {
-  mockPostCollectionItem,
-  mockDeleteCollectionItem,
-  mockPatchCollectionItem,
-} = vi.hoisted(() => ({
+const { mockPostCollectionItem, mockPatchCollectionItem } = vi.hoisted(() => ({
   mockPostCollectionItem: vi.fn(),
-  mockDeleteCollectionItem: vi.fn(),
   mockPatchCollectionItem: vi.fn(),
 }));
 
-vi.mock("../api/clients/mutationClient", () => ({
-  postCollectionItem: mockPostCollectionItem,
-  deleteCollectionItem: mockDeleteCollectionItem,
-  patchCollectionItem: mockPatchCollectionItem,
-}));
+vi.mock("../api/clients/mutationClient", async (importOriginal) => {
+  const actual = await importOriginal();
+
+  return {
+    ...actual,
+    postCollectionItem: mockPostCollectionItem,
+    patchCollectionItem: mockPatchCollectionItem,
+  };
+});
 
 setupResizeObserverMock();
 
@@ -33,7 +32,6 @@ beforeEach(() => {
   vi.clearAllMocks();
   setupDefaultViewerMocks();
   mockPostCollectionItem.mockResolvedValue({});
-  mockDeleteCollectionItem.mockResolvedValue({});
   mockPatchCollectionItem.mockResolvedValue({});
 });
 
@@ -241,19 +239,20 @@ describe("ViewerPage", () => {
     expect(screen.getByRole("button", { name: "元に戻す" })).toBeEnabled();
   });
 
-  test("削除したWordは保存時にdeleteへ含まれる", async () => {
+  test("削除したWordは保存後の表示にも残らない", async () => {
     renderViewerPage();
     const user = await enterEditMode();
 
     await user.click(screen.getByRole("button", { name: "削除" }));
+    expect(screen.queryByDisplayValue("テスト語")).toBeNull();
+
     await user.click(screen.getByRole("button", { name: "保存" }));
 
-    await waitFor(() =>
-      expect(mockDeleteCollectionItem).toHaveBeenCalledWith({
-        collectionUrl: expect.stringContaining("/words/"),
-        id: 1,
-      }),
-    );
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "編集" })).toBeVisible();
+    });
+
+    expect(screen.queryByText("テスト語")).toBeNull();
   });
 
   test("中止ボタンで削除操作も破棄される", async () => {
@@ -267,7 +266,6 @@ describe("ViewerPage", () => {
 
     expect(screen.getByRole("button", { name: "編集" })).toBeVisible();
     expect(screen.getAllByText("テスト語").length).toBeGreaterThan(0);
-    expect(mockDeleteCollectionItem).not.toHaveBeenCalled();
   });
 
   // Undo/Redoは削除操作で確認する。
