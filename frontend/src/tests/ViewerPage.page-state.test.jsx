@@ -10,8 +10,8 @@ import {
   renderViewerPage,
   setupDefaultViewerMocks,
   setupResizeObserverMock,
+  setupCanvasTextMeasureMock,
 } from "./ViewerPage.test-utils";
-import { setupCanvasTextMeasureMock } from "./mockCanvasTextMeasure";
 
 const { mockUsePrint, mockOpenPrintDialog } = vi.hoisted(() => ({
   mockUsePrint: vi.fn(),
