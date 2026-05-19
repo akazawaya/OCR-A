@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { beforeEach, describe, test, expect, vi } from "vitest";
+import { beforeEach, describe, test, expect } from "vitest";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
@@ -14,9 +14,47 @@ import {
 setupResizeObserverMock();
 
 beforeEach(() => {
-  vi.clearAllMocks();
   setupDefaultViewerMocks();
 });
+
+const FIRST_WORD_CONTENT = "テスト語";
+const UPDATED_WORD_CONTENT = "更新後";
+const ADDED_WORD_CONTENT = "追加語";
+
+// defaultMockWords は1件のみだが、テスト対象として先頭のWordを取得する意図を明示する
+const getFirstWordContentInput = () =>
+  screen.getAllByDisplayValue(FIRST_WORD_CONTENT)[0];
+
+const getFirstWordDeleteButton = () =>
+  screen.getAllByRole("button", { name: "削除" })[0];
+
+// svgはpage単位だが、pageが識別可能な属性を付与していないため、単に先頭のsvgを取る
+const getFirstSelectionArea = () =>
+  screen.getAllByLabelText("文字範囲選択エリア")[0];
+
+// jsdom では getBoundingClientRect がレイアウト計算を返せないため、
+// pointer操作時に参照されても落ちないように最小限差し替える
+const mockSelectionAreaRect = (svg) => {
+  svg.getBoundingClientRect = () => ({
+    toJSON: () => ({}),
+  });
+};
+
+const dragSelectionArea = (svg) => {
+  fireEvent.pointerDown(svg, { clientX: 10, clientY: 20 });
+  fireEvent.pointerUp(svg, { clientX: 110, clientY: 120 });
+};
+
+const addPreviewWordByDrag = async () => {
+  const svg = getFirstSelectionArea();
+  mockSelectionAreaRect(svg);
+  dragSelectionArea(svg);
+
+  // 削除ボタンの追加により配列長さが2件分となったことから、新しいWordが追加されたことを確認する
+  await waitFor(() => {
+    expect(screen.getAllByRole("button", { name: "削除" })).toHaveLength(2);
+  });
+};
 
 describe("ViewerPage", () => {
   const enterEditMode = async () => {
@@ -24,258 +62,157 @@ describe("ViewerPage", () => {
     await user.click(await screen.findByRole("button", { name: "編集" }));
     return user;
   };
+  describe("編集モードと保存、中止の挙動", () => {
+    test("編集ボタンを押すと編集モードへ遷移する", async () => {
+      renderViewerPage();
+      await enterEditMode();
 
-  const getContentInput = () => screen.getByDisplayValue("テスト語");
+      expect(screen.queryByRole("button", { name: "編集" })).toBeNull();
+      expect(screen.queryByRole("button", { name: "出力" })).toBeNull();
+      expect(screen.getByRole("button", { name: "元に戻す" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "やり直す" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "保存" })).toBeVisible();
+      expect(screen.getByRole("button", { name: "中止" })).toBeVisible();
+      expect(screen.getByRole("button", { name: "削除" })).toBeVisible();
+      expect(getFirstWordContentInput()).toBeVisible();
+    });
 
-  test("編集ボタンを押すと編集モードへ遷移する", async () => {
-    renderViewerPage();
+    test("保存ボタンを押すと編集内容が保存される", async () => {
+      renderViewerPage();
+      const user = await enterEditMode();
+      const contentInput = getFirstWordContentInput();
+      await user.clear(contentInput);
+      await user.type(contentInput, UPDATED_WORD_CONTENT);
+      await user.click(screen.getByRole("button", { name: "保存" }));
 
-    await enterEditMode();
-
-    expect(screen.queryByRole("button", { name: "編集" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "出力" })).toBeNull();
-    expect(screen.getByRole("button", { name: "元に戻す" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "やり直す" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "保存" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "中止" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "削除" })).toBeVisible();
-    expect(getContentInput()).toBeVisible();
-  });
-
-  test("保存ボタンを押すと編集内容が保存される", async () => {
-    renderViewerPage();
-    const user = await enterEditMode();
-
-    const contentInput = getContentInput();
-    await user.clear(contentInput);
-    await user.type(contentInput, "更新後");
-    await user.click(screen.getByRole("button", { name: "保存" }));
-
-    await waitFor(() => {
       expect(screen.getByRole("button", { name: "編集" })).toBeVisible();
+      expect(screen.getByText(UPDATED_WORD_CONTENT)).toBeVisible();
+      expect(screen.queryByRole("button", { name: "保存" })).toBeNull();
     });
 
-    expect(screen.getByRole("button", { name: "編集" })).toBeVisible();
-    expect(screen.queryByRole("button", { name: "保存" })).toBeNull();
-  });
+    test("中止ボタンを押すと編集内容が破棄される", async () => {
+      renderViewerPage();
+      const user = await enterEditMode();
+      const contentInput = getFirstWordContentInput();
+      await user.clear(contentInput);
+      await user.type(contentInput, UPDATED_WORD_CONTENT);
+      await user.click(screen.getByRole("button", { name: "中止" }));
 
-  test("中止ボタンを押すと編集内容が破棄される", async () => {
-    renderViewerPage();
-    const user = await enterEditMode();
-
-    const contentInput = getContentInput();
-    await user.clear(contentInput);
-    await user.type(contentInput, "更新後");
-    await user.click(screen.getByRole("button", { name: "中止" }));
-
-    expect(screen.getByRole("button", { name: "編集" })).toBeVisible();
-    expect(screen.getAllByText("テスト語").length).toBeGreaterThan(0);
-    expect(screen.queryByDisplayValue("更新後")).toBeNull();
-  });
-
-  test("ドラッグで範囲選択すると仮のWordが追加される", async () => {
-    renderViewerPage();
-
-    await enterEditMode();
-
-    // svgにはpage属性を付与していないため、単に先頭のsvgを取る
-    const svg = (await screen.findAllByLabelText("文字範囲選択エリア"))[0];
-    expect(svg).not.toBeNull();
-    // jsdom には実ブラウザのようなレイアウト計算がないため、
-    // ドラッグ時の座標変換に使う getBoundingClientRect を固定する
-    svg.getBoundingClientRect = () => ({
-      left: 0,
-      top: 0,
-      width: 1000,
-      height: 800,
-      right: 1000,
-      bottom: 800,
-      x: 0,
-      y: 0,
-      toJSON: () => ({}),
-    });
-
-    fireEvent.pointerDown(svg, { clientX: 10, clientY: 20 });
-    fireEvent.pointerMove(svg, { clientX: 110, clientY: 120 });
-    fireEvent.pointerUp(svg, { clientX: 110, clientY: 120 });
-
-    await waitFor(() => {
-      expect(screen.getAllByRole("button", { name: "削除" })).toHaveLength(2);
-    });
-  });
-
-  test("新規追加したWordは保存後に通常表示へ反映される", async () => {
-    renderViewerPage();
-    const user = await enterEditMode();
-
-    const svg = (await screen.findAllByLabelText("文字範囲選択エリア"))[0];
-    expect(svg).not.toBeNull();
-    svg.getBoundingClientRect = () => ({
-      left: 0,
-      top: 0,
-      width: 1000,
-      height: 800,
-      right: 1000,
-      bottom: 800,
-      x: 0,
-      y: 0,
-      toJSON: () => ({}),
-    });
-
-    fireEvent.pointerDown(svg, { clientX: 10, clientY: 20 });
-    fireEvent.pointerMove(svg, { clientX: 110, clientY: 120 });
-    fireEvent.pointerUp(svg, { clientX: 110, clientY: 120 });
-
-    await waitFor(() => {
-      expect(screen.getAllByRole("button", { name: "削除" })).toHaveLength(2);
-    });
-
-    const previewContentInput = screen
-      .getAllByRole("textbox")
-      .find((input) => input.value === "");
-    expect(previewContentInput).toBeDefined();
-    await user.type(previewContentInput, "追加語");
-    await user.click(screen.getByRole("button", { name: "保存" }));
-
-    await waitFor(() => {
       expect(screen.getByRole("button", { name: "編集" })).toBeVisible();
+      expect(screen.getByText(FIRST_WORD_CONTENT)).toBeVisible();
+      expect(screen.queryByDisplayValue(UPDATED_WORD_CONTENT)).toBeNull();
+    });
+  });
+
+  describe("保存時のPOST, PATCH, DELETE対象となるWord操作", () => {
+    test("ドラッグで範囲選択すると仮のWordが追加される", async () => {
+      renderViewerPage();
+      await enterEditMode();
+
+      await addPreviewWordByDrag();
     });
 
-    expect(screen.getAllByText("追加語").length).toBeGreaterThan(0);
-  });
+    test("新規追加したWordは保存後に通常表示へ反映される", async () => {
+      renderViewerPage();
+      const user = await enterEditMode();
 
-  test("内容を入力するとinputの表示が更新される", async () => {
-    renderViewerPage();
-    const user = await enterEditMode();
+      await addPreviewWordByDrag();
 
-    const contentInput = getContentInput();
-    await user.clear(contentInput);
-    await user.type(contentInput, "下書き更新");
+      const previewContentInput = screen
+        .getAllByRole("textbox")
+        .find((input) => input.value === "");
 
-    expect(screen.getByDisplayValue("下書き更新")).toBeVisible();
-  });
+      expect(previewContentInput).toBeVisible();
 
-  test("内容変更はEnterで確定するまでUndo履歴に積まれない", async () => {
-    renderViewerPage();
-    const user = await enterEditMode();
+      await user.type(previewContentInput, ADDED_WORD_CONTENT);
+      await user.click(screen.getByRole("button", { name: "保存" }));
 
-    const contentInput = getContentInput();
-    await user.clear(contentInput);
-    await user.type(contentInput, "更新後");
-
-    expect(screen.getByRole("button", { name: "元に戻す" })).toBeDisabled();
-
-    await user.keyboard("{Enter}");
-
-    expect(screen.getByRole("button", { name: "元に戻す" })).toBeEnabled();
-  });
-
-  test("内容変更はblurでも確定される", async () => {
-    renderViewerPage();
-    const user = await enterEditMode();
-
-    const contentInput = getContentInput();
-    await user.clear(contentInput);
-    await user.type(contentInput, "更新後");
-
-    expect(screen.getByRole("button", { name: "元に戻す" })).toBeDisabled();
-
-    fireEvent.blur(contentInput);
-
-    expect(screen.getByRole("button", { name: "元に戻す" })).toBeEnabled();
-  });
-
-  test("Enterで確定した内容変更はUndoで全文が戻る", async () => {
-    renderViewerPage();
-    const user = await enterEditMode();
-
-    const contentInput = getContentInput();
-    await user.clear(contentInput);
-    await user.type(contentInput, "更新後");
-    await user.keyboard("{Enter}");
-
-    document.activeElement.blur();
-    fireEvent.keyDown(window, { key: "z", ctrlKey: true });
-
-    expect(screen.getByDisplayValue("テスト語")).toBeVisible();
-    expect(screen.queryByDisplayValue("更新後")).toBeNull();
-  });
-
-  test("削除ボタンを押すと対象Wordが即時に一覧から消える", async () => {
-    renderViewerPage();
-    const user = await enterEditMode();
-
-    await user.click(screen.getByRole("button", { name: "削除" }));
-
-    expect(screen.queryByDisplayValue("テスト語")).toBeNull();
-    expect(screen.getByRole("button", { name: "元に戻す" })).toBeEnabled();
-  });
-
-  test("削除したWordは保存後の表示にも残らない", async () => {
-    renderViewerPage();
-    const user = await enterEditMode();
-
-    await user.click(screen.getByRole("button", { name: "削除" }));
-    expect(screen.queryByDisplayValue("テスト語")).toBeNull();
-
-    await user.click(screen.getByRole("button", { name: "保存" }));
-
-    await waitFor(() => {
       expect(screen.getByRole("button", { name: "編集" })).toBeVisible();
+      expect(screen.getByText(ADDED_WORD_CONTENT)).toBeVisible();
     });
 
-    expect(screen.queryByText("テスト語")).toBeNull();
+    test("内容変更は入力中には確定されずEnterで確定される", async () => {
+      renderViewerPage();
+      const user = await enterEditMode();
+      const contentInput = getFirstWordContentInput();
+      await user.clear(contentInput);
+      await user.type(contentInput, UPDATED_WORD_CONTENT);
+
+      // アサート対象として元に戻すボタンを使う
+      expect(screen.getByRole("button", { name: "元に戻す" })).toBeDisabled();
+
+      await user.keyboard("{Enter}");
+
+      expect(screen.getByRole("button", { name: "元に戻す" })).toBeEnabled();
+    });
+
+    test("内容変更はblurでも確定される", async () => {
+      renderViewerPage();
+      const user = await enterEditMode();
+      const contentInput = getFirstWordContentInput();
+      await user.clear(contentInput);
+      await user.type(contentInput, UPDATED_WORD_CONTENT);
+
+      expect(screen.getByRole("button", { name: "元に戻す" })).toBeDisabled();
+
+      fireEvent.blur(contentInput);
+
+      expect(screen.getByRole("button", { name: "元に戻す" })).toBeEnabled();
+    });
+
+    test("削除したWordは即時に一覧から消え、保存後の表示にも残らない", async () => {
+      renderViewerPage();
+      const user = await enterEditMode();
+
+      await user.click(getFirstWordDeleteButton());
+
+      expect(screen.queryByDisplayValue(FIRST_WORD_CONTENT)).toBeNull();
+      expect(screen.getByRole("button", { name: "元に戻す" })).toBeEnabled();
+
+      await user.click(screen.getByRole("button", { name: "保存" }));
+
+      expect(screen.getByRole("button", { name: "編集" })).toBeVisible();
+      expect(screen.queryByText(FIRST_WORD_CONTENT)).toBeNull();
+    });
   });
 
-  test("中止ボタンで削除操作も破棄される", async () => {
-    renderViewerPage();
-    const user = await enterEditMode();
+  describe("削除操作を代表としたUndo/Redoの確認", () => {
+    test("Undo/Redoボタンで削除操作を戻せる", async () => {
+      renderViewerPage();
+      const user = await enterEditMode();
 
-    await user.click(screen.getByRole("button", { name: "削除" }));
-    expect(screen.queryByDisplayValue("テスト語")).toBeNull();
+      await user.click(screen.getByRole("button", { name: "削除" }));
+      await user.click(screen.getByRole("button", { name: "元に戻す" }));
 
-    await user.click(screen.getByRole("button", { name: "中止" }));
+      expect(screen.getByDisplayValue(FIRST_WORD_CONTENT)).toBeVisible();
+      expect(screen.getByRole("button", { name: "削除" })).toBeVisible();
 
-    expect(screen.getByRole("button", { name: "編集" })).toBeVisible();
-    expect(screen.getAllByText("テスト語").length).toBeGreaterThan(0);
-  });
+      await user.click(screen.getByRole("button", { name: "やり直す" }));
 
-  // Undo/Redoは削除操作で確認する。
-  test("Undo/Redoボタンで削除操作を戻せる", async () => {
-    renderViewerPage();
-    const user = await enterEditMode();
+      expect(screen.queryByDisplayValue(FIRST_WORD_CONTENT)).toBeNull();
+    });
 
-    await user.click(screen.getByRole("button", { name: "削除" }));
-    await user.click(screen.getByRole("button", { name: "元に戻す" }));
+    test("Undoコマンドで直前の削除操作が取り消される", async () => {
+      renderViewerPage();
+      const user = await enterEditMode();
 
-    expect(screen.getByDisplayValue("テスト語")).toBeVisible();
-    expect(screen.getByRole("button", { name: "削除" })).toBeVisible();
+      await user.click(screen.getByRole("button", { name: "削除" }));
+      document.activeElement.blur();
+      fireEvent.keyDown(window, { key: "z", ctrlKey: true });
 
-    await user.click(screen.getByRole("button", { name: "やり直す" }));
+      expect(screen.getByDisplayValue(FIRST_WORD_CONTENT)).toBeVisible();
+    });
 
-    expect(screen.queryByDisplayValue("テスト語")).toBeNull();
-  });
+    test("Redoコマンドで取り消した削除操作がやり直される", async () => {
+      renderViewerPage();
+      const user = await enterEditMode();
 
-  test("Undoコマンドで直前の編集操作が取り消される", async () => {
-    renderViewerPage();
-    const user = await enterEditMode();
+      await user.click(screen.getByRole("button", { name: "削除" }));
+      document.activeElement.blur();
+      fireEvent.keyDown(window, { key: "z", ctrlKey: true });
+      fireEvent.keyDown(window, { key: "y", ctrlKey: true });
 
-    await user.click(screen.getByRole("button", { name: "削除" }));
-    document.activeElement.blur();
-    fireEvent.keyDown(window, { key: "z", ctrlKey: true });
-
-    expect(screen.getByDisplayValue("テスト語")).toBeVisible();
-  });
-
-  test("Redoコマンドで取り消した編集操作がやり直される", async () => {
-    renderViewerPage();
-    const user = await enterEditMode();
-
-    await user.click(screen.getByRole("button", { name: "削除" }));
-    document.activeElement.blur();
-    fireEvent.keyDown(window, { key: "z", ctrlKey: true });
-    fireEvent.keyDown(window, { key: "y", ctrlKey: true });
-
-    expect(screen.queryByDisplayValue("テスト語")).toBeNull();
+      expect(screen.queryByDisplayValue(FIRST_WORD_CONTENT)).toBeNull();
+    });
   });
 });
