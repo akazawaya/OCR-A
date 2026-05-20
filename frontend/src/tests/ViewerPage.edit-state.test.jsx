@@ -8,10 +8,7 @@ import "@testing-library/jest-dom/vitest";
 import {
   renderViewerPage,
   setupDefaultViewerMocks,
-  setupResizeObserverMock,
 } from "./ViewerPage.test-utils";
-
-setupResizeObserverMock();
 
 beforeEach(() => {
   setupDefaultViewerMocks();

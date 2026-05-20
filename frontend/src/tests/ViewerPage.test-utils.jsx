@@ -9,6 +9,7 @@ import { resetMockPages } from "./msw/pagesApiHandlers";
 import { resetMockWords } from "./msw/wordsApiHandlers";
 // pageAccessSpec/wordSpec は、setupでVITE_API_BASE_URLをstub済みの想定。
 // ※実際の通信関数はmockすること！
+
 export const renderViewerPage = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -40,34 +41,34 @@ export const setupCanvasTextMeasureMock = () => {
     }));
 };
 
-export const setupDefaultViewerMocks = ({
-  mockUsePrint,
-  mockOpenPrintDialog = vi.fn(),
-} = {}) => {
-  resetMockPages();
-  resetMockWords();
-  if (mockUsePrint) {
-    mockUsePrint.mockReturnValue({
-      contentRef: { current: null },
-      isPrintMode: false,
-      openPrintDialog: mockOpenPrintDialog,
-    });
-  }
-};
-
 class MockResizeObserver {
   constructor(callback) {
     this.callback = callback;
   }
-
   observe() {
     this.callback([]);
   }
-
   unobserve() {}
   disconnect() {}
 }
 
-export const setupResizeObserverMock = () => {
+const viewerPageMocks = vi.hoisted(() => ({
+  mockUsePrint: vi.fn(),
+}));
+const mockUsePrint = viewerPageMocks.mockUsePrint;
+
+vi.mock("../logic/print/usePrint", () => ({
+  usePrint: viewerPageMocks.mockUsePrint,
+}));
+
+export const setupDefaultViewerMocks = () => {
+  resetMockPages();
+  resetMockWords();
   globalThis.ResizeObserver = MockResizeObserver;
+  mockUsePrint.mockReset();
+  mockUsePrint.mockReturnValue({
+    contentRef: { current: null },
+    isPrintMode: false,
+    openPrintDialog: vi.fn(),
+  });
 };

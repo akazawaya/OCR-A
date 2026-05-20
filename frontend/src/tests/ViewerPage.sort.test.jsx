@@ -1,27 +1,19 @@
 // @vitest-environment jsdom
 
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test } from "vitest";
 import { screen, within } from "@testing-library/react";
 
 import "@testing-library/jest-dom/vitest";
 import { sortMockPages, sortMockWords } from "./msw/fixture";
 import { setMockPages } from "./msw/pagesApiHandlers";
 import { setMockWords } from "./msw/wordsApiHandlers";
-import { renderViewerPage } from "./ViewerPage.test-utils";
-
-class MockResizeObserver {
-  constructor(callback) {
-    this.callback = callback;
-  }
-  observe() {
-    this.callback();
-  }
-  disconnect() {}
-}
+import {
+  renderViewerPage,
+  setupDefaultViewerMocks,
+} from "./ViewerPage.test-utils";
 
 beforeEach(() => {
-  vi.clearAllMocks();
-  globalThis.ResizeObserver = MockResizeObserver;
+  setupDefaultViewerMocks();
 });
 
 describe("ViewerPage sort", () => {

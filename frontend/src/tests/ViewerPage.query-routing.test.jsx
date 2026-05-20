@@ -11,19 +11,10 @@ import ViewerPage from "../pages/ViewerPage";
 import { setMockPages } from "./msw/pagesApiHandlers";
 import { setMockWords } from "./msw/wordsApiHandlers";
 import { queryRoutingMockPages, queryRoutingMockWords } from "./msw/fixture";
-
-class MockResizeObserver {
-  constructor(callback) {
-    this.callback = callback;
-  }
-  observe() {
-    this.callback();
-  }
-  disconnect() {}
-}
+import { setupDefaultViewerMocks } from "./ViewerPage.test-utils";
 
 beforeEach(() => {
-  globalThis.ResizeObserver = MockResizeObserver;
+  setupDefaultViewerMocks();
   setMockPages(queryRoutingMockPages);
   setMockWords(queryRoutingMockWords);
 });
