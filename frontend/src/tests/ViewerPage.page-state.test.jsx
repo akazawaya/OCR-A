@@ -7,6 +7,7 @@ import "@testing-library/jest-dom/vitest";
 
 import { defaultMockPages } from "./msw/fixture";
 import {
+  mockUsePrint,
   renderViewerPage,
   setupDefaultViewerMocks,
   setupCanvasTextMeasureMock,
@@ -227,9 +228,15 @@ describe("ViewerPage", () => {
   });
 
   test("非編集時は出力ボタンを押すとopenPrintDialogが呼ばれる", async () => {
+    const mockOpenPrintDialog = vi.fn();
+    mockUsePrint.mockReturnValue({
+      openPrintDialog: mockOpenPrintDialog,
+    });
     renderViewerPage();
+
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: "出力" }));
-    //expect(mockOpenPrintDialog).toHaveBeenCalledTimes(1); 一旦無効化
+
+    expect(mockOpenPrintDialog).toHaveBeenCalledTimes(1);
   });
 });

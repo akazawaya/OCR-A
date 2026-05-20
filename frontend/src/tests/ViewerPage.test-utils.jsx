@@ -52,23 +52,19 @@ class MockResizeObserver {
   disconnect() {}
 }
 
-const viewerPageMocks = vi.hoisted(() => ({
-  mockUsePrint: vi.fn(),
-}));
-const mockUsePrint = viewerPageMocks.mockUsePrint;
+const mockUsePrint = vi.hoisted(() => vi.fn());
 
 vi.mock("../logic/print/usePrint", () => ({
-  usePrint: viewerPageMocks.mockUsePrint,
+  usePrint: mockUsePrint,
 }));
+
+export { mockUsePrint };
+// vi.hoisted() のreturnは直接 export 不可のため分けてexportする（returnのcallテスト用）
 
 export const setupDefaultViewerMocks = () => {
   resetMockPages();
   resetMockWords();
   globalThis.ResizeObserver = MockResizeObserver;
   mockUsePrint.mockReset();
-  mockUsePrint.mockReturnValue({
-    contentRef: { current: null },
-    isPrintMode: false,
-    openPrintDialog: vi.fn(),
-  });
+  mockUsePrint.mockReturnValue({});
 };
