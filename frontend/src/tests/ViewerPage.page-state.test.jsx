@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { beforeEach, describe, test, expect, vi, afterEach } from "vitest";
+import { beforeEach, describe, test, expect, vi } from "vitest";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
@@ -29,15 +29,9 @@ Object.defineProperty(HTMLElement.prototype, "clientHeight", {
   },
 });
 
-let getContextSpy;
-
 beforeEach(() => {
   setupDefaultViewerMocks();
-  getContextSpy = setupCanvasTextMeasureMock();
-});
-
-afterEach(() => {
-  getContextSpy.mockRestore();
+  setupCanvasTextMeasureMock();
 });
 
 describe("ViewerPage", () => {
@@ -224,6 +218,7 @@ describe("ViewerPage", () => {
     renderViewerPage();
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: "編集" }));
+
     expect(screen.queryByRole("button", { name: "出力" })).toBeNull();
   });
 
@@ -233,7 +228,6 @@ describe("ViewerPage", () => {
       openPrintDialog: mockOpenPrintDialog,
     });
     renderViewerPage();
-
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: "出力" }));
 
