@@ -13,6 +13,11 @@ import {
   X,
 } from "lucide-react";
 
+import {
+  VIEWER_ZOOM,
+  VIEWER_ROTATE_STEP,
+} from "../../logic/viewer/viewerPageConstants";
+
 const renderTextField = (foo, commitFoo, inputRef, ariaLabel) => (
   // 外部の foo が変わったときにinputRef.current.value = ... で表示を同期
   <input
@@ -37,12 +42,10 @@ const renderTextField = (foo, commitFoo, inputRef, ariaLabel) => (
 
 const ViewerTopBar = ({
   data: {
-    maxPage = 1,
+    maxPage,
     page,
     zoom,
     rotate,
-    ZOOM_STEP,
-    ROTATE_STEP,
     isEditing,
     canUndo = false,
     canRedo = false,
@@ -129,7 +132,7 @@ const ViewerTopBar = ({
           icon: ZoomOut,
           className: actionButtonWithDisabledClassName,
           disabled: !canZoomOut,
-          onClick: () => onClickZoomStepButton((a) => a - ZOOM_STEP),
+          onClick: () => onClickZoomStepButton((a) => a - VIEWER_ZOOM.STEP),
         })}
         {renderTextField(zoom, onEnterZoomInput, zoomRef, "zoom")}
         {renderIconButton({
@@ -137,7 +140,7 @@ const ViewerTopBar = ({
           icon: ZoomIn,
           className: actionButtonWithDisabledClassName,
           disabled: !canZoomIn,
-          onClick: () => onClickZoomStepButton((a) => a + ZOOM_STEP),
+          onClick: () => onClickZoomStepButton((a) => a + VIEWER_ZOOM.STEP),
         })}
       </div>
       <div className="flex items-center gap-0.5">
@@ -145,7 +148,7 @@ const ViewerTopBar = ({
           label: "回転",
           icon: RotateCw,
           className: actionButtonClassName,
-          onClick: () => onClickRotateStepButton((a) => a + ROTATE_STEP),
+          onClick: () => onClickRotateStepButton((a) => a + VIEWER_ROTATE_STEP),
         })}
         {renderTextField(rotate, onEnterRotateInput, rotateRef, "rotate")}
       </div>

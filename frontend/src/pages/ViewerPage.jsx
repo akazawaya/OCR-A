@@ -158,9 +158,6 @@ const ViewerPage = () => {
     page: pageState.page,
     maxPage: pages.length,
     zoom: pageState.zoom,
-    zoomStep: pageState.ZOOM_STEP,
-    minZoom: pageState.MIN_ZOOM,
-    maxZoom: pageState.MAX_ZOOM,
   });
   return (
     <>
@@ -180,8 +177,6 @@ const ViewerPage = () => {
               page: pageState.page,
               zoom: pageState.zoom,
               rotate: pageState.rotate,
-              ZOOM_STEP: pageState.ZOOM_STEP,
-              ROTATE_STEP: pageState.ROTATE_STEP,
               isEditing: editState.isEditing,
               canUndo: editState.canUndo,
               canRedo: editState.canRedo,

@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { VIEWER_ZOOM, VIEWER_ROTATE_STEP } from "./viewerPageConstants";
+
 // raw→str（空白除去、全角数字を半角化）　ASCII digitsは0〜9の半角数字（ASCII の数字）の意味
 const rawToAsciiDigits = (raw) => {
   const map = {
@@ -60,23 +62,17 @@ const buildCommit = (_setFoo, rawToNum) => (raw) => {
 };
 
 export const useViewerPageState = ({ maxPage }) => {
-  const MIN_PAGE = 1;
-  const safeMaxPage = Math.max(MIN_PAGE, maxPage);
-  const MIN_ZOOM = 25,
-    MAX_ZOOM = 300,
-    ZOOM_STEP = 25;
-  const ROTATE_STEP = 90;
-
+  const safeMaxPage = Math.max(1, maxPage);
   const [page, _setPage] = useState(1);
   const [zoom, _setZoom] = useState(100); // 100=100%
   const [rotate, _setRotate] = useState(0);
 
   const rawToPage = buildRawToNumOrNull((num) => clamp(num, 1, safeMaxPage));
   const rawToZoom = buildRawToNumOrNull((num) =>
-    clamp(snap(num, ZOOM_STEP), MIN_ZOOM, MAX_ZOOM),
+    clamp(snap(num, VIEWER_ZOOM.STEP), VIEWER_ZOOM.MIN, VIEWER_ZOOM.MAX),
   );
   const rawToRotate = buildRawToNumOrNull((num) =>
-    wrap360(snap(num, ROTATE_STEP)),
+    wrap360(snap(num, VIEWER_ROTATE_STEP)),
   );
 
   // setFoo: ボタン操作などの更新要求を反映する
@@ -99,9 +95,5 @@ export const useViewerPageState = ({ maxPage }) => {
     commitPage,
     commitZoom,
     commitRotate,
-    MIN_ZOOM,
-    MAX_ZOOM,
-    ZOOM_STEP,
-    ROTATE_STEP,
   };
 };

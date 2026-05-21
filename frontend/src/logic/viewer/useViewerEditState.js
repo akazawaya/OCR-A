@@ -1,6 +1,8 @@
+// Edit,Save,Cancelのロジック用まとめのhook
 import { useMemo, useReducer, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-// Edit,Save,Cancelのロジック用まとめのhook
+
+import { VIEWER_ZOOM } from "./viewerPageConstants";
 
 const initialHistoryState = {
   past: [],
@@ -95,9 +97,6 @@ export const useViewerEditState = ({
   page,
   maxPage,
   zoom,
-  zoomStep,
-  minZoom,
-  maxZoom,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [historyState, historyDispatch] = useReducer(
@@ -292,8 +291,8 @@ export const useViewerEditState = ({
   const canRedo = historyState.future.length > 0;
   const canGoPrevPage = page > 1;
   const canGoNextPage = page < maxPage;
-  const canZoomOut = zoom - zoomStep >= minZoom;
-  const canZoomIn = zoom + zoomStep <= maxZoom;
+  const canZoomOut = zoom - VIEWER_ZOOM.STEP >= VIEWER_ZOOM.MIN;
+  const canZoomIn = zoom + VIEWER_ZOOM.STEP <= VIEWER_ZOOM.MAX;
 
   return {
     isEditing,
