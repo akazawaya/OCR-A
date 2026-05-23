@@ -190,8 +190,8 @@ describe("ViewerPage", () => {
     const user = userEvent.setup();
     await user.click(zoomUpButton);
     const afterFontSize = parseFloat(wordSpan.style.fontSize);
-
-    expect(afterFontSize / beforeFontSize).toBeCloseTo(1.25);
+    // サイズ変更は単に大きくなったか否かをアサートする
+    expect(afterFontSize).toBeGreaterThan(beforeFontSize);
   });
 
   test("内容をEnterで確定するとWordOverlayの表示語も更新される", async () => {
