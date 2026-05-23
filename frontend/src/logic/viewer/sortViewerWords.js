@@ -1,3 +1,5 @@
+import { bboxToBounds } from "../transforms/bboxTransforms";
+
 /**
  * sortViewerWords.js
  *
@@ -5,16 +7,7 @@
  * - word 配列の表示順を compareViewerWords で決める
  * - 優先順は page → direction → bbox座標 → id
  *
- * @typedef {Object} ViewerWord
- * @property {number|string} id
- * @property {number} page__page_number
- * @property {number[]} bbox
- * @property {number} direction
- */
-
-import { bboxToBounds } from "../transforms/bboxTransforms";
-
-/**
+ * compareViewerWords
  * @param {ViewerWord} wordA
  * @param {ViewerWord} wordB
  * @returns {number} 負の数なら wordA を先、0 なら同順、正の数なら wordB を先にする。数の大きさは無関係。

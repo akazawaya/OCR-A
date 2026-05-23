@@ -5,37 +5,6 @@
  * - OCR結果のword配列から、overlay描画に必要なレイアウト情報(polygonとspan)を生成する。
  * - clientSizePx(DOM要素のサイズ), imageSizePx(座標系全体のサイズ）を受け取り、拡大縮小に伴うサイズの変更を担う。
  *
- * @param {object} params
- *
- * @param {{ w:number, h:number }} params.clientSizePx
- * - overlayを描画するDOM要素のclientサイズ
- *
- * @param {{ w:number, h:number }} params.imageSizePx
- * - 画像座標系の全体サイズ（幅/高さ）。
- *   wordsの座標（x,y）はこの座標系に属しており、overlay配置では「値/全体サイズ」を%へ変換するための分母として使う。
- *
- * @param {Array<{ id: string|number, bbox: Array<[number, number]>, content: string|null }>} [params.words]
- * - OCR結果のwordの配列。bboxは頂点座標[[x1,y1],[x2,y2],...]を想定
- *
- * @returns {object} result
- *
- * @property {Array<{
- *   id: string|number,
- *   polygon: { points: string },
- *   span: {
- *     style: { left: string, top: string, width: string, height: string },
- *     text: string,
- *     mode: "vertical"|"horizontal",
- *     fontPx: number
- *   }
- * }>} result.wordLayout
- * - overlay描画用のアイテム配列（<polygon>用 + <span>用）
- *
- * 特筆事項:
- * - measureTextPx: canvasで文字幅計測
- * - decideWritingMode: 縦書き/横書きの判定(縦書きは排除を検討中)
- * - fitFontPxHorizontal/Vertical: bbox内に収めるためのfontPxの計算
- *
  */
 
 import {
