@@ -12,6 +12,7 @@ const WordOverlay = ({
     pageId,
     clientSizePx,
     imageSizePx,
+    rotate,
     words = [],
     hoveredWordId,
     selectedWordId,
@@ -32,6 +33,7 @@ const WordOverlay = ({
     onPointerCancel,
   } = useDragRectState({
     imageSizePx,
+    rotate,
     pageId,
     onAddPendingPostByBbox,
   });

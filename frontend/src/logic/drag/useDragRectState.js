@@ -10,22 +10,28 @@ import { useState } from "react";
 
 import { rectFromPoints, rectToBbox } from "../transforms/bboxTransforms";
 
-const readPointFromPointerEvent = (event, { imageW, imageH }) => {
+const readPointFromPointerEvent = (event, { imageW, imageH, rotate }) => {
   const rect = event.currentTarget.getBoundingClientRect();
   const rawX = event.clientX - rect.left;
   const rawY = event.clientY - rect.top;
+  const nx = rect.width === 0 ? 0 : rawX / rect.width;
+  const ny = rect.height === 0 ? 0 : rawY / rect.height;
 
-  const scaleX = rect.width === 0 ? 0 : imageW / rect.width;
-  const scaleY = rect.height === 0 ? 0 : imageH / rect.height;
-
-  return {
-    x: rawX * scaleX,
-    y: rawY * scaleY,
-  };
+  if (rotate === 90) {
+    return { x: ny * imageW, y: (1 - nx) * imageH };
+  }
+  if (rotate === 180) {
+    return { x: (1 - nx) * imageW, y: (1 - ny) * imageH };
+  }
+  if (rotate === 270) {
+    return { x: (1 - ny) * imageW, y: nx * imageH };
+  }
+  return { x: nx * imageW, y: ny * imageH };
 };
 
 export const useDragRectState = ({
   imageSizePx = {},
+  rotate = 0,
   pageId,
   onAddPendingPostByBbox,
 } = {}) => {
@@ -46,13 +52,13 @@ export const useDragRectState = ({
       : null;
 
   const onPointerDown = (event) => {
-    const point = readPointFromPointerEvent(event, { imageW, imageH });
+    const point = readPointFromPointerEvent(event, { imageW, imageH, rotate });
     setStartPoint(point);
     setCurrentPoint(point);
   };
 
   const onPointerMove = (event) => {
-    const point = readPointFromPointerEvent(event, { imageW, imageH });
+    const point = readPointFromPointerEvent(event, { imageW, imageH, rotate });
     if (!startPoint) return;
     setCurrentPoint(point);
   };
@@ -62,7 +68,11 @@ export const useDragRectState = ({
   };
 
   const onPointerUp = (event) => {
-    const endPoint = readPointFromPointerEvent(event, { imageW, imageH });
+    const endPoint = readPointFromPointerEvent(event, {
+      imageW,
+      imageH,
+      rotate,
+    });
     if (!startPoint) {
       clearDragState();
       return;

@@ -78,6 +78,7 @@ const ViewerImage = ({
                 data={{
                   ...wordOverlayData,
                   pageId: p.id,
+                  rotate: safeRotate,
                   clientSizePx: { w, h },
                   imageSizePx: { w: imageW, h: imageH },
                 }}
