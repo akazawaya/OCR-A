@@ -16,7 +16,7 @@ export const fetchBackend = async (url, options = {}) => {
 
   try {
     const res = await fetch(url, { ...fetchOptions, headers });
-    const data = res.status === 204 ? null : await res.json();
+    const data = [202, 204].includes(res.status) ? null : await res.json();
 
     if (!res.ok) {
       throw buildHttpError({ res, data, url });
