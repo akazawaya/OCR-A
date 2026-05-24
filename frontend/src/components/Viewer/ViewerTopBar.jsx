@@ -31,7 +31,7 @@ const renderTextField = (foo, commitFoo, inputRef, ariaLabel) => (
     }}
     onKeyDown={(e) => {
       if (e.key !== "Enter") return;
-      if (e.nativeEvent.isComposing) return;
+      if (e.isComposing) return;
       // commitFoo側の整合化によりstateが変わらず、表示更新が発生しないことを避けるために
       // EnterのタイミングcommitFoo の返り値をinputに書き戻す
       const display = commitFoo(e.currentTarget.value);
