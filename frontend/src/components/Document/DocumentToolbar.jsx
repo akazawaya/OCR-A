@@ -15,8 +15,8 @@ const DocumentToolbar = ({
   const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
 
-  const onClickStartOcrButton = async () => {
-    await _onClickStartOcrButton(selectedFile);
+  const onClickStartOcrButton = () => {
+    _onClickStartOcrButton(selectedFile);
     setSelectedFile(null);
     fileInputRef.current.value = "";
   };
