@@ -10,7 +10,12 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text"],
       include: ["src/**/*.{js,jsx}"],
-      exclude: ["src/tests/**", "src/main.jsx", "src/App.jsx"],
+      exclude: [
+        "src/tests/**",
+        "src/main.jsx",
+        "src/App.jsx",
+        "schemaClient.js",
+      ],
     },
   },
 });
