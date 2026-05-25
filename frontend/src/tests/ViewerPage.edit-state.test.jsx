@@ -31,15 +31,40 @@ const getFirstSelectionArea = () =>
 
 // jsdom では getBoundingClientRect がレイアウト計算を返せないため、
 // pointer操作時に参照されても落ちないように最小限差し替える
-const mockSelectionAreaRect = (svg) => {
+const mockSelectionAreaRect = (
+  svg,
+  { left = 0, top = 0, width = 200, height = 100 } = {},
+) => {
   svg.getBoundingClientRect = () => ({
+    left,
+    top,
+    width,
+    height,
+    right: left + width,
+    bottom: top + height,
+    x: left,
+    y: top,
     toJSON: () => ({}),
   });
 };
 
-const dragSelectionArea = (svg) => {
-  fireEvent.pointerDown(svg, { clientX: 10, clientY: 20 });
-  fireEvent.pointerUp(svg, { clientX: 110, clientY: 120 });
+const dragSelectionArea = (
+  svg,
+  {
+    start = { clientX: 10, clientY: 20 },
+    end = { clientX: 110, clientY: 120 },
+  } = {},
+) => {
+  fireEvent.pointerDown(svg, start);
+  fireEvent.pointerUp(svg, end);
+};
+
+const getPendingPolygonPoints = (svg) => {
+  const polygons = Array.from(svg.querySelectorAll("polygon"));
+  const pendingPolygon = polygons.find((polygon) =>
+    (polygon.getAttribute("class") ?? "").includes("fill-green-500/15"),
+  );
+  return pendingPolygon?.getAttribute("points") ?? null;
 };
 
 const addPreviewWordByDrag = async () => {
@@ -210,6 +235,44 @@ describe("ViewerPage", () => {
       fireEvent.keyDown(window, { key: "y", ctrlKey: true });
 
       expect(screen.queryByDisplayValue(FIRST_WORD_CONTENT)).toBeNull();
+    });
+  });
+
+  describe("Dragによる詳細なpostの座標追加の確認", () => {
+    test("ドラッグした通りの座標でpending bboxが積まれる", async () => {
+      renderViewerPage();
+      await enterEditMode();
+
+      const svg = getFirstSelectionArea();
+      mockSelectionAreaRect(svg, { width: 200, height: 100 });
+      dragSelectionArea(svg, {
+        start: { clientX: 20, clientY: 10 },
+        end: { clientX: 120, clientY: 60 },
+      });
+
+      await waitFor(() => {
+        expect(getPendingPolygonPoints(svg)).toBe(
+          "100,80 600,80 600,480 100,480",
+        );
+      });
+    });
+
+    test("90度回転でも正しいpending bboxが積まれる", async () => {
+      renderViewerPage();
+      const user = await enterEditMode();
+      await user.click(screen.getByRole("button", { name: "回転" }));
+
+      const svg = getFirstSelectionArea();
+      mockSelectionAreaRect(svg, { width: 100, height: 200 });
+      dragSelectionArea(svg, {
+        start: { clientX: 10, clientY: 20 },
+        end: { clientX: 60, clientY: 120 },
+      });
+      await waitFor(() => {
+        expect(getPendingPolygonPoints(svg)).toBe(
+          "100,320 600,320 600,720 100,720",
+        );
+      });
     });
   });
 });
