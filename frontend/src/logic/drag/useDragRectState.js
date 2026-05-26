@@ -12,21 +12,38 @@ import { rectFromPoints, rectToBbox } from "../transforms/bboxTransforms";
 
 const readPointFromPointerEvent = (event, { imageW, imageH, rotate }) => {
   const rect = event.currentTarget.getBoundingClientRect();
+  // ブラウザ画面上でのポインタ位置 clientX/clientYから
+  // SVG要素の外接矩形の左上 rect.left/top を引き、SVG表示上のローカル座標にする
   const rawX = event.clientX - rect.left;
   const rawY = event.clientY - rect.top;
-  const nx = rawX / rect.width;
-  const ny = rawY / rect.height;
-
   if (rotate === 90) {
-    return { x: ny * imageW, y: (1 - nx) * imageH };
+    // rect.width/heightは画面上に実際に表示されているSVG要素の外接矩形サイズ
+    // raw ÷ rectでローカル座標表示上の何割の位置かを出し、imagePxを掛けて元画像座標に戻す
+    const localX = rawY;
+    const localY = rect.width - rawX;
+    return {
+      x: (localX / rect.height) * imageW,
+      y: (localY / rect.width) * imageH,
+    };
   }
   if (rotate === 180) {
-    return { x: (1 - nx) * imageW, y: (1 - ny) * imageH };
+    return {
+      x: (1 - rawX / rect.width) * imageW,
+      y: (1 - rawY / rect.height) * imageH,
+    };
   }
   if (rotate === 270) {
-    return { x: (1 - ny) * imageW, y: nx * imageH };
+    const localX = rect.height - rawY;
+    const localY = rawX;
+    return {
+      x: (localX / rect.height) * imageW,
+      y: (localY / rect.width) * imageH,
+    };
   }
-  return { x: nx * imageW, y: ny * imageH };
+  return {
+    x: (rawX / rect.width) * imageW,
+    y: (rawY / rect.height) * imageH,
+  };
 };
 
 export const useDragRectState = ({

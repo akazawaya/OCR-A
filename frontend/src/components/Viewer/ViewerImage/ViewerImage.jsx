@@ -49,9 +49,13 @@ const ViewerImage = ({
         const containerW = safeRotate === 90 || safeRotate === 270 ? h : w;
         const containerH = safeRotate === 90 || safeRotate === 270 ? w : h;
         const containerClass = isPrintMode ? "relative" : "relative mx-auto";
+        // 回転時は軸を中心に据えるため、画像要素そのものを親コンテナ中央に配置する。
+        // top-1/2 left-1/2で要素の左上を親コンテナ中央へ置き、
+        // -translate-x/y-1/2で要素自身の半分だけ戻す。
+        // origin-centerにより、その中央位置を基準にrotateする。
         const imageClass = isPrintMode
           ? "relative"
-          : "absolute top-1/2 left-1/2 origin-center -translate-x-1/2 -translate-y-1/2 rotate-(--rotate)";
+          : "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 origin-center rotate-(--rotate)";
         const containerStyle = isPrintMode
           ? { width: containerW, height: containerH, margin: 0 }
           : { width: containerW, height: containerH };

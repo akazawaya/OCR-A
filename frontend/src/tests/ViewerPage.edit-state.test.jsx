@@ -33,7 +33,7 @@ const getFirstSelectionArea = () =>
 // pointer操作時に参照されても落ちないように最小限差し替える
 const mockSelectionAreaRect = (
   svg,
-  { left = 0, top = 0, width = 200, height = 100 } = {},
+  { left = 0, top = 0, width, height } = {},
 ) => {
   svg.getBoundingClientRect = () => ({
     left,
@@ -48,29 +48,30 @@ const mockSelectionAreaRect = (
   });
 };
 
-const dragSelectionArea = (
-  svg,
-  {
-    start = { clientX: 10, clientY: 20 },
-    end = { clientX: 110, clientY: 120 },
-  } = {},
-) => {
+const DEFAULT_SELECTION_AREA_RECT = { width: 123, height: 456 };
+const DEFAULT_DRAG_SELECTION = {
+  start: { clientX: 78, clientY: 90 },
+  end: { clientX: 101, clientY: 123 },
+};
+
+const dragSelectionArea = (svg, { start, end }) => {
   fireEvent.pointerDown(svg, start);
   fireEvent.pointerUp(svg, end);
 };
 
 const getPendingPolygonPoints = (svg) => {
   const polygons = Array.from(svg.querySelectorAll("polygon"));
-  const pendingPolygon = polygons.find((polygon) =>
-    (polygon.getAttribute("class") ?? "").includes("fill-green-500/15"),
-  );
-  return pendingPolygon?.getAttribute("points") ?? null;
+  const pendingPolygon = polygons.at(-1);
+  return pendingPolygon.getAttribute("points");
 };
 
-const addPreviewWordByDrag = async () => {
+const addPreviewWordByDrag = async ({
+  rect = DEFAULT_SELECTION_AREA_RECT,
+  drag = DEFAULT_DRAG_SELECTION,
+} = {}) => {
   const svg = getFirstSelectionArea();
-  mockSelectionAreaRect(svg);
-  dragSelectionArea(svg);
+  mockSelectionAreaRect(svg, rect);
+  dragSelectionArea(svg, drag);
 
   // 削除ボタンの追加により配列長さが2件分となったことから、新しいWordが追加されたことを確認する
   await waitFor(() => {
@@ -238,21 +239,23 @@ describe("ViewerPage", () => {
     });
   });
 
-  describe("Dragによる詳細なpostの座標追加の確認", () => {
+  describe("DragRectによる詳細なpostの座標追加の確認", () => {
     test("ドラッグした通りの座標でpending bboxが積まれる", async () => {
       renderViewerPage();
       await enterEditMode();
-
       const svg = getFirstSelectionArea();
-      mockSelectionAreaRect(svg, { width: 200, height: 100 });
+      // SelectionAreaはfixtureのqueryRoutingMockPagesのwhが(1000,800)であることに対して1/10
+      // dragSelectionAreaは(20,10)の横長となるよう配置
+      // client座標は画像座標へ10倍換算されるため、(200,100)のrectとなる
+      mockSelectionAreaRect(svg, { width: 100, height: 80 });
       dragSelectionArea(svg, {
-        start: { clientX: 20, clientY: 10 },
-        end: { clientX: 120, clientY: 60 },
+        start: { clientX: 10, clientY: 10 },
+        end: { clientX: 30, clientY: 20 },
       });
-
+      // polygonのpointsは左上を(0,0)とした、左上からの時計回り
       await waitFor(() => {
         expect(getPendingPolygonPoints(svg)).toBe(
-          "100,80 600,80 600,480 100,480",
+          "100,100 300,100 300,200 100,200",
         );
       });
     });
@@ -263,14 +266,15 @@ describe("ViewerPage", () => {
       await user.click(screen.getByRole("button", { name: "回転" }));
 
       const svg = getFirstSelectionArea();
-      mockSelectionAreaRect(svg, { width: 100, height: 200 });
+      mockSelectionAreaRect(svg, { width: 80, height: 100 });
       dragSelectionArea(svg, {
-        start: { clientX: 10, clientY: 20 },
-        end: { clientX: 60, clientY: 120 },
+        start: { clientX: 10, clientY: 10 },
+        end: { clientX: 30, clientY: 20 },
       });
+      // 90度回転時のy1は imageHeight - bboxMaxX = 800 - 300 = 500
       await waitFor(() => {
         expect(getPendingPolygonPoints(svg)).toBe(
-          "100,320 600,320 600,720 100,720",
+          "100,500 200,500 200,700 100,700",
         );
       });
     });
