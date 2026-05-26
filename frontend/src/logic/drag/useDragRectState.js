@@ -14,8 +14,8 @@ const readPointFromPointerEvent = (event, { imageW, imageH, rotate }) => {
   const rect = event.currentTarget.getBoundingClientRect();
   const rawX = event.clientX - rect.left;
   const rawY = event.clientY - rect.top;
-  const nx = rect.width === 0 ? 0 : rawX / rect.width;
-  const ny = rect.height === 0 ? 0 : rawY / rect.height;
+  const nx = rawX / rect.width;
+  const ny = rawY / rect.height;
 
   if (rotate === 90) {
     return { x: ny * imageW, y: (1 - nx) * imageH };
