@@ -48,8 +48,11 @@ class DocumentSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class DocumentUploadSerializer(serializers.Serializer):
-    file = serializers.FileField()
+    file = serializers.FileField(allow_empty_file=False)
 
+    # FileFieldはデフォルトのallow_empty_file=Falseにより
+    # サイズ0のファイルを検知してバリデーションエラーとして拒否できる
+    # 「添付ファイルの中身が空でした。」が返る
     def validate_file(self, file):
         ext = file.name.rsplit(".", 1)[-1].lower() if "." in file.name else ""
         ext = UPLOAD_FILE_EXTENSION_ALIASES.get(ext, ext)
