@@ -37,11 +37,11 @@ const ViewerImage = ({
   return (
     <div ref={rootRef} data-print-root={isPrintMode ? "true" : undefined}>
       {pages.map((p) => {
-        const imageW = Number(p.width_px) || 0;
-        const imageH = Number(p.height_px) || 0;
+        const imageW = Number(p.width_px);
+        const imageH = Number(p.height_px);
         const safeRotate = isPrintMode ? 0 : rotate;
         const zoomScale = isPrintMode ? 1 : zoom / 100;
-        const baseScale = isPrintMode ? 1 : imageW ? limitW / imageW : 1;
+        const baseScale = isPrintMode ? 1 : limitW / imageW;
         const finalScale = baseScale * zoomScale;
 
         const w = imageW * finalScale;
