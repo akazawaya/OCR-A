@@ -22,7 +22,7 @@ const WordOverlay = ({
     onHoverWord,
     onHoverClearWord,
     onSelectWord,
-    onAddPendingPostByBbox,
+    onBboxDrawComplete,
   } = {},
 }) => {
   const {
@@ -35,7 +35,7 @@ const WordOverlay = ({
     imageSizePx,
     rotate,
     pageId,
-    onAddPendingPostByBbox,
+    onBboxDrawComplete,
   });
 
   const wordsOnPage = words.filter((w) => Number(w.page) === Number(pageId));

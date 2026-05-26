@@ -50,7 +50,7 @@ export const useDragRectState = ({
   imageSizePx = {},
   rotate = 0,
   pageId,
-  onAddPendingPostByBbox,
+  onBboxDrawComplete,
 } = {}) => {
   const imageW = imageSizePx.w;
   const imageH = imageSizePx.h;
@@ -104,7 +104,7 @@ export const useDragRectState = ({
     const aspect = rect.height / rect.width;
     const direction = aspect >= 2 ? 2 : 1;
 
-    onAddPendingPostByBbox(pageId, bbox, direction);
+    onBboxDrawComplete(pageId, bbox, direction);
   };
 
   return {

@@ -201,7 +201,7 @@ const ViewerPage = () => {
             }}
           />
         </div>
-        <div className="overflow-auto overscroll-contain [scrollbar-gutter:stable]">
+        <div className="[scrollbar-gutter:stable] overflow-auto overscroll-contain">
           <ViewerImage
             data={{
               pages,
@@ -223,7 +223,7 @@ const ViewerPage = () => {
               onHoverWord: selection.hover,
               onHoverClearWord: selection.clearHovered,
               onSelectWord: selection.commitSelect,
-              onAddPendingPostByBbox: editState.addPendingPostByBbox,
+              onBboxDrawComplete: editState.addPendingPostByBbox,
             }}
           />
         </div>
