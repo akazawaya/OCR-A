@@ -67,4 +67,5 @@ export const setupDefaultViewerMocks = () => {
   globalThis.ResizeObserver = MockResizeObserver;
   mockUsePrint.mockReset();
   mockUsePrint.mockReturnValue({});
+  Element.prototype.scrollIntoView = vi.fn();
 };

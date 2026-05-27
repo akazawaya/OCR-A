@@ -43,12 +43,8 @@ const DocumentsPage = () => {
 
   const columnsSort = useCallback(
     (orderingField) => {
-      const currentSortQuery = {
-        ordering:
-          new URLSearchParams(baseQueryString || "").get("ordering") || "",
-      };
       const nextAppliedSortQuery = toggleSortQuery(
-        currentSortQuery,
+        appliedSortQuery,
         orderingField,
       );
       setAppliedSortQuery(nextAppliedSortQuery);
@@ -61,7 +57,7 @@ const DocumentsPage = () => {
 
       navigate({ search: nextQueryString }, { replace: true });
     },
-    [appliedSearchQuery, baseQueryString, navigate],
+    [appliedSearchQuery, appliedSortQuery, baseQueryString, navigate],
   );
 
   const applySearch = useCallback(() => {
@@ -93,12 +89,15 @@ const DocumentsPage = () => {
     [appliedSearchQuery, appliedSortQuery, baseQueryString],
   );
 
-  const { data: rows } = useQuery({
+  const {
+    data: rows,
+    isPending,
+    isError,
+  } = useQuery({
     queryKey: [collectionUrl, documentQueryString],
     queryFn: () =>
       getCollection({ collectionUrl, queryString: documentQueryString }),
     enabled: Boolean(collectionUrl),
-    placeholderData: [],
   });
 
   const { mutate: deleteRowMutation } = useMutation({
@@ -151,18 +150,24 @@ const DocumentsPage = () => {
           onClickStartOcrButton: startOcr,
         }}
       />
-      <DocumentTable
-        data={{
-          columns: documentTableColumns,
-          rows,
-          ordering: appliedSortQuery.ordering,
-        }}
-        events={{
-          onClickColumn: columnsSort,
-          onClickRow: dataRouter,
-          onClickDeleteButton: deleteRow,
-        }}
-      />
+      {isPending ? (
+        <div>Now Loading...</div>
+      ) : isError ? (
+        <div>読み込みに失敗しました</div>
+      ) : (
+        <DocumentTable
+          data={{
+            columns: documentTableColumns,
+            rows,
+            ordering: appliedSortQuery.ordering,
+          }}
+          events={{
+            onClickColumn: columnsSort,
+            onClickRow: dataRouter,
+            onClickDeleteButton: deleteRow,
+          }}
+        />
+      )}
     </div>
   );
 };

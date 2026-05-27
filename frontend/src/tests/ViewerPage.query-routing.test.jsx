@@ -46,7 +46,7 @@ describe("ViewerPage routing query", () => {
     renderViewerPage("/documents/1/viewer");
 
     // 絞り込みの確認は ViewerTableの<tr>を想定する
-    const table = screen.getByRole("table");
+    const table = await screen.findByRole("table");
     expect(
       await within(table).findByRole("row", { name: /alpha word/i }),
     ).toBeVisible();

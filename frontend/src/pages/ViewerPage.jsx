@@ -54,7 +54,11 @@ const ViewerPage = () => {
     [wordCollectionUrl, wordQueryString],
   );
 
-  const { data: pages = [] } = useQuery({
+  const {
+    data: pages = [], //maxPage: pages.lengthのためにpagesはガードを追加
+    isPending: isPagesPending,
+    isError: isPagesError,
+  } = useQuery({
     queryKey: pageQueryKey,
     queryFn: () =>
       getCollection({
@@ -62,10 +66,13 @@ const ViewerPage = () => {
         queryString: pageQueryString,
       }),
     enabled: Boolean(pageCollectionUrl),
-    placeholderData: [],
   });
 
-  const { data: words = [] } = useQuery({
+  const {
+    data: words,
+    isPending: isWordsPending,
+    isError: isWordsError,
+  } = useQuery({
     queryKey: wordsQueryKey,
     queryFn: () =>
       getCollection({
@@ -73,8 +80,10 @@ const ViewerPage = () => {
         queryString: wordQueryString,
       }),
     enabled: Boolean(wordCollectionUrl),
-    placeholderData: [],
   });
+
+  const isPending = isPagesPending || isWordsPending;
+  const isError = isPagesError || isWordsError;
   const sortedWords = useMemo(
     () => sortViewerWords({ words, pages }),
     [words, pages],
@@ -201,52 +210,60 @@ const ViewerPage = () => {
             }}
           />
         </div>
-        <div className="[scrollbar-gutter:stable] overflow-auto overscroll-contain">
-          <ViewerImage
-            data={{
-              pages,
-              isPrintMode,
-              page: pageState.page,
-              contentRef,
-              rotate: pageState.rotate,
-              zoom: pageState.zoom,
-              selectedId: selection.selectedId,
-              selectedBy: selection.selectedBy,
-            }}
-            wordOverlayData={{
-              words: sortedWords,
-              hoveredWordId: selection.hoveredId,
-              selectedWordId: selection.selectedId,
-              isEditing: editState.isEditing,
-            }}
-            wordOverlayEvents={{
-              onHoverWord: selection.hover,
-              onHoverClearWord: selection.clearHovered,
-              onSelectWord: selection.commitSelect,
-              onBboxDrawComplete: editState.addPendingPostByBbox,
-            }}
-          />
-        </div>
-        <div className="overflow-auto overscroll-contain">
-          <ViewerTable
-            data={{
-              columns: wordTableColumns,
-              rows: sortedWords,
-              page: pageState.page,
-              hoveredId: selection.hoveredId,
-              selectedId: selection.selectedId,
-              selectedBy: selection.selectedBy,
-              isEditing: editState.isEditing,
-            }}
-            events={{
-              onChangeContentDraft: editState.changeContentDraftById,
-              onClickDeleteButton: editState.addPendingDeleteById,
-              onHover: selection.hover,
-              onHoverClear: selection.clearHovered,
-              onSelect: selection.commitSelect,
-            }}
-          />
-        </div>
+        {isPending ? (
+          <div>Now Loading...</div>
+        ) : isError ? (
+          <div>読み込みに失敗しました</div>
+        ) : (
+          <>
+            <div className="scrollbar-gutter-stable overflow-auto overscroll-contain">
+              <ViewerImage
+                data={{
+                  pages,
+                  isPrintMode,
+                  page: pageState.page,
+                  contentRef,
+                  rotate: pageState.rotate,
+                  zoom: pageState.zoom,
+                  selectedId: selection.selectedId,
+                  selectedBy: selection.selectedBy,
+                }}
+                wordOverlayData={{
+                  words: sortedWords,
+                  hoveredWordId: selection.hoveredId,
+                  selectedWordId: selection.selectedId,
+                  isEditing: editState.isEditing,
+                }}
+                wordOverlayEvents={{
+                  onHoverWord: selection.hover,
+                  onHoverClearWord: selection.clearHovered,
+                  onSelectWord: selection.commitSelect,
+                  onBboxDrawComplete: editState.addPendingPostByBbox,
+                }}
+              />
+            </div>
+            <div className="overflow-auto overscroll-contain">
+              <ViewerTable
+                data={{
+                  columns: wordTableColumns,
+                  rows: sortedWords,
+                  page: pageState.page,
+                  hoveredId: selection.hoveredId,
+                  selectedId: selection.selectedId,
+                  selectedBy: selection.selectedBy,
+                  isEditing: editState.isEditing,
+                }}
+                events={{
+                  onChangeContentDraft: editState.changeContentDraftById,
+                  onClickDeleteButton: editState.addPendingDeleteById,
+                  onHover: selection.hover,
+                  onHoverClear: selection.clearHovered,
+                  onSelect: selection.commitSelect,
+                }}
+              />
+            </div>
+          </>
+        )}
       </div>
     </>
   );

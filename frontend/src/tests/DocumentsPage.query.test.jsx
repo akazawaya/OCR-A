@@ -88,19 +88,18 @@ describe("DocumentsPage query", () => {
     ).toBeVisible();
 
     const user = userEvent.setup();
-    const nameHeader = screen.getByRole("columnheader", { name: /^名前/ });
+    await user.click(screen.getByRole("columnheader", { name: /^名前/ }));
 
-    await user.click(nameHeader);
     expect(screen.getByTestId("location-display")).toHaveTextContent(
       "/documents?ordering=file_name",
     );
 
-    await user.click(nameHeader);
+    await user.click(screen.getByRole("columnheader", { name: /^名前/ }));
     expect(screen.getByTestId("location-display")).toHaveTextContent(
       "/documents?ordering=-file_name",
     );
 
-    await user.click(nameHeader);
+    await user.click(screen.getByRole("columnheader", { name: /^名前/ }));
     expect(screen.getByTestId("location-display")).toHaveTextContent(
       "/documents",
     );

@@ -35,7 +35,6 @@ Object.defineProperty(HTMLElement.prototype, "clientHeight", {
 beforeEach(() => {
   setupDefaultViewerMocks();
   setupCanvasTextMeasureMock();
-  Element.prototype.scrollIntoView = vi.fn();
 });
 
 // Pageのfixtureに対して最後のページ番号の取得を抽象化
