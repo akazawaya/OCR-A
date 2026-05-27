@@ -85,6 +85,7 @@ const ViewerImage = ({
                   rotate: safeRotate,
                   clientSizePx: { w, h },
                   imageSizePx: { w: imageW, h: imageH },
+                  isPrintMode,
                 }}
                 events={wordOverlayEvents}
               />

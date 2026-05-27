@@ -17,6 +17,7 @@ const WordOverlay = ({
     hoveredWordId,
     selectedWordId,
     isEditing,
+    isPrintMode,
   } = {},
   events: {
     onHoverWord,
@@ -86,12 +87,14 @@ const WordOverlay = ({
           return (
             <polygon
               key={w.id}
-              className={`scroll-mt-30 stroke-red-500 stroke-4 ${
-                isSelected
-                  ? "fill-red-500/30"
-                  : isHover
-                    ? "fill-red-500/20"
-                    : "fill-transparent"
+              className={`scroll-mt-30 ${
+                isPrintMode
+                  ? "fill-transparent"
+                  : isSelected
+                    ? " fill-red-500/30 stroke-red-500 stroke-4"
+                    : isHover
+                      ? "fill-red-500/20 stroke-red-500 stroke-4"
+                      : "fill-transparent stroke-red-500 stroke-4"
               }`}
               data-word={w.id}
               points={w.polygon.points}
