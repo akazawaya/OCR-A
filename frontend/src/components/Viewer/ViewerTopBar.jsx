@@ -46,7 +46,7 @@ const ViewerTopBar = ({
     page,
     zoom,
     rotate,
-    isEditing,
+    isEditMode,
     canUndo = false,
     canRedo = false,
     canGoPrevPage = false,
@@ -152,7 +152,7 @@ const ViewerTopBar = ({
         })}
         {renderTextField(rotate, onEnterRotateInput, rotateRef, "rotate")}
       </div>
-      {!isEditing ? (
+      {!isEditMode ? (
         renderIconButton({
           label: "出力",
           icon: Printer,
@@ -162,7 +162,7 @@ const ViewerTopBar = ({
       ) : (
         <></>
       )}
-      {!isEditing ? (
+      {!isEditMode ? (
         renderIconButton({
           label: "編集",
           icon: Pencil,

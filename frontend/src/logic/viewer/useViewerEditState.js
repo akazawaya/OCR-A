@@ -98,7 +98,7 @@ export const useViewerEditState = ({
   maxPage,
   zoom,
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditMode, setisEditMode] = useState(false);
   const [historyState, historyDispatch] = useReducer(
     historyReducer,
     initialHistoryState,
@@ -237,7 +237,7 @@ export const useViewerEditState = ({
   };
 
   const startEdit = () => {
-    setIsEditing(true);
+    setisEditMode(true);
   };
 
   const isPreviewId = (id) =>
@@ -263,13 +263,13 @@ export const useViewerEditState = ({
     postWordByBbox(postPayload);
     patchWordContentById(patchPayload);
     deleteWordById(deleteIds);
-    setIsEditing(false);
+    setisEditMode(false);
     historyDispatch({ type: "RESET" });
   };
 
   const cancelEdit = () => {
     [...historyState.past].reverse().forEach((entry) => applyUndoEntry(entry));
-    setIsEditing(false);
+    setisEditMode(false);
     historyDispatch({ type: "RESET" });
   };
 
@@ -295,7 +295,7 @@ export const useViewerEditState = ({
   const canZoomIn = zoom + VIEWER_ZOOM.STEP <= VIEWER_ZOOM.MAX;
 
   return {
-    isEditing,
+    isEditMode,
     startEdit,
     saveEdit,
     cancelEdit,

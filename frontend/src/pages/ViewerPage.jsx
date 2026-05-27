@@ -171,7 +171,7 @@ const ViewerPage = () => {
   return (
     <>
       <ViewerEditHotkeys
-        data={{ isEditing: editState.isEditing }}
+        data={{ isEditMode: editState.isEditMode }}
         events={{
           onKeyDownUndo: editState.undo,
           onKeyDownRedo: editState.redo,
@@ -186,7 +186,7 @@ const ViewerPage = () => {
               page: pageState.page,
               zoom: pageState.zoom,
               rotate: pageState.rotate,
-              isEditing: editState.isEditing,
+              isEditMode: editState.isEditMode,
               canUndo: editState.canUndo,
               canRedo: editState.canRedo,
               canGoPrevPage: editState.canGoPrevPage,
@@ -232,7 +232,7 @@ const ViewerPage = () => {
                   words: sortedWords,
                   hoveredWordId: selection.hoveredId,
                   selectedWordId: selection.selectedId,
-                  isEditing: editState.isEditing,
+                  isEditMode: editState.isEditMode,
                 }}
                 wordOverlayEvents={{
                   onHoverWord: selection.hover,
@@ -251,7 +251,7 @@ const ViewerPage = () => {
                   hoveredId: selection.hoveredId,
                   selectedId: selection.selectedId,
                   selectedBy: selection.selectedBy,
-                  isEditing: editState.isEditing,
+                  isEditMode: editState.isEditMode,
                 }}
                 events={{
                   onChangeContentDraft: editState.changeContentDraftById,
