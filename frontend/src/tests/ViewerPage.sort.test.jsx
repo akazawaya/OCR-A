@@ -45,8 +45,7 @@ describe("ViewerPage sort", () => {
       await screen.findByRole("cell", { name: expected[0] });
       const orderedContents = screen
         .getAllByRole("row")
-        .slice(1)
-        .map((row) => within(row).getAllByRole("cell")[1].textContent);
+        .map((row) => within(row).getByRole("cell").textContent);
 
       expect(orderedContents).toEqual(expected);
       unmount();

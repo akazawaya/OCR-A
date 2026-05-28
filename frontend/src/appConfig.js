@@ -51,10 +51,7 @@ const documentUiSpec = Object.freeze({
   ],
 });
 const wordUiSpec = Object.freeze({
-  table: [
-    { key: "page__page_number", label: "ページ" },
-    { key: "content", label: "本文" },
-  ],
+  table: [{ key: "content" }],
 });
 
 // attachResourceSpec:accessSpec（入口）と uiSpec（表示定義）を束ねる

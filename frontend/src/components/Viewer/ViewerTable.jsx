@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import { Trash2 } from "lucide-react";
 
 import { useScroll } from "../../logic/layout/useScroll";
 
 const ContentEditInput = ({
   content,
-  className,
+  inputSize,
   onChangeContentDraft,
 } = {}) => {
   const [editingContent, setEditingContent] = useState(content);
@@ -16,10 +17,10 @@ const ContentEditInput = ({
   const finalizeEdit = () => {
     onChangeContentDraft(editingContent, content);
   };
-
   return (
     <input
-      className={className}
+      className="border-0 outline-none"
+      size={inputSize}
       value={editingContent}
       onBlur={finalizeEdit}
       onChange={(e) => setEditingContent(e.target.value)}
@@ -32,7 +33,6 @@ const ContentEditInput = ({
     />
   );
 };
-
 const ViewerTable = ({
   data: {
     columns = [],
@@ -41,10 +41,9 @@ const ViewerTable = ({
     hoveredId,
     selectedId,
     selectedBy,
-    isEditing,
+    isEditMode,
   } = {},
   events: {
-    onClickColumn,
     onHover,
     onHoverClear,
     onSelect,
@@ -52,11 +51,15 @@ const ViewerTable = ({
     onClickDeleteButton,
   } = {},
 }) => {
-  const rootRef = useRef(null);
+  // edit中のinputの幅は事前に固定値を取る
+  const maxContentLength = Math.max(
+    20,
+    ...rows.flatMap((r) => columns.map((c) => String(r[c.key]).length)),
+  );
 
+  const rootRef = useRef(null);
   // page変更に追随してスクロールする
   useScroll({ rootRef, targetAttrName: "data-page", targetAttrValue: page });
-
   // viewerTable起点のwordの選択時、viewerImage側を追随スクロールする
   const shouldScroll = selectedBy === "image";
   useScroll({
@@ -68,15 +71,6 @@ const ViewerTable = ({
 
   return (
     <table ref={rootRef}>
-      <thead>
-        <tr>
-          {columns.map((c) => (
-            <th key={c.key} onClick={() => onClickColumn(c.key)}>
-              {c.label}
-            </th>
-          ))}
-        </tr>
-      </thead>
       <tbody>
         {rows.map((r) => {
           const isSelected = r.id === selectedId;
@@ -84,7 +78,7 @@ const ViewerTable = ({
           return (
             <tr
               key={r.id}
-              className={`scroll-mt-30 ${
+              className={`cursor-pointer scroll-mt-30 border border-gray-400 ${
                 isSelected
                   ? "bg-red-500/30"
                   : isHover
@@ -97,27 +91,29 @@ const ViewerTable = ({
               onMouseEnter={() => onHover(r.id)}
               onMouseLeave={onHoverClear}
             >
-              {isEditing && (
-                <td>
+              {isEditMode && (
+                <td className="sticky left-0 z-2">
                   <button
+                    aria-label="削除"
+                    className="cursor-pointer border border-gray-400 bg-red-100 text-black hover:bg-red-300"
                     onClick={(e) => {
                       e.stopPropagation();
                       onClickDeleteButton(r.id);
                     }}
                   >
-                    削除
+                    <Trash2 className="h-4" />
                   </button>
                 </td>
               )}
 
               {columns.map((c) => (
-                <td key={c.key}>
-                  {!isEditing || c.key !== "content" ? (
-                    r[c.key]
+                <td key={c.key} className="px-1">
+                  {!isEditMode ? (
+                    <span className="inline-block min-w-max">{r[c.key]}</span>
                   ) : (
                     <ContentEditInput
-                      className=""
                       content={r[c.key]}
+                      inputSize={maxContentLength}
                       onChangeContentDraft={(nextContent, prevContent) =>
                         onChangeContentDraft(r.id, nextContent, prevContent)
                       }
