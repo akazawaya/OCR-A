@@ -11,7 +11,7 @@ from rest_framework.response import Response
 
 from app_ocr.etc.tools import inspect_file
 from app_ocr.filters import DocumentFilterSet
-from app_ocr.models import Document, FileType, Page, Word
+from app_ocr.models import Document, FileType, Page, State, Word
 from app_ocr.serializers import (
     DocumentSerializer,
     DocumentUploadSerializer,
@@ -19,7 +19,7 @@ from app_ocr.serializers import (
     UserSerializer,
     WordSerializer,
 )
-from app_ocr.tasks import dispatch_ocr_pages_task
+from app_ocr.tasks import dispatch_ocr_pages_task, notify_document_state_changed
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -55,8 +55,15 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
         with transaction.atomic():
             doc.save()
+            document_id = doc.instance.pk
             transaction.on_commit(
-                lambda: dispatch_ocr_pages_task.delay(doc.instance.pk)
+                lambda: (
+                    notify_document_state_changed(
+                        document_id=document_id,
+                        state=State.QUEUED,
+                    ),
+                    dispatch_ocr_pages_task.delay(document_id),
+                )
             )
         return Response({"document": doc.data}, status=status.HTTP_202_ACCEPTED)
 
