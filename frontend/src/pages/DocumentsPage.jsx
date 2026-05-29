@@ -10,6 +10,7 @@ import {
 } from "../appConfig";
 import { getCollection } from "../api/clients/collectionClient";
 import {
+  postDocument,
   startOcrDocument,
   deleteCollectionItem,
 } from "../api/clients/mutationClient";
@@ -110,20 +111,33 @@ const DocumentsPage = () => {
     [deleteRowMutation],
   );
 
-  const { mutate: startOcrMutation } = useMutation({
+  const { mutate: postDocumentMutation } = useMutation({
+    mutationFn: ({ formData }) => postDocument({ collectionUrl, formData }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: [collectionUrl] }),
+  });
+
+  const { mutate: startOcrDocumentMutation } = useMutation({
     mutationFn: ({ formData }) => startOcrDocument({ startOcrUrl, formData }),
     onError: (error) => {
       window.alert(error.data.file[0]);
     },
+    // startOcrはocrロジック内のws送信によりinvalidateQueries更新を実施する
   });
 
-  const startOcr = useCallback(
-    (file) => {
+  const postDocumentFile = useCallback(
+    (file, { shouldStartOcr }) => {
       const formData = new FormData();
       formData.append("file", file);
-      startOcrMutation({ formData });
+
+      if (shouldStartOcr) {
+        startOcrDocumentMutation({ formData });
+        return;
+      }
+
+      postDocumentMutation({ formData });
     },
-    [startOcrMutation],
+    [postDocumentMutation, startOcrDocumentMutation],
   );
 
   const documentTableColumns = documentSpec.ui.table.map(({ key, label }) => ({
@@ -147,7 +161,7 @@ const DocumentsPage = () => {
           onClickSearchButton: applySearch,
           onChangeSearchInput: updateSearchQuery,
           onClickResetSearchButton: clearSearch,
-          onClickStartOcrButton: startOcr,
+          onClickPostDocumentButton: postDocumentFile,
         }}
       />
       {isPending ? (

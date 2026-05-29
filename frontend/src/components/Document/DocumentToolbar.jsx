@@ -9,14 +9,14 @@ const DocumentToolbar = ({
     onClickSearchButton,
     onChangeSearchInput,
     onClickResetSearchButton,
-    onClickStartOcrButton: _onClickStartOcrButton,
+    onClickPostDocumentButton: _onClickPostDocumentButton,
   } = {},
 }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
 
-  const onClickStartOcrButton = () => {
-    _onClickStartOcrButton(selectedFile);
+  const onClickPostDocumentButton = (file, { shouldStartOcr }) => {
+    _onClickPostDocumentButton(file, { shouldStartOcr });
     setSelectedFile(null);
     fileInputRef.current.value = "";
   };
@@ -77,15 +77,35 @@ const DocumentToolbar = ({
             </span>
           )}
         </label>
-        <button
-          className="w-fit rounded-md bg-indigo-500 p-2 text-white enabled:cursor-pointer enabled:hover:bg-indigo-600 disabled:cursor-not-allowed disabled:bg-gray-400"
-          disabled={!selectedFile}
-          onClick={onClickStartOcrButton}
-        >
-          OCR実行
-        </button>
-      </div>
 
+        <div className="flex h-full flex-col items-center justify-center gap-1">
+          <button
+            className="w-fit rounded-md bg-indigo-500 p-2 text-white enabled:cursor-pointer enabled:hover:bg-indigo-600 disabled:cursor-not-allowed disabled:bg-gray-400"
+            disabled={!selectedFile}
+            onClick={() =>
+              onClickPostDocumentButton(selectedFile, {
+                shouldStartOcr: true,
+              })
+            }
+          >
+            保存＆OCR
+          </button>
+          <button
+            className="w-fit rounded-md bg-indigo-500 p-2 text-white enabled:cursor-pointer enabled:hover:bg-indigo-600 disabled:cursor-not-allowed disabled:bg-gray-400"
+            disabled={!selectedFile}
+            onClick={() =>
+              onClickPostDocumentButton(selectedFile, {
+                shouldStartOcr: false,
+              })
+            }
+          >
+            保存のみ
+          </button>
+        </div>
+      </div>
+      <div className="text-sm">
+        保存のみの場合も、編集画面からOCRを実行できます。
+      </div>
       <div className="mt-2 flex flex-col items-center gap-1 rounded border border-gray-300 p-2">
         <p>検索メニュー</p>
         <div className="flex items-center gap-1">

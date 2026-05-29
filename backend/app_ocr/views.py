@@ -5,6 +5,7 @@ from rest_framework import status, viewsets
 
 # from app_ocr.permissions import IsOwnerOrReadOnly
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
@@ -19,6 +20,7 @@ from app_ocr.serializers import (
     UserSerializer,
     WordSerializer,
 )
+from app_ocr.service.document import create_pages_from_document_file
 from app_ocr.tasks import dispatch_ocr_pages_task, notify_document_state_changed
 
 
@@ -34,16 +36,16 @@ class DocumentViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = DocumentFilterSet
 
-    @action(detail=False, methods=["post"], url_path="ocr")
-    def start_ocr(self, request):
-        file = request.FILES.get("file")
+    def build_document_serializer_from_file(self, file):
         upload_serializer = DocumentUploadSerializer(data={"file": file})
         upload_serializer.is_valid(raise_exception=True)
+
         try:
             ext_label, total_pages = inspect_file(file)
         except ValueError as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        doc = DocumentSerializer(
+            raise ValidationError({"detail": str(e)}) from e
+
+        serializer = self.get_serializer(
             data={
                 "file": file,
                 "file_name": file.name,
@@ -51,11 +53,36 @@ class DocumentViewSet(viewsets.ModelViewSet):
                 "total_pages": total_pages,
             }
         )
-        doc.is_valid(raise_exception=True)
+        serializer.is_valid(raise_exception=True)
+        return serializer
+
+    def create(self, request, *args, **kwargs):
+        file = request.FILES.get("file")
+        serializer = self.build_document_serializer_from_file(file)
 
         with transaction.atomic():
-            doc.save()
-            document_id = doc.instance.pk
+            serializer.save()
+            document = serializer.instance
+            create_pages_from_document_file(document)
+            document.state = State.SUCCESS
+            document.save(update_fields=["state"])
+            transaction.on_commit(
+                lambda: notify_document_state_changed(
+                    document_id=document.pk,
+                    state=State.SUCCESS,
+                )
+            )
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=["post"], url_path="ocr")
+    def start_ocr(self, request):
+        file = request.FILES.get("file")
+        serializer = self.build_document_serializer_from_file(file)
+
+        with transaction.atomic():
+            serializer.save()
+            document_id = serializer.instance.pk
             transaction.on_commit(
                 lambda: (
                     notify_document_state_changed(
@@ -65,7 +92,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
                     dispatch_ocr_pages_task.delay(document_id),
                 )
             )
-        return Response({"document": doc.data}, status=status.HTTP_202_ACCEPTED)
+
+        return Response({"document": serializer.data}, status=status.HTTP_202_ACCEPTED)
 
 
 class PageViewSet(viewsets.ReadOnlyModelViewSet):

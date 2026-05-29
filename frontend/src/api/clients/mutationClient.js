@@ -30,6 +30,15 @@ export const deleteCollectionItem = async ({ collectionUrl, id }) => {
   return res;
 };
 
+export const postDocument = async ({ collectionUrl, formData }) => {
+  const { res, data } = await fetchBackend(collectionUrl, {
+    method: "POST",
+    body: formData,
+    throwOnError: true,
+  });
+  return { res, data };
+};
+
 export const startOcrDocument = async ({ startOcrUrl, formData }) => {
   const { res, data } = await fetchBackend(startOcrUrl, {
     method: "POST",
