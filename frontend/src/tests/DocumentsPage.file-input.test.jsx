@@ -7,16 +7,16 @@ import "@testing-library/jest-dom/vitest";
 
 import { renderDocumentsPage } from "./DocumentsPage.test-utils";
 import {
-  getReceivedOcrRequestFile,
-  resetReceivedOcrRequestFile,
+  getReceivedCreateRequestFile,
+  resetReceivedCreateRequestFile,
 } from "./msw/documentsApiHandlers";
 
 beforeEach(() => {
-  resetReceivedOcrRequestFile();
+  resetReceivedCreateRequestFile();
 });
 
-describe("DocumentsPage file input", () => {
-  test("正常系:選択ファイルがOCR実行へ送信される", async () => {
+describe("DocumentsPage upload", () => {
+  test("正常系:createでは選択ファイルが保存APIへ送信される", async () => {
     const user = userEvent.setup();
     const { container } = renderDocumentsPage();
     const fileInput = container.querySelector("#document-file-input");
@@ -25,15 +25,15 @@ describe("DocumentsPage file input", () => {
 
     await user.upload(fileInput, file);
     expect(screen.getByText("sample.jpg")).toBeVisible();
-    expect(screen.getByRole("button", { name: "OCR実行" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "保存のみ" })).toBeEnabled();
 
-    await user.click(screen.getByRole("button", { name: "OCR実行" }));
+    await user.click(screen.getByRole("button", { name: "保存のみ" }));
 
-    await waitFor(() => expect(getReceivedOcrRequestFile()).not.toBeNull());
-    expect(getReceivedOcrRequestFile().type).toBe("image/jpeg");
+    await waitFor(() => expect(getReceivedCreateRequestFile()).not.toBeNull());
+    expect(getReceivedCreateRequestFile().type).toBe("image/jpeg");
   });
 
-  test("異常系:送信失敗時にエラーをアラート表示する", async () => {
+  test("異常系:createでは送信失敗時にエラーをアラート表示する", async () => {
     const alertSpy = vi.fn();
     vi.stubGlobal("alert", alertSpy);
 
@@ -45,10 +45,25 @@ describe("DocumentsPage file input", () => {
     expect(fileInput).not.toBeNull();
     await user.upload(fileInput, file);
 
-    await user.click(screen.getByRole("button", { name: "OCR実行" }));
+    await user.click(screen.getByRole("button", { name: "保存のみ" }));
 
     await waitFor(() =>
       expect(alertSpy).toHaveBeenCalledWith("拡張子が非対応です。"),
     );
+  });
+
+  test("start_ocrでは保存＆OCRボタンを押せる", async () => {
+    const user = userEvent.setup();
+    const { container } = renderDocumentsPage();
+    const fileInput = container.querySelector("#document-file-input");
+    const file = new File(["dummy"], "sample.jpg", { type: "image/jpeg" });
+
+    expect(fileInput).not.toBeNull();
+    await user.upload(fileInput, file);
+
+    const ocrButton = screen.getByRole("button", { name: "保存＆OCR" });
+    expect(ocrButton).toBeEnabled();
+
+    await user.click(ocrButton);
   });
 });

@@ -115,6 +115,9 @@ const DocumentsPage = () => {
     mutationFn: ({ formData }) => postDocument({ collectionUrl, formData }),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: [collectionUrl] }),
+    onError: (error) => {
+      window.alert(error.data.file[0]);
+    },
   });
 
   const { mutate: startOcrDocumentMutation } = useMutation({

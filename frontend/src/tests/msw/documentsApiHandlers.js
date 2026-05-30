@@ -4,16 +4,13 @@ import { defaultMockDocuments } from "./fixture";
 
 let documents = structuredClone(defaultMockDocuments);
 
-let receivedOcrRequestFile = null;
+let receivedCreateRequestFile = null;
 
-const setReceivedOcrRequestFile = (file) => {
-  receivedOcrRequestFile = file;
+export const getReceivedCreateRequestFile = () => {
+  return receivedCreateRequestFile;
 };
-export const getReceivedOcrRequestFile = () => {
-  return receivedOcrRequestFile;
-};
-export const resetReceivedOcrRequestFile = () => {
-  receivedOcrRequestFile = null;
+export const resetReceivedCreateRequestFile = () => {
+  receivedCreateRequestFile = null;
 };
 
 // 検索に関しては、DOMツリーへの反映確認を責務とする。
@@ -56,20 +53,14 @@ export const documentsApiHandlers = [
     return HttpResponse.json(sorted);
   }),
 
-  http.delete(`http://test.dummy/documents/:id/`, ({ params }) => {
-    const id = Number(params.id);
-    documents = documents.filter((document) => document.id !== id);
-    return new HttpResponse(null, { status: 204 });
-  }),
-
-  // start_ocr のmockは 202/400 のresのみを責務とする
-  // 異常系に関しては、エラーハンドリングのバリエーション確認はbackend側の責務とする
-  // frontendでは擬似的な拡張子非対応エラーのみmockし、alertの確認に留める
-  http.post("http://test.dummy/documents/ocr/", async ({ request }) => {
+  // create の mock は、アップロード導線の代表確認を責務とする。
+  // 詳細なファイル検証は backend 側で担う。
+  // frontend では擬似的な拡張子非対応エラーのみ mock し、alert の確認に留める。
+  http.post("http://test.dummy/documents/", async ({ request }) => {
     const formData = await request.formData();
     const file = formData.get("file");
 
-    setReceivedOcrRequestFile(file);
+    receivedCreateRequestFile = file;
 
     if (
       !file ||
@@ -81,6 +72,21 @@ export const documentsApiHandlers = [
       );
     }
 
+    return HttpResponse.json(
+      { id: 999, file_name: file.name },
+      { status: 201 },
+    );
+  }),
+
+  http.delete(`http://test.dummy/documents/:id/`, ({ params }) => {
+    const id = Number(params.id);
+    documents = documents.filter((document) => document.id !== id);
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // start_ocr のmockはfrontendで確認できる範囲はcreateでカバーできているとみなし、
+  //　user.clickで呼ばれたかを見る程度に留める
+  http.post("http://test.dummy/documents/ocr/", async () => {
     return new HttpResponse(null, { status: 202 });
   }),
 ];
