@@ -21,6 +21,10 @@ from app_ocr.serializers import (
     WordSerializer,
 )
 from app_ocr.service.document import create_pages_from_document_file
+from app_ocr.storage import (
+    build_document_storage_prefix,
+    delete_document_files,
+)
 from app_ocr.tasks import dispatch_ocr_pages_task, notify_document_state_changed
 
 
@@ -59,41 +63,58 @@ class DocumentViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         file = request.FILES.get("file")
         serializer = self.build_document_serializer_from_file(file)
+        document = None
 
-        with transaction.atomic():
-            serializer.save()
-            document = serializer.instance
-            create_pages_from_document_file(document)
-            document.state = State.SUCCESS
-            document.save(update_fields=["state"])
-            transaction.on_commit(
-                lambda: notify_document_state_changed(
-                    document_id=document.pk,
-                    state=State.SUCCESS,
+        try:
+            with transaction.atomic():
+                document = serializer.save()
+                create_pages_from_document_file(document)
+                document.state = State.SUCCESS
+                document.save(update_fields=["state"])
+                transaction.on_commit(
+                    lambda: notify_document_state_changed(
+                        document_id=document.pk,
+                        state=State.SUCCESS,
+                    )
                 )
-            )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        # Djangoのトランザクションのロールバックにfileは含まれないため、
+        # 失敗時のfile削除が行われるようにExceptionを追加(start_ocrも同様)
+        except Exception:
+            if document is not None:
+                prefix = build_document_storage_prefix(document.pk)
+                delete_document_files(document, prefix)
+            raise
 
     @action(detail=False, methods=["post"], url_path="ocr")
     def start_ocr(self, request):
         file = request.FILES.get("file")
         serializer = self.build_document_serializer_from_file(file)
-
-        with transaction.atomic():
-            serializer.save()
-            document_id = serializer.instance.pk
-            transaction.on_commit(
-                lambda: (
-                    notify_document_state_changed(
-                        document_id=document_id,
-                        state=State.QUEUED,
-                    ),
-                    dispatch_ocr_pages_task.delay(document_id),
+        document = None
+        try:
+            with transaction.atomic():
+                document = serializer.save()
+                document_id = document.pk
+                transaction.on_commit(
+                    lambda: (
+                        notify_document_state_changed(
+                            document_id=document_id,
+                            state=State.QUEUED,
+                        ),
+                        dispatch_ocr_pages_task.delay(document_id),
+                    )
                 )
+            return Response(
+                {"document": DocumentSerializer(document).data},
+                status=status.HTTP_202_ACCEPTED,
             )
 
-        return Response({"document": serializer.data}, status=status.HTTP_202_ACCEPTED)
+        except Exception:
+            if document is not None:
+                prefix = build_document_storage_prefix(document.pk)
+                delete_document_files(document, prefix)
+            raise
 
 
 class PageViewSet(viewsets.ReadOnlyModelViewSet):

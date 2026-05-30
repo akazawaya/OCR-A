@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -9,6 +10,7 @@ from rest_framework.test import APIClient
 from app_ocr.models import Document, Page, State, Word
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures"
+
 
 pytestmark = pytest.mark.django_db
 
@@ -130,6 +132,48 @@ class TestDocumentApi:
         assert not Document.objects.filter(id=document.id).exists()
         assert not Page.objects.filter(id=page.id).exists()
         assert not Word.objects.filter(id=word.id).exists()
+
+    def test_create_document_deletes_file_when_transaction_fails(
+        self, api_client, settings, tmp_path
+    ):
+        settings.MEDIA_ROOT = tmp_path
+        file = make_uploaded_file_from_fixture("table.jpg", "image/jpeg")
+
+        with patch(
+            "app_ocr.views.create_pages_from_document_file",
+            side_effect=RuntimeError("page creation failed"),
+        ):
+            with pytest.raises(RuntimeError):
+                api_client.post(
+                    reverse("document-list"),
+                    {"file": file},
+                    format="multipart",
+                )
+
+        assert Document.objects.count() == 0
+        assert Page.objects.count() == 0
+        assert not any(path.is_file() for path in tmp_path.rglob("*"))
+
+    def test_start_ocr_deletes_file_when_transaction_fails(
+        self, api_client, settings, tmp_path
+    ):
+        settings.MEDIA_ROOT = tmp_path
+        file = make_uploaded_file_from_fixture("table.jpg", "image/jpeg")
+
+        with patch(
+            "app_ocr.views.transaction.on_commit",
+            side_effect=RuntimeError("on_commit failed"),
+        ):
+            with pytest.raises(RuntimeError):
+                api_client.post(
+                    reverse("document-start-ocr"),
+                    {"file": file},
+                    format="multipart",
+                )
+
+        assert Document.objects.count() == 0
+        assert Page.objects.count() == 0
+        assert not any(path.is_file() for path in tmp_path.rglob("*"))
 
 
 class TestWordApi:

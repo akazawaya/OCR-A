@@ -1,7 +1,3 @@
-import shutil
-from pathlib import Path
-
-from django.core.files.storage import FileSystemStorage
 from django.core.validators import (
     FileExtensionValidator,
     MaxValueValidator,
@@ -12,6 +8,12 @@ from django.db import models
 from app_ocr.input_constraints import (
     ALLOWED_UPLOAD_FILE_EXTENSIONS,
     MAX_UPLOAD_FILE_NAME_LENGTH,
+)
+from app_ocr.storage import (
+    build_document_storage_prefix,
+    delete_document_files,
+    document_file_upload_to,
+    page_image_upload_to,
 )
 
 
@@ -53,31 +55,6 @@ class State(models.IntegerChoices):
 
 
 # Userモデルはdjango.contrib.auth.modelsから自動で作成される
-
-
-# 直書きだと path が import 時に固定文字列として評価されるため、関数で定義する
-def build_document_storage_prefix(doc_id):
-    return f"input/doc-{doc_id}/"
-
-
-def document_file_upload_to(instance, filename):
-    return f"{build_document_storage_prefix(instance.id)}document/{filename}"
-
-
-def page_image_upload_to(instance, filename):
-    return f"{build_document_storage_prefix(instance.doc_id)}pages/{filename}"
-
-
-def delete_document_files(document, prefix):
-    storage = document.file.storage
-
-    if isinstance(storage, FileSystemStorage):
-        root_path = Path(storage.location) / prefix
-        if root_path.exists():
-            shutil.rmtree(root_path)
-        return
-
-    raise NotImplementedError("This storage backend is not supported yet.")
 
 
 class Document(models.Model):
