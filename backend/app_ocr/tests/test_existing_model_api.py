@@ -6,7 +6,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from app_ocr.models import Document, Page, Word
+from app_ocr.models import Document, Page, State, Word
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures"
 
@@ -16,6 +16,14 @@ pytestmark = pytest.mark.django_db
 @pytest.fixture
 def api_client():
     return APIClient()
+
+
+def make_dummy_file(filename, content_type):
+    return SimpleUploadedFile(
+        filename,
+        b"dummy content",
+        content_type=content_type,
+    )
 
 
 def make_uploaded_file_from_fixture(filename, content_type):
@@ -53,15 +61,75 @@ def ocr_fixture_data():
     return document, page, word
 
 
-def test_delete_document_cascades_pages_and_words(api_client, ocr_fixture_data):
-    document, page, word = ocr_fixture_data
+class TestDocumentApi:
+    def test_create_document_creates_document_and_pages(self, api_client):
+        file = make_uploaded_file_from_fixture("table.jpg", "image/jpeg")
+        response = api_client.post(
+            reverse("document-list"),
+            {"file": file},
+            format="multipart",
+        )
 
-    response = api_client.delete(reverse("document-detail", args=[document.id]))
+        document_id = response.data["id"]
+        document = Document.objects.get(id=document_id)
 
-    assert response.status_code == status.HTTP_204_NO_CONTENT
-    assert not Document.objects.filter(id=document.id).exists()
-    assert not Page.objects.filter(id=page.id).exists()
-    assert not Word.objects.filter(id=word.id).exists()
+        assert response.status_code == status.HTTP_201_CREATED
+        assert document.file_name == "table.jpg"
+        assert document.state == State.SUCCESS
+        assert Page.objects.filter(doc=document).count() == 1
+
+    def test_create_document_rejects_invalid_file(self, api_client):
+        file = make_dummy_file("test.txt", "text/plain")
+
+        response = api_client.post(
+            reverse("document-list"),
+            {"file": file},
+            format="multipart",
+        )
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert Document.objects.count() == 0
+        assert Page.objects.count() == 0
+
+    def test_start_ocr_creates_document_and_dispatches_task(self, api_client):
+        file = make_uploaded_file_from_fixture("table.jpg", "image/jpeg")
+        response = api_client.post(
+            reverse("document-start-ocr"),
+            {"file": file},
+            format="multipart",
+        )
+
+        document_id = response.data["document"]["id"]
+        document = Document.objects.get(id=document_id)
+
+        assert response.status_code == status.HTTP_202_ACCEPTED
+        assert document.file_name == "table.jpg"
+        assert Page.objects.filter(doc=document).count() == 0
+
+    def test_start_ocr_rejects_invalid_file(self, api_client):
+        file = make_dummy_file("test.txt", "text/plain")
+
+        response = api_client.post(
+            reverse("document-start-ocr"),
+            {"file": file},
+            format="multipart",
+        )
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert Document.objects.count() == 0
+        assert Page.objects.count() == 0
+
+    def test_delete_document_cascades_pages_and_words(
+        self, api_client, ocr_fixture_data
+    ):
+        document, page, word = ocr_fixture_data
+
+        response = api_client.delete(reverse("document-detail", args=[document.id]))
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert not Document.objects.filter(id=document.id).exists()
+        assert not Page.objects.filter(id=page.id).exists()
+        assert not Word.objects.filter(id=word.id).exists()
 
 
 class TestWordApi:

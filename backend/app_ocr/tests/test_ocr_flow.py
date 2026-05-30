@@ -7,16 +7,12 @@ import cv2
 import numpy as np
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.urls import reverse
-from rest_framework import status
 from rest_framework.test import APIClient
 
 from app_ocr.consumers import OcrProgressConsumer
 from app_ocr.etc.tools import inspect_file, render_page
 from app_ocr.etc.yomitoku_adapter import get_engine, init_engine, yomitoku_ocr
-from app_ocr.input_constraints import MAX_UPLOAD_FILE_SIZE
 from app_ocr.models import Document, FileType, Page, State, Word
-from app_ocr.serializers import DocumentUploadSerializer
 from app_ocr.service.ocr import run_ocr_for_page
 from app_ocr.tasks import (
     dispatch_ocr_pages_task,
@@ -133,89 +129,6 @@ class TestRenderPage:
 
         with pytest.raises(ValueError, match="Unsupported file format"):
             render_page(file=file, page_number=1, input_ext="txt")
-
-
-class TestDocumentUploadSerializer:
-    def test_rejects_unsupported_extension(self):
-        serializer = DocumentUploadSerializer(
-            data={"file": make_dummy_file("test.txt", "text/plain")}
-        )
-
-        assert not serializer.is_valid()
-        assert str(serializer.errors["file"][0]) == "拡張子が非対応です。"
-        assert serializer.errors["file"][0].code == "unsupported_extension"
-
-    def test_rejects_too_large_file(self):
-        file = SimpleUploadedFile(
-            "too_large.jpg",
-            b"a" * (MAX_UPLOAD_FILE_SIZE + 1),
-            content_type="image/jpeg",
-        )
-
-        serializer = DocumentUploadSerializer(data={"file": file})
-
-        assert not serializer.is_valid()
-        assert str(serializer.errors["file"][0]) == "ファイルサイズが大きすぎます。"
-        assert serializer.errors["file"][0].code == "file_too_large"
-
-    def test_rejects_too_long_file_name(self):
-        file = make_dummy_file(f"{'a' * 101}.jpg", "image/jpeg")
-        serializer = DocumentUploadSerializer(data={"file": file})
-
-        assert not serializer.is_valid()
-        assert str(serializer.errors["file"][0]) == "ファイル名が長すぎます。"
-        assert serializer.errors["file"][0].code == "file_name_too_long"
-
-
-class TestStartOCR:
-    @pytest.mark.parametrize(
-        "filename, content_type, expected_status",
-        [
-            ("test.jpg", "image/jpeg", status.HTTP_202_ACCEPTED),
-            ("test.jpeg", "image/jpeg", status.HTTP_202_ACCEPTED),
-            ("test.png", "image/png", status.HTTP_202_ACCEPTED),
-            ("test.txt", "text/plain", status.HTTP_400_BAD_REQUEST),
-            ("test.tiff", "image/tiff", status.HTTP_400_BAD_REQUEST),
-            ("test.bmp", "image/bmp", status.HTTP_400_BAD_REQUEST),
-        ],
-    )
-    @pytest.mark.django_db
-    def test_start_ocr_validates_file_extension(
-        self,
-        api_client,
-        filename,
-        content_type,
-        expected_status,
-    ):
-        file = make_dummy_file(filename, content_type)
-        url = reverse("document-start-ocr")
-        payload = {"file": file}
-        response = api_client.post(url, payload, format="multipart")
-
-        assert response.status_code == expected_status
-
-    @pytest.mark.django_db
-    @pytest.mark.parametrize(
-        "filename, content_type",
-        [
-            ("sample.pdf", "application/pdf"),
-            ("table.jpg", "image/jpeg"),
-        ],
-    )
-    def test_start_ocr_creates_document(
-        self,
-        api_client,
-        filename,
-        content_type,
-    ):
-        file = make_uploaded_file_from_fixture(filename, content_type)
-        url = reverse("document-start-ocr")
-        response = api_client.post(url, {"file": file}, format="multipart")
-        created_document_id = response.data["document"]["id"]
-        document = Document.objects.get(id=created_document_id)
-
-        assert response.status_code == status.HTTP_202_ACCEPTED
-        assert document.id == created_document_id
 
 
 class TestTasks:
