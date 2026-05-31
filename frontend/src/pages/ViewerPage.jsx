@@ -175,9 +175,6 @@ const ViewerPage = () => {
     ocrPreviewByPreviewWord,
     wordsQueryKey,
     pageNumberByPageId,
-    page: pageState.page,
-    maxPage: pages.length,
-    zoom: pageState.zoom,
   });
   return (
     <>
@@ -199,10 +196,10 @@ const ViewerPage = () => {
               isEditMode: editState.isEditMode,
               canUndo: editState.canUndo,
               canRedo: editState.canRedo,
-              canGoPrevPage: editState.canGoPrevPage,
-              canGoNextPage: editState.canGoNextPage,
-              canZoomOut: editState.canZoomOut,
-              canZoomIn: editState.canZoomIn,
+              canGoPrevPage: pageState.canGoPrevPage,
+              canGoNextPage: pageState.canGoNextPage,
+              canZoomOut: pageState.canZoomOut,
+              canZoomIn: pageState.canZoomIn,
             }}
             events={{
               onClickPrintButton: openPrintDialog,

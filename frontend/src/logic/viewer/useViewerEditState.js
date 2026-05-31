@@ -2,8 +2,6 @@
 import { useMemo, useReducer, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { VIEWER_ZOOM } from "./viewerPageConstants";
-
 const initialHistoryState = {
   past: [],
   future: [],
@@ -110,9 +108,6 @@ export const useViewerEditState = ({
   ocrPreviewByPreviewWord,
   wordsQueryKey,
   pageNumberByPageId,
-  page,
-  maxPage,
-  zoom,
 }) => {
   const [isEditMode, setisEditMode] = useState(false);
   const [historyState, historyDispatch] = useReducer(
@@ -398,10 +393,6 @@ export const useViewerEditState = ({
 
   const canUndo = isEditMode && historyState.past.length > 0;
   const canRedo = isEditMode && historyState.future.length > 0;
-  const canGoPrevPage = page > 1;
-  const canGoNextPage = page < maxPage;
-  const canZoomOut = zoom - VIEWER_ZOOM.STEP >= VIEWER_ZOOM.MIN;
-  const canZoomIn = zoom + VIEWER_ZOOM.STEP <= VIEWER_ZOOM.MAX;
 
   return {
     isEditMode,
@@ -415,10 +406,6 @@ export const useViewerEditState = ({
     rewritePreviewWordContentByOcr,
     canUndo,
     canRedo,
-    canGoPrevPage,
-    canGoNextPage,
-    canZoomOut,
-    canZoomIn,
     undo,
     redo,
   };

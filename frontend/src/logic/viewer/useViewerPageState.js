@@ -84,11 +84,19 @@ export const useViewerPageState = ({ maxPage }) => {
   const commitPage = buildCommit(_setPage, rawToPage);
   const commitZoom = buildCommit(_setZoom, rawToZoom);
   const commitRotate = buildCommit(_setRotate, rawToRotate);
+  const canGoPrevPage = page > 1;
+  const canGoNextPage = page < safeMaxPage;
+  const canZoomOut = zoom - VIEWER_ZOOM.STEP >= VIEWER_ZOOM.MIN;
+  const canZoomIn = zoom + VIEWER_ZOOM.STEP <= VIEWER_ZOOM.MAX;
 
   return {
     page,
     zoom,
     rotate,
+    canGoPrevPage,
+    canGoNextPage,
+    canZoomOut,
+    canZoomIn,
     setPage,
     setZoom,
     setRotate,
