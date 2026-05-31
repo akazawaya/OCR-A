@@ -1,12 +1,11 @@
 import { useEffect } from "react";
 
 export const ViewerEditHotkeys = ({
-  data: { isEditMode, viewerRootRef } = {},
+  data: { viewerRootRef } = {},
   events: { onKeyDownUndo, onKeyDownRedo } = {},
 }) => {
   useEffect(() => {
     const onWindowKeyDown = (e) => {
-      if (!isEditMode) return;
       if (e.isComposing) return;
 
       const active = document.activeElement;
@@ -36,7 +35,7 @@ export const ViewerEditHotkeys = ({
 
     window.addEventListener("keydown", onWindowKeyDown);
     return () => window.removeEventListener("keydown", onWindowKeyDown);
-  }, [isEditMode, onKeyDownUndo, onKeyDownRedo, viewerRootRef]);
+  }, [onKeyDownUndo, onKeyDownRedo, viewerRootRef]);
 
   return null;
 };

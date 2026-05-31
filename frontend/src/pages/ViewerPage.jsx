@@ -100,7 +100,6 @@ const ViewerPage = () => {
 
   const pageState = useViewerPageState({ maxPage: pages.length });
   const selection = useSelection();
-  const viewerRootRef = useRef(null);
   const contentRef = useRef(null);
   const { isPrintMode, openPrintDialog } = usePrint({
     contentRef,
@@ -183,12 +182,11 @@ const ViewerPage = () => {
   return (
     <>
       <ViewerEditHotkeys
-        data={{ isEditMode: editState.isEditMode }}
+        data={{}}
         events={{
           onKeyDownUndo: editState.undo,
           onKeyDownRedo: editState.redo,
         }}
-        viewerRootRef={viewerRootRef}
       />
       <div className="grid h-full grid-cols-[2fr_1fr] grid-rows-[auto_1fr] gap-2 overflow-hidden p-2">
         <div className="col-span-2">

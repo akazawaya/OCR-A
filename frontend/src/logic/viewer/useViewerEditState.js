@@ -381,6 +381,7 @@ export const useViewerEditState = ({
   };
 
   const undo = () => {
+    if (!isEditMode) return;
     const entry = historyState.past.at(-1);
     if (!entry) return;
     applyUndoEntry(entry);
@@ -388,14 +389,15 @@ export const useViewerEditState = ({
   };
 
   const redo = () => {
+    if (!isEditMode) return;
     const entry = historyState.future[0];
     if (!entry) return;
     applyRedoEntry(entry);
     historyDispatch({ type: "REDO" });
   };
 
-  const canUndo = historyState.past.length > 0;
-  const canRedo = historyState.future.length > 0;
+  const canUndo = isEditMode && historyState.past.length > 0;
+  const canRedo = isEditMode && historyState.future.length > 0;
   const canGoPrevPage = page > 1;
   const canGoNextPage = page < maxPage;
   const canZoomOut = zoom - VIEWER_ZOOM.STEP >= VIEWER_ZOOM.MIN;
