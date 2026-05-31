@@ -63,8 +63,6 @@ export const ocrPreviewByPreviewWord = async ({
       doc,
       page_number: previewWord.page__page_number,
       bbox: previewWord.bbox,
-      direction: previewWord.direction,
-      content: previewWord.content ?? "",
     }),
     throwOnError: true,
   });
