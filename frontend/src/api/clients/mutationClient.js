@@ -47,3 +47,26 @@ export const startOcrDocument = async ({ startOcrUrl, formData }) => {
   });
   return { res, data };
 };
+
+export const ocrPreviewByPreviewWord = async ({
+  ocrPreviewUrl,
+  previewWord,
+  mode,
+  doc,
+}) => {
+  const { res, data } = await fetchBackend(ocrPreviewUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      mode,
+      preview_id: previewWord.id,
+      doc,
+      page_number: previewWord.page__page_number,
+      bbox: previewWord.bbox,
+      direction: previewWord.direction,
+      content: previewWord.content ?? "",
+    }),
+    throwOnError: true,
+  });
+  return { res, data };
+};

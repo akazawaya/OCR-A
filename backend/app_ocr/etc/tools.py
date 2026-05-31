@@ -92,3 +92,29 @@ def exchange_ext(ext):
     if ext in ALLOWED_UPLOAD_FILE_EXTENSIONS:
         return ext
     raise KeyError(ext)
+
+
+def crop_img_by_bbox(img, bbox):
+    xs = [p[0] for p in bbox]
+    ys = [p[1] for p in bbox]
+
+    h, w = img.shape[:2]
+
+    x_min = max(0, int(min(xs)))
+    y_min = max(0, int(min(ys)))
+    x_max = min(w, int(max(xs)))
+    y_max = min(h, int(max(ys)))
+
+    if x_min >= x_max or y_min >= y_max:
+        raise ValueError("invalid bbox")
+
+    cropped_img = img[y_min:y_max, x_min:x_max]
+    offset = (x_min, y_min)
+
+    return cropped_img, offset
+
+
+def apply_offset_to_points(points, offset):
+    ox, oy = offset
+
+    return [[x + ox, y + oy] for x, y in points]

@@ -42,6 +42,11 @@ export const wordAccessSpec = makeAccessSpec({
 export const documentOcrAccessSpec = {
   startOcrUrl: API_BASE_URL + "documents/ocr/",
 };
+
+export const wordOcrAccessSpec = {
+  ocrPreviewUrl: API_BASE_URL + "words/ocr-preview/",
+};
+
 // 表示するフィールド/列を選ぶ（表示名の翻訳も兼ねる）
 const documentUiSpec = Object.freeze({
   table: [

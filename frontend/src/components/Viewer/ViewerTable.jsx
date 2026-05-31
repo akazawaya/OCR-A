@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Trash2 } from "lucide-react";
+import { ScanLine, ScanText, Trash2 } from "lucide-react";
 
 import { useScroll } from "../../logic/layout/useScroll";
 
@@ -49,6 +49,8 @@ const ViewerTable = ({
     onSelect,
     onChangeContentDraft,
     onClickDeleteButton,
+    onClickOcrRewriteButton,
+    onClickOcrReplaceButton,
   } = {},
 }) => {
   // edit中のinputの幅は事前に固定値を取る
@@ -93,16 +95,38 @@ const ViewerTable = ({
             >
               {isEditMode && (
                 <td className="sticky left-0 z-2">
-                  <button
-                    aria-label="削除"
-                    className="cursor-pointer border border-gray-400 bg-red-100 text-black hover:bg-red-300"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onClickDeleteButton(r.id);
-                    }}
-                  >
-                    <Trash2 className="h-4" />
-                  </button>
+                  <div className="flex items-center">
+                    <button
+                      aria-label="削除"
+                      className="cursor-pointer border border-gray-400 bg-red-100 text-black hover:bg-red-300"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onClickDeleteButton(r.id);
+                      }}
+                    >
+                      <Trash2 className="h-4" />
+                    </button>
+                    <button
+                      aria-label="OCRでcontent書換"
+                      className="cursor-pointer border border-gray-400 bg-green-100 text-black hover:bg-green-300"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onClickOcrRewriteButton(r);
+                      }}
+                    >
+                      <ScanLine className="h-4" />
+                    </button>
+                    <button
+                      aria-label="OCRでwords置換"
+                      className="cursor-pointer border border-gray-400 bg-blue-100 text-black hover:bg-blue-300"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onClickOcrReplaceButton(r);
+                      }}
+                    >
+                      <ScanText className="h-4" />
+                    </button>
+                  </div>
                 </td>
               )}
 

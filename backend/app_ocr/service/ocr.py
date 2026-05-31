@@ -48,3 +48,27 @@ def run_ocr_for_page(document_id, page_number):
         "page_id": page_instance.pk,
         "word_count": len(words),
     }
+
+
+def run_ocr_for_bbox(document_id, page_number, bbox):
+    doc = Document.objects.get(pk=document_id)
+    ocr = get_engine()
+    input_ext = doc.get_file_type_display()
+    img_bytes = render_page(doc.file, page_number, input_ext)
+
+    words = yomitoku_ocr(
+        img_bytes=img_bytes,
+        ocr_instance=ocr,
+        bbox=bbox,
+    )
+
+    return [
+        {
+            "bbox": w["points"],
+            "content": w["content"],
+            "direction": Direction.label_to_value(w["direction"]),
+            "rec_score": w["rec_score"],
+            "det_score": w["det_score"],
+        }
+        for w in words
+    ]

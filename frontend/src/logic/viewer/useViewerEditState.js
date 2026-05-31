@@ -51,13 +51,13 @@ const buildSaveChangesFromHistory = (pastEntries = []) => {
         pendingPostWordMap.set(word.id, word);
         return;
       }
+
       case "CHANGE_CONTENT_DRAFT": {
         const { wordId, prev, next } = pastEntry.payload;
         if (pendingPostWordMap.has(wordId)) {
           const word = pendingPostWordMap.get(wordId);
           pendingPostWordMap.set(wordId, { ...word, content: next });
         }
-
         const contentChange = patchStateById.get(wordId);
         if (!contentChange) {
           patchStateById.set(wordId, { firstPrev: prev, lastNext: next });
@@ -66,14 +66,29 @@ const buildSaveChangesFromHistory = (pastEntries = []) => {
         }
         return;
       }
+
       case "ADD_PENDING_DELETE": {
         const { word } = pastEntry.payload;
-
         if (pendingPostWordMap.has(word.id)) {
           pendingPostWordMap.delete(word.id);
           return;
         }
         pendingDeleteIdSet.add(word.id);
+        return;
+      }
+
+      case "REPLACE_WORDS": {
+        const { removeWords, addWords } = pastEntry.payload;
+        removeWords.forEach((word) => {
+          if (pendingPostWordMap.has(word.id)) {
+            pendingPostWordMap.delete(word.id);
+          } else {
+            pendingDeleteIdSet.add(word.id);
+          }
+        });
+        addWords.forEach((word) => {
+          pendingPostWordMap.set(word.id, word);
+        });
         return;
       }
     }
@@ -92,6 +107,7 @@ export const useViewerEditState = ({
   postWordByBbox,
   patchWordContentById,
   deleteWordById,
+  ocrPreviewByPreviewWord,
   wordsQueryKey,
   pageNumberByPageId,
   page,
@@ -174,6 +190,67 @@ export const useViewerEditState = ({
     });
   };
 
+  const rewritePreviewWordContentByOcr = async (previewWord) => {
+    const result = await ocrPreviewByPreviewWord({
+      previewWord,
+      mode: "rewrite_content",
+    });
+    const response = result.data ?? {};
+    const nextContent =
+      response.content ??
+      response.words?.map((word) => word.content ?? "").join("") ??
+      "";
+    changeContentDraftById(
+      previewWord.id,
+      nextContent,
+      previewWord.content ?? "",
+    );
+  };
+
+  const replacePreviewWordByOcr = async (previewWord) => {
+    const result = await ocrPreviewByPreviewWord({
+      previewWord,
+      mode: "replace_words",
+    });
+    const response = result.data ?? {};
+    const addWords = (response.words ?? []).map((word) => ({
+      id: `preview:${crypto.randomUUID()}`,
+      isPendingPost: true,
+      page: previewWord.page,
+      page__page_number: previewWord.page__page_number,
+      bbox: word.bbox,
+      direction: word.direction,
+      content: word.content ?? "",
+    }));
+    const payload = {
+      removeWords: [previewWord],
+      addWords,
+    };
+    applyReplaceWords(payload);
+    // OCR結果を query cache に反映する
+    historyDispatch({
+      type: "PUSH",
+      entry: {
+        type: "REPLACE_WORDS",
+        payload,
+      },
+    });
+  };
+
+  const applyReplaceWords = ({ removeWords, addWords }) => {
+    queryClient.setQueryData(wordsQueryKey, (oldWords = []) => {
+      const removeWordIdSet = new Set(removeWords.map((w) => w.id));
+      const withoutRemovedWords = oldWords.filter(
+        (word) => !removeWordIdSet.has(word.id),
+      );
+      const existingIdSet = new Set(withoutRemovedWords.map((w) => w.id));
+      const nextAddWords = addWords.filter(
+        (word) => !existingIdSet.has(word.id),
+      );
+      return [...withoutRemovedWords, ...nextAddWords];
+    });
+  };
+
   const applyUndoEntry = (entry) => {
     switch (entry.type) {
       case "CHANGE_CONTENT_DRAFT": {
@@ -197,6 +274,21 @@ export const useViewerEditState = ({
         const { word } = entry.payload;
         queryClient.setQueryData(wordsQueryKey, (oldWords = []) => {
           return oldWords.filter((w) => w.id !== word.id);
+        });
+        return;
+      }
+      case "REPLACE_WORDS": {
+        const { removeWords, addWords } = entry.payload;
+        queryClient.setQueryData(wordsQueryKey, (oldWords = []) => {
+          const addWordIdSet = new Set(addWords.map((w) => w.id));
+          const withoutAddedWords = oldWords.filter(
+            (word) => !addWordIdSet.has(word.id),
+          );
+          const existingIdSet = new Set(withoutAddedWords.map((w) => w.id));
+          const restoredWords = removeWords.filter(
+            (word) => !existingIdSet.has(word.id),
+          );
+          return [...withoutAddedWords, ...restoredWords];
         });
         return;
       }
@@ -228,6 +320,21 @@ export const useViewerEditState = ({
         queryClient.setQueryData(wordsQueryKey, (oldWords = []) => {
           if (oldWords.some((w) => w.id === word.id)) return oldWords;
           return [...oldWords, word];
+        });
+        return;
+      }
+      case "REPLACE_WORDS": {
+        const { removeWords, addWords } = entry.payload;
+        queryClient.setQueryData(wordsQueryKey, (oldWords = []) => {
+          const removeWordIdSet = new Set(removeWords.map((w) => w.id));
+          const withoutRemovedWords = oldWords.filter(
+            (word) => !removeWordIdSet.has(word.id),
+          );
+          const existingIdSet = new Set(withoutRemovedWords.map((w) => w.id));
+          const addedWords = addWords.filter(
+            (word) => !existingIdSet.has(word.id),
+          );
+          return [...withoutRemovedWords, ...addedWords];
         });
         return;
       }
@@ -302,6 +409,8 @@ export const useViewerEditState = ({
     changeContentDraftById,
     addPendingDeleteById,
     addPendingPostByBbox,
+    replacePreviewWordByOcr,
+    rewritePreviewWordContentByOcr,
     canUndo,
     canRedo,
     canGoPrevPage,

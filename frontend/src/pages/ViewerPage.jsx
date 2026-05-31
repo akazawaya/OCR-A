@@ -2,12 +2,13 @@ import { useMemo, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useParams } from "react-router-dom";
 
-import { pageAccessSpec, wordSpec } from "../appConfig";
+import { pageAccessSpec, wordSpec, wordOcrAccessSpec } from "../appConfig";
 import { getCollection } from "../api/clients/collectionClient";
 import {
   postCollectionItem,
   deleteCollectionItem,
   patchCollectionItem,
+  ocrPreviewByPreviewWord as ocrPreviewByPreviewWordApi,
 } from "../api/clients/mutationClient";
 import { usePrint } from "../logic/print/usePrint";
 import { buildCollectionQueryString } from "../logic/urlQuery/buildCollectionQueryString";
@@ -158,10 +159,21 @@ const ViewerPage = () => {
       }),
   });
 
+  const { mutateAsync: ocrPreviewByPreviewWord } = useMutation({
+    mutationFn: ({ previewWord, mode }) =>
+      ocrPreviewByPreviewWordApi({
+        ocrPreviewUrl: wordOcrAccessSpec.ocrPreviewUrl,
+        previewWord,
+        mode,
+        doc: primaryKey,
+      }),
+  });
+
   const editState = useViewerEditState({
     postWordByBbox,
     patchWordContentById,
     deleteWordById,
+    ocrPreviewByPreviewWord,
     wordsQueryKey,
     pageNumberByPageId,
     page: pageState.page,
@@ -256,6 +268,9 @@ const ViewerPage = () => {
                 events={{
                   onChangeContentDraft: editState.changeContentDraftById,
                   onClickDeleteButton: editState.addPendingDeleteById,
+                  onClickOcrReplaceButton: editState.replacePreviewWordByOcr,
+                  onClickOcrRewriteButton:
+                    editState.rewritePreviewWordContentByOcr,
                   onHover: selection.hover,
                   onHoverClear: selection.clearHovered,
                   onSelect: selection.commitSelect,

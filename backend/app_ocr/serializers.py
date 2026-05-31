@@ -110,3 +110,11 @@ class WordSerializer(serializers.HyperlinkedModelSerializer):
             "det_score",
             "page__page_number",
         ]
+
+
+class WordOcrPreviewRequestSerializer(serializers.Serializer):
+    mode = serializers.ChoiceField(choices=["replace_words", "rewrite_content"])
+    preview_id = serializers.CharField()
+    doc = serializers.IntegerField()
+    page_number = serializers.IntegerField(min_value=1)
+    bbox = serializers.ListField()

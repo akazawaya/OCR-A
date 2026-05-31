@@ -18,9 +18,11 @@ from app_ocr.serializers import (
     DocumentUploadSerializer,
     PageSerializer,
     UserSerializer,
+    WordOcrPreviewRequestSerializer,
     WordSerializer,
 )
 from app_ocr.service.document import create_pages_from_document_file
+from app_ocr.service.ocr import run_ocr_for_bbox
 from app_ocr.storage import (
     build_document_storage_prefix,
     delete_document_files,
@@ -129,3 +131,45 @@ class WordViewSet(viewsets.ModelViewSet):
     serializer_class = WordSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["page", "page__doc"]
+
+    @action(detail=False, methods=["post"], url_path="ocr-preview")
+    def ocr_preview(self, request):
+        serializer = WordOcrPreviewRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        mode = serializer.validated_data["mode"]
+        preview_id = serializer.validated_data["preview_id"]
+        document_id = serializer.validated_data["doc"]
+        page_number = serializer.validated_data["page_number"]
+        bbox = serializer.validated_data["bbox"]
+
+        ocr_words = run_ocr_for_bbox(
+            document_id=document_id,
+            page_number=page_number,
+            bbox=bbox,
+        )
+
+        if mode == "replace_words":
+            return Response(
+                {
+                    "mode": mode,
+                    "preview_id": preview_id,
+                    "words": [
+                        {
+                            "bbox": word["bbox"],
+                            "direction": word.get("direction", "horizontal"),
+                            "content": word.get("content", ""),
+                        }
+                        for word in ocr_words
+                    ],
+                }
+            )
+
+        if mode == "rewrite_content":
+            return Response(
+                {
+                    "mode": mode,
+                    "preview_id": preview_id,
+                    "content": "".join(word.get("content", "") for word in ocr_words),
+                }
+            )
