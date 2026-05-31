@@ -8,10 +8,27 @@ import "@testing-library/jest-dom/vitest";
 import {
   renderViewerPage,
   setupDefaultViewerMocks,
+  setupCanvasTextMeasureMock,
 } from "./ViewerPage.test-utils";
+import { defaultMockPages } from "./msw/fixture";
+
+Object.defineProperty(HTMLElement.prototype, "clientWidth", {
+  configurable: true,
+  get() {
+    return defaultMockPages[0].width_px;
+  },
+});
+
+Object.defineProperty(HTMLElement.prototype, "clientHeight", {
+  configurable: true,
+  get() {
+    return defaultMockPages[0].height_px;
+  },
+});
 
 beforeEach(() => {
   setupDefaultViewerMocks();
+  setupCanvasTextMeasureMock();
 });
 
 const FIRST_WORD_CONTENT = "テスト語";
@@ -28,6 +45,11 @@ const getFirstWordDeleteButton = () =>
 // svgはpage単位だが、pageが識別可能な属性を付与していないため、単に先頭のsvgを取る
 const getFirstSelectionArea = () =>
   screen.getAllByLabelText("文字範囲選択エリア")[0];
+
+const getWordPolygonPoints = () =>
+  Array.from(
+    getFirstSelectionArea().querySelectorAll("polygon[data-word]"),
+  ).map((polygon) => polygon.getAttribute("points"));
 
 // jsdom では getBoundingClientRect がレイアウト計算を返せないため、
 // pointer操作時に参照されても落ちないように最小限差し替える
@@ -109,7 +131,9 @@ describe("ViewerPage", () => {
       await user.click(screen.getByRole("button", { name: "保存" }));
 
       expect(screen.getByRole("button", { name: "編集" })).toBeVisible();
-      expect(screen.getByText(UPDATED_WORD_CONTENT)).toBeVisible();
+      expect(
+        screen.getByRole("button", { name: UPDATED_WORD_CONTENT }),
+      ).toBeVisible();
       expect(screen.queryByRole("button", { name: "保存" })).toBeNull();
     });
 
@@ -122,7 +146,9 @@ describe("ViewerPage", () => {
       await user.click(screen.getByRole("button", { name: "中止" }));
 
       expect(screen.getByRole("button", { name: "編集" })).toBeVisible();
-      expect(screen.getByText(FIRST_WORD_CONTENT)).toBeVisible();
+      expect(
+        screen.getByRole("button", { name: FIRST_WORD_CONTENT }),
+      ).toBeVisible();
       expect(screen.queryByDisplayValue(UPDATED_WORD_CONTENT)).toBeNull();
     });
   });
@@ -151,7 +177,9 @@ describe("ViewerPage", () => {
       await user.click(screen.getByRole("button", { name: "保存" }));
 
       expect(screen.getByRole("button", { name: "編集" })).toBeVisible();
-      expect(screen.getByText(ADDED_WORD_CONTENT)).toBeVisible();
+      expect(
+        screen.getByRole("button", { name: ADDED_WORD_CONTENT }),
+      ).toBeVisible();
     });
 
     test("内容変更は入力中には確定されずEnterで確定される", async () => {
@@ -195,7 +223,105 @@ describe("ViewerPage", () => {
       await user.click(screen.getByRole("button", { name: "保存" }));
 
       expect(screen.getByRole("button", { name: "編集" })).toBeVisible();
-      expect(screen.queryByText(FIRST_WORD_CONTENT)).toBeNull();
+      expect(
+        screen.queryByRole("button", { name: FIRST_WORD_CONTENT }),
+      ).toBeNull();
+    });
+  });
+
+  describe("OCRボタンによるbbox単位の更新", () => {
+    test("OCRでwords置換を押すと、既存wordが複数wordへ破壊的に置換される", async () => {
+      renderViewerPage();
+      const user = await enterEditMode();
+
+      expect(getWordPolygonPoints()).toEqual([
+        "100,100 200,100 200,150 100,150",
+      ]);
+
+      await user.click(screen.getByRole("button", { name: "OCRでwords置換" }));
+
+      await waitFor(() => {
+        expect(screen.getByDisplayValue("分割A")).toBeVisible();
+      });
+
+      expect(screen.queryByDisplayValue(FIRST_WORD_CONTENT)).toBeNull();
+      expect(screen.getByDisplayValue("分割B")).toBeVisible();
+      expect(getWordPolygonPoints()).toEqual([
+        "100,100 150,100 150,150 100,150",
+        "150,100 200,100 200,150 150,150",
+      ]);
+    });
+
+    test("OCRでwords置換のあとUndo/Redoで置換前後を切り替えられる", async () => {
+      renderViewerPage();
+      const user = await enterEditMode();
+
+      await user.click(screen.getByRole("button", { name: "OCRでwords置換" }));
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: "分割A" })).toBeVisible();
+        expect(screen.getByRole("button", { name: "分割B" })).toBeVisible();
+      });
+
+      await user.click(screen.getByRole("button", { name: "元に戻す" }));
+
+      expect(
+        screen.getByRole("button", { name: FIRST_WORD_CONTENT }),
+      ).toBeVisible();
+      expect(screen.queryByRole("button", { name: "分割A" })).toBeNull();
+      expect(screen.queryByRole("button", { name: "分割B" })).toBeNull();
+
+      await user.click(screen.getByRole("button", { name: "やり直す" }));
+
+      expect(screen.getByRole("button", { name: "分割A" })).toBeVisible();
+      expect(screen.getByRole("button", { name: "分割B" })).toBeVisible();
+      expect(
+        screen.queryByRole("button", { name: FIRST_WORD_CONTENT }),
+      ).toBeNull();
+    });
+
+    test("OCRでcontent書換を押すとbboxは維持したままcontentだけ更新される", async () => {
+      renderViewerPage();
+      const user = await enterEditMode();
+      const beforePoints = getWordPolygonPoints();
+
+      await user.click(
+        screen.getByRole("button", { name: "OCRでcontent書換" }),
+      );
+
+      await waitFor(() => {
+        expect(screen.getByDisplayValue("書換後")).toBeVisible();
+      });
+
+      expect(screen.queryByDisplayValue(FIRST_WORD_CONTENT)).toBeNull();
+      expect(getWordPolygonPoints()).toEqual(beforePoints);
+    });
+
+    test("OCRでcontent書換は既存wordのcontent変更としてUndo/Redoと保存に反映される", async () => {
+      renderViewerPage();
+      const user = await enterEditMode();
+
+      await user.click(
+        screen.getByRole("button", { name: "OCRでcontent書換" }),
+      );
+
+      await waitFor(() => {
+        expect(screen.getByDisplayValue("書換後")).toBeVisible();
+      });
+
+      await user.click(screen.getByRole("button", { name: "元に戻す" }));
+      expect(screen.getByDisplayValue(FIRST_WORD_CONTENT)).toBeVisible();
+
+      await user.click(screen.getByRole("button", { name: "やり直す" }));
+      expect(screen.getByDisplayValue("書換後")).toBeVisible();
+
+      await user.click(screen.getByRole("button", { name: "保存" }));
+
+      expect(screen.getByRole("button", { name: "編集" })).toBeVisible();
+      expect(screen.getByRole("button", { name: "書換後" })).toBeVisible();
+      expect(
+        screen.queryByRole("button", { name: FIRST_WORD_CONTENT }),
+      ).toBeNull();
     });
   });
 

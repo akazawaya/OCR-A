@@ -61,6 +61,49 @@ export const wordsApiHandlers = [
     return HttpResponse.json(createdWord, { status: 201 });
   }),
 
+  http.post("http://test.dummy/words/ocr-preview/", async ({ request }) => {
+    const body = await request.json();
+
+    if (body.mode === "replace_words") {
+      return HttpResponse.json({
+        mode: body.mode,
+        preview_id: body.preview_id,
+        words: [
+          {
+            bbox: [
+              [100, 100],
+              [150, 100],
+              [150, 150],
+              [100, 150],
+            ],
+            direction: 1,
+            content: "分割A",
+          },
+          {
+            bbox: [
+              [150, 100],
+              [200, 100],
+              [200, 150],
+              [150, 150],
+            ],
+            direction: 1,
+            content: "分割B",
+          },
+        ],
+      });
+    }
+
+    if (body.mode === "rewrite_content") {
+      return HttpResponse.json({
+        mode: body.mode,
+        preview_id: body.preview_id,
+        content: "書換後",
+      });
+    }
+
+    return new HttpResponse(null, { status: 400 });
+  }),
+
   http.patch("http://test.dummy/words/:id/", async ({ params, request }) => {
     const id = Number(params.id);
     const body = await request.json();
