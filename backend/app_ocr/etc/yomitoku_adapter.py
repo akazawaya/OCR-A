@@ -23,6 +23,9 @@ def yomitoku_ocr(img_bytes, ocr_instance, bbox=None):
 
     arr = np.frombuffer(img_bytes, dtype=np.uint8)
     img_bgr = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    if img_bgr is None:
+        raise ValueError("Invalid image bytes")
+
     if bbox is not None:
         img_bgr, offset = crop_img_by_bbox(img_bgr, bbox)
 

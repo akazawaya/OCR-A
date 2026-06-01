@@ -388,5 +388,6 @@ class TestYomitokuAdapter:
         ocr_instance.assert_called_once()
 
     def test_yomitoku_ocr_rejects_invalid_image_bytes(self):
-        with pytest.raises(ValueError, match="failed to read"):
-            yomitoku_ocr(img_bytes=b"invalid", ocr_instance=Mock())
+        ocr_instance = Mock()
+        with pytest.raises(ValueError, match="Invalid image bytes"):
+            yomitoku_ocr(b"not image", ocr_instance)
