@@ -6,7 +6,6 @@ const initialHistoryState = {
   past: [],
   future: [],
 };
-
 const historyReducer = (state, action) => {
   switch (action.type) {
     case "PUSH":
@@ -16,18 +15,19 @@ const historyReducer = (state, action) => {
       };
     case "UNDO": {
       if (state.past.length === 0) return state;
-      const entry = state.past[state.past.length - 1];
+      const entry = state.past.at(-1);
       return {
         past: state.past.slice(0, -1),
-        future: [entry, ...state.future],
+        future: [...state.future, entry],
       };
     }
+
     case "REDO": {
       if (state.future.length === 0) return state;
-      const entry = state.future[0];
+      const entry = state.future.at(-1);
       return {
         past: [...state.past, entry],
-        future: state.future.slice(1),
+        future: state.future.slice(0, -1),
       };
     }
     case "RESET":
