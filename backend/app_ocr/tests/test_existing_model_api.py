@@ -207,10 +207,4 @@ class TestWordApi:
         word.refresh_from_db()
         assert word.content == "next"
 
-    def test_delete_word(self, api_client, ocr_fixture_data):
-        _, _, word = ocr_fixture_data
-
-        response = api_client.delete(reverse("word-detail", args=[word.id]))
-
-        assert response.status_code == status.HTTP_204_NO_CONTENT
-        assert not Word.objects.filter(id=word.id).exists()
+    # ocr_previewのAPIテストはmodelへの書き込みを意味しないためocr_flowにて実施。

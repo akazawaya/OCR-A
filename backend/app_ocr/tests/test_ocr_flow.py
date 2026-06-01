@@ -12,8 +12,8 @@ from rest_framework.test import APIClient
 from app_ocr.consumers import OcrProgressConsumer
 from app_ocr.etc.tools import inspect_file, render_page
 from app_ocr.etc.yomitoku_adapter import get_engine, init_engine, yomitoku_ocr
-from app_ocr.models import Document, FileType, Page, State, Word
-from app_ocr.service.ocr import run_ocr_for_page
+from app_ocr.models import Direction, Document, FileType, Page, State, Word
+from app_ocr.service.ocr import run_ocr_for_bbox, run_ocr_for_page
 from app_ocr.tasks import (
     dispatch_ocr_pages_task,
     notify_document_state_changed,
@@ -297,6 +297,8 @@ class TestConsumer:
 
 @pytest.mark.django_db
 def test_run_ocr_for_page_creates_page_and_words_from_ocr_result():
+    # OCRエンジンを差し替え、OCRインスタンスが呼ばれたかの確認と、
+    # mockの返り値で保存がなされたかを確認
     with (
         patch("app_ocr.service.ocr.get_engine") as mock_get_engine,
         patch("app_ocr.service.ocr.yomitoku_ocr") as mock_yomitoku_ocr,
@@ -312,7 +314,6 @@ def test_run_ocr_for_page_creates_page_and_words_from_ocr_result():
                 "det_score": 0.8,
             }
         ]
-
         file = make_uploaded_file_from_fixture("table.jpg", "image/jpeg")
         doc = Document.objects.create(
             file=file,
@@ -334,10 +335,55 @@ def test_run_ocr_for_page_creates_page_and_words_from_ocr_result():
     assert word.rec_score == 0.9
     assert word.det_score == 0.8
 
-    mock_yomitoku_ocr.assert_called_once_with(
-        img_bytes=page.image.read(),
-        ocr_instance=mock_ocr,
-    )
+
+@pytest.mark.django_db
+def test_run_ocr_for_bbox_returns_words_without_saving_page_or_words():
+    # 本質ではないが、run_ocr_for_bboxは単体では保存がされないことをアサ―トとする
+    with (
+        patch("app_ocr.service.ocr.get_engine") as mock_get_engine,
+        patch("app_ocr.service.ocr.yomitoku_ocr") as mock_yomitoku_ocr,
+    ):
+        mock_ocr = object()
+        mock_get_engine.return_value = mock_ocr
+        mock_yomitoku_ocr.return_value = [
+            {
+                "points": [[1, 1], [20, 1], [20, 12], [1, 12]],
+                "content": "bbox text",
+                "direction": "horizontal",
+                "rec_score": 0.95,
+                "det_score": 0.85,
+            }
+        ]
+        file = make_uploaded_file_from_fixture("table.jpg", "image/jpeg")
+        doc = Document.objects.create(
+            file=file,
+            file_name="table.jpg",
+            file_type=FileType.JPG,
+            total_pages=1,
+        )
+        bbox = [1, 1, 20, 12]
+        result = run_ocr_for_bbox(document_id=doc.id, page_number=1, bbox=bbox)
+
+    # 保存されないため直接返り値をアサ―トする
+    assert result == [
+        {
+            "bbox": [[1, 1], [20, 1], [20, 12], [1, 12]],
+            "content": "bbox text",
+            "direction": Direction.HORIZONTAL,
+            "rec_score": 0.95,
+            "det_score": 0.85,
+        }
+    ]
+    mock_yomitoku_ocr.assert_called_once()
+    kwargs = mock_yomitoku_ocr.call_args.kwargs
+
+    assert kwargs["ocr_instance"] is mock_ocr
+    assert kwargs["bbox"] == bbox
+    assert isinstance(kwargs["img_bytes"], bytes)
+    assert len(kwargs["img_bytes"]) > 0
+
+    assert Page.objects.count() == 0
+    assert Word.objects.count() == 0
 
 
 class TestYomitokuAdapter:

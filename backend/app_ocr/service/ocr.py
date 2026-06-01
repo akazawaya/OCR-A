@@ -7,14 +7,23 @@ from app_ocr.models import Direction, Document
 from app_ocr.serializers import PageSerializer, WordSerializer
 
 
-def run_ocr_for_page(document_id, page_number):
+def _run_yomitoku_on_rendered_page(document_id, page_number, bbox=None):
     doc = Document.objects.get(pk=document_id)
     ocr = get_engine()
     input_ext = doc.get_file_type_display()
     img_bytes = render_page(doc.file, page_number, input_ext)
+    ocr_kwargs = {
+        "img_bytes": img_bytes,
+        "ocr_instance": ocr,
+    }
+    if bbox is not None:
+        ocr_kwargs["bbox"] = bbox
+    words = yomitoku_ocr(**ocr_kwargs)
+    return doc, img_bytes, words
 
-    words = yomitoku_ocr(img_bytes=img_bytes, ocr_instance=ocr)
 
+def run_ocr_for_page(document_id, page_number):
+    doc, img_bytes, words = _run_yomitoku_on_rendered_page(document_id, page_number)
     img_file = ContentFile(img_bytes, name=f"{page_number}.png")
 
     with transaction.atomic():
@@ -27,7 +36,6 @@ def run_ocr_for_page(document_id, page_number):
         )
         page_serializer.is_valid(raise_exception=True)
         page_instance = page_serializer.save()
-
         for w in words:
             word_serializer = WordSerializer(
                 data={
@@ -41,7 +49,6 @@ def run_ocr_for_page(document_id, page_number):
             )
             word_serializer.is_valid(raise_exception=True)
             word_serializer.save()
-
     return {
         "doc_id": document_id,
         "page_number": page_number,
@@ -51,17 +58,9 @@ def run_ocr_for_page(document_id, page_number):
 
 
 def run_ocr_for_bbox(document_id, page_number, bbox):
-    doc = Document.objects.get(pk=document_id)
-    ocr = get_engine()
-    input_ext = doc.get_file_type_display()
-    img_bytes = render_page(doc.file, page_number, input_ext)
-
-    words = yomitoku_ocr(
-        img_bytes=img_bytes,
-        ocr_instance=ocr,
-        bbox=bbox,
-    )
-
+    # run_ocr_for_bboxはpreviewWordという、
+    # frontendのcache値に適用する方針のため、保存を伴わない
+    _, _, words = _run_yomitoku_on_rendered_page(document_id, page_number, bbox=bbox)
     return [
         {
             "bbox": w["points"],
