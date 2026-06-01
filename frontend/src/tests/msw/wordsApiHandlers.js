@@ -1,13 +1,19 @@
 import { http, HttpResponse } from "msw";
 
-import { defaultMockWords } from "./fixture";
+import { defaultMockWords, ocrPreviewMock } from "./fixture";
 
 let words = structuredClone(defaultMockWords);
+let ocrPreview = structuredClone(ocrPreviewMock);
+
 export const resetMockWords = () => {
   words = structuredClone(defaultMockWords);
+  ocrPreview = structuredClone(ocrPreviewMock);
 };
 export const setMockWords = (anotherFixtute) => {
   words = structuredClone(anotherFixtute);
+};
+export const setMockOcrPreview = (anotherFixture) => {
+  ocrPreview = structuredClone(anotherFixture);
 };
 
 export const wordsApiHandlers = [
@@ -61,47 +67,18 @@ export const wordsApiHandlers = [
     return HttpResponse.json(createdWord, { status: 201 });
   }),
 
+  // wordのocrは、返り値の差し変えをfixture形式からimport可能にする
   http.post("http://test.dummy/words/ocr-preview/", async ({ request }) => {
     const body = await request.json();
-
-    if (body.mode === "replace_words") {
-      return HttpResponse.json({
-        mode: body.mode,
-        preview_id: body.preview_id,
-        words: [
-          {
-            bbox: [
-              [100, 100],
-              [150, 100],
-              [150, 150],
-              [100, 150],
-            ],
-            direction: 1,
-            content: "分割A",
-          },
-          {
-            bbox: [
-              [150, 100],
-              [200, 100],
-              [200, 150],
-              [150, 150],
-            ],
-            direction: 1,
-            content: "分割B",
-          },
-        ],
-      });
+    if (!["replace_words", "rewrite_content"].includes(body.mode)) {
+      return new HttpResponse(null, { status: 400 });
     }
+    const response = ocrPreview;
 
-    if (body.mode === "rewrite_content") {
-      return HttpResponse.json({
-        mode: body.mode,
-        preview_id: body.preview_id,
-        content: "書換後",
-      });
-    }
-
-    return new HttpResponse(null, { status: 400 });
+    return HttpResponse.json({
+      ...response,
+      preview_id: body.preview_id,
+    });
   }),
 
   http.patch("http://test.dummy/words/:id/", async ({ params, request }) => {

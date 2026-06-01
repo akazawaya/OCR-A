@@ -107,7 +107,7 @@ const ViewerTable = ({
                       <Trash2 className="h-4" />
                     </button>
                     <button
-                      aria-label="OCRでcontent書換"
+                      aria-label="OCR書換"
                       className="cursor-pointer border border-gray-400 bg-green-100 text-black hover:bg-green-300"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -117,7 +117,7 @@ const ViewerTable = ({
                       <ScanLine className="h-4" />
                     </button>
                     <button
-                      aria-label="OCRでwords置換"
+                      aria-label="OCR置換"
                       className="cursor-pointer border border-gray-400 bg-blue-100 text-black hover:bg-blue-300"
                       onClick={(e) => {
                         e.stopPropagation();

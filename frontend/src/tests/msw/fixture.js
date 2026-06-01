@@ -233,3 +233,39 @@ export const sortMockWords = {
     },
   ],
 };
+
+// OCR preview fixture
+// 1. 結果が複数wordに分割されるケース
+// 2. 結果が空のケース
+export const ocrPreviewMockByCase = {
+  splitWords: {
+    words: [
+      {
+        bbox: [
+          [110, 100],
+          [150, 100],
+          [150, 150],
+          [110, 150],
+        ],
+        content: "分割A",
+        direction: 1,
+      },
+      {
+        bbox: [
+          [150, 100],
+          [200, 100],
+          [200, 150],
+          [150, 150],
+        ],
+        content: "分割B",
+        direction: 1,
+      },
+    ],
+  },
+  empty: {
+    words: [],
+    content: "",
+  },
+};
+
+export const ocrPreviewMock = ocrPreviewMockByCase.splitWords;
