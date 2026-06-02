@@ -200,6 +200,7 @@ const ViewerPage = () => {
               canGoNextPage: pageState.canGoNextPage,
               canZoomOut: pageState.canZoomOut,
               canZoomIn: pageState.canZoomIn,
+              isOcring: editState.isOcring,
             }}
             events={{
               onClickPrintButton: openPrintDialog,
@@ -240,6 +241,7 @@ const ViewerPage = () => {
                   hoveredWordId: selection.hoveredId,
                   selectedWordId: selection.selectedId,
                   isEditMode: editState.isEditMode,
+                  isDragRectDisabled: editState.isOcring,
                 }}
                 wordOverlayEvents={{
                   onHoverWord: selection.hover,
@@ -259,6 +261,7 @@ const ViewerPage = () => {
                   selectedId: selection.selectedId,
                   selectedBy: selection.selectedBy,
                   isEditMode: editState.isEditMode,
+                  isOcring: editState.isOcring,
                 }}
                 events={{
                   onChangeContentDraft: editState.changeContentDraftById,

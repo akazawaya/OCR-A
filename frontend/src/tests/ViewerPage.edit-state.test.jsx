@@ -11,7 +11,10 @@ import {
   setupCanvasTextMeasureMock,
 } from "./ViewerPage.test-utils";
 import { defaultMockPages, ocrPreviewMockByCase } from "./msw/fixture";
-import { setMockOcrPreview } from "./msw/wordsApiHandlers";
+import {
+  createMockOcrPreviewGate,
+  setMockOcrPreview,
+} from "./msw/wordsApiHandlers";
 
 Object.defineProperty(HTMLElement.prototype, "clientWidth", {
   configurable: true,
@@ -302,6 +305,56 @@ describe("ViewerPage", () => {
         expect(getPendingPolygonPoints(svg)).toBe(
           "100,500 200,500 200,700 100,700",
         );
+      });
+    });
+  });
+
+  describe("previewWordのocr:OCR待ちの挙動", () => {
+    test("OCR待ちの間はtableとTopBarの操作がdisabledになる", async () => {
+      const ocrPreviewGate = createMockOcrPreviewGate();
+      renderViewerPage();
+      const user = await enterEditMode();
+      await user.click(screen.getByRole("button", { name: "OCR書換" }));
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: "保存" })).toBeDisabled();
+      });
+      expect(screen.getByRole("button", { name: "削除" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "OCR書換" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "OCR置換" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "回転" })).toBeDisabled();
+      expect(screen.getByLabelText("page")).toBeDisabled();
+      expect(screen.getByLabelText("zoom")).toBeDisabled();
+      expect(screen.getByLabelText("rotate")).toBeDisabled();
+      expect(screen.getByRole("status")).toHaveTextContent("OCR実行中...");
+
+      ocrPreviewGate.release();
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: "保存" })).toBeEnabled();
+      });
+      expect(screen.queryByRole("status")).toBeNull();
+    });
+
+    test("OCR待ちの間はDragRectが機能しない", async () => {
+      const ocrPreviewGate = createMockOcrPreviewGate();
+      renderViewerPage();
+      const user = await enterEditMode();
+      const svg = getFirstSelectionArea();
+      mockSelectionAreaRect(svg, DEFAULT_SELECTION_AREA_RECT);
+      await user.click(screen.getByRole("button", { name: "OCR書換" }));
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: "OCR書換" })).toBeDisabled();
+      });
+
+      dragSelectionArea(svg, DEFAULT_DRAG_SELECTION);
+      expect(screen.getAllByRole("button", { name: "削除" })).toHaveLength(1);
+
+      ocrPreviewGate.release();
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: "OCR書換" })).toBeEnabled();
       });
     });
   });

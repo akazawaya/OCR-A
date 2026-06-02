@@ -42,6 +42,7 @@ const ViewerTable = ({
     selectedId,
     selectedBy,
     isEditMode,
+    isOcring,
   } = {},
   events: {
     onHover,
@@ -71,6 +72,9 @@ const ViewerTable = ({
     shouldScroll,
   });
 
+  const editButtonClassName =
+    "cursor-pointer border border-gray-400 text-black disabled:cursor-not-allowed disabled:opacity-50";
+
   return (
     <table ref={rootRef}>
       <tbody>
@@ -98,7 +102,8 @@ const ViewerTable = ({
                   <div className="flex items-center">
                     <button
                       aria-label="削除"
-                      className="cursor-pointer border border-gray-400 bg-red-100 text-black hover:bg-red-300"
+                      className={`${editButtonClassName} bg-red-100 hover:bg-red-300 disabled:hover:bg-red-100`}
+                      disabled={isOcring}
                       onClick={(e) => {
                         e.stopPropagation();
                         onClickDeleteButton(r.id);
@@ -108,7 +113,8 @@ const ViewerTable = ({
                     </button>
                     <button
                       aria-label="OCR書換"
-                      className="cursor-pointer border border-gray-400 bg-green-100 text-black hover:bg-green-300"
+                      className={`${editButtonClassName} bg-green-100 hover:bg-green-300 disabled:hover:bg-green-100`}
+                      disabled={isOcring}
                       onClick={(e) => {
                         e.stopPropagation();
                         onClickOcrRewriteButton(r);
@@ -118,7 +124,8 @@ const ViewerTable = ({
                     </button>
                     <button
                       aria-label="OCR置換"
-                      className="cursor-pointer border border-gray-400 bg-blue-100 text-black hover:bg-blue-300"
+                      className={`${editButtonClassName} bg-blue-100 hover:bg-blue-300 disabled:hover:bg-blue-100`}
+                      disabled={isOcring}
                       onClick={(e) => {
                         e.stopPropagation();
                         onClickOcrReplaceButton(r);

@@ -17,6 +17,7 @@ const WordOverlay = ({
     hoveredWordId,
     selectedWordId,
     isEditMode,
+    isOcring,
     isPrintMode,
   } = {},
   events: {
@@ -62,10 +63,10 @@ const WordOverlay = ({
       <svg
         aria-label="文字範囲選択エリア"
         viewBox={`0 0 ${imageSizePx.w} ${imageSizePx.h}`}
-        onPointerCancel={isEditMode ? onPointerCancel : undefined}
-        onPointerDown={isEditMode ? onPointerDown : undefined}
-        onPointerMove={isEditMode ? onPointerMove : undefined}
-        onPointerUp={isEditMode ? onPointerUp : undefined}
+        onPointerCancel={isEditMode && !isOcring ? onPointerCancel : undefined}
+        onPointerDown={isEditMode && !isOcring ? onPointerDown : undefined}
+        onPointerMove={isEditMode && !isOcring ? onPointerMove : undefined}
+        onPointerUp={isEditMode && !isOcring ? onPointerUp : undefined}
       >
         {isEditMode && draftBbox && (
           <polygon

@@ -18,13 +18,14 @@ import {
   VIEWER_ROTATE_STEP,
 } from "../../logic/viewer/viewerPageConstants";
 
-const renderTextField = (foo, commitFoo, inputRef, ariaLabel) => (
+const renderTextField = (foo, commitFoo, inputRef, ariaLabel, disabled) => (
   // 外部の foo が変わったときにinputRef.current.value = ... で表示を同期
   <input
     ref={inputRef}
     aria-label={ariaLabel}
-    className="w-[3ch] border border-double border-black bg-white text-center"
+    className="w-[3ch] border border-double border-black bg-white text-center disabled:cursor-not-allowed disabled:opacity-50"
     defaultValue={foo}
+    disabled={disabled}
     onBlur={(e) => {
       const display = commitFoo(e.currentTarget.value);
       if (display != null) e.currentTarget.value = display;
@@ -53,6 +54,7 @@ const ViewerTopBar = ({
     canGoNextPage = false,
     canZoomOut = false,
     canZoomIn = false,
+    isOcring = false,
   } = {},
   events: {
     onClickPrintButton,
@@ -85,7 +87,7 @@ const ViewerTopBar = ({
   const actionButtonClassName =
     "inline-flex h-8 w-5 items-center justify-center rounded-md border border-black bg-white cursor-pointer hover:bg-gray-100";
   const actionButtonDisabledStateClassName =
-    "disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 disabled:hover:bg-gray-100";
+    "disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 disabled:opacity-50 disabled:hover:bg-gray-100";
   const actionButtonWithDisabledClassName = `${actionButtonClassName} ${actionButtonDisabledStateClassName}`;
   const iconClassName = "h-4 w-4";
 
@@ -114,15 +116,16 @@ const ViewerTopBar = ({
           label: "前のページ",
           icon: ChevronLeft,
           className: actionButtonWithDisabledClassName,
-          disabled: !canGoPrevPage,
+          disabled: isOcring || !canGoPrevPage,
           onClick: () => onClickPageStepButton((a) => a - 1),
         })}
-        {renderTextField(page, onEnterPageInput, pageRef, "page")}/ {maxPage}
+        {renderTextField(page, onEnterPageInput, pageRef, "page", isOcring)}/{" "}
+        {maxPage}
         {renderIconButton({
           label: "次のページ",
           icon: ChevronRight,
           className: actionButtonWithDisabledClassName,
-          disabled: !canGoNextPage,
+          disabled: isOcring || !canGoNextPage,
           onClick: () => onClickPageStepButton((a) => a + 1),
         })}
       </div>
@@ -131,15 +134,15 @@ const ViewerTopBar = ({
           label: "縮小",
           icon: ZoomOut,
           className: actionButtonWithDisabledClassName,
-          disabled: !canZoomOut,
+          disabled: isOcring || !canZoomOut,
           onClick: () => onClickZoomStepButton((a) => a - VIEWER_ZOOM.STEP),
         })}
-        {renderTextField(zoom, onEnterZoomInput, zoomRef, "zoom")}
+        {renderTextField(zoom, onEnterZoomInput, zoomRef, "zoom", isOcring)}
         {renderIconButton({
           label: "拡大",
           icon: ZoomIn,
           className: actionButtonWithDisabledClassName,
-          disabled: !canZoomIn,
+          disabled: isOcring || !canZoomIn,
           onClick: () => onClickZoomStepButton((a) => a + VIEWER_ZOOM.STEP),
         })}
       </div>
@@ -147,16 +150,24 @@ const ViewerTopBar = ({
         {renderIconButton({
           label: "回転",
           icon: RotateCw,
-          className: actionButtonClassName,
+          className: actionButtonWithDisabledClassName,
+          disabled: isOcring,
           onClick: () => onClickRotateStepButton((a) => a + VIEWER_ROTATE_STEP),
         })}
-        {renderTextField(rotate, onEnterRotateInput, rotateRef, "rotate")}
+        {renderTextField(
+          rotate,
+          onEnterRotateInput,
+          rotateRef,
+          "rotate",
+          isOcring,
+        )}
       </div>
       {!isEditMode ? (
         renderIconButton({
           label: "出力",
           icon: Printer,
-          className: actionButtonClassName,
+          className: actionButtonWithDisabledClassName,
+          disabled: isOcring,
           onClick: onClickPrintButton,
         })
       ) : (
@@ -166,7 +177,8 @@ const ViewerTopBar = ({
         renderIconButton({
           label: "編集",
           icon: Pencil,
-          className: actionButtonClassName,
+          className: actionButtonWithDisabledClassName,
+          disabled: isOcring,
           onClick: onClickEditButton,
         })
       ) : (
@@ -176,14 +188,14 @@ const ViewerTopBar = ({
               label: "元に戻す",
               icon: Undo2,
               className: actionButtonWithDisabledClassName,
-              disabled: !canUndo,
+              disabled: isOcring || !canUndo,
               onClick: onClickUndoButton,
             })}
             {renderIconButton({
               label: "やり直す",
               icon: Redo2,
               className: actionButtonWithDisabledClassName,
-              disabled: !canRedo,
+              disabled: isOcring || !canRedo,
               onClick: onClickRedoButton,
             })}
           </div>
@@ -191,17 +203,24 @@ const ViewerTopBar = ({
             {renderIconButton({
               label: "保存",
               icon: Save,
-              className: actionButtonClassName,
+              className: actionButtonWithDisabledClassName,
+              disabled: isOcring,
               onClick: onClickSaveButton,
             })}
             {renderIconButton({
               label: "中止",
               icon: X,
-              className: actionButtonClassName,
+              className: actionButtonWithDisabledClassName,
+              disabled: isOcring,
               onClick: onClickCancelButton,
             })}
           </div>
         </>
+      )}
+      {isOcring && (
+        <span className="text-sm text-gray-600" role="status">
+          OCR実行中...
+        </span>
       )}
     </div>
   );

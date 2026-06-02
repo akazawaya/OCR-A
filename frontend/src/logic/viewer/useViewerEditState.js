@@ -110,6 +110,7 @@ export const useViewerEditState = ({
   pageNumberByPageId,
 }) => {
   const [isEditMode, setisEditMode] = useState(false);
+  const [isOcring, setIsOcring] = useState(false);
   const [historyState, historyDispatch] = useReducer(
     historyReducer,
     initialHistoryState,
@@ -123,6 +124,7 @@ export const useViewerEditState = ({
   const queryClient = useQueryClient();
 
   const addPendingPostByBbox = (pageId, bbox, direction) => {
+    if (isOcring) return;
     const pageNumber = pageNumberByPageId.get(String(pageId));
 
     const previewWord = {
@@ -150,6 +152,7 @@ export const useViewerEditState = ({
   };
 
   const changeContentDraftById = (wordId, nextContent, prevContent) => {
+    if (isOcring) return;
     if (prevContent === nextContent) return;
     queryClient.setQueryData(wordsQueryKey, (oldWords = []) =>
       oldWords.map((word) =>
@@ -167,6 +170,7 @@ export const useViewerEditState = ({
   };
 
   const addPendingDeleteById = (wordId) => {
+    if (isOcring) return;
     let deletedWord = null;
     queryClient.setQueryData(wordsQueryKey, (oldWords = []) => {
       deletedWord = oldWords.find((w) => w.id === wordId) ?? null;
@@ -186,50 +190,62 @@ export const useViewerEditState = ({
   };
 
   const rewritePreviewWordContentByOcr = async (previewWord) => {
-    const result = await ocrPreviewByPreviewWord({
-      previewWord,
-      mode: "rewrite_content",
-    });
-    const response = result.data ?? {};
-    const nextContent =
-      response.content ??
-      response.words?.map((word) => word.content ?? "").join("") ??
-      "";
-    changeContentDraftById(
-      previewWord.id,
-      nextContent,
-      previewWord.content ?? "",
-    );
+    if (isOcring) return;
+    setIsOcring(true);
+    try {
+      const result = await ocrPreviewByPreviewWord({
+        previewWord,
+        mode: "rewrite_content",
+      });
+      const response = result.data ?? {};
+      const nextContent =
+        response.content ??
+        response.words?.map((word) => word.content ?? "").join("") ??
+        "";
+      changeContentDraftById(
+        previewWord.id,
+        nextContent,
+        previewWord.content ?? "",
+      );
+    } finally {
+      setIsOcring(false);
+    }
   };
 
   const replacePreviewWordByOcr = async (previewWord) => {
-    const result = await ocrPreviewByPreviewWord({
-      previewWord,
-      mode: "replace_words",
-    });
-    const response = result.data ?? {};
-    const addWords = (response.words ?? []).map((word) => ({
-      id: `preview:${crypto.randomUUID()}`,
-      isPendingPost: true,
-      page: previewWord.page,
-      page__page_number: previewWord.page__page_number,
-      bbox: word.bbox,
-      direction: word.direction,
-      content: word.content ?? "",
-    }));
-    const payload = {
-      removeWords: [previewWord],
-      addWords,
-    };
-    applyReplaceWords(payload);
-    // OCR結果を query cache に反映する
-    historyDispatch({
-      type: "PUSH",
-      entry: {
-        type: "REPLACE_WORDS",
-        payload,
-      },
-    });
+    if (isOcring) return;
+    setIsOcring(true);
+    try {
+      const result = await ocrPreviewByPreviewWord({
+        previewWord,
+        mode: "replace_words",
+      });
+      const response = result.data ?? {};
+      const addWords = (response.words ?? []).map((word) => ({
+        id: `preview:${crypto.randomUUID()}`,
+        isPendingPost: true,
+        page: previewWord.page,
+        page__page_number: previewWord.page__page_number,
+        bbox: word.bbox,
+        direction: word.direction,
+        content: word.content ?? "",
+      }));
+      const payload = {
+        removeWords: [previewWord],
+        addWords,
+      };
+      applyReplaceWords(payload);
+      // OCR結果を query cache に反映する
+      historyDispatch({
+        type: "PUSH",
+        entry: {
+          type: "REPLACE_WORDS",
+          payload,
+        },
+      });
+    } finally {
+      setIsOcring(false);
+    }
   };
 
   const applyReplaceWords = ({ removeWords, addWords }) => {
@@ -346,6 +362,7 @@ export const useViewerEditState = ({
     typeof id === "string" && id.startsWith("preview:");
 
   const saveEdit = () => {
+    if (isOcring) return;
     const postPayload = [...pendingPostWordMap.values()].map((w) => ({
       pageId: w.page,
       bbox: w.bbox,
@@ -370,13 +387,14 @@ export const useViewerEditState = ({
   };
 
   const cancelEdit = () => {
+    if (isOcring) return;
     [...historyState.past].reverse().forEach((entry) => applyUndoEntry(entry));
     setisEditMode(false);
     historyDispatch({ type: "RESET" });
   };
 
   const undo = () => {
-    if (!isEditMode) return;
+    if (!isEditMode || isOcring) return;
     const entry = historyState.past.at(-1);
     if (!entry) return;
     applyUndoEntry(entry);
@@ -384,7 +402,7 @@ export const useViewerEditState = ({
   };
 
   const redo = () => {
-    if (!isEditMode) return;
+    if (!isEditMode || isOcring) return;
     const entry = historyState.future[0];
     if (!entry) return;
     applyRedoEntry(entry);
@@ -396,6 +414,7 @@ export const useViewerEditState = ({
 
   return {
     isEditMode,
+    isOcring,
     startEdit,
     saveEdit,
     cancelEdit,

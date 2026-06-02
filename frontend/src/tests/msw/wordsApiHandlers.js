@@ -4,16 +4,34 @@ import { defaultMockWords, ocrPreviewMock } from "./fixture";
 
 let words = structuredClone(defaultMockWords);
 let ocrPreview = structuredClone(ocrPreviewMock);
+let ocrPreviewWaitPromise = null;
 
 export const resetMockWords = () => {
   words = structuredClone(defaultMockWords);
   ocrPreview = structuredClone(ocrPreviewMock);
+  ocrPreviewWaitPromise = null;
 };
 export const setMockWords = (anotherFixtute) => {
   words = structuredClone(anotherFixtute);
 };
 export const setMockOcrPreview = (anotherFixture) => {
   ocrPreview = structuredClone(anotherFixture);
+};
+
+// isOcring中の動作の確認用にpromiseを定義する
+// createMockOcrPreviewGate()により、内部に未解決のpromise(ocrPreviewWaitPromise)を作成
+// release()のメソッド実行により、promiseが解決される
+export const createMockOcrPreviewGate = () => {
+  let resolveOcrPreview;
+  ocrPreviewWaitPromise = new Promise((resolve) => {
+    resolveOcrPreview = resolve;
+  });
+  return {
+    release: () => {
+      resolveOcrPreview();
+      ocrPreviewWaitPromise = null;
+    },
+  };
 };
 
 export const wordsApiHandlers = [
@@ -73,8 +91,10 @@ export const wordsApiHandlers = [
     if (!["replace_words", "rewrite_content"].includes(body.mode)) {
       return new HttpResponse(null, { status: 400 });
     }
+    if (ocrPreviewWaitPromise) {
+      await ocrPreviewWaitPromise;
+    }
     const response = ocrPreview;
-
     return HttpResponse.json({
       ...response,
       preview_id: body.preview_id,
