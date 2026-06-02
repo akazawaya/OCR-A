@@ -81,6 +81,7 @@ const ViewerPage = () => {
         queryString: wordQueryString,
       }),
     enabled: Boolean(wordCollectionUrl),
+    refetchOnWindowFocus: false,
   });
 
   const isPending = isPagesPending || isWordsPending;
