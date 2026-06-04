@@ -39,5 +39,7 @@ dist-ssr
 *.sw?
 
 .env
+.env.local
+.env.prod
 .ruff_cache
 coverage/
