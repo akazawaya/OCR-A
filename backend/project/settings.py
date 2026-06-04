@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "django_filters",
     "corsheaders",
     "app_ocr",
+    "storages",
 ]
 
 REST_FRAMEWORK = {
@@ -137,15 +138,28 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = "static/"
+# STATIC_URL = "static/" 未使用
 
-# Media files (user uploads)
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+USE_S3_STORAGE = os.environ.get("USE_S3_STORAGE") == "true"
+if USE_S3_STORAGE:
+    INSTALLED_APPS.append("storages")
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+        },
+    }
+    AWS_STORAGE_BUCKET_NAME = os.environ["AWS_STORAGE_BUCKET_NAME"]
+    AWS_S3_REGION_NAME = os.environ["AWS_S3_REGION_NAME"]
+    # AWS_QUERYSTRING_AUTH S3ファイルURLに 署名付きクエリ文字列を付ける
+    # Trueだと 非公開S3オブジェクトURLを一時的に読める
+    AWS_QUERYSTRING_AUTH = True
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
