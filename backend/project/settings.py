@@ -148,7 +148,6 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 USE_S3_STORAGE = os.environ.get("USE_S3_STORAGE") == "true"
 if USE_S3_STORAGE:
-    INSTALLED_APPS.append("storages")
     STORAGES = {
         "default": {
             "BACKEND": "storages.backends.s3.S3Storage",
