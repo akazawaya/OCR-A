@@ -9,7 +9,7 @@ from app_ocr.input_constraints import (
     MAX_UPLOAD_FILE_SIZE,
     UPLOAD_FILE_EXTENSION_ALIASES,
 )
-from app_ocr.models import Document, Page, Word
+from app_ocr.models import Document, Page, State, Word
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -118,3 +118,22 @@ class WordOcrPreviewRequestSerializer(serializers.Serializer):
     doc = serializers.IntegerField()
     page_number = serializers.IntegerField(min_value=1)
     bbox = serializers.ListField()
+
+
+class WordOcrPreviewJobCreateResponseSerializer(serializers.Serializer):
+    preview_job_id = serializers.CharField()
+
+
+class WordOcrPreviewJobResultSerializer(serializers.Serializer):
+    state = serializers.ChoiceField(choices=State.choices, default=State.QUEUED)
+    mode = serializers.ChoiceField(
+        choices=["replace_words", "rewrite_content"],
+        required=False,
+    )
+    preview_id = serializers.CharField(required=False)
+    words = serializers.ListField(required=False)
+    content = serializers.CharField(required=False)
+    error_message = serializers.CharField(required=False)
+    # words/contentのrequiredはmodeにより変動するが、
+    # 直でrequiredを変動することは不可能であるため、
+    # if文等で制限を設けたい場合はValidationErrorを追加定義することが有効。

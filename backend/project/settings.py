@@ -25,8 +25,20 @@ ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "").split()
 
 
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL")
-CHANNEL_REDIS_URL = os.getenv("CHANNEL_REDIS_URL")  # compose 前提ならデフォルト不要
+CELERY_TASK_DEFAULT_QUEUE = "ocr_document_queue"
+CELERY_TASK_ROUTES = {
+    "app_ocr.tasks.dispatch_ocr_pages_task": {
+        "queue": "ocr_document_queue",
+    },
+    "app_ocr.tasks.ocr_page_task": {
+        "queue": "ocr_document_queue",
+    },
+    "app_ocr.tasks.ocr_preview_word_task": {
+        "queue": "ocr_preview_word_queue",
+    },
+}
 
+CHANNEL_REDIS_URL = os.getenv("CHANNEL_REDIS_URL")  # compose 前提ならデフォルト不要
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
@@ -35,6 +47,13 @@ CHANNEL_LAYERS = {
         },
     },
 }
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": os.environ["CACHE_REDIS_URL"],
+    }
+}
+
 # Application definition
 INSTALLED_APPS = [
     "channels",

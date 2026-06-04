@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from django.contrib.auth.models import User
 from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
@@ -18,16 +20,24 @@ from app_ocr.serializers import (
     DocumentUploadSerializer,
     PageSerializer,
     UserSerializer,
+    WordOcrPreviewJobResultSerializer,
     WordOcrPreviewRequestSerializer,
     WordSerializer,
 )
 from app_ocr.service.document import create_pages_from_document_file
-from app_ocr.service.ocr import run_ocr_for_bbox
+from app_ocr.service.preview_word_ocr_cache import (
+    get_preview_word_ocr_job,
+    set_preview_word_ocr_job,
+)
 from app_ocr.storage import (
     build_document_storage_prefix,
     delete_document_files,
 )
-from app_ocr.tasks import dispatch_ocr_pages_task, notify_document_state_changed
+from app_ocr.tasks import (
+    dispatch_ocr_pages_task,
+    notify_document_state_changed,
+    ocr_preview_word_task,
+)
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -136,40 +146,35 @@ class WordViewSet(viewsets.ModelViewSet):
     def ocr_preview(self, request):
         serializer = WordOcrPreviewRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        mode = serializer.validated_data["mode"]
-        preview_id = serializer.validated_data["preview_id"]
-        document_id = serializer.validated_data["doc"]
-        page_number = serializer.validated_data["page_number"]
-        bbox = serializer.validated_data["bbox"]
-
-        ocr_words = run_ocr_for_bbox(
-            document_id=document_id,
-            page_number=page_number,
-            bbox=bbox,
+        preview_job_id = str(uuid4())
+        set_preview_word_ocr_job(
+            preview_job_id,
+            {
+                "state": State.QUEUED,
+                **serializer.validated_data,
+            },
+        )
+        ocr_preview_word_task.apply_async(
+            args=[preview_job_id],
+            queue="ocr_preview_word_queue",
+        )
+        return Response(
+            {"preview_job_id": preview_job_id},
+            status=status.HTTP_202_ACCEPTED,
         )
 
-        if mode == "replace_words":
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path=r"ocr-preview/(?P<preview_job_id>[^/.]+)",
+    )
+    def ocr_preview_result(self, request, preview_job_id=None):
+        job = get_preview_word_ocr_job(preview_job_id)
+        if job is None:
             return Response(
-                {
-                    "mode": mode,
-                    "preview_id": preview_id,
-                    "words": [
-                        {
-                            "bbox": word["bbox"],
-                            "direction": word.get("direction", "horizontal"),
-                            "content": word.get("content", ""),
-                        }
-                        for word in ocr_words
-                    ],
-                }
+                {"detail": "preview OCR job not found or expired."},
+                status=status.HTTP_404_NOT_FOUND,
             )
-
-        if mode == "rewrite_content":
-            return Response(
-                {
-                    "mode": mode,
-                    "preview_id": preview_id,
-                    "content": "".join(word.get("content", "") for word in ocr_words),
-                }
-            )
+        serializer = WordOcrPreviewJobResultSerializer(data=job)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.validated_data)

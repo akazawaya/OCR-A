@@ -17,7 +17,9 @@ from app_ocr.service.ocr import run_ocr_for_bbox, run_ocr_for_page
 from app_ocr.tasks import (
     dispatch_ocr_pages_task,
     notify_document_state_changed,
+    notify_preview_word_ocr_changed,
     ocr_page_task,
+    ocr_preview_word_task,
 )
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures"
@@ -152,6 +154,29 @@ class TestTasks:
             },
         )
 
+    def test_notify_preview_word_ocr_changed_sends_group_message(self):
+        with (
+            patch("app_ocr.tasks.get_channel_layer") as mock_get_channel_layer,
+            patch("app_ocr.tasks.async_to_sync") as mock_async_to_sync,
+        ):
+            mock_channel_layer = mock_get_channel_layer.return_value
+            mock_group_send = mock_async_to_sync.return_value
+
+            notify_preview_word_ocr_changed(
+                preview_job_id="preview-job-1",
+                state=State.SUCCESS,
+            )
+
+        mock_async_to_sync.assert_called_once_with(mock_channel_layer.group_send)
+        mock_group_send.assert_called_once_with(
+            "broadcast",
+            {
+                "type": "preview_word_ocr_changed",
+                "preview_job_id": "preview-job-1",
+                "state": State.SUCCESS,
+            },
+        )
+
     @pytest.mark.django_db
     def test_dispatch_ocr_pages_task_sets_processing_and_dispatches_each_page(self):
         with (
@@ -248,6 +273,171 @@ class TestTasks:
             state=State.FAILED,
         )
 
+    def test_ocr_preview_word_task_updates_cache_and_notifies_success(self):
+        cache_snapshots = []
+
+        def record_cache_update(preview_job_id, payload):
+            cache_snapshots.append((preview_job_id, payload.copy()))
+
+        with (
+            patch(
+                "app_ocr.tasks.get_preview_word_ocr_job",
+                return_value={
+                    "state": State.QUEUED,
+                    "mode": "rewrite_content",
+                    "preview_id": "preview:1",
+                    "doc": 1,
+                    "page_number": 2,
+                    "bbox": [1, 1, 20, 12],
+                },
+            ),
+            patch(
+                "app_ocr.tasks.set_preview_word_ocr_job",
+                side_effect=record_cache_update,
+            ),
+            patch(
+                "app_ocr.tasks.run_ocr_for_bbox",
+                return_value=[
+                    {
+                        "bbox": [[1, 1], [20, 1], [20, 12], [1, 12]],
+                        "content": "bbox text",
+                        "direction": Direction.HORIZONTAL,
+                    }
+                ],
+            ) as mock_run_ocr_for_bbox,
+            patch("app_ocr.tasks.notify_preview_word_ocr_changed") as mock_notify,
+        ):
+            ocr_preview_word_task("preview-job-1")
+
+        mock_run_ocr_for_bbox.assert_called_once_with(
+            document_id=1,
+            page_number=2,
+            bbox=[1, 1, 20, 12],
+        )
+        assert cache_snapshots[0] == (
+            "preview-job-1",
+            {
+                "state": State.PROCESSING,
+                "mode": "rewrite_content",
+                "preview_id": "preview:1",
+                "doc": 1,
+                "page_number": 2,
+                "bbox": [1, 1, 20, 12],
+            },
+        )
+        assert cache_snapshots[1][0] == "preview-job-1"
+        assert cache_snapshots[1][1]["state"] == State.SUCCESS
+        assert cache_snapshots[1][1]["content"] == "bbox text"
+        mock_notify.assert_has_calls(
+            [
+                call("preview-job-1", State.PROCESSING),
+                call("preview-job-1", State.SUCCESS),
+            ]
+        )
+
+    def test_ocr_preview_word_task_updates_cache_and_notifies_failure(self):
+        cache_snapshots = []
+
+        def record_cache_update(preview_job_id, payload):
+            cache_snapshots.append((preview_job_id, payload.copy()))
+
+        with (
+            patch(
+                "app_ocr.tasks.get_preview_word_ocr_job",
+                return_value={
+                    "state": State.QUEUED,
+                    "mode": "replace_words",
+                    "preview_id": "preview:1",
+                    "doc": 1,
+                    "page_number": 2,
+                    "bbox": [1, 1, 20, 12],
+                },
+            ),
+            patch(
+                "app_ocr.tasks.set_preview_word_ocr_job",
+                side_effect=record_cache_update,
+            ),
+            patch(
+                "app_ocr.tasks.run_ocr_for_bbox",
+                side_effect=RuntimeError("ocr failed"),
+            ),
+            patch("app_ocr.tasks.notify_preview_word_ocr_changed") as mock_notify,
+        ):
+            with pytest.raises(RuntimeError):
+                ocr_preview_word_task("preview-job-1")
+
+        assert cache_snapshots[-1][1]["state"] == State.FAILED
+        assert cache_snapshots[-1][1]["error_message"] == "ocr failed"
+        mock_notify.assert_has_calls(
+            [
+                call("preview-job-1", State.PROCESSING),
+                call("preview-job-1", State.FAILED),
+            ]
+        )
+
+
+@pytest.mark.django_db
+class TestOcrPreviewApi:
+    def test_ocr_preview_creates_cache_job_and_dispatches_task(self, api_client):
+        with (
+            patch("app_ocr.views.uuid4", return_value="preview-job-1"),
+            patch("app_ocr.views.set_preview_word_ocr_job") as mock_set_job,
+            patch(
+                "app_ocr.views.ocr_preview_word_task.apply_async"
+            ) as mock_apply_async,
+        ):
+            response = api_client.post(
+                "/words/ocr-preview/",
+                {
+                    "mode": "rewrite_content",
+                    "preview_id": "preview:1",
+                    "doc": 1,
+                    "page_number": 2,
+                    "bbox": [1, 1, 20, 12],
+                },
+                format="json",
+            )
+
+        assert response.status_code == 202
+        assert response.data == {"preview_job_id": "preview-job-1"}
+        mock_set_job.assert_called_once_with(
+            "preview-job-1",
+            {
+                "state": State.QUEUED,
+                "mode": "rewrite_content",
+                "preview_id": "preview:1",
+                "doc": 1,
+                "page_number": 2,
+                "bbox": [1, 1, 20, 12],
+            },
+        )
+        mock_apply_async.assert_called_once_with(
+            args=["preview-job-1"],
+            queue="ocr_preview_word_queue",
+        )
+
+    def test_ocr_preview_result_returns_cached_job(self, api_client):
+        with patch(
+            "app_ocr.views.get_preview_word_ocr_job",
+            return_value={
+                "state": State.SUCCESS,
+                "mode": "rewrite_content",
+                "preview_id": "preview:1",
+                "content": "bbox text",
+            },
+        ):
+            response = api_client.get("/words/ocr-preview/preview-job-1/")
+
+        assert response.status_code == 200
+        assert response.data["state"] == State.SUCCESS
+        assert response.data["content"] == "bbox text"
+
+    def test_ocr_preview_result_returns_404_when_cache_expired(self, api_client):
+        with patch("app_ocr.views.get_preview_word_ocr_job", return_value=None):
+            response = api_client.get("/words/ocr-preview/preview-job-1/")
+
+        assert response.status_code == 404
+
 
 class TestConsumer:
     def test_connect_accepts_and_joins_broadcast_group(self):
@@ -293,6 +483,25 @@ class TestConsumer:
         sent_payload = json.loads(consumer.send.call_args.kwargs["text_data"])
 
         assert sent_payload["type"] == "document_state_changed"
+
+    def test_preview_word_ocr_changed_sends_websocket_message(self):
+        consumer = OcrProgressConsumer()
+        consumer.send = Mock()
+        consumer.preview_word_ocr_changed(
+            {
+                "preview_job_id": "preview-job-1",
+                "state": "SUCCESS",
+            }
+        )
+
+        consumer.send.assert_called_once()
+        sent_payload = json.loads(consumer.send.call_args.kwargs["text_data"])
+
+        assert sent_payload == {
+            "type": "preview_word_ocr_changed",
+            "preview_job_id": "preview-job-1",
+            "state": "SUCCESS",
+        }
 
 
 @pytest.mark.django_db
