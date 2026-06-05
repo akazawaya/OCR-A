@@ -6,7 +6,7 @@ import {
   documentOcrAccessSpec,
   documentSpec,
   routePaths,
-  WS_BASE_URL,
+  OCR_WS_URL,
 } from "../appConfig";
 import { getCollection } from "../api/clients/collectionClient";
 import {
@@ -149,7 +149,7 @@ const DocumentsPage = () => {
   }));
 
   useEffect(() => {
-    const ws = new WebSocket(`${WS_BASE_URL}documents/`);
+    const ws = new WebSocket(OCR_WS_URL);
     ws.onmessage = () =>
       queryClient.invalidateQueries({ queryKey: [collectionUrl] });
     return () => ws.close();
