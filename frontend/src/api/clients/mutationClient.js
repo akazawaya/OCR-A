@@ -48,13 +48,16 @@ export const startOcrDocument = async ({ startOcrUrl, formData }) => {
   return { res, data };
 };
 
+// このAPIはジョブ登録のみ行い、
+// 結果回収は ws通知を契機に Redis cache の GET APIであるgetWordOcrPreviewResult で行う。
+// 返り値の preview_job_id は、そのイベントが自分のジョブかどうかを照合するために使う。
 export const ocrPreviewByPreviewWord = async ({
   ocrPreviewUrl,
   previewWord,
   mode,
   doc,
 }) => {
-  const { res, data } = await fetchBackend(ocrPreviewUrl, {
+  const { data } = await fetchBackend(ocrPreviewUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -66,5 +69,5 @@ export const ocrPreviewByPreviewWord = async ({
     }),
     throwOnError: true,
   });
-  return { res, data };
+  return data.preview_job_id;
 };
