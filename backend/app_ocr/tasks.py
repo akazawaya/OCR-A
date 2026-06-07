@@ -81,7 +81,6 @@ def ocr_preview_word_task(preview_job_id):
 
     job["state"] = State.PROCESSING
     set_preview_word_ocr_job(preview_job_id, job)
-    notify_preview_word_ocr_changed(preview_job_id, job["state"])
     try:
         words = run_ocr_for_bbox(
             document_id=job["doc"],
