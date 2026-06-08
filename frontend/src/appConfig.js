@@ -40,7 +40,7 @@ export const wordAccessSpec = makeAccessSpec({
   collection: "words",
 });
 export const documentOcrAccessSpec = {
-  startOcrUrl: API_BASE_URL + "documents/ocr/",
+  ocrUrl: API_BASE_URL + "documents/ocr/",
 };
 
 export const wordOcrAccessSpec = {

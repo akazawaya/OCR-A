@@ -84,8 +84,8 @@ export const documentsApiHandlers = [
     return new HttpResponse(null, { status: 204 });
   }),
 
-  // start_ocr のmockはfrontendで確認できる範囲はcreateでカバーできているとみなし、
-  //　user.clickで呼ばれたかを見る程度に留める
+  // ocr のmockはfrontendで確認できる範囲はcreateでカバーできているとみなし、
+  // user.clickで呼ばれたかを見る程度に留める
   http.post("http://test.dummy/documents/ocr/", async () => {
     return new HttpResponse(null, { status: 202 });
   }),

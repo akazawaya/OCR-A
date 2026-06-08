@@ -93,10 +93,10 @@ class TestDocumentApi:
         assert Document.objects.count() == 0
         assert Page.objects.count() == 0
 
-    def test_start_ocr_creates_document_and_dispatches_task(self, api_client):
+    def test_ocr_creates_document_and_dispatches_task(self, api_client):
         file = make_uploaded_file_from_fixture("table.jpg", "image/jpeg")
         response = api_client.post(
-            reverse("document-start-ocr"),
+            reverse("document-ocr"),
             {"file": file},
             format="multipart",
         )
@@ -108,11 +108,11 @@ class TestDocumentApi:
         assert document.file_name == "table.jpg"
         assert Page.objects.filter(doc=document).count() == 0
 
-    def test_start_ocr_rejects_invalid_file(self, api_client):
+    def test_ocr_rejects_invalid_file(self, api_client):
         file = make_dummy_file("test.txt", "text/plain")
 
         response = api_client.post(
-            reverse("document-start-ocr"),
+            reverse("document-ocr"),
             {"file": file},
             format="multipart",
         )
@@ -154,7 +154,7 @@ class TestDocumentApi:
         assert Page.objects.count() == 0
         assert not any(path.is_file() for path in tmp_path.rglob("*"))
 
-    def test_start_ocr_deletes_file_when_transaction_fails(
+    def test_ocr_deletes_file_when_transaction_fails(
         self, api_client, settings, tmp_path
     ):
         settings.MEDIA_ROOT = tmp_path
@@ -166,7 +166,7 @@ class TestDocumentApi:
         ):
             with pytest.raises(RuntimeError):
                 api_client.post(
-                    reverse("document-start-ocr"),
+                    reverse("document-ocr"),
                     {"file": file},
                     format="multipart",
                 )

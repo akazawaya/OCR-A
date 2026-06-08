@@ -92,7 +92,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         # Djangoのトランザクションのロールバックにfileは含まれないため、
-        # 失敗時のfile削除が行われるようにExceptionを追加(start_ocrも同様)
+        # 失敗時のfile削除が行われるようにExceptionを追加(ocrも同様)
         except Exception:
             if document is not None:
                 prefix = build_document_storage_prefix(document.pk)
@@ -100,7 +100,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
             raise
 
     @action(detail=False, methods=["post"], url_path="ocr")
-    def start_ocr(self, request):
+    def ocr(self, request):
         file = request.FILES.get("file")
         serializer = self.build_document_serializer_from_file(file)
         document = None

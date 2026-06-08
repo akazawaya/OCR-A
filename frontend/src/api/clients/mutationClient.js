@@ -39,8 +39,8 @@ export const postDocument = async ({ collectionUrl, formData }) => {
   return { res, data };
 };
 
-export const startOcrDocument = async ({ startOcrUrl, formData }) => {
-  const { res, data } = await fetchBackend(startOcrUrl, {
+export const ocrDocument = async ({ ocrUrl, formData }) => {
+  const { res, data } = await fetchBackend(ocrUrl, {
     method: "POST",
     body: formData,
     throwOnError: true,

@@ -11,7 +11,7 @@ import {
 import { getCollection } from "../api/clients/collectionClient";
 import {
   postDocument,
-  startOcrDocument,
+  ocrDocument,
   deleteCollectionItem,
 } from "../api/clients/mutationClient";
 import { buildCollectionQueryString } from "../logic/urlQuery/buildCollectionQueryString";
@@ -26,7 +26,7 @@ const DocumentsPage = () => {
   const { search: baseQueryString } = useLocation();
   const queryClient = useQueryClient();
   const { collectionUrl } = documentSpec;
-  const { startOcrUrl } = documentOcrAccessSpec;
+  const { ocrUrl } = documentOcrAccessSpec;
   const {
     searchQuery: draftSearchQuery,
     updateSearchQuery,
@@ -120,12 +120,12 @@ const DocumentsPage = () => {
     },
   });
 
-  const { mutate: startOcrDocumentMutation } = useMutation({
-    mutationFn: ({ formData }) => startOcrDocument({ startOcrUrl, formData }),
+  const { mutate: ocrDocumentMutation } = useMutation({
+    mutationFn: ({ formData }) => ocrDocument({ ocrUrl, formData }),
     onError: (error) => {
       window.alert(error.data.file[0]);
     },
-    // startOcrはocrロジック内のws送信によりinvalidateQueries更新を実施する
+    // これはocrロジック内のws送信によりinvalidateQueries更新を実施する
   });
 
   const postDocumentFile = useCallback(
@@ -134,13 +134,13 @@ const DocumentsPage = () => {
       formData.append("file", file);
 
       if (shouldStartOcr) {
-        startOcrDocumentMutation({ formData });
+        ocrDocumentMutation({ formData });
         return;
       }
 
       postDocumentMutation({ formData });
     },
-    [postDocumentMutation, startOcrDocumentMutation],
+    [postDocumentMutation, ocrDocumentMutation],
   );
 
   const documentTableColumns = documentSpec.ui.table.map(({ key, label }) => ({
