@@ -10,11 +10,8 @@ import {
   setupDefaultViewerMocks,
   setupCanvasTextMeasureMock,
 } from "./ViewerPage.test-utils";
-import { defaultMockPages, ocrPreviewMockByCase } from "./msw/fixture";
-import {
-  createMockOcrPreviewGate,
-  setMockOcrPreview,
-} from "./msw/wordsApiHandlers";
+import { defaultMockPages, ocrMockByCase } from "./msw/fixture";
+import { createMockOcrGate, setMockOcr } from "./msw/wordsApiHandlers";
 
 Object.defineProperty(HTMLElement.prototype, "clientWidth", {
   configurable: true,
@@ -311,7 +308,7 @@ describe("ViewerPage", () => {
 
   describe("previewWordのocr:OCR待ちの挙動", () => {
     test("OCR待ちの間はtableとTopBarの操作がdisabledになる", async () => {
-      const ocrPreviewGate = createMockOcrPreviewGate();
+      const ocrGate = createMockOcrGate();
       renderViewerPage();
       const user = await enterEditMode();
       await user.click(screen.getByRole("button", { name: "OCR書換" }));
@@ -328,7 +325,7 @@ describe("ViewerPage", () => {
       expect(screen.getByLabelText("rotate")).toBeDisabled();
       expect(screen.getByRole("status")).toHaveTextContent("OCR実行中...");
 
-      ocrPreviewGate.release();
+      ocrGate.release();
 
       await waitFor(() => {
         expect(screen.getByRole("button", { name: "保存" })).toBeEnabled();
@@ -337,7 +334,7 @@ describe("ViewerPage", () => {
     });
 
     test("OCR待ちの間はDragRectが機能しない", async () => {
-      const ocrPreviewGate = createMockOcrPreviewGate();
+      const ocrGate = createMockOcrGate();
       renderViewerPage();
       const user = await enterEditMode();
       const svg = getFirstSelectionArea();
@@ -351,7 +348,7 @@ describe("ViewerPage", () => {
       dragSelectionArea(svg, DEFAULT_DRAG_SELECTION);
       expect(screen.getAllByRole("button", { name: "削除" })).toHaveLength(1);
 
-      ocrPreviewGate.release();
+      ocrGate.release();
 
       await waitFor(() => {
         expect(screen.getByRole("button", { name: "OCR書換" })).toBeEnabled();
@@ -361,7 +358,7 @@ describe("ViewerPage", () => {
 
   describe("previewWordのocr: rewrite_contentの書換", () => {
     test("複数のwordもひとつのcontentとして置換する", async () => {
-      setMockOcrPreview(ocrPreviewMockByCase.splitWords);
+      setMockOcr(ocrMockByCase.splitWords);
       renderViewerPage();
       const user = await enterEditMode();
       await user.click(screen.getByRole("button", { name: "OCR書換" }));
@@ -373,7 +370,7 @@ describe("ViewerPage", () => {
     });
 
     test("空白の場合もcontentのみ置換し、bboxを維持する", async () => {
-      setMockOcrPreview(ocrPreviewMockByCase.empty);
+      setMockOcr(ocrMockByCase.empty);
       renderViewerPage();
       const user = await enterEditMode();
       await user.click(screen.getByRole("button", { name: "OCR書換" }));
@@ -390,7 +387,7 @@ describe("ViewerPage", () => {
 
   describe("previewWordのocr: replace_wordsの置換", () => {
     test("複数のwordは分裂して置換する", async () => {
-      setMockOcrPreview(ocrPreviewMockByCase.splitWords);
+      setMockOcr(ocrMockByCase.splitWords);
       renderViewerPage();
       const user = await enterEditMode();
       await user.click(screen.getByRole("button", { name: "OCR置換" }));
@@ -403,7 +400,7 @@ describe("ViewerPage", () => {
     });
 
     test("空白の場合は元のbboxも削除する", async () => {
-      setMockOcrPreview(ocrPreviewMockByCase.empty);
+      setMockOcr(ocrMockByCase.empty);
       renderViewerPage();
       const user = await enterEditMode();
       await user.click(screen.getByRole("button", { name: "OCR置換" }));
@@ -417,7 +414,7 @@ describe("ViewerPage", () => {
     });
 
     test("複数の置換時はひと塊でUndo/Redoが機能する", async () => {
-      setMockOcrPreview(ocrPreviewMockByCase.splitWords);
+      setMockOcr(ocrMockByCase.splitWords);
       renderViewerPage();
       const user = await enterEditMode();
       await user.click(screen.getByRole("button", { name: "OCR置換" }));

@@ -105,7 +105,7 @@ export const useViewerEditState = ({
   postWordByBbox,
   patchWordContentById,
   deleteWordById,
-  ocrPreviewByPreviewWord,
+  ocrByPreviewWord,
   wordsQueryKey,
   pageNumberByPageId,
 }) => {
@@ -193,7 +193,7 @@ export const useViewerEditState = ({
     if (isOcring) return;
     setIsOcring(true);
     try {
-      const result = await ocrPreviewByPreviewWord({
+      const result = await ocrByPreviewWord({
         previewWord,
         mode: "rewrite_content",
       });
@@ -216,7 +216,7 @@ export const useViewerEditState = ({
     if (isOcring) return;
     setIsOcring(true);
     try {
-      const result = await ocrPreviewByPreviewWord({
+      const result = await ocrByPreviewWord({
         previewWord,
         mode: "replace_words",
       });

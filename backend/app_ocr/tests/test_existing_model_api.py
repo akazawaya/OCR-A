@@ -207,4 +207,4 @@ class TestWordApi:
         word.refresh_from_db()
         assert word.content == "next"
 
-    # ocr_previewのAPIテストはmodelへの書き込みを意味しないためocr_flowにて実施。
+    # ocrのAPIテストはmodelへの書き込みを意味しないためocr_flowにて実施。

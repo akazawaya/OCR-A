@@ -44,9 +44,9 @@ export const documentOcrAccessSpec = {
 };
 
 export const wordOcrAccessSpec = {
-  ocrPreviewUrl: API_BASE_URL + "words/ocr-preview/",
-  makeOcrPreviewResultUrl: (previewJobId) =>
-    API_BASE_URL + `words/ocr-preview/${previewJobId}/`,
+  ocrUrl: API_BASE_URL + "words/ocr/",
+  makeOcrResultUrl: (previewJobId) =>
+    API_BASE_URL + `words/ocr/${previewJobId}/`,
 };
 // 表示するフィールド/列を選ぶ（表示名の翻訳も兼ねる）
 const documentUiSpec = Object.freeze({

@@ -20,8 +20,8 @@ from app_ocr.serializers import (
     DocumentUploadSerializer,
     PageSerializer,
     UserSerializer,
-    WordOcrPreviewJobResultSerializer,
-    WordOcrPreviewRequestSerializer,
+    WordOcrJobResultSerializer,
+    WordOcrRequestSerializer,
     WordSerializer,
 )
 from app_ocr.service.document import create_pages_from_document_file
@@ -36,7 +36,7 @@ from app_ocr.storage import (
 from app_ocr.tasks import (
     dispatch_ocr_pages_task,
     notify_document_state_changed,
-    ocr_preview_word_task,
+    ocr_word_task,
 )
 
 
@@ -142,9 +142,9 @@ class WordViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["page", "page__doc"]
 
-    @action(detail=False, methods=["post"], url_path="ocr-preview")
-    def ocr_preview(self, request):
-        serializer = WordOcrPreviewRequestSerializer(data=request.data)
+    @action(detail=False, methods=["post"], url_path="ocr")
+    def ocr(self, request):
+        serializer = WordOcrRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         preview_job_id = str(uuid4())
         set_preview_word_ocr_job(
@@ -154,9 +154,9 @@ class WordViewSet(viewsets.ModelViewSet):
                 **serializer.validated_data,
             },
         )
-        ocr_preview_word_task.apply_async(
+        ocr_word_task.apply_async(
             args=[preview_job_id],
-            queue="ocr_preview_word_queue",
+            queue="ocr_word_queue",
         )
         return Response(
             {"preview_job_id": preview_job_id},
@@ -166,15 +166,15 @@ class WordViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=["get"],
-        url_path=r"ocr-preview/(?P<preview_job_id>[^/.]+)",
+        url_path=r"ocr/(?P<preview_job_id>[^/.]+)",
     )
-    def ocr_preview_result(self, request, preview_job_id=None):
+    def ocr_result(self, request, preview_job_id=None):
         job = get_preview_word_ocr_job(preview_job_id)
         if job is None:
             return Response(
                 {"detail": "preview OCR job not found or expired."},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        serializer = WordOcrPreviewJobResultSerializer(data=job)
+        serializer = WordOcrJobResultSerializer(data=job)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.validated_data)

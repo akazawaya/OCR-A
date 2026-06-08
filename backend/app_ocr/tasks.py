@@ -74,7 +74,7 @@ def ocr_page_task(document_id, page_number):
 
 
 @shared_task
-def ocr_preview_word_task(preview_job_id):
+def ocr_word_task(preview_job_id):
     job = get_preview_word_ocr_job(preview_job_id)
     if job is None:
         return

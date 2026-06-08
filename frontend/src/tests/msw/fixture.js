@@ -237,7 +237,7 @@ export const sortMockWords = {
 // OCR preview fixture
 // 1. 結果が複数wordに分割されるケース
 // 2. 結果が空のケース
-export const ocrPreviewMockByCase = {
+export const ocrMockByCase = {
   splitWords: {
     words: [
       {
@@ -268,4 +268,4 @@ export const ocrPreviewMockByCase = {
   },
 };
 
-export const ocrPreviewMock = ocrPreviewMockByCase.splitWords;
+export const ocrMock = ocrMockByCase.splitWords;

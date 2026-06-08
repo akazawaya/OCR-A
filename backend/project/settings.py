@@ -33,8 +33,8 @@ CELERY_TASK_ROUTES = {
     "app_ocr.tasks.ocr_page_task": {
         "queue": "ocr_document_queue",
     },
-    "app_ocr.tasks.ocr_preview_word_task": {
-        "queue": "ocr_preview_word_queue",
+    "app_ocr.tasks.ocr_word_task": {
+        "queue": "ocr_word_queue",
     },
 }
 

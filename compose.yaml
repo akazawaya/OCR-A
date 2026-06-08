@@ -101,7 +101,7 @@ services:
         "-l",
         "INFO",
         "-Q",
-        "ocr_preview_word_queue",
+        "ocr_word_queue",
         "--concurrency",
         "1",
       ]

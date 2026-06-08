@@ -7,9 +7,9 @@ export const getCollection = async ({ collectionUrl, queryString }) => {
   return data;
 };
 
-export const getWordOcrPreviewResult = async ({ previewJobId }) => {
+export const getWordOcrResult = async ({ previewJobId }) => {
   const { data } = await fetchBackend(
-    wordOcrAccessSpec.makeOcrPreviewResultUrl(previewJobId),
+    wordOcrAccessSpec.makeOcrResultUrl(previewJobId),
   );
   return data;
 };

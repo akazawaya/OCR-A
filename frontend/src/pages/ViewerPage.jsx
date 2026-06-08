@@ -8,7 +8,7 @@ import {
   postCollectionItem,
   deleteCollectionItem,
   patchCollectionItem,
-  ocrPreviewByPreviewWord as ocrPreviewByPreviewWordApi,
+  ocrByPreviewWord as ocrByPreviewWordApi,
 } from "../api/clients/mutationClient";
 import { usePrint } from "../logic/print/usePrint";
 import { buildCollectionQueryString } from "../logic/urlQuery/buildCollectionQueryString";
@@ -159,10 +159,10 @@ const ViewerPage = () => {
       }),
   });
 
-  const { mutateAsync: ocrPreviewByPreviewWord } = useMutation({
+  const { mutateAsync: ocrByPreviewWord } = useMutation({
     mutationFn: ({ previewWord, mode }) =>
-      ocrPreviewByPreviewWordApi({
-        ocrPreviewUrl: wordOcrAccessSpec.ocrPreviewUrl,
+      ocrByPreviewWordApi({
+        ocrUrl: wordOcrAccessSpec.ocrUrl,
         previewWord,
         mode,
         doc: primaryKey,
@@ -173,7 +173,7 @@ const ViewerPage = () => {
     postWordByBbox,
     patchWordContentById,
     deleteWordById,
-    ocrPreviewByPreviewWord,
+    ocrByPreviewWord,
     wordsQueryKey,
     pageNumberByPageId,
   });

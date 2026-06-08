@@ -112,7 +112,7 @@ class WordSerializer(serializers.HyperlinkedModelSerializer):
         ]
 
 
-class WordOcrPreviewRequestSerializer(serializers.Serializer):
+class WordOcrRequestSerializer(serializers.Serializer):
     mode = serializers.ChoiceField(choices=["replace_words", "rewrite_content"])
     preview_id = serializers.CharField()
     doc = serializers.IntegerField()
@@ -120,11 +120,11 @@ class WordOcrPreviewRequestSerializer(serializers.Serializer):
     bbox = serializers.ListField()
 
 
-class WordOcrPreviewJobCreateResponseSerializer(serializers.Serializer):
+class WordOcrJobCreateResponseSerializer(serializers.Serializer):
     preview_job_id = serializers.CharField()
 
 
-class WordOcrPreviewJobResultSerializer(serializers.Serializer):
+class WordOcrJobResultSerializer(serializers.Serializer):
     state = serializers.ChoiceField(choices=State.choices, default=State.QUEUED)
     mode = serializers.ChoiceField(
         choices=["replace_words", "rewrite_content"],
