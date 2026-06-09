@@ -3,11 +3,11 @@ export const OCR_WS_URL = API_BASE_URL.replace("http", "ws") + "ocr/";
 export const OPENAPI_URL = API_BASE_URL + "schema/";
 // 目的
 // OpenAPI（components/schemas）から型情報（schema）を動的に参照できる様にして、
-// REST の collection endpointに対して操作を行うための情報をまとめる。
+// REST の endpointに対して操作を行うための情報をまとめる。
 
 // 変数の命名規則
 // schema: OpenAPI由来の設計図 (metadata)
-// collection: REST由来のcollection endpoint情報（data の入口）
+// collection: REST由来のendpoint情報（data の入口）
 // spec: specification（仕様・契約） 上記を包含するspecは双方どちらにも依った用語ではない
 
 // 関数の命名規則
@@ -40,13 +40,12 @@ export const wordAccessSpec = makeAccessSpec({
   collection: "words",
 });
 export const documentOcrAccessSpec = {
-  ocrUrl: API_BASE_URL + "documents/ocr/",
+  actionUrl: API_BASE_URL + "documents/ocr/",
 };
 
 export const wordOcrAccessSpec = {
-  ocrUrl: API_BASE_URL + "words/ocr/",
-  makeOcrResultUrl: (previewJobId) =>
-    API_BASE_URL + `words/ocr/${previewJobId}/`,
+  actionUrl: API_BASE_URL + "words/ocr/",
+  resultUrl: (previewJobId) => API_BASE_URL + `words/ocr/${previewJobId}/`,
 };
 // 表示するフィールド/列を選ぶ（表示名の翻訳も兼ねる）
 const documentUiSpec = Object.freeze({

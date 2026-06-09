@@ -25,7 +25,7 @@ const DocumentsPage = () => {
   const { search: baseQueryString } = useLocation();
   const queryClient = useQueryClient();
   const { collectionUrl } = documentSpec;
-  const { ocrUrl } = documentOcrAccessSpec;
+  const { actionUrl: documentOcrActionUrl } = documentOcrAccessSpec;
   const {
     searchQuery: draftSearchQuery,
     updateSearchQuery,
@@ -121,7 +121,8 @@ const DocumentsPage = () => {
   });
 
   const { mutate: ocrFormDataMutation } = useMutation({
-    mutationFn: ({ formData }) => postFormData({ url: ocrUrl, formData }),
+    mutationFn: ({ formData }) =>
+      postFormData({ url: documentOcrActionUrl, formData }),
     onError: (error) => {
       window.alert(error.data.file[0]);
     },
