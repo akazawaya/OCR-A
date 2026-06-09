@@ -100,17 +100,17 @@ const DocumentsPage = () => {
     enabled: Boolean(collectionUrl),
   });
 
-  const { mutate: deleteRowMutation } = useMutation({
+  const { mutate: deleteDocumentMutation } = useMutation({
     mutationFn: ({ id }) => deleteCollectionItem({ collectionUrl, id }),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: [collectionUrl] }),
   });
   const deleteRow = useCallback(
-    (resource) => deleteRowMutation({ id: resource.id }),
-    [deleteRowMutation],
+    (resource) => deleteDocumentMutation({ id: resource.id }),
+    [deleteDocumentMutation],
   );
 
-  const { mutate: postFormDataMutation } = useMutation({
+  const { mutate: postDocumentMutation } = useMutation({
     mutationFn: ({ formData }) =>
       postFormData({ url: collectionUrl, formData }),
     onSuccess: () =>
@@ -120,7 +120,7 @@ const DocumentsPage = () => {
     },
   });
 
-  const { mutate: ocrFormDataMutation } = useMutation({
+  const { mutate: ocrDocumentMutation } = useMutation({
     mutationFn: ({ formData }) =>
       postFormData({ url: documentOcrActionUrl, formData }),
     onError: (error) => {
@@ -134,12 +134,12 @@ const DocumentsPage = () => {
       const formData = new FormData();
       formData.append("file", file);
       if (shouldStartOcr) {
-        ocrFormDataMutation({ formData });
+        ocrDocumentMutation({ formData });
         return;
       }
-      postFormDataMutation({ formData });
+      postDocumentMutation({ formData });
     },
-    [postFormDataMutation, ocrFormDataMutation],
+    [postDocumentMutation, ocrDocumentMutation],
   );
 
   const documentTableColumns = documentSpec.ui.table.map(({ key, label }) => ({

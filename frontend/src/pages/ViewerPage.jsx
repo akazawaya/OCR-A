@@ -8,7 +8,7 @@ import {
   postCollectionItem,
   deleteCollectionItem,
   patchCollectionItem,
-  ocrPreviewWord as ocrPreviewWordApi,
+  ocrPreviewWord,
 } from "../api/clients/mutationClient";
 import { usePrint } from "../logic/print/usePrint";
 import { buildCollectionQueryString } from "../logic/urlQuery/buildCollectionQueryString";
@@ -109,7 +109,7 @@ const ViewerPage = () => {
     documentTitle: "viewer-export",
   });
 
-  const { mutate: postWordByBbox } = useMutation({
+  const { mutate: postWordMutation } = useMutation({
     mutationFn: async (wordPostInputs) => {
       for (const { pageId, bbox, direction, content } of wordPostInputs) {
         await postCollectionItem({
@@ -125,7 +125,7 @@ const ViewerPage = () => {
     },
   });
 
-  const { mutate: patchWordContentById } = useMutation({
+  const { mutate: patchWordMutation } = useMutation({
     mutationFn: async (wordPatchInputs) => {
       const snapshot = { ...(wordPatchInputs ?? {}) };
       const entries = Object.entries(snapshot);
@@ -144,7 +144,7 @@ const ViewerPage = () => {
     },
   });
 
-  const { mutate: deleteWordById } = useMutation({
+  const { mutate: deleteWordMutation } = useMutation({
     mutationFn: async (wordDeleteIds = []) => {
       for (const id of wordDeleteIds) {
         await deleteCollectionItem({
@@ -159,9 +159,9 @@ const ViewerPage = () => {
       }),
   });
 
-  const { mutateAsync: ocrPreviewWord } = useMutation({
+  const { mutateAsync: ocrPreviewWordMutation } = useMutation({
     mutationFn: ({ previewWord, mode }) =>
-      ocrPreviewWordApi({
+      ocrPreviewWord({
         actionUrl: wordOcrAccessSpec.actionUrl,
         previewWord,
         mode,
@@ -170,10 +170,10 @@ const ViewerPage = () => {
   });
 
   const editState = useViewerEditState({
-    postWordByBbox,
-    patchWordContentById,
-    deleteWordById,
-    ocrPreviewWord,
+    postWordMutation,
+    patchWordMutation,
+    deleteWordMutation,
+    ocrPreviewWordMutation,
     wordsQueryKey,
     pageNumberByPageId,
   });

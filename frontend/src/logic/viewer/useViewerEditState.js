@@ -102,10 +102,10 @@ const buildSaveChangesFromHistory = (pastEntries = []) => {
 };
 
 export const useViewerEditState = ({
-  postWordByBbox,
-  patchWordContentById,
-  deleteWordById,
-  ocrPreviewWord,
+  postWordMutation,
+  patchWordMutation,
+  deleteWordMutation,
+  ocrPreviewWordMutation,
   wordsQueryKey,
   pageNumberByPageId,
 }) => {
@@ -193,7 +193,7 @@ export const useViewerEditState = ({
     if (isOcring) return;
     setIsOcring(true);
     try {
-      const result = await ocrPreviewWord({
+      const result = await ocrPreviewWordMutation({
         previewWord,
         mode: "rewrite_content",
       });
@@ -216,7 +216,7 @@ export const useViewerEditState = ({
     if (isOcring) return;
     setIsOcring(true);
     try {
-      const result = await ocrPreviewWord({
+      const result = await ocrPreviewWordMutation({
         previewWord,
         mode: "replace_words",
       });
@@ -379,9 +379,9 @@ export const useViewerEditState = ({
       }),
     );
 
-    postWordByBbox(postPayload);
-    patchWordContentById(patchPayload);
-    deleteWordById(deleteIds);
+    postWordMutation(postPayload);
+    patchWordMutation(patchPayload);
+    deleteWordMutation(deleteIds);
     setisEditMode(false);
     historyDispatch({ type: "RESET" });
   };
