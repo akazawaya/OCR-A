@@ -10,8 +10,7 @@ import {
 } from "../appConfig";
 import { getCollection } from "../api/clients/collectionClient";
 import {
-  postDocument,
-  ocrDocument,
+  postFormData,
   deleteCollectionItem,
 } from "../api/clients/mutationClient";
 import { buildCollectionQueryString } from "../logic/urlQuery/buildCollectionQueryString";
@@ -111,8 +110,9 @@ const DocumentsPage = () => {
     [deleteRowMutation],
   );
 
-  const { mutate: postDocumentMutation } = useMutation({
-    mutationFn: ({ formData }) => postDocument({ collectionUrl, formData }),
+  const { mutate: postFormDataMutation } = useMutation({
+    mutationFn: ({ formData }) =>
+      postFormData({ url: collectionUrl, formData }),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: [collectionUrl] }),
     onError: (error) => {
@@ -120,27 +120,25 @@ const DocumentsPage = () => {
     },
   });
 
-  const { mutate: ocrDocumentMutation } = useMutation({
-    mutationFn: ({ formData }) => ocrDocument({ ocrUrl, formData }),
+  const { mutate: ocrFormDataMutation } = useMutation({
+    mutationFn: ({ formData }) => postFormData({ url: ocrUrl, formData }),
     onError: (error) => {
       window.alert(error.data.file[0]);
     },
     // これはocrロジック内のws送信によりinvalidateQueries更新を実施する
   });
 
-  const postDocumentFile = useCallback(
+  const postFormDataFile = useCallback(
     (file, { shouldStartOcr }) => {
       const formData = new FormData();
       formData.append("file", file);
-
       if (shouldStartOcr) {
-        ocrDocumentMutation({ formData });
+        ocrFormDataMutation({ formData });
         return;
       }
-
-      postDocumentMutation({ formData });
+      postFormDataMutation({ formData });
     },
-    [postDocumentMutation, ocrDocumentMutation],
+    [postFormDataMutation, ocrFormDataMutation],
   );
 
   const documentTableColumns = documentSpec.ui.table.map(({ key, label }) => ({
@@ -164,7 +162,7 @@ const DocumentsPage = () => {
           onClickSearchButton: applySearch,
           onChangeSearchInput: updateSearchQuery,
           onClickResetSearchButton: clearSearch,
-          onClickPostDocumentButton: postDocumentFile,
+          onClickPostDocumentButton: postFormDataFile,
         }}
       />
       {isPending ? (

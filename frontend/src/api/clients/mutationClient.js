@@ -30,8 +30,9 @@ export const deleteCollectionItem = async ({ collectionUrl, id }) => {
   return res;
 };
 
-export const postDocument = async ({ collectionUrl, formData }) => {
-  const { res, data } = await fetchBackend(collectionUrl, {
+// document用API createとocrの違いは呼び出し元が渡すURLで決まる。
+export const postFormData = async ({ url, formData }) => {
+  const { res, data } = await fetchBackend(url, {
     method: "POST",
     body: formData,
     throwOnError: true,
@@ -39,16 +40,7 @@ export const postDocument = async ({ collectionUrl, formData }) => {
   return { res, data };
 };
 
-export const ocrDocument = async ({ ocrUrl, formData }) => {
-  const { res, data } = await fetchBackend(ocrUrl, {
-    method: "POST",
-    body: formData,
-    throwOnError: true,
-  });
-  return { res, data };
-};
-
-// このAPIはジョブ登録のみ行い、
+// previewWord用API このAPIはジョブ登録のみ行い、
 // 結果回収は ws通知を契機に Redis cache の GET APIであるgetWordOcrResult で行う。
 // 返り値の preview_job_id は、そのイベントが自分のジョブかどうかを照合するために使う。
 export const ocrByPreviewWord = async ({ ocrUrl, previewWord, mode, doc }) => {
