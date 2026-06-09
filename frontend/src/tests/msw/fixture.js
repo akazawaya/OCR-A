@@ -239,6 +239,7 @@ export const sortMockWords = {
 // 2. 結果が空のケース
 export const ocrMockByCase = {
   splitWords: {
+    state: "SUCCESS",
     words: [
       {
         bbox: [
@@ -263,9 +264,15 @@ export const ocrMockByCase = {
     ],
   },
   empty: {
+    state: "SUCCESS",
     words: [],
     content: "",
   },
 };
 
 export const ocrMock = ocrMockByCase.splitWords;
+
+export const ocrJobMock = {
+  previewJobId: "preview-job-1",
+  result: ocrMock,
+};

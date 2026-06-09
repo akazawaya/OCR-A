@@ -1,21 +1,32 @@
 import { http, HttpResponse } from "msw";
 
-import { defaultMockWords, ocrMock } from "./fixture";
+import { defaultMockWords, ocrJobMock } from "./fixture";
+import { emitMockWebSocketMessage } from "./webSocketMock";
 
 let words = structuredClone(defaultMockWords);
-let ocr = structuredClone(ocrMock);
+let previewJobId = ocrJobMock.previewJobId;
+let ocrResultByPreviewJobId = new Map([
+  [ocrJobMock.previewJobId, structuredClone(ocrJobMock.result)],
+]);
 let ocrWaitPromise = null;
 
 export const resetMockWords = () => {
   words = structuredClone(defaultMockWords);
-  ocr = structuredClone(ocrMock);
+  previewJobId = ocrJobMock.previewJobId;
+  ocrResultByPreviewJobId = new Map([
+    [ocrJobMock.previewJobId, structuredClone(ocrJobMock.result)],
+  ]);
   ocrWaitPromise = null;
 };
 export const setMockWords = (anotherFixtute) => {
   words = structuredClone(anotherFixtute);
 };
 export const setMockOcr = (anotherFixture) => {
-  ocr = structuredClone(anotherFixture);
+  ocrResultByPreviewJobId.set(previewJobId, structuredClone(anotherFixture));
+};
+export const setMockOcrJob = ({ previewJobId: nextPreviewJobId, result }) => {
+  previewJobId = nextPreviewJobId;
+  ocrResultByPreviewJobId.set(previewJobId, structuredClone(result));
 };
 
 // isOcring中の動作の確認用にpromiseを定義する
@@ -27,9 +38,14 @@ export const createMockOcrGate = () => {
     resolveOcr = resolve;
   });
   return {
-    release: () => {
+    release: ({ state = "SUCCESS" } = {}) => {
       resolveOcr();
       ocrWaitPromise = null;
+      emitMockWebSocketMessage({
+        type: "preview_word_ocr_changed",
+        preview_job_id: previewJobId,
+        state,
+      });
     },
   };
 };
@@ -108,34 +124,25 @@ export const wordsApiHandlers = [
     return new HttpResponse(null, { status: 204 });
   }),
 
-  // wordのocrは、返り値の差し変えをfixture形式からimport可能にする
   http.post("http://test.dummy/words/ocr/", async ({ request }) => {
     const body = await request.json();
     if (!["replace_words", "rewrite_content"].includes(body.mode)) {
       return new HttpResponse(null, { status: 400 });
     }
-    if (ocrWaitPromise) {
-      await ocrWaitPromise;
-    }
-    const response = ocr;
     return HttpResponse.json({
-      ...response,
-      preview_id: body.preview_id,
+      preview_job_id: previewJobId,
     });
   }),
 
-  http.get("http://test.dummy/words/ocr/", async ({ request }) => {
-    const body = await request.json();
-    if (!["replace_words", "rewrite_content"].includes(body.mode)) {
-      return new HttpResponse(null, { status: 400 });
-    }
+  // wordのocr結果は、返り値の差し替えをfixture形式からimport可能にする
+  http.get("http://test.dummy/words/ocr/:previewJobId/", async ({ params }) => {
     if (ocrWaitPromise) {
       await ocrWaitPromise;
     }
-    const response = ocr;
-    return HttpResponse.json({
-      ...response,
-      preview_id: body.preview_id,
-    });
+    const response = ocrResultByPreviewJobId.get(params.previewJobId);
+    if (!response) {
+      return HttpResponse.json(null, { status: 404 });
+    }
+    return HttpResponse.json(structuredClone(response));
   }),
 ];
