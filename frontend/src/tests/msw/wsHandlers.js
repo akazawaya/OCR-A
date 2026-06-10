@@ -17,8 +17,8 @@ export const sendPreviewWordOcrChanged = ({ previewJobId, state }) => {
 };
 
 // isOcring中の動作確認用
-// release() が呼ばれるまでWS完了通知を送らないことで、OCR待ち状態を再現する。
-export const createMockOcrGate = ({ previewJobId }) => {
+// release() が呼ばれるまでWS完了通知を送らないことで、OCR待ち状態~ws.onmessage送信までを再現する。
+export const createMockWsGate = ({ previewJobId }) => {
   return {
     release: (options) => {
       sendPreviewWordOcrChanged({

@@ -10,8 +10,9 @@ import {
   setupDefaultViewerMocks,
   setupCanvasTextMeasureMock,
 } from "./ViewerPage.test-utils";
-import { defaultMockPages, ocrMockByCase } from "./msw/fixture";
-import { createMockOcrGate, setMockOcr } from "./msw/wordsApiHandlers";
+import { defaultMockPages, ocrMockByCase, ocrJobMock } from "./msw/fixture";
+import { setMockOcrJob } from "./msw/wordsApiHandlers";
+import { sendPreviewWordOcrChanged, createMockWsGate } from "./msw/wsHandlers";
 
 Object.defineProperty(HTMLElement.prototype, "clientWidth", {
   configurable: true,
@@ -306,9 +307,14 @@ describe("ViewerPage", () => {
     });
   });
 
-  describe("previewWordのocr:OCR待ちの挙動", () => {
-    test("OCR待ちの間はtableとTopBarの操作がdisabledになる", async () => {
-      const ocrGate = createMockOcrGate();
+  describe("previewWordのocr:ws待ちの挙動", () => {
+    test("ws待ちの間はtableとTopBarの操作がdisabledになる", async () => {
+      setMockOcrJob({
+        previewJobId: ocrJobMock.previewJobId,
+      });
+      const wsGate = createMockWsGate({
+        previewJobId: ocrJobMock.previewJobId,
+      });
       renderViewerPage();
       const user = await enterEditMode();
       await user.click(screen.getByRole("button", { name: "OCR書換" }));
@@ -325,7 +331,7 @@ describe("ViewerPage", () => {
       expect(screen.getByLabelText("rotate")).toBeDisabled();
       expect(screen.getByRole("status")).toHaveTextContent("OCR実行中...");
 
-      ocrGate.release();
+      wsGate.release({ state: "SUCCESS" });
 
       await waitFor(() => {
         expect(screen.getByRole("button", { name: "保存" })).toBeEnabled();
@@ -333,8 +339,13 @@ describe("ViewerPage", () => {
       expect(screen.queryByRole("status")).toBeNull();
     });
 
-    test("OCR待ちの間はDragRectが機能しない", async () => {
-      const ocrGate = createMockOcrGate();
+    test("ws待ちの間はDragRectが機能しない", async () => {
+      setMockOcrJob({
+        previewJobId: ocrJobMock.previewJobId,
+      });
+      const wsGate = createMockWsGate({
+        previewJobId: ocrJobMock.previewJobId,
+      });
       renderViewerPage();
       const user = await enterEditMode();
       const svg = getFirstSelectionArea();
@@ -348,7 +359,7 @@ describe("ViewerPage", () => {
       dragSelectionArea(svg, DEFAULT_DRAG_SELECTION);
       expect(screen.getAllByRole("button", { name: "削除" })).toHaveLength(1);
 
-      ocrGate.release();
+      wsGate.release({ state: "SUCCESS" });
 
       await waitFor(() => {
         expect(screen.getByRole("button", { name: "OCR書換" })).toBeEnabled();
@@ -358,11 +369,22 @@ describe("ViewerPage", () => {
 
   describe("previewWordのocr: rewrite_contentの書換", () => {
     test("複数のwordもひとつのcontentとして置換する", async () => {
-      setMockOcr(ocrMockByCase.splitWords);
+      setMockOcrJob({
+        previewJobId: ocrJobMock.previewJobId,
+        result: ocrMockByCase.splitWords,
+      });
       renderViewerPage();
       const user = await enterEditMode();
       await user.click(screen.getByRole("button", { name: "OCR書換" }));
 
+      await waitFor(() => {
+        expect(screen.getByRole("status")).toHaveTextContent("OCR実行中...");
+      });
+
+      sendPreviewWordOcrChanged({
+        previewJobId: ocrJobMock.previewJobId,
+        state: "SUCCESS",
+      });
       await waitFor(() => {
         expect(screen.getByDisplayValue("分割A分割B")).toBeVisible();
       });
@@ -370,10 +392,21 @@ describe("ViewerPage", () => {
     });
 
     test("空白の場合もcontentのみ置換し、bboxを維持する", async () => {
-      setMockOcr(ocrMockByCase.empty);
+      setMockOcrJob({
+        previewJobId: ocrJobMock.previewJobId,
+        result: ocrMockByCase.empty,
+      });
       renderViewerPage();
       const user = await enterEditMode();
       await user.click(screen.getByRole("button", { name: "OCR書換" }));
+      await waitFor(() => {
+        expect(screen.getByRole("status")).toHaveTextContent("OCR実行中...");
+      });
+
+      sendPreviewWordOcrChanged({
+        previewJobId: ocrJobMock.previewJobId,
+        state: "SUCCESS",
+      });
 
       await waitFor(() => {
         const emptyInputs = screen
@@ -387,10 +420,22 @@ describe("ViewerPage", () => {
 
   describe("previewWordのocr: replace_wordsの置換", () => {
     test("複数のwordは分裂して置換する", async () => {
-      setMockOcr(ocrMockByCase.splitWords);
+      setMockOcrJob({
+        previewJobId: ocrJobMock.previewJobId,
+        result: ocrMockByCase.splitWords,
+      });
       renderViewerPage();
       const user = await enterEditMode();
       await user.click(screen.getByRole("button", { name: "OCR置換" }));
+
+      await waitFor(() => {
+        expect(screen.getByRole("status")).toHaveTextContent("OCR実行中...");
+      });
+
+      sendPreviewWordOcrChanged({
+        previewJobId: ocrJobMock.previewJobId,
+        state: "SUCCESS",
+      });
 
       await waitFor(() => {
         expect(screen.getByDisplayValue("分割A")).toBeVisible();
@@ -400,10 +445,22 @@ describe("ViewerPage", () => {
     });
 
     test("空白の場合は元のbboxも削除する", async () => {
-      setMockOcr(ocrMockByCase.empty);
+      setMockOcrJob({
+        previewJobId: ocrJobMock.previewJobId,
+        result: ocrMockByCase.empty,
+      });
       renderViewerPage();
       const user = await enterEditMode();
       await user.click(screen.getByRole("button", { name: "OCR置換" }));
+
+      await waitFor(() => {
+        expect(screen.getByRole("status")).toHaveTextContent("OCR実行中...");
+      });
+
+      sendPreviewWordOcrChanged({
+        previewJobId: ocrJobMock.previewJobId,
+        state: "SUCCESS",
+      });
 
       await waitFor(() => {
         expect(screen.queryByDisplayValue(FIRST_WORD_CONTENT)).toBeNull();
@@ -414,10 +471,22 @@ describe("ViewerPage", () => {
     });
 
     test("複数の置換時はひと塊でUndo/Redoが機能する", async () => {
-      setMockOcr(ocrMockByCase.splitWords);
+      setMockOcrJob({
+        previewJobId: ocrJobMock.previewJobId,
+        result: ocrMockByCase.splitWords,
+      });
       renderViewerPage();
       const user = await enterEditMode();
       await user.click(screen.getByRole("button", { name: "OCR置換" }));
+
+      await waitFor(() => {
+        expect(screen.getByRole("status")).toHaveTextContent("OCR実行中...");
+      });
+
+      sendPreviewWordOcrChanged({
+        previewJobId: ocrJobMock.previewJobId,
+        state: "SUCCESS",
+      });
 
       await waitFor(() => {
         expect(screen.getByDisplayValue("分割A")).toBeVisible();
