@@ -235,9 +235,14 @@ export const sortMockWords = {
 };
 
 // OCR preview fixture
-// 1. 結果が複数wordに分割されるケース
-// 2. 結果が空のケース
+// 1. 結果が空のケース
+// 2. 結果が複数wordに分割されるケース
 export const ocrMockByCase = {
+  empty: {
+    state: "SUCCESS",
+    words: [],
+    content: "",
+  },
   splitWords: {
     state: "SUCCESS",
     words: [
@@ -263,16 +268,9 @@ export const ocrMockByCase = {
       },
     ],
   },
-  empty: {
-    state: "SUCCESS",
-    words: [],
-    content: "",
-  },
 };
-
-export const ocrMock = ocrMockByCase.splitWords;
 
 export const ocrJobMock = {
   previewJobId: "preview-job-1",
-  result: ocrMock,
+  result: ocrMockByCase.empty,
 };
