@@ -1,7 +1,6 @@
 import { http, HttpResponse } from "msw";
 
 import { defaultMockWords, ocrJobMock } from "./fixture";
-import { emitMockWebSocketMessage } from "./webSocketMock";
 
 let words = structuredClone(defaultMockWords);
 let previewJobId = ocrJobMock.previewJobId;
@@ -27,27 +26,6 @@ export const setMockOcr = (anotherFixture) => {
 export const setMockOcrJob = ({ previewJobId: nextPreviewJobId, result }) => {
   previewJobId = nextPreviewJobId;
   ocrResultByPreviewJobId.set(previewJobId, structuredClone(result));
-};
-
-// isOcring中の動作の確認用にpromiseを定義する
-// createMockOcrGate()により、内部に未解決のpromise(ocrWaitPromise)を作成
-// release()のメソッド実行により、promiseが解決される
-export const createMockOcrGate = () => {
-  let resolveOcr;
-  ocrWaitPromise = new Promise((resolve) => {
-    resolveOcr = resolve;
-  });
-  return {
-    release: ({ state = "SUCCESS" } = {}) => {
-      resolveOcr();
-      ocrWaitPromise = null;
-      emitMockWebSocketMessage({
-        type: "preview_word_ocr_changed",
-        preview_job_id: previewJobId,
-        state,
-      });
-    },
-  };
 };
 
 export const wordsApiHandlers = [
