@@ -1,9 +1,17 @@
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useParams } from "react-router-dom";
 
-import { pageAccessSpec, wordSpec, wordOcrAccessSpec } from "../appConfig";
-import { getCollection } from "../api/clients/collectionClient";
+import {
+  pageAccessSpec,
+  wordSpec,
+  wordOcrAccessSpec,
+  OCR_WS_URL,
+} from "../appConfig";
+import {
+  getCollection,
+  getPreviewWordOcrResult,
+} from "../api/clients/collectionClient";
 import {
   postCollectionItem,
   deleteCollectionItem,
@@ -159,6 +167,9 @@ const ViewerPage = () => {
       }),
   });
 
+  // ここからOCR関連
+  const pendingPreviewJobIdsRef = useRef(new Set());
+  const [previewJob, setPreviewJob] = useState(null);
   const { mutateAsync: ocrPreviewWordMutation } = useMutation({
     mutationFn: ({ previewWord, mode }) =>
       ocrPreviewWord({
@@ -167,7 +178,36 @@ const ViewerPage = () => {
         mode,
         doc: primaryKey,
       }),
+    onSuccess: (previewJobId) => {
+      pendingPreviewJobIdsRef.current.add(previewJobId);
+    },
   });
+
+  useEffect(() => {
+    const ws = new WebSocket(OCR_WS_URL);
+    ws.onmessage = async (event) => {
+      const payload = JSON.parse(event.data);
+      if (payload.type !== "preview_word_ocr_changed") return;
+      const previewJobId = payload.preview_job_id;
+      if (!pendingPreviewJobIdsRef.current.has(previewJobId)) return;
+      try {
+        const _previewJob = await queryClient.fetchQuery({
+          queryKey: [previewJobId],
+          queryFn: () =>
+            getPreviewWordOcrResult({
+              previewJobId,
+            }),
+        });
+        setPreviewJob({
+          ..._previewJob,
+          preview_job_id: previewJobId,
+        });
+      } finally {
+        pendingPreviewJobIdsRef.current.delete(previewJobId);
+      }
+    };
+    return () => ws.close();
+  }, [queryClient]);
 
   const editState = useViewerEditState({
     postWordMutation,
@@ -176,7 +216,9 @@ const ViewerPage = () => {
     ocrPreviewWordMutation,
     wordsQueryKey,
     pageNumberByPageId,
+    previewJob,
   });
+
   return (
     <>
       <ViewerEditHotkeys
