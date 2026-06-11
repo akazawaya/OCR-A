@@ -240,11 +240,13 @@ export const sortMockWords = {
 export const ocrMockByCase = {
   empty: {
     state: "SUCCESS",
+    preview_id: "1",
     words: [],
     content: "",
   },
   splitWords: {
     state: "SUCCESS",
+    preview_id: "1",
     words: [
       {
         bbox: [
