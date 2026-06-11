@@ -112,7 +112,7 @@ class WordSerializer(serializers.HyperlinkedModelSerializer):
         ]
 
 
-class WordOcrRequestSerializer(serializers.Serializer):
+class PreviewWordOcrRequestSerializer(serializers.Serializer):
     mode = serializers.ChoiceField(choices=["replace_words", "rewrite_content"])
     preview_id = serializers.CharField()
     doc = serializers.IntegerField()
@@ -120,11 +120,7 @@ class WordOcrRequestSerializer(serializers.Serializer):
     bbox = serializers.ListField()
 
 
-class WordOcrJobCreateResponseSerializer(serializers.Serializer):
-    preview_job_id = serializers.CharField()
-
-
-class WordOcrJobResultSerializer(serializers.Serializer):
+class PreviewWordOcrJobResultSerializer(serializers.Serializer):
     state = serializers.ChoiceField(choices=State.choices, default=State.QUEUED)
     mode = serializers.ChoiceField(
         choices=["replace_words", "rewrite_content"],
@@ -134,6 +130,7 @@ class WordOcrJobResultSerializer(serializers.Serializer):
     words = serializers.ListField(required=False)
     content = serializers.CharField(required=False)
     error_message = serializers.CharField(required=False)
+    direction = serializers.CharField(required=False)
     # words/contentのrequiredはmodeにより変動するが、
     # 直でrequiredを変動することは不可能であるため、
     # if文等で制限を設けたい場合はValidationErrorを追加定義することが有効。

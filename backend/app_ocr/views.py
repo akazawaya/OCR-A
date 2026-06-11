@@ -19,9 +19,9 @@ from app_ocr.serializers import (
     DocumentSerializer,
     DocumentUploadSerializer,
     PageSerializer,
+    PreviewWordOcrJobResultSerializer,
+    PreviewWordOcrRequestSerializer,
     UserSerializer,
-    WordOcrJobResultSerializer,
-    WordOcrRequestSerializer,
     WordSerializer,
 )
 from app_ocr.service.document import create_pages_from_document_file
@@ -144,7 +144,7 @@ class WordViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["post"], url_path="ocr")
     def ocr(self, request):
-        serializer = WordOcrRequestSerializer(data=request.data)
+        serializer = PreviewWordOcrRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         preview_job_id = str(uuid4())
         set_preview_word_ocr_job(
@@ -175,6 +175,6 @@ class WordViewSet(viewsets.ModelViewSet):
                 {"detail": "preview OCR job not found or expired."},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        serializer = WordOcrJobResultSerializer(data=job)
+        serializer = PreviewWordOcrJobResultSerializer(data=job)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.validated_data)
