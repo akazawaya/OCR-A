@@ -1,3 +1,5 @@
+import { PREVIEW_WORD_OCR_STATE } from "../../logic/viewer/previewWordOcrContract";
+
 export const defaultMockDocuments = [
   { id: 1, file_name: "alpha-report.pdf", state: "SUCCESS" },
   { id: 2, file_name: "beta-report.pdf", state: "QUEUED" },
@@ -239,13 +241,13 @@ export const sortMockWords = {
 // 2. 結果が複数wordに分割されるケース
 export const ocrMockByCase = {
   empty: {
-    state: "SUCCESS",
+    state: PREVIEW_WORD_OCR_STATE.SUCCESS,
     preview_id: "1",
     words: [],
     content: "",
   },
   splitWords: {
-    state: "SUCCESS",
+    state: PREVIEW_WORD_OCR_STATE.SUCCESS,
     preview_id: "1",
     words: [
       {

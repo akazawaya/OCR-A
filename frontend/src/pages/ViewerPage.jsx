@@ -24,6 +24,7 @@ import { useViewerPageState } from "../logic/viewer/useViewerPageState";
 import { sortViewerWords } from "../logic/viewer/sortViewerWords";
 import { useSelection } from "../logic/layout/useSelection";
 import { useViewerEditState } from "../logic/viewer/useViewerEditState";
+import { normalizePreviewWordOcrJobResult } from "../logic/viewer/previewWordOcrContract";
 import ViewerTopBar from "../components/Viewer/ViewerTopBar";
 import ViewerImage from "../components/Viewer/ViewerImage/ViewerImage";
 import ViewerTable from "../components/Viewer/ViewerTable";
@@ -198,10 +199,12 @@ const ViewerPage = () => {
               previewJobId,
             }),
         });
-        setPreviewJob({
-          ..._previewJob,
-          preview_job_id: previewJobId,
-        });
+        setPreviewJob(
+          normalizePreviewWordOcrJobResult({
+            ..._previewJob,
+            preview_job_id: previewJobId,
+          }),
+        );
       } finally {
         pendingPreviewJobIdsRef.current.delete(previewJobId);
       }
