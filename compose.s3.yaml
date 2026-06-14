@@ -14,6 +14,6 @@ services:
     environment:
       <<: *s3_env
 
-  worker_preview:
+  worker_preview_word:
     environment:
       <<: *s3_env
