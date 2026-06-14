@@ -1,5 +1,5 @@
 // Edit,Save,Cancelのロジック用まとめのhook
-import { useMemo, useReducer, useState } from "react";
+import { useMemo, useReducer, useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 const initialHistoryState = {
@@ -108,6 +108,7 @@ export const useViewerEditState = ({
   ocrPreviewWordMutation,
   wordsQueryKey,
   pageNumberByPageId,
+  previewJob,
 }) => {
   const [isEditMode, setisEditMode] = useState(false);
   const [isOcring, setIsOcring] = useState(false);
@@ -192,76 +193,107 @@ export const useViewerEditState = ({
   const rewritePreviewWordContentByOcr = async (previewWord) => {
     if (isOcring) return;
     setIsOcring(true);
-    try {
-      const result = await ocrPreviewWordMutation({
-        previewWord,
-        mode: "rewrite_content",
-      });
-      const response = result.data ?? {};
-      const nextContent =
-        response.content ??
-        response.words?.map((word) => word.content ?? "").join("") ??
-        "";
-      changeContentDraftById(
-        previewWord.id,
-        nextContent,
-        previewWord.content ?? "",
-      );
-    } finally {
-      setIsOcring(false);
-    }
+    await ocrPreviewWordMutation({
+      previewWord,
+      mode: "rewrite_content",
+    });
   };
 
   const replacePreviewWordByOcr = async (previewWord) => {
     if (isOcring) return;
     setIsOcring(true);
-    try {
-      const result = await ocrPreviewWordMutation({
-        previewWord,
-        mode: "replace_words",
+    await ocrPreviewWordMutation({
+      previewWord,
+      mode: "replace_words",
+    });
+  };
+
+  useEffect(() => {
+    if (!previewJob) return;
+    if (previewJob.state !== "SUCCESS") {
+      setIsOcring(false);
+      return;
+    }
+    const wordId = previewJob.preview_id;
+    if (previewJob.mode === "rewrite_content") {
+      // rewrite_contentはcontentとdirectionを置き換える
+      // ただし履歴はCHANGE_CONTENT_DRAFTと同列扱いとする
+      let prevWord = null;
+      queryClient.setQueryData(wordsQueryKey, (prevWords) => {
+        return prevWords.map((word) => {
+          if (String(word.id) !== String(wordId)) {
+            return word;
+          }
+          prevWord = word;
+          return {
+            ...word,
+            content: previewJob.content,
+            direction: previewJob.direction,
+          };
+        });
       });
-      const response = result.data ?? {};
-      const addWords = (response.words ?? []).map((word) => ({
-        id: `preview:${crypto.randomUUID()}`,
-        isPendingPost: true,
-        page: previewWord.page,
-        page__page_number: previewWord.page__page_number,
-        bbox: word.bbox,
-        direction: word.direction,
-        content: word.content ?? "",
-      }));
-      const payload = {
-        removeWords: [previewWord],
-        addWords,
-      };
-      applyReplaceWords(payload);
-      // OCR結果を query cache に反映する
+      historyDispatch({
+        type: "PUSH",
+        entry: {
+          type: "CHANGE_CONTENT_DRAFT",
+          payload: {
+            wordId: prevWord.id,
+            prev: {
+              content: prevWord.content,
+              direction: prevWord.direction,
+            },
+            next: {
+              content: previewJob.content,
+              direction: previewJob.direction,
+            },
+          },
+        },
+      });
+    }
+    if (previewJob.mode === "replace_words") {
+      const wordId = previewJob.preview_id;
+      const oldWords = queryClient.getQueryData(wordsQueryKey);
+      const removeWord = oldWords.find(
+        (word) => String(word.id) === String(wordId),
+      );
+      if (previewJob.state !== "SUCCESS") {
+        setIsOcring(false);
+        return;
+      }
+      const removeWords = [removeWord];
+      const addWords = previewJob.words
+        .filter((word) => (word.content ?? "") !== "")
+        .map((word) => ({
+          id: `preview:${crypto.randomUUID()}`,
+          isPendingPost: true,
+          page: removeWord.page,
+          page__page_number: removeWord.page__page_number,
+          bbox: word.bbox,
+          direction: word.direction,
+          content: word.content,
+        }));
+
+      queryClient.setQueryData(wordsQueryKey, (oldWords) => {
+        const removeWordIdSet = new Set(removeWords.map((word) => word.id));
+        return [
+          ...oldWords.filter((word) => !removeWordIdSet.has(word.id)),
+          ...addWords,
+        ];
+      });
       historyDispatch({
         type: "PUSH",
         entry: {
           type: "REPLACE_WORDS",
-          payload,
+          payload: {
+            removeWords,
+            addWords,
+          },
         },
       });
-    } finally {
-      setIsOcring(false);
     }
-  };
 
-  const applyReplaceWords = ({ removeWords, addWords }) => {
-    queryClient.setQueryData(wordsQueryKey, (oldWords = []) => {
-      const removeWordIdSet = new Set(removeWords.map((w) => w.id));
-      const withoutRemovedWords = oldWords.filter(
-        (word) => !removeWordIdSet.has(word.id),
-      );
-      const existingIdSet = new Set(withoutRemovedWords.map((w) => w.id));
-      const nextAddWords = addWords.filter(
-        (word) => !existingIdSet.has(word.id),
-      );
-      return [...withoutRemovedWords, ...nextAddWords];
-    });
-  };
-
+    setIsOcring(false);
+  }, [previewJob, queryClient, wordsQueryKey]);
   const applyUndoEntry = (entry) => {
     switch (entry.type) {
       case "CHANGE_CONTENT_DRAFT": {
