@@ -1,5 +1,7 @@
 import { http, HttpResponse } from "msw";
 
+import { PREVIEW_WORD_OCR_STATE } from "../../logic/viewer/previewWordOcrContract";
+
 import { defaultMockWords, ocrJobMock } from "./fixture";
 
 let words = structuredClone(defaultMockWords);
@@ -23,9 +25,33 @@ export const setMockWords = (anotherFixtute) => {
 export const setMockOcr = (anotherFixture) => {
   ocrResultByPreviewJobId.set(previewJobId, structuredClone(anotherFixture));
 };
-export const setMockOcrJob = ({ previewJobId: nextPreviewJobId, result }) => {
+export const setMockOcrJob = ({
+  previewJobId: nextPreviewJobId = ocrJobMock.previewJobId,
+  result = ocrJobMock.result,
+} = {}) => {
   previewJobId = nextPreviewJobId;
   ocrResultByPreviewJobId.set(previewJobId, structuredClone(result));
+};
+
+const buildPreviewJobResult = ({ body, rawResult }) => {
+  const result = structuredClone(rawResult);
+  result.state = PREVIEW_WORD_OCR_STATE.SUCCESS;
+  result.mode = body.mode;
+  result.preview_id = body.preview_id;
+
+  if (body.mode === "rewrite_content") {
+    result.content = rawResult.words.map((word) => word.content ?? "").join("");
+    delete result.words;
+    delete result.direction;
+  }
+
+  if (body.mode === "replace_words") {
+    result.words = structuredClone(rawResult.words);
+    delete result.content;
+    delete result.direction;
+  }
+
+  return result;
 };
 
 export const wordsApiHandlers = [
@@ -107,6 +133,11 @@ export const wordsApiHandlers = [
     if (!["replace_words", "rewrite_content"].includes(body.mode)) {
       return new HttpResponse(null, { status: 400 });
     }
+    const rawResult = ocrResultByPreviewJobId.get(previewJobId);
+    ocrResultByPreviewJobId.set(
+      previewJobId,
+      buildPreviewJobResult({ body, rawResult }),
+    );
     return HttpResponse.json({
       preview_job_id: previewJobId,
     });
