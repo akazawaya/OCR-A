@@ -54,6 +54,12 @@ CACHES = {
     }
 }
 
+AWS_EC2_REGION_NAME = os.environ.get("AWS_EC2_REGION_NAME", "ap-northeast-1")
+GPU_WORKER_INSTANCE_IDS = {
+    "worker_document": os.environ.get("GPU_WORKER_DOCUMENT_INSTANCE_ID"),
+    "worker_preview_word": os.environ.get("GPU_WORKER_PREVIEW_WORD_INSTANCE_ID"),
+}
+
 # Application definition
 INSTALLED_APPS = [
     "channels",

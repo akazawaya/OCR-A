@@ -41,10 +41,10 @@ def start_gpu_worker(worker_type, instance_id, ec2_client):
     )
 
     with patch(
-        "app_ocr.service.gpu_instance_service.boto3.client",
+        "app_ocr.service.gpu_instance.boto3.client",
         return_value=ec2_client,
     ):
-        service = import_module("app_ocr.service.gpu_instance_service")
+        service = import_module("app_ocr.service.gpu_instance")
         service.ensure_gpu_worker_running(worker_type)
 
 
