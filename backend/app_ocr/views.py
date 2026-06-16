@@ -1,5 +1,6 @@
 from uuid import uuid4
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
@@ -25,6 +26,7 @@ from app_ocr.serializers import (
     WordSerializer,
 )
 from app_ocr.service.document import create_pages_from_document_file
+from app_ocr.service.gpu_instance import ensure_gpu_worker_running
 from app_ocr.service.preview_word_ocr_cache import (
     get_preview_word_ocr_job,
     set_preview_word_ocr_job,
@@ -108,15 +110,17 @@ class DocumentViewSet(viewsets.ModelViewSet):
             with transaction.atomic():
                 document = serializer.save()
                 document_id = document.pk
-                transaction.on_commit(
-                    lambda: (
-                        notify_document_state_changed(
-                            document_id=document_id,
-                            state=State.QUEUED,
-                        ),
-                        dispatch_ocr_pages_task.delay(document_id),
+
+                def enqueue_document_ocr():
+                    notify_document_state_changed(
+                        document_id=document_id,
+                        state=State.QUEUED,
                     )
-                )
+                    if settings.ENABLE_GPU_WORKER_AUTOSTART:
+                        ensure_gpu_worker_running("worker_document")
+                    dispatch_ocr_pages_task.delay(document_id)
+
+                transaction.on_commit(enqueue_document_ocr)
             return Response(
                 {"document": DocumentSerializer(document).data},
                 status=status.HTTP_202_ACCEPTED,
@@ -154,6 +158,8 @@ class WordViewSet(viewsets.ModelViewSet):
                 **serializer.validated_data,
             },
         )
+        if settings.ENABLE_GPU_WORKER_AUTOSTART:
+            ensure_gpu_worker_running("worker_preview_word")
         ocr_word_task.apply_async(
             args=[preview_job_id],
             queue="ocr_word_queue",
