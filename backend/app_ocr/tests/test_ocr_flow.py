@@ -30,6 +30,13 @@ def api_client():
     return APIClient()
 
 
+# AWSのOCR推論用EC2を起動するための有効化引数をOFF
+# AWS関連のテストはすべてAWS/に分離する
+@pytest.fixture(autouse=True)
+def disable_gpu_worker_autostart(settings):
+    settings.ENABLE_GPU_WORKER_AUTOSTART = False
+
+
 def make_dummy_file(filename, content_type):
     return SimpleUploadedFile(
         filename,
