@@ -7,12 +7,12 @@ from django.conf import settings
 from django.utils import timezone
 
 from app_ocr.models import Document, Page, State
-from app_ocr.service.gpu_instance import stop_gpu_worker
-from app_ocr.service.gpu_worker_heartbeat import get_last_ensure_at
-from app_ocr.service.gpu_worker_task_checker import (
+from app_ocr.service.gpu_worker.heartbeat import get_last_ensure_at
+from app_ocr.service.gpu_worker.task_checker import (
     has_active_or_reserved_gpu_worker_tasks,
     has_pending_gpu_worker_queue_tasks,
 )
+from app_ocr.service.gpu_worker.worker_instance import stop_gpu_worker
 from app_ocr.service.ocr import run_ocr_for_bbox, run_ocr_for_page
 from app_ocr.service.preview_word_ocr_cache import (
     get_preview_word_ocr_job,

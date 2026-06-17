@@ -1,7 +1,7 @@
 import boto3
 from django.conf import settings
 
-from app_ocr.service.gpu_worker_heartbeat import mark_gpu_worker_ensured
+from app_ocr.service.gpu_worker.heartbeat import mark_gpu_worker_ensured
 
 
 def _get_instance_id(worker_type):

@@ -26,7 +26,7 @@ from app_ocr.serializers import (
     WordSerializer,
 )
 from app_ocr.service.document import create_pages_from_document_file
-from app_ocr.service.gpu_instance import ensure_gpu_worker_running
+from app_ocr.service.gpu_worker.worker_instance import ensure_gpu_worker_running
 from app_ocr.service.preview_word_ocr_cache import (
     get_preview_word_ocr_job,
     set_preview_word_ocr_job,
