@@ -24,6 +24,18 @@ DEBUG = True
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "").split()
 
 
+def env_bool(name, default=False):
+    value = os.environ.get(name)
+    if value is None or value == "":
+        return default
+    normalized = value.strip()
+    if normalized == "true":
+        return True
+    if normalized == "false":
+        return False
+    raise ValueError(f"{name} must be 'true' or 'false', got {value!r}")
+
+
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL")
 CELERY_TASK_DEFAULT_QUEUE = "ocr_document_queue"
 CELERY_TASK_ROUTES = {
@@ -58,8 +70,8 @@ CACHES = {
 }
 
 AWS_EC2_REGION_NAME = os.environ.get("AWS_EC2_REGION_NAME", "ap-northeast-1")
-ENABLE_GPU_WORKER_AUTOSTART = os.environ.get("ENABLE_GPU_WORKER_AUTOSTART", "0") == "1"
-ENABLE_GPU_WORKER_AUTOSTOP = os.environ.get("ENABLE_GPU_WORKER_AUTOSTOP", "0") == "1"
+ENABLE_GPU_WORKER_AUTOSTART = env_bool("ENABLE_GPU_WORKER_AUTOSTART", False)
+ENABLE_GPU_WORKER_AUTOSTOP = env_bool("ENABLE_GPU_WORKER_AUTOSTOP", False)
 GPU_WORKER_AUTOSTOP_IDLE_MINUTES = float(
     os.environ.get("GPU_WORKER_AUTOSTOP_IDLE_MINUTES", "30"),
 )
@@ -195,8 +207,8 @@ STATIC_URL = "static/"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-USE_S3_STORAGE = os.environ.get("USE_S3_STORAGE") == "true"
-if USE_S3_STORAGE:
+ENABLE_S3_STORAGE = env_bool("ENABLE_S3_STORAGE", False)
+if ENABLE_S3_STORAGE:
     STORAGES = {
         "default": {
             "BACKEND": "storages.backends.s3.S3Storage",
