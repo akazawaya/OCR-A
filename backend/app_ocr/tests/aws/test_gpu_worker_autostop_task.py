@@ -14,7 +14,7 @@ def configure_gpu_worker_autostop_settings(settings):
     settings.ENABLE_GPU_WORKER_AUTOSTOP = True
     settings.GPU_WORKER_AUTOSTOP_IDLE_MINUTES = AUTOSTOP_THRESHOLD_SECONDS / 60
     settings.GPU_WORKER_INSTANCE_IDS = {
-        "worker_document": "i-document",
+        "worker_foo": "i-foo",
     }
 
 
@@ -42,7 +42,7 @@ def test_autostop_does_not_stop_when_redis_queue_has_pending_tasks():
     ):
         check_gpu_worker_autostop_task()
 
-    mock_has_pending_queue_tasks.assert_called_once_with("worker_document")
+    mock_has_pending_queue_tasks.assert_called_once_with("worker_foo")
     mock_has_active_or_reserved_tasks.assert_not_called()
     mock_stop_gpu_worker.assert_not_called()
 
@@ -73,8 +73,8 @@ def test_autostop_does_not_stop_when_celery_has_active_or_reserved_tasks(
     ):
         check_gpu_worker_autostop_task()
 
-    mock_has_pending_queue_tasks.assert_called_once_with("worker_document")
-    mock_has_active_or_reserved_tasks.assert_called_once_with("worker_document")
+    mock_has_pending_queue_tasks.assert_called_once_with("worker_foo")
+    mock_has_active_or_reserved_tasks.assert_called_once_with("worker_foo")
     mock_stop_gpu_worker.assert_not_called()
 
 
@@ -98,7 +98,7 @@ def test_autostop_does_not_stop_when_idle_time_is_just_below_threshold():
     ):
         check_gpu_worker_autostop_task()
 
-    mock_get_last_ensure_at.assert_called_once_with("worker_document")
+    mock_get_last_ensure_at.assert_called_once_with("worker_foo")
     mock_has_pending_queue_tasks.assert_not_called()
     mock_has_active_or_reserved_tasks.assert_not_called()
     mock_stop_gpu_worker.assert_not_called()
@@ -124,6 +124,6 @@ def test_autostop_stops_when_idle_and_no_redis_or_celery_tasks_exist():
     ):
         check_gpu_worker_autostop_task()
 
-    mock_has_pending_queue_tasks.assert_called_once_with("worker_document")
-    mock_has_active_or_reserved_tasks.assert_called_once_with("worker_document")
-    mock_stop_gpu_worker.assert_called_once_with("worker_document")
+    mock_has_pending_queue_tasks.assert_called_once_with("worker_foo")
+    mock_has_active_or_reserved_tasks.assert_called_once_with("worker_foo")
+    mock_stop_gpu_worker.assert_called_once_with("worker_foo")
