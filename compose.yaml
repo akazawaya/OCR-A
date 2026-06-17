@@ -106,38 +106,6 @@ services:
         "1",
       ]
 
-  worker_control:
-    <<: *worker_common
-    command:
-      [
-        "/app/.venv/bin/python",
-        "-m",
-        "celery",
-        "-A",
-        "project.celery:app",
-        "worker",
-        "-l",
-        "INFO",
-        "-Q",
-        "gpu_control_queue",
-        "--concurrency",
-        "1",
-      ]
-
-  celery_beat:
-    <<: *worker_common
-    command:
-      [
-        "/app/.venv/bin/python",
-        "-m",
-        "celery",
-        "-A",
-        "project.celery:app",
-        "beat",
-        "-l",
-        "INFO",
-      ]
-
   broker:
     image: redis:8.4.0-bookworm
     
