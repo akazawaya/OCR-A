@@ -328,12 +328,7 @@ class TestTasks:
         assert cache_snapshots[1][0] == "preview-job-1"
         assert cache_snapshots[1][1]["state"] == State.SUCCESS
         assert cache_snapshots[1][1]["content"] == "bbox text"
-        mock_notify.assert_has_calls(
-            [
-                call("preview-job-1", State.PROCESSING),
-                call("preview-job-1", State.SUCCESS),
-            ]
-        )
+        mock_notify.assert_called_once_with("preview-job-1", State.SUCCESS)
 
     def test_ocr_word_task_updates_cache_and_notifies_failure(self):
         cache_snapshots = []
@@ -368,12 +363,7 @@ class TestTasks:
 
         assert cache_snapshots[-1][1]["state"] == State.FAILED
         assert cache_snapshots[-1][1]["error_message"] == "ocr failed"
-        mock_notify.assert_has_calls(
-            [
-                call("preview-job-1", State.PROCESSING),
-                call("preview-job-1", State.FAILED),
-            ]
-        )
+        mock_notify.assert_called_once_with("preview-job-1", State.FAILED)
 
 
 @pytest.mark.django_db
