@@ -71,6 +71,11 @@ CACHES = {
     }
 }
 
+# Preview Word OCRジョブ情報のキャッシュ保持時間。
+# キュー待機中・OCR処理中・処理完了後の結果取得期間に適用され、
+# 情報が更新されるたび有効期限も更新される。
+PREVIEW_WORD_OCR_CACHE_TIMEOUT_SECONDS = 60 * 10
+
 ENABLE_GPU_WORKER_AUTOSTART = env_bool("ENABLE_GPU_WORKER_AUTOSTART", False)
 ENABLE_GPU_WORKER_AUTOSTOP = env_bool("ENABLE_GPU_WORKER_AUTOSTOP", False)
 ENABLE_S3_STORAGE = env_bool("ENABLE_S3_STORAGE", False)
