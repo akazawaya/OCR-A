@@ -17,16 +17,18 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "").split()
+ALLOWED_HOSTS = os.environ["DJANGO_ALLOWED_HOSTS"].split()
 
 
 def env_bool(name, default=False):
-    value = os.environ.get(name)
-    if value is None or value == "":
+    if name not in os.environ:
+        return default
+    value = os.environ[name]
+    if value == "":
         return default
     normalized = value.strip()
     if normalized == "true":
@@ -36,7 +38,7 @@ def env_bool(name, default=False):
     raise ValueError(f"{name} must be 'true' or 'false', got {value!r}")
 
 
-CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL")
+CELERY_BROKER_URL = os.environ["CELERY_BROKER_URL"]
 CELERY_TASK_DEFAULT_QUEUE = "ocr_document_queue"
 CELERY_TASK_ROUTES = {
     "app_ocr.tasks.dispatch_ocr_pages_task": {
@@ -53,7 +55,7 @@ CELERY_TASK_ROUTES = {
     },
 }
 
-CHANNEL_REDIS_URL = os.getenv("CHANNEL_REDIS_URL")  # compose 前提ならデフォルト不要
+CHANNEL_REDIS_URL = os.environ["CHANNEL_REDIS_URL"]  # compose 前提ならデフォルト不要
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
@@ -69,32 +71,39 @@ CACHES = {
     }
 }
 
-AWS_EC2_REGION_NAME = os.environ.get("AWS_EC2_REGION_NAME", "ap-northeast-1")
 ENABLE_GPU_WORKER_AUTOSTART = env_bool("ENABLE_GPU_WORKER_AUTOSTART", False)
 ENABLE_GPU_WORKER_AUTOSTOP = env_bool("ENABLE_GPU_WORKER_AUTOSTOP", False)
-GPU_WORKER_AUTOSTOP_IDLE_MINUTES = float(
-    os.environ.get("GPU_WORKER_AUTOSTOP_IDLE_MINUTES", "30"),
-)
-GPU_WORKER_AUTOSTOP_CHECK_INTERVAL_SECONDS = float(
-    os.environ.get(
-        "GPU_WORKER_AUTOSTOP_CHECK_INTERVAL_SECONDS",
-        str(GPU_WORKER_AUTOSTOP_IDLE_MINUTES * 60),
-    ),
-)
-GPU_WORKER_INSTANCE_IDS = {
-    "worker_document": os.environ.get("GPU_WORKER_DOCUMENT_INSTANCE_ID"),
-    "worker_preview_word": os.environ.get("GPU_WORKER_PREVIEW_WORD_INSTANCE_ID"),
-}
+ENABLE_S3_STORAGE = env_bool("ENABLE_S3_STORAGE", False)
+
+ENABLE_AWS_INFRASTRUCTURE = ENABLE_S3_STORAGE or ENABLE_GPU_WORKER_AUTOSTART
+if ENABLE_AWS_INFRASTRUCTURE:
+    AWS_ACCESS_KEY_ID = os.environ["AWS_ACCESS_KEY_ID"]
+    AWS_SECRET_ACCESS_KEY = os.environ["AWS_SECRET_ACCESS_KEY"]
+
 GPU_WORKER_QUEUES = {
     "worker_document": "ocr_document_queue",
     "worker_preview_word": "ocr_word_queue",
 }
-CELERY_BEAT_SCHEDULE = {
-    "check-gpu-worker-autostop": {
+GPU_WORKER_INSTANCE_IDS = {}
+if ENABLE_GPU_WORKER_AUTOSTART:
+    AWS_EC2_REGION_NAME = os.environ["AWS_EC2_REGION_NAME"]
+    GPU_WORKER_INSTANCE_IDS = {
+        "worker_document": os.environ["GPU_WORKER_DOCUMENT_INSTANCE_ID"],
+        "worker_preview_word": os.environ["GPU_WORKER_PREVIEW_WORD_INSTANCE_ID"],
+    }
+
+CELERY_BEAT_SCHEDULE = {}
+if ENABLE_GPU_WORKER_AUTOSTOP:
+    GPU_WORKER_AUTOSTOP_IDLE_MINUTES = float(
+        os.environ["GPU_WORKER_AUTOSTOP_IDLE_MINUTES"],
+    )
+    GPU_WORKER_AUTOSTOP_CHECK_INTERVAL_SECONDS = float(
+        os.environ["GPU_WORKER_AUTOSTOP_CHECK_INTERVAL_SECONDS"],
+    )
+    CELERY_BEAT_SCHEDULE["check-gpu-worker-autostop"] = {
         "task": "app_ocr.tasks.check_gpu_worker_autostop_task",
         "schedule": GPU_WORKER_AUTOSTOP_CHECK_INTERVAL_SECONDS,
-    },
-}
+    }
 
 # Application definition
 INSTALLED_APPS = [
@@ -118,7 +127,7 @@ REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
 }
 
-CORS_ALLOWED_ORIGINS = os.environ.get("DJANGO_CORS_ALLOWED_ORIGINS", "").split()
+CORS_ALLOWED_ORIGINS = os.environ["DJANGO_CORS_ALLOWED_ORIGINS"].split()
 
 
 MIDDLEWARE = [
@@ -207,7 +216,6 @@ STATIC_URL = "static/"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-ENABLE_S3_STORAGE = env_bool("ENABLE_S3_STORAGE", False)
 if ENABLE_S3_STORAGE:
     STORAGES = {
         "default": {
