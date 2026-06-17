@@ -1,8 +1,18 @@
+from datetime import timedelta
+
 from asgiref.sync import async_to_sync
 from celery import shared_task
 from channels.layers import get_channel_layer
+from django.conf import settings
+from django.utils import timezone
 
 from app_ocr.models import Document, Page, State
+from app_ocr.service.gpu_instance import stop_gpu_worker
+from app_ocr.service.gpu_worker_heartbeat import get_last_ensure_at
+from app_ocr.service.gpu_worker_task_checker import (
+    has_active_or_reserved_gpu_worker_tasks,
+    has_pending_gpu_worker_queue_tasks,
+)
 from app_ocr.service.ocr import run_ocr_for_bbox, run_ocr_for_page
 from app_ocr.service.preview_word_ocr_cache import (
     get_preview_word_ocr_job,
@@ -32,6 +42,28 @@ def notify_preview_word_ocr_changed(preview_job_id, state):
             "state": state,
         },
     )
+
+
+@shared_task
+def check_gpu_worker_autostop_task():
+    if not settings.ENABLE_GPU_WORKER_AUTOSTOP:
+        return
+
+    idle_threshold = timedelta(
+        minutes=settings.GPU_WORKER_AUTOSTOP_IDLE_MINUTES,
+    )
+    now = timezone.now()
+    for worker_type in settings.GPU_WORKER_INSTANCE_IDS:
+        last_ensure_at = get_last_ensure_at(worker_type)
+        if last_ensure_at is None:
+            continue
+        if now - last_ensure_at < idle_threshold:
+            continue
+        if has_pending_gpu_worker_queue_tasks(worker_type):
+            continue
+        if has_active_or_reserved_gpu_worker_tasks(worker_type):
+            continue
+        stop_gpu_worker(worker_type)
 
 
 @shared_task

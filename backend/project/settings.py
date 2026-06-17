@@ -36,6 +36,9 @@ CELERY_TASK_ROUTES = {
     "app_ocr.tasks.ocr_word_task": {
         "queue": "ocr_word_queue",
     },
+    "app_ocr.tasks.check_gpu_worker_autostop_task": {
+        "queue": "gpu_control_queue",
+    },
 }
 
 CHANNEL_REDIS_URL = os.getenv("CHANNEL_REDIS_URL")  # compose 前提ならデフォルト不要
@@ -56,9 +59,29 @@ CACHES = {
 
 AWS_EC2_REGION_NAME = os.environ.get("AWS_EC2_REGION_NAME", "ap-northeast-1")
 ENABLE_GPU_WORKER_AUTOSTART = os.environ.get("ENABLE_GPU_WORKER_AUTOSTART", "0") == "1"
+ENABLE_GPU_WORKER_AUTOSTOP = os.environ.get("ENABLE_GPU_WORKER_AUTOSTOP", "0") == "1"
+GPU_WORKER_AUTOSTOP_IDLE_MINUTES = float(
+    os.environ.get("GPU_WORKER_AUTOSTOP_IDLE_MINUTES", "30"),
+)
+GPU_WORKER_AUTOSTOP_CHECK_INTERVAL_SECONDS = float(
+    os.environ.get(
+        "GPU_WORKER_AUTOSTOP_CHECK_INTERVAL_SECONDS",
+        str(GPU_WORKER_AUTOSTOP_IDLE_MINUTES * 60),
+    ),
+)
 GPU_WORKER_INSTANCE_IDS = {
     "worker_document": os.environ.get("GPU_WORKER_DOCUMENT_INSTANCE_ID"),
     "worker_preview_word": os.environ.get("GPU_WORKER_PREVIEW_WORD_INSTANCE_ID"),
+}
+GPU_WORKER_QUEUES = {
+    "worker_document": "ocr_document_queue",
+    "worker_preview_word": "ocr_word_queue",
+}
+CELERY_BEAT_SCHEDULE = {
+    "check-gpu-worker-autostop": {
+        "task": "app_ocr.tasks.check_gpu_worker_autostop_task",
+        "schedule": GPU_WORKER_AUTOSTOP_CHECK_INTERVAL_SECONDS,
+    },
 }
 
 # Application definition

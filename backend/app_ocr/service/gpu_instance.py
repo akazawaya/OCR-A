@@ -1,6 +1,8 @@
 import boto3
 from django.conf import settings
 
+from app_ocr.service.gpu_worker_heartbeat import mark_gpu_worker_ensured
+
 
 def _get_instance_id(worker_type):
     try:
@@ -19,6 +21,8 @@ def _get_ec2_client():
 
 
 def ensure_gpu_worker_running(worker_type):
+    mark_gpu_worker_ensured(worker_type)
+
     ec2_client = _get_ec2_client()
     instance_id = _get_instance_id(worker_type)
 
@@ -27,3 +31,14 @@ def ensure_gpu_worker_running(worker_type):
 
     if state == "stopped":
         ec2_client.start_instances(InstanceIds=[instance_id])
+
+
+def stop_gpu_worker(worker_type):
+    ec2_client = _get_ec2_client()
+    instance_id = _get_instance_id(worker_type)
+
+    response = ec2_client.describe_instances(InstanceIds=[instance_id])
+    state = response["Reservations"][0]["Instances"][0]["State"]["Name"]
+
+    if state == "running":
+        ec2_client.stop_instances(InstanceIds=[instance_id])
