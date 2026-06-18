@@ -1,0 +1,17 @@
+x-elasticache-env: &elasticache_env
+  CELERY_BROKER_URL: ${CELERY_BROKER_URL}
+  CHANNEL_REDIS_URL: ${CHANNEL_REDIS_URL}
+  CACHE_REDIS_URL: ${CACHE_REDIS_URL}
+
+services:
+  backend:
+    environment:
+      <<: *elasticache_env
+
+  worker_document:
+    environment:
+      <<: *elasticache_env
+
+  worker_preview_word:
+    environment:
+      <<: *elasticache_env

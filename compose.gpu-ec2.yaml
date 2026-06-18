@@ -24,9 +24,9 @@ x-gpu-worker-common: &gpu_worker_common
     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     POSTGRES_HOST: ${POSTGRES_HOST}
     POSTGRES_PORT: ${POSTGRES_PORT}
-    CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://broker:6379/0}
-    CHANNEL_REDIS_URL: ${CHANNEL_REDIS_URL:-redis://broker:6379/1}
-    CACHE_REDIS_URL: ${CACHE_REDIS_URL:-redis://broker:6379/2}
+    CELERY_BROKER_URL: ${CELERY_BROKER_URL}
+    CHANNEL_REDIS_URL: ${CHANNEL_REDIS_URL}
+    CACHE_REDIS_URL: ${CACHE_REDIS_URL}
     <<: *gpu_ec2_env
   volumes:
     - media_input:/app/media
