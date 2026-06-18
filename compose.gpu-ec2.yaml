@@ -36,7 +36,7 @@ services:
     environment:
       <<: *gpu_ec2_env
 
-  worker_control:
+  worker_gpu_autostop:
     <<: *gpu_worker_common
     command:
       [
