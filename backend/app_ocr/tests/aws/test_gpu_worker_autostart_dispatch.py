@@ -33,7 +33,7 @@ def test_ocr_ensures_gpu_worker_before_dispatching_pages(
     # withブロック内での transaction.on_commit コールバックの実行を保障する
     with (
         patch("app_ocr.views.inspect_file", return_value=("pdf", 1)),
-        patch("app_ocr.views.notify_document_state_changed"),
+        patch("app_ocr.views.notify_document_changed"),
         patch(
             "app_ocr.views.ensure_gpu_worker_running",
             side_effect=lambda worker_type: call_order.ensure(worker_type),

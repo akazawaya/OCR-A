@@ -37,7 +37,7 @@ from app_ocr.storage import (
 )
 from app_ocr.tasks import (
     dispatch_ocr_pages_task,
-    notify_document_state_changed,
+    notify_document_changed,
     ocr_word_task,
 )
 
@@ -85,12 +85,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
                 create_pages_from_document_file(document)
                 document.state = State.SUCCESS
                 document.save(update_fields=["state"])
-                transaction.on_commit(
-                    lambda: notify_document_state_changed(
-                        document_id=document.pk,
-                        state=State.SUCCESS,
-                    )
-                )
+                transaction.on_commit(notify_document_changed)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         # Djangoのトランザクションのロールバックにfileは含まれないため、
@@ -112,10 +107,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
                 document_id = document.pk
 
                 def enqueue_document_ocr():
-                    notify_document_state_changed(
-                        document_id=document_id,
-                        state=State.QUEUED,
-                    )
+                    notify_document_changed()
                     if settings.ENABLE_GPU_WORKER_AUTOSTART:
                         ensure_gpu_worker_running("worker_document")
                     dispatch_ocr_pages_task.delay(document_id)

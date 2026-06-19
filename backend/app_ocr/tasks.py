@@ -20,14 +20,12 @@ from app_ocr.service.preview_word_ocr_cache import (
 )
 
 
-def notify_document_state_changed(document_id, state):
+def notify_document_changed():
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
         "broadcast",  # Consumerの self.group_name
         {
-            "type": "document_state_changed",  # Consumerのハンドラ名
-            "document_id": document_id,
-            "state": state,
+            "type": "document_changed",  # Consumerのハンドラ名
         },
     )
 
@@ -71,7 +69,7 @@ def check_gpu_worker_autostop_task():
 def dispatch_ocr_pages_task(document_id):
     doc = Document.objects.get(pk=document_id)
     Document.objects.filter(pk=document_id).update(state=State.PROCESSING)
-    notify_document_state_changed(document_id=document_id, state=State.PROCESSING)
+    notify_document_changed()
     for page_number in range(1, doc.total_pages + 1):
         ocr_page_task.delay(document_id, page_number)
 
@@ -85,7 +83,7 @@ def ocr_page_task(document_id, page_number):
             state=State.FAILED
         )
         Document.objects.filter(pk=document_id).update(state=State.FAILED)
-        notify_document_state_changed(document_id=document_id, state=State.FAILED)
+        notify_document_changed()
         raise
     else:
         Page.objects.filter(doc_id=document_id, page_number=page_number).update(
@@ -102,7 +100,7 @@ def ocr_page_task(document_id, page_number):
 
         if (not failed_exists) and (success_count == doc.total_pages):
             Document.objects.filter(pk=document_id).update(state=State.SUCCESS)
-            notify_document_state_changed(document_id=document_id, state=State.SUCCESS)
+            notify_document_changed()
 
 
 @shared_task

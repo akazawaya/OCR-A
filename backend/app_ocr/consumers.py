@@ -17,14 +17,9 @@ class OcrProgressConsumer(WebsocketConsumer):
             self.group_name, self.channel_name
         )
 
-    # {"type": "foo", "document_id": 1, "state": "SUCCESS"}　のようなpayloadを送信
-    # ※現状、このイベントはトリガーとしてのみ使っており、payloadの内容自体は未使用
-    def document_state_changed(self, event):
-        payload = {
-            "type": "document_state_changed",
-            "document_id": event.get("document_id"),
-            "state": event.get("state"),
-        }
+    # Document一覧の再取得トリガーとしてのみ使う。
+    def document_changed(self, event):
+        payload = {"type": "document_changed"}
         self.send(text_data=json.dumps(payload))
 
     def preview_word_ocr_changed(self, event):

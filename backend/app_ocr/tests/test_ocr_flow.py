@@ -16,7 +16,7 @@ from app_ocr.models import Direction, Document, FileType, Page, State, Word
 from app_ocr.service.ocr import run_ocr_for_bbox, run_ocr_for_page
 from app_ocr.tasks import (
     dispatch_ocr_pages_task,
-    notify_document_state_changed,
+    notify_document_changed,
     notify_preview_word_ocr_changed,
     ocr_page_task,
     ocr_word_task,
@@ -141,7 +141,7 @@ class TestRenderPage:
 
 
 class TestTasks:
-    def test_notify_document_state_changed_sends_group_message(self):
+    def test_notify_document_changed_sends_group_message(self):
         with (
             patch("app_ocr.tasks.get_channel_layer") as mock_get_channel_layer,
             patch("app_ocr.tasks.async_to_sync") as mock_async_to_sync,
@@ -149,15 +149,13 @@ class TestTasks:
             mock_channel_layer = mock_get_channel_layer.return_value
             mock_group_send = mock_async_to_sync.return_value
 
-            notify_document_state_changed(document_id=1, state=State.SUCCESS)
+            notify_document_changed()
 
         mock_async_to_sync.assert_called_once_with(mock_channel_layer.group_send)
         mock_group_send.assert_called_once_with(
             "broadcast",
             {
-                "type": "document_state_changed",
-                "document_id": 1,
-                "state": State.SUCCESS,
+                "type": "document_changed",
             },
         )
 
@@ -187,7 +185,7 @@ class TestTasks:
     @pytest.mark.django_db
     def test_dispatch_ocr_pages_task_sets_processing_and_dispatches_each_page(self):
         with (
-            patch("app_ocr.tasks.notify_document_state_changed") as mock_notify,
+            patch("app_ocr.tasks.notify_document_changed") as mock_notify,
             patch("app_ocr.tasks.ocr_page_task.delay") as mock_delay,
         ):
             doc = Document.objects.create(
@@ -201,10 +199,7 @@ class TestTasks:
         doc.refresh_from_db()
 
         assert doc.state == State.PROCESSING
-        mock_notify.assert_called_once_with(
-            document_id=doc.id,
-            state=State.PROCESSING,
-        )
+        mock_notify.assert_called_once_with()
         mock_delay.assert_has_calls(
             [
                 call(doc.id, 1),
@@ -218,7 +213,7 @@ class TestTasks:
     def test_ocr_page_task_success_when_all_pages_finish(self):
         with (
             patch("app_ocr.tasks.run_ocr_for_page"),
-            patch("app_ocr.tasks.notify_document_state_changed") as mock_notify,
+            patch("app_ocr.tasks.notify_document_changed") as mock_notify,
         ):
             doc = Document.objects.create(
                 file_name="sample.pdf",
@@ -246,10 +241,7 @@ class TestTasks:
 
         assert page2.state == State.SUCCESS
         assert doc.state == State.SUCCESS
-        mock_notify.assert_called_once_with(
-            document_id=doc.id,
-            state=State.SUCCESS,
-        )
+        mock_notify.assert_called_once_with()
 
     @pytest.mark.django_db
     def test_ocr_page_task_failed_when_run_ocr_raises(self):
@@ -258,7 +250,7 @@ class TestTasks:
                 "app_ocr.tasks.run_ocr_for_page",
                 side_effect=RuntimeError("ocr failed"),
             ),
-            patch("app_ocr.tasks.notify_document_state_changed") as mock_notify,
+            patch("app_ocr.tasks.notify_document_changed") as mock_notify,
         ):
             doc = Document.objects.create(
                 file_name="sample.pdf",
@@ -275,10 +267,7 @@ class TestTasks:
 
         assert page.state == State.FAILED
         assert doc.state == State.FAILED
-        mock_notify.assert_called_once_with(
-            document_id=doc.id,
-            state=State.FAILED,
-        )
+        mock_notify.assert_called_once_with()
 
     def test_ocr_word_task_updates_cache_and_notifies_success(self):
         cache_snapshots = []
@@ -464,20 +453,15 @@ class TestConsumer:
         mock_group_discard.assert_called_once_with("broadcast", "test-channel")
 
     # payloadの中身は暫定かつ未使用のため、そこまで深掘りしない
-    def test_document_state_changed_sends_websocket_message(self):
+    def test_document_changed_sends_websocket_message(self):
         consumer = OcrProgressConsumer()
         consumer.send = Mock()
-        consumer.document_state_changed(
-            {
-                "document_id": 1,
-                "state": "SUCCESS",
-            }
-        )
+        consumer.document_changed({})
 
         consumer.send.assert_called_once()
         sent_payload = json.loads(consumer.send.call_args.kwargs["text_data"])
 
-        assert sent_payload["type"] == "document_state_changed"
+        assert sent_payload == {"type": "document_changed"}
 
     def test_preview_word_ocr_changed_sends_websocket_message(self):
         consumer = OcrProgressConsumer()
