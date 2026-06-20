@@ -106,6 +106,9 @@ class Page(models.Model):
     width_px = models.PositiveIntegerField(null=True, blank=True)
     height_px = models.PositiveIntegerField(null=True, blank=True)
 
+    class Meta:
+        ordering = ["page_number"]
+
 
 class Word(models.Model):
     page = models.ForeignKey(Page, on_delete=models.CASCADE, related_name="words")
