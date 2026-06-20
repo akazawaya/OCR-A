@@ -53,6 +53,9 @@ class DocumentViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser]
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = DocumentFilterSet
+    # serializerでsource="get_foo_display"を使用している場合、
+    # DRFのデフォルトではordering対象と認識されなくなるため、明示する
+    ordering_fields = ["created", "file_name", "state"]
 
     def build_document_serializer_from_file(self, file):
         upload_serializer = DocumentUploadSerializer(data={"file": file})
