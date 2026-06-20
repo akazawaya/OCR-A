@@ -142,10 +142,13 @@ const DocumentsPage = () => {
     [postDocumentMutation, ocrDocumentMutation],
   );
 
-  const documentTableColumns = documentSpec.ui.table.map(({ key, label }) => ({
-    key,
-    label,
-  }));
+  const documentTableColumns = documentSpec.ui.table.map(
+    ({ key, label, format }) => ({
+      key,
+      label,
+      format,
+    }),
+  );
 
   useEffect(() => {
     const ws = new WebSocket(OCR_WS_URL);

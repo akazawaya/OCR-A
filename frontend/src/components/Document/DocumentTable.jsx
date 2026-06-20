@@ -41,7 +41,7 @@ const DocumentTable = ({
           >
             {columns.map((c) => (
               <td key={c.key} className="border border-gray-400 px-1">
-                {r[c.key]}
+                {c.format ? c.format(r[c.key]) : r[c.key]}
               </td>
             ))}
             {onClickDeleteButton && (
