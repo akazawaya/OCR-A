@@ -13,7 +13,7 @@ import {
   getPreviewWordOcrResult,
 } from "../api/clients/collectionClient";
 import {
-  postCollectionItem,
+  postCollection,
   deleteCollectionItem,
   patchCollectionItem,
   ocrPreviewWord,
@@ -121,7 +121,7 @@ const ViewerPage = () => {
   const { mutate: postWordMutation } = useMutation({
     mutationFn: async (wordPostInputs) => {
       for (const { pageId, bbox, direction, content } of wordPostInputs) {
-        await postCollectionItem({
+        await postCollection({
           collectionUrl: wordCollectionUrl,
           body: { page: pageId, bbox, direction, content },
         });
