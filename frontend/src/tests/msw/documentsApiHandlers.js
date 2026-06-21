@@ -44,6 +44,12 @@ const sortDocuments = (documents, queryString) => {
 };
 
 export const documentsApiHandlers = [
+  http.get("http://test.dummy/documents/:id/", ({ params }) => {
+    const id = Number(params.id);
+    const document = documents.find((d) => d.id === id);
+    return HttpResponse.json(document);
+  }),
+
   http.get("http://test.dummy/documents/", ({ request }) => {
     const queryString = new URL(request.url).search;
 

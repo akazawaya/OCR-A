@@ -1,6 +1,10 @@
 import { fetchBackend } from "../fetchBackend";
 import { wordOcrAccessSpec } from "../../appConfig";
 
+export const getCollectionItem = async ({ collectionUrl, id }) => {
+  const { data } = await fetchBackend(`${collectionUrl}${id}/`);
+  return data;
+};
 export const getCollection = async ({ collectionUrl, queryString }) => {
   const url = queryString ? `${collectionUrl}${queryString}` : collectionUrl;
   const { data } = await fetchBackend(url);
