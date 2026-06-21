@@ -109,7 +109,7 @@ const WordOverlay = ({
         return (
           <span
             key={w.id}
-            className={`absolute leading-none whitespace-nowrap ${
+            className={`absolute flex items-center justify-center leading-none ${
               w.span.mode === "vertical"
                 ? "[text-orientation:upright] [writing-mode:vertical-rl]"
                 : ""
