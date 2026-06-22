@@ -1,10 +1,12 @@
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include, path
 
 urlpatterns = [
-    path("", include("app_ocr.urls")),
+    path("admin/", admin.site.urls),
+    path("api/", include("app_ocr.urls")),
 ]
 
 # 開発環境(DEBUG = True)ならならアップロードファイル(MEDIA)を配信
