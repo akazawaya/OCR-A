@@ -3,12 +3,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useParams } from "react-router-dom";
 
 import {
+  documentAccessSpec,
   pageAccessSpec,
   wordSpec,
   wordOcrAccessSpec,
   OCR_WS_URL,
 } from "../appConfig";
 import {
+  getCollectionItem,
   getCollection,
   getPreviewWordOcrResult,
 } from "../api/clients/collectionClient";
@@ -35,6 +37,12 @@ const ViewerPage = () => {
   const { search } = useLocation();
   // この search はURIの?以降のqueryString全体のため、searchQueryと混同しないように注意
   const { primaryKey } = useParams();
+
+  const { collectionUrl: documentCollectionUrl } = documentAccessSpec;
+  const documentQueryKey = useMemo(
+    () => [documentCollectionUrl, primaryKey],
+    [documentCollectionUrl, primaryKey],
+  );
 
   const { collectionUrl: pageCollectionUrl } = pageAccessSpec;
   const pageQueryString = useMemo(
@@ -65,6 +73,20 @@ const ViewerPage = () => {
   );
 
   const {
+    data: document = [], // documentTitleのためにガード追加
+    isPending: isDocumentsPending,
+    isError: isDocumentsError,
+  } = useQuery({
+    queryKey: documentQueryKey,
+    queryFn: () =>
+      getCollectionItem({
+        collectionUrl: documentCollectionUrl,
+        id: primaryKey,
+      }),
+    enabled: Boolean(documentCollectionUrl),
+  });
+
+  const {
     data: pages = [], //maxPage: pages.lengthのためにpagesはガードを追加
     isPending: isPagesPending,
     isError: isPagesError,
@@ -93,8 +115,8 @@ const ViewerPage = () => {
     refetchOnWindowFocus: false,
   });
 
-  const isPending = isPagesPending || isWordsPending;
-  const isError = isPagesError || isWordsError;
+  const isPending = isDocumentsPending || isPagesPending || isWordsPending;
+  const isError = isDocumentsError || isPagesError || isWordsError;
   const sortedWords = useMemo(
     () => sortViewerWords({ words, pages }),
     [words, pages],
@@ -115,7 +137,7 @@ const ViewerPage = () => {
     contentRef,
     pages,
     currentPage: pageState.page,
-    documentTitle: "viewer-export",
+    documentTitle: `電子化出力_${document.file_name}`,
   });
 
   const { mutate: postWordMutation } = useMutation({

@@ -5,7 +5,7 @@ export const usePrint = ({
   contentRef,
   pages = [],
   currentPage,
-  documentTitle = "viewer-export",
+  documentTitle,
 } = {}) => {
   const printPromiseResolveRef = useRef(null);
   const [isPrintMode, setIsPrintMode] = useState(false);
