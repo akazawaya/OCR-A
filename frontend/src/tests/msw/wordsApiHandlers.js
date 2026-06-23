@@ -2,6 +2,7 @@ import { http, HttpResponse } from "msw";
 
 import { PREVIEW_WORD_OCR_STATE } from "../../logic/viewer/previewWordOcrContract";
 
+import { MOCK_API_BASE_URL } from "./config";
 import { defaultMockWords, ocrJobMock } from "./fixture";
 
 let words = structuredClone(defaultMockWords);
@@ -55,7 +56,7 @@ const buildPreviewJobResult = ({ body, rawResult }) => {
 };
 
 export const wordsApiHandlers = [
-  http.get("http://test.dummy/words/", ({ request }) => {
+  http.get(`${MOCK_API_BASE_URL}/words/`, ({ request }) => {
     const url = new URL(request.url);
     const pageDoc = url.searchParams.get("page__doc");
 
@@ -66,13 +67,13 @@ export const wordsApiHandlers = [
     return HttpResponse.json(filteredWords);
   }),
 
-  http.get(`http://test.dummy/words/:id/`, ({ params }) => {
+  http.get(`${MOCK_API_BASE_URL}/words/:id/`, ({ params }) => {
     const id = Number(params.id);
     const word = words.find((w) => w.id === id);
     return HttpResponse.json(word);
   }),
 
-  http.patch(`http://test.dummy/words/:id/`, ({ params, request }) => {
+  http.patch(`${MOCK_API_BASE_URL}/words/:id/`, ({ params, request }) => {
     const id = Number(params.id);
     const wordIndex = words.findIndex((w) => w.id === id);
     if (wordIndex === -1) {
@@ -85,7 +86,7 @@ export const wordsApiHandlers = [
     });
   }),
 
-  http.post("http://test.dummy/words/", async ({ request }) => {
+  http.post(`${MOCK_API_BASE_URL}/words/`, async ({ request }) => {
     const body = await request.json();
 
     const nextId = Math.max(0, ...words.map((word) => Number(word.id))) + 1;
@@ -105,7 +106,7 @@ export const wordsApiHandlers = [
     return HttpResponse.json(createdWord, { status: 201 });
   }),
 
-  http.patch("http://test.dummy/words/:id/", async ({ params, request }) => {
+  http.patch(`${MOCK_API_BASE_URL}/words/:id/`, async ({ params, request }) => {
     const id = Number(params.id);
     const body = await request.json();
     const index = words.findIndex((word) => Number(word.id) === id);
@@ -122,13 +123,13 @@ export const wordsApiHandlers = [
     return HttpResponse.json(words[index]);
   }),
 
-  http.delete(`http://test.dummy/words/:id/`, ({ params }) => {
+  http.delete(`${MOCK_API_BASE_URL}/words/:id/`, ({ params }) => {
     const id = Number(params.id);
     words = words.filter((p) => p.id !== id);
     return new HttpResponse(null, { status: 204 });
   }),
 
-  http.post("http://test.dummy/words/ocr/", async ({ request }) => {
+  http.post(`${MOCK_API_BASE_URL}/words/ocr/`, async ({ request }) => {
     const body = await request.json();
     if (!["replace_words", "rewrite_content"].includes(body.mode)) {
       return new HttpResponse(null, { status: 400 });
@@ -144,14 +145,17 @@ export const wordsApiHandlers = [
   }),
 
   // wordのocr結果は、返り値の差し替えをfixture形式からimport可能にする
-  http.get("http://test.dummy/words/ocr/:previewJobId/", async ({ params }) => {
-    if (ocrWaitPromise) {
-      await ocrWaitPromise;
-    }
-    const response = ocrResultByPreviewJobId.get(params.previewJobId);
-    if (!response) {
-      return HttpResponse.json(null, { status: 404 });
-    }
-    return HttpResponse.json(structuredClone(response));
-  }),
+  http.get(
+    `${MOCK_API_BASE_URL}/words/ocr/:previewJobId/`,
+    async ({ params }) => {
+      if (ocrWaitPromise) {
+        await ocrWaitPromise;
+      }
+      const response = ocrResultByPreviewJobId.get(params.previewJobId);
+      if (!response) {
+        return HttpResponse.json(null, { status: 404 });
+      }
+      return HttpResponse.json(structuredClone(response));
+    },
+  ),
 ];

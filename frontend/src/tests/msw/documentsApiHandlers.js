@@ -1,5 +1,6 @@
 import { http, HttpResponse } from "msw";
 
+import { MOCK_API_BASE_URL } from "./config";
 import { defaultMockDocuments } from "./fixture";
 
 let documents = structuredClone(defaultMockDocuments);
@@ -44,13 +45,13 @@ const sortDocuments = (documents, queryString) => {
 };
 
 export const documentsApiHandlers = [
-  http.get("http://test.dummy/documents/:id/", ({ params }) => {
+  http.get(`${MOCK_API_BASE_URL}/documents/:id/`, ({ params }) => {
     const id = Number(params.id);
     const document = documents.find((d) => d.id === id);
     return HttpResponse.json(document);
   }),
 
-  http.get("http://test.dummy/documents/", ({ request }) => {
+  http.get(`${MOCK_API_BASE_URL}/documents/`, ({ request }) => {
     const queryString = new URL(request.url).search;
 
     const searched = filterDocumentsBySearch(documents, queryString);
@@ -62,7 +63,7 @@ export const documentsApiHandlers = [
   // create の mock は、アップロード導線の代表確認を責務とする。
   // 詳細なファイル検証は backend 側で担う。
   // frontend では擬似的な拡張子非対応エラーのみ mock し、alert の確認に留める。
-  http.post("http://test.dummy/documents/", async ({ request }) => {
+  http.post(`${MOCK_API_BASE_URL}/documents/`, async ({ request }) => {
     const formData = await request.formData();
     const file = formData.get("file");
 
@@ -84,7 +85,7 @@ export const documentsApiHandlers = [
     );
   }),
 
-  http.delete(`http://test.dummy/documents/:id/`, ({ params }) => {
+  http.delete(`${MOCK_API_BASE_URL}/documents/:id/`, ({ params }) => {
     const id = Number(params.id);
     documents = documents.filter((document) => document.id !== id);
     return new HttpResponse(null, { status: 204 });
@@ -92,7 +93,7 @@ export const documentsApiHandlers = [
 
   // ocr のmockはfrontendで確認できる範囲はcreateでカバーできているとみなし、
   // user.clickで呼ばれたかを見る程度に留める
-  http.post("http://test.dummy/documents/ocr/", async () => {
+  http.post(`${MOCK_API_BASE_URL}/documents/ocr/`, async () => {
     return new HttpResponse(null, { status: 202 });
   }),
 ];

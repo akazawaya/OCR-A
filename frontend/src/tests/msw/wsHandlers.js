@@ -1,6 +1,6 @@
 import { ws } from "msw";
 
-export const ocrWsMock = ws.link("ws://test.dummy/ocr/");
+export const ocrWsMock = ws.link("ws://test.dummy/api/ocr/");
 
 // テスト全体で使う WebSocket接続受付ハンドラ
 export const wsHandlers = [ocrWsMock.addEventListener("connection", () => {})];
