@@ -109,6 +109,7 @@ const ViewerTopBar = ({
     </button>
   );
 
+  const isBaseDisabled = isOcring;
   return (
     <div className="flex items-center justify-center gap-5 border bg-gray-200 px-2 py-1">
       <div className="flex items-center gap-0.5">
@@ -116,16 +117,22 @@ const ViewerTopBar = ({
           label: "前のページ",
           icon: ChevronLeft,
           className: actionButtonWithDisabledClassName,
-          disabled: isOcring || !canGoPrevPage,
+          disabled: isBaseDisabled || !canGoPrevPage,
           onClick: () => onClickPageStepButton((a) => a - 1),
         })}
-        {renderTextField(page, onEnterPageInput, pageRef, "page", isOcring)}/{" "}
-        {maxPage}
+        {renderTextField(
+          page,
+          onEnterPageInput,
+          pageRef,
+          "page",
+          isBaseDisabled,
+        )}
+        / {maxPage}
         {renderIconButton({
           label: "次のページ",
           icon: ChevronRight,
           className: actionButtonWithDisabledClassName,
-          disabled: isOcring || !canGoNextPage,
+          disabled: isBaseDisabled || !canGoNextPage,
           onClick: () => onClickPageStepButton((a) => a + 1),
         })}
       </div>
@@ -134,15 +141,21 @@ const ViewerTopBar = ({
           label: "縮小",
           icon: ZoomOut,
           className: actionButtonWithDisabledClassName,
-          disabled: isOcring || !canZoomOut,
+          disabled: isBaseDisabled || !canZoomOut,
           onClick: () => onClickZoomStepButton((a) => a - VIEWER_ZOOM.STEP),
         })}
-        {renderTextField(zoom, onEnterZoomInput, zoomRef, "zoom", isOcring)}
+        {renderTextField(
+          zoom,
+          onEnterZoomInput,
+          zoomRef,
+          "zoom",
+          isBaseDisabled,
+        )}
         {renderIconButton({
           label: "拡大",
           icon: ZoomIn,
           className: actionButtonWithDisabledClassName,
-          disabled: isOcring || !canZoomIn,
+          disabled: isBaseDisabled || !canZoomIn,
           onClick: () => onClickZoomStepButton((a) => a + VIEWER_ZOOM.STEP),
         })}
       </div>
@@ -151,7 +164,7 @@ const ViewerTopBar = ({
           label: "回転",
           icon: RotateCw,
           className: actionButtonWithDisabledClassName,
-          disabled: isOcring,
+          disabled: isBaseDisabled,
           onClick: () => onClickRotateStepButton((a) => a + VIEWER_ROTATE_STEP),
         })}
         {renderTextField(
@@ -159,7 +172,7 @@ const ViewerTopBar = ({
           onEnterRotateInput,
           rotateRef,
           "rotate",
-          isOcring,
+          isBaseDisabled,
         )}
       </div>
       {!isEditMode ? (
@@ -167,7 +180,7 @@ const ViewerTopBar = ({
           label: "出力",
           icon: Printer,
           className: actionButtonWithDisabledClassName,
-          disabled: isOcring,
+          disabled: isBaseDisabled,
           onClick: onClickPrintButton,
         })
       ) : (
@@ -178,7 +191,7 @@ const ViewerTopBar = ({
           label: "編集",
           icon: Pencil,
           className: actionButtonWithDisabledClassName,
-          disabled: isOcring,
+          disabled: isBaseDisabled,
           onClick: onClickEditButton,
         })
       ) : (
@@ -188,14 +201,14 @@ const ViewerTopBar = ({
               label: "元に戻す",
               icon: Undo2,
               className: actionButtonWithDisabledClassName,
-              disabled: isOcring || !canUndo,
+              disabled: isBaseDisabled || !canUndo,
               onClick: onClickUndoButton,
             })}
             {renderIconButton({
               label: "やり直す",
               icon: Redo2,
               className: actionButtonWithDisabledClassName,
-              disabled: isOcring || !canRedo,
+              disabled: isBaseDisabled || !canRedo,
               onClick: onClickRedoButton,
             })}
           </div>
@@ -204,14 +217,14 @@ const ViewerTopBar = ({
               label: "保存",
               icon: Save,
               className: actionButtonWithDisabledClassName,
-              disabled: isOcring,
+              disabled: isBaseDisabled,
               onClick: onClickSaveButton,
             })}
             {renderIconButton({
               label: "中止",
               icon: X,
               className: actionButtonWithDisabledClassName,
-              disabled: isOcring,
+              disabled: isBaseDisabled,
               onClick: onClickCancelButton,
             })}
           </div>
