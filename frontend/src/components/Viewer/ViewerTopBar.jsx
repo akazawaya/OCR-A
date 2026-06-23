@@ -55,6 +55,7 @@ const ViewerTopBar = ({
     canZoomOut = false,
     canZoomIn = false,
     isOcring = false,
+    isPrintMode = false,
   } = {},
   events: {
     onClickPrintButton,
@@ -109,7 +110,7 @@ const ViewerTopBar = ({
     </button>
   );
 
-  const isBaseDisabled = isOcring;
+  const isBaseDisabled = isOcring || isPrintMode;
   return (
     <div className="flex items-center justify-center gap-5 border bg-gray-200 px-2 py-1">
       <div className="flex items-center gap-0.5">

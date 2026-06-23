@@ -267,4 +267,18 @@ describe("ViewerPage", () => {
 
     expect(mockOpenPrintDialog).toHaveBeenCalledTimes(1);
   });
+
+  test("印刷モード中はビューア操作を無効化する", async () => {
+    mockUsePrint.mockReturnValue({
+      isPrintMode: true,
+      openPrintDialog: vi.fn(),
+    });
+    renderViewerPage();
+
+    expect(screen.getByRole("button", { name: "出力" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "次のページ" })).toBeDisabled();
+    expect(screen.getByLabelText("page")).toBeDisabled();
+    expect(screen.getByLabelText("zoom")).toBeDisabled();
+    expect(screen.getByLabelText("rotate")).toBeDisabled();
+  });
 });

@@ -269,6 +269,7 @@ const ViewerPage = () => {
               canZoomOut: pageState.canZoomOut,
               canZoomIn: pageState.canZoomIn,
               isOcring: editState.isOcring,
+              isPrintMode,
             }}
             events={{
               onClickPrintButton: openPrintDialog,
