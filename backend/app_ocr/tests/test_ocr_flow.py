@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.urls import reverse
 from rest_framework.test import APIClient
 
 from app_ocr.consumers import OcrProgressConsumer
@@ -371,7 +372,7 @@ class TestOcrApi:
             patch("app_ocr.views.ocr_word_task.apply_async") as mock_apply_async,
         ):
             response = api_client.post(
-                "/words/ocr/",
+                reverse("word-ocr"),
                 {
                     "mode": "rewrite_content",
                     "preview_id": "preview:1",
@@ -410,7 +411,12 @@ class TestOcrApi:
                 "content": "bbox text",
             },
         ):
-            response = api_client.get("/words/ocr/preview-job-1/")
+            response = api_client.get(
+                reverse(
+                    "word-ocr-result",
+                    kwargs={"preview_job_id": "preview-job-1"},
+                )
+            )
 
         assert response.status_code == 200
         assert response.data["state"] == State.SUCCESS
@@ -418,7 +424,12 @@ class TestOcrApi:
 
     def test_ocr_result_returns_404_when_cache_expired(self, api_client):
         with patch("app_ocr.views.get_preview_word_ocr_job", return_value=None):
-            response = api_client.get("/words/ocr/preview-job-1/")
+            response = api_client.get(
+                reverse(
+                    "word-ocr-result",
+                    kwargs={"preview_job_id": "preview-job-1"},
+                )
+            )
 
         assert response.status_code == 404
 

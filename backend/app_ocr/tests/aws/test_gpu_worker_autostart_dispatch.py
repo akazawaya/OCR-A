@@ -2,6 +2,7 @@ from unittest.mock import Mock, call, patch
 
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.urls import reverse
 from rest_framework.test import APIClient
 
 
@@ -46,7 +47,7 @@ def test_ocr_ensures_gpu_worker_before_dispatching_pages(
         django_capture_on_commit_callbacks(execute=True),
     ):
         response = api_client.post(
-            "/documents/ocr/",
+            reverse("document-ocr"),
             {"file": make_uploaded_pdf()},
             format="multipart",
         )
@@ -85,7 +86,7 @@ def test_word_ocr_ensures_gpu_worker_before_dispatching_task(
         ) as mock_apply_async,
     ):
         response = api_client.post(
-            "/words/ocr/",
+            reverse("word-ocr"),
             {
                 "mode": "rewrite_content",
                 "preview_id": "preview:1",
