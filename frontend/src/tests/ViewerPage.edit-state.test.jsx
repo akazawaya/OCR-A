@@ -78,10 +78,15 @@ const dragSelectionArea = (svg, { start, end }) => {
   fireEvent.pointerUp(svg, end);
 };
 
-const getPendingPolygonPoints = (svg) => {
-  const polygons = Array.from(svg.querySelectorAll("polygon"));
-  const pendingPolygon = polygons.at(-1);
-  return pendingPolygon.getAttribute("points");
+const getPendingRectAttrs = (svg) => {
+  const rects = Array.from(svg.querySelectorAll("rect"));
+  const pendingRect = rects.at(-1);
+  return [
+    pendingRect.getAttribute("x"),
+    pendingRect.getAttribute("y"),
+    pendingRect.getAttribute("width"),
+    pendingRect.getAttribute("height"),
+  ].join(",");
 };
 
 const addPreviewWordByDrag = async ({
@@ -279,11 +284,8 @@ describe("ViewerPage", () => {
         start: { clientX: 10, clientY: 10 },
         end: { clientX: 30, clientY: 20 },
       });
-      // polygonのpointsは左上を(0,0)とした、左上からの時計回り
       await waitFor(() => {
-        expect(getPendingPolygonPoints(svg)).toBe(
-          "100,100 300,100 300,200 100,200",
-        );
+        expect(getPendingRectAttrs(svg)).toBe("100,100,200,100");
       });
     });
 
@@ -298,11 +300,9 @@ describe("ViewerPage", () => {
         start: { clientX: 10, clientY: 10 },
         end: { clientX: 30, clientY: 20 },
       });
-      // 90度回転時のy1は imageHeight - bboxMaxX = 800 - 300 = 500
+      // 90度回転時のy(左上)は imageHeight - bboxMaxX = 800 - 300 = 500
       await waitFor(() => {
-        expect(getPendingPolygonPoints(svg)).toBe(
-          "100,500 200,500 200,700 100,700",
-        );
+        expect(getPendingRectAttrs(svg)).toBe("100,500,100,200");
       });
     });
   });

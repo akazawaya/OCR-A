@@ -2,16 +2,12 @@
  * buildWordOverlayLayout.js
  *
  * 責務:
- * - OCR結果のword配列から、overlay描画に必要なレイアウト情報(polygonとspan)を生成する。
+ * - OCR結果のword配列から、overlay描画に必要なレイアウト情報(rectとspan)を生成する。
  * - clientSizePx(DOM要素のサイズ), imageSizePx(座標系全体のサイズ）を受け取り、拡大縮小に伴うサイズの変更を担う。
  *
  */
 
-import {
-  bboxToRect,
-  bboxToPolygonPoints,
-  rectToSpanStyle,
-} from "../transforms/bboxTransforms";
+import { bboxToRect, rectToSpanStyle } from "../transforms/bboxTransforms";
 
 const getAppFontFamily = () => {
   return getComputedStyle(document.documentElement)
@@ -99,7 +95,7 @@ export const buildWordOverlayLayout = ({
 
     items.push({
       id: w.id,
-      polygon: { points: bboxToPolygonPoints(bbox) },
+      rect,
       span: { style: rectStyle, text, mode, fontPx },
     });
   }

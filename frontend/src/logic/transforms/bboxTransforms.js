@@ -6,10 +6,6 @@
  * - ここで扱うのは、図形情報とその描画用表現への純粋変換のみ
  */
 
-export const bboxToPolygonPoints = (bbox) => {
-  return bbox.map(([x, y]) => `${x},${y}`).join(" ");
-};
-
 export const bboxToBounds = (bbox) => {
   const xs = bbox.map(([x]) => Number(x));
   const ys = bbox.map(([, y]) => Number(y));
@@ -26,8 +22,8 @@ export const bboxToRect = (bbox) => {
   const bounds = bboxToBounds(bbox);
 
   return {
-    left: bounds.xMin,
-    top: bounds.yMin,
+    x: bounds.xMin,
+    y: bounds.yMin,
     width: bounds.xMax - bounds.xMin,
     height: bounds.yMax - bounds.yMin,
   };
@@ -53,8 +49,8 @@ export const rectToSpanStyle = (rect, imageSizePx) => {
   const toPercent = (value, base) => `${(value / base) * 100}%`;
 
   return {
-    left: toPercent(rect.left, imageSizePx.w),
-    top: toPercent(rect.top, imageSizePx.h),
+    left: toPercent(rect.x, imageSizePx.w),
+    top: toPercent(rect.y, imageSizePx.h),
     width: toPercent(rect.width, imageSizePx.w),
     height: toPercent(rect.height, imageSizePx.h),
   };

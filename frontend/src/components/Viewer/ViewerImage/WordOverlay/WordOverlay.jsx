@@ -2,7 +2,7 @@ import { useMemo } from "react";
 
 import { buildWordOverlayLayout } from "../../../../logic/layout/buildWordOverlayLayout";
 import {
-  bboxToPolygonPoints,
+  bboxToRect,
   rectToBbox,
 } from "../../../../logic/transforms/bboxTransforms";
 import { useDragRectState } from "../../../../logic/drag/useDragRectState";
@@ -69,16 +69,16 @@ const WordOverlay = ({
         onPointerUp={isEditMode && !isOcring ? onPointerUp : undefined}
       >
         {isEditMode && draftBbox && (
-          <polygon
+          <rect
             className="pointer-events-none fill-green-500/15 stroke-green-500 stroke-4"
-            points={bboxToPolygonPoints(draftBbox)}
+            {...bboxToRect(draftBbox)}
           />
         )}
         {pendingPostsOnPage.map((p) => (
-          <polygon
+          <rect
             key={p.id}
             className="fill-green-500/15 stroke-green-500 stroke-4"
-            points={bboxToPolygonPoints(p.bbox)}
+            {...bboxToRect(p.bbox)}
           />
         ))}
 
@@ -86,7 +86,7 @@ const WordOverlay = ({
           const isSelected = w.id === selectedWordId;
           const isHover = w.id === hoveredWordId;
           return (
-            <polygon
+            <rect
               key={w.id}
               className={`scroll-mt-30 ${
                 isPrintMode
@@ -98,7 +98,7 @@ const WordOverlay = ({
                       : "fill-transparent stroke-red-500 stroke-4"
               }`}
               data-word={w.id}
-              points={w.polygon.points}
+              {...w.rect}
             />
           );
         })}
