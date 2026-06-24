@@ -12,13 +12,13 @@ from app_ocr.input_constraints import (
 from app_ocr.models import Document, Page, State, Word
 
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["id", "url", "username"]
 
 
-class DocumentSerializer(serializers.HyperlinkedModelSerializer):
+class DocumentSerializer(serializers.ModelSerializer):
     state = serializers.CharField(source="get_state_display", read_only=True)
     created = serializers.DateTimeField(
         format="%Y/%m/%d %H:%M:%S",
@@ -74,7 +74,7 @@ class DocumentUploadSerializer(serializers.Serializer):
         return file
 
 
-class PageSerializer(serializers.HyperlinkedModelSerializer):
+class PageSerializer(serializers.ModelSerializer):
     doc = serializers.PrimaryKeyRelatedField(queryset=Document.objects.all())
 
     class Meta:
@@ -90,7 +90,7 @@ class PageSerializer(serializers.HyperlinkedModelSerializer):
         ]
 
 
-class WordSerializer(serializers.HyperlinkedModelSerializer):
+class WordSerializer(serializers.ModelSerializer):
     page = serializers.PrimaryKeyRelatedField(queryset=Page.objects.all())
     page__page_number = serializers.IntegerField(
         source="page.page_number", read_only=True
