@@ -1,6 +1,7 @@
 from uuid import uuid4
 
 from django.conf import settings
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
@@ -45,6 +46,35 @@ from app_ocr.tasks import (
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+
+class AuthViewSet(viewsets.ViewSet):
+    @action(detail=False, methods=["post"])
+    def login(self, request):
+        username = request.data.get("username")
+        password = request.data.get("password")
+        user = authenticate(request, username=username, password=password)
+
+        if user is None:
+            return Response(
+                {"detail": "ログイン失敗"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        login(request, user)
+
+        return Response(
+            {
+                "detail": "ログイン成功",
+                "user": UserSerializer(user).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    @action(detail=False, methods=["post"])
+    def logout(self, request):
+        logout(request)
+        return Response({"detail": "ログアウト成功"})
 
 
 class DocumentViewSet(viewsets.ModelViewSet):
