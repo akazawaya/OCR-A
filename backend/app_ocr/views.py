@@ -12,6 +12,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from app_ocr.etc.tools import inspect_file
@@ -49,6 +50,8 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class AuthViewSet(viewsets.ViewSet):
+    permission_classes = [AllowAny]
+
     @action(detail=False, methods=["post"])
     def login(self, request):
         username = request.data.get("username")
