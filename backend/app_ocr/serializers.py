@@ -15,7 +15,7 @@ from app_ocr.models import Document, Page, State, Word
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "url", "username"]
+        fields = ["id", "username"]
 
 
 class DocumentSerializer(serializers.ModelSerializer):
