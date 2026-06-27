@@ -5,7 +5,6 @@ import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APIClient
 
 from app_ocr.models import Document, Page
 
@@ -13,11 +12,6 @@ FIXTURE_DIR = Path(__file__).parent / "fixtures"
 
 
 pytestmark = pytest.mark.django_db
-
-
-@pytest.fixture
-def api_client():
-    return APIClient()
 
 
 def make_dummy_file(filename, content_type):
@@ -38,10 +32,15 @@ def make_uploaded_file_from_fixture(filename, content_type):
 
 
 class TestImportWithoutOcr:
-    def test_import_produces_viewable_document(self, api_client, settings, tmp_path):
+    def test_import_produces_viewable_document(
+        self,
+        authenticated_client,
+        settings,
+        tmp_path,
+    ):
         settings.MEDIA_ROOT = tmp_path
         file = make_uploaded_file_from_fixture("table.jpg", "image/jpeg")
-        response = api_client.post(
+        response = authenticated_client.post(
             reverse("document-list"),
             {"file": file},
             format="multipart",
@@ -58,12 +57,15 @@ class TestImportWithoutOcr:
         assert all(page.image.storage.exists(page.image.name) for page in pages)
 
     def test_invalid_input_is_rejected_without_persistence(
-        self, api_client, settings, tmp_path
+        self,
+        authenticated_client,
+        settings,
+        tmp_path,
     ):
         settings.MEDIA_ROOT = tmp_path
         file = make_dummy_file("test.txt", "text/plain")
 
-        response = api_client.post(
+        response = authenticated_client.post(
             reverse("document-list"),
             {"file": file},
             format="multipart",
@@ -75,7 +77,10 @@ class TestImportWithoutOcr:
         assert not any(path.is_file() for path in tmp_path.rglob("*"))
 
     def test_failure_after_persistence_removes_database_and_storage_resources(
-        self, api_client, settings, tmp_path
+        self,
+        authenticated_client,
+        settings,
+        tmp_path,
     ):
         settings.MEDIA_ROOT = tmp_path
         file = make_uploaded_file_from_fixture("table.jpg", "image/jpeg")
@@ -85,7 +90,7 @@ class TestImportWithoutOcr:
             side_effect=RuntimeError("page creation failed"),
         ):
             with pytest.raises(RuntimeError):
-                api_client.post(
+                authenticated_client.post(
                     reverse("document-list"),
                     {"file": file},
                     format="multipart",
@@ -99,7 +104,7 @@ class TestImportWithoutOcr:
 class TestImportWithOcr:
     def test_import_persists_input_and_schedules_ocr(
         self,
-        api_client,
+        authenticated_client,
         django_capture_on_commit_callbacks,
         settings,
         tmp_path,
@@ -111,7 +116,7 @@ class TestImportWithOcr:
             patch("app_ocr.views.dispatch_ocr_pages_task.delay") as mock_dispatch,
             django_capture_on_commit_callbacks(execute=True),
         ):
-            response = api_client.post(
+            response = authenticated_client.post(
                 reverse("document-ocr"),
                 {"file": file},
                 format="multipart",
@@ -126,13 +131,16 @@ class TestImportWithOcr:
         mock_dispatch.assert_called_once_with(document.id)
 
     def test_invalid_input_is_rejected_without_persistence(
-        self, api_client, settings, tmp_path
+        self,
+        authenticated_client,
+        settings,
+        tmp_path,
     ):
         settings.MEDIA_ROOT = tmp_path
         file = make_dummy_file("test.txt", "text/plain")
 
         with patch("app_ocr.views.dispatch_ocr_pages_task.delay") as mock_dispatch:
-            response = api_client.post(
+            response = authenticated_client.post(
                 reverse("document-ocr"),
                 {"file": file},
                 format="multipart",
@@ -146,7 +154,10 @@ class TestImportWithOcr:
         mock_dispatch.assert_not_called()
 
     def test_failure_after_persistence_removes_database_and_storage_resources(
-        self, api_client, settings, tmp_path
+        self,
+        authenticated_client,
+        settings,
+        tmp_path,
     ):
         settings.MEDIA_ROOT = tmp_path
         file = make_uploaded_file_from_fixture("table.jpg", "image/jpeg")
@@ -156,7 +167,7 @@ class TestImportWithOcr:
             side_effect=RuntimeError("on_commit failed"),
         ):
             with pytest.raises(RuntimeError):
-                api_client.post(
+                authenticated_client.post(
                     reverse("document-ocr"),
                     {"file": file},
                     format="multipart",

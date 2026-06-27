@@ -83,8 +83,8 @@ def search_test_data(tmp_path):
 
 
 # 重複idのピックアップ排除
-def test_search_distinct(client, search_test_data):
-    response = client.get(
+def test_search_distinct(authenticated_client, search_test_data):
+    response = authenticated_client.get(
         reverse("document-list"),
         {
             "keyword": "apple",
@@ -120,8 +120,13 @@ def test_search_distinct(client, search_test_data):
         ),
     ],
 )
-def test_search_by_field_name(client, search_test_data, field_name, expected_keys):
-    response = client.get(
+def test_search_by_field_name(
+    authenticated_client,
+    search_test_data,
+    field_name,
+    expected_keys,
+):
+    response = authenticated_client.get(
         reverse("document-list"),
         {
             "keyword": "banana",
@@ -157,13 +162,13 @@ def test_search_by_field_name(client, search_test_data, field_name, expected_key
     ],
 )
 def test_search_by_lookup_expr(
-    client,
+    authenticated_client,
     search_test_data,
     keyword,
     lookup_expr,
     expected_keys,
 ):
-    response = client.get(
+    response = authenticated_client.get(
         reverse("document-list"),
         {
             "keyword": keyword,
@@ -198,13 +203,13 @@ def test_search_by_lookup_expr(
     ],
 )
 def test_search_by_keyword_operator(
-    client,
+    authenticated_client,
     search_test_data,
     keyword,
     keyword_operator,
     expected_keys,
 ):
-    response = client.get(
+    response = authenticated_client.get(
         reverse("document-list"),
         {
             "keyword": keyword,
@@ -225,10 +230,10 @@ def test_search_by_keyword_operator(
 # 単一の検索キーワードで keyword_operator を指定しても通常動作する
 @pytest.mark.parametrize("keyword_operator", ["and", "or"])
 def test_search_allows_keyword_operator_with_single_keyword(
-    client,
+    authenticated_client,
     keyword_operator,
 ):
-    base_response = client.get(
+    base_response = authenticated_client.get(
         reverse("document-list"),
         {
             "keyword": "banana",
@@ -236,7 +241,7 @@ def test_search_allows_keyword_operator_with_single_keyword(
             "lookup_expr": "exact",
         },
     )
-    response = client.get(
+    response = authenticated_client.get(
         reverse("document-list"),
         {
             "keyword": "banana",
@@ -277,7 +282,7 @@ def test_search_allows_keyword_operator_with_single_keyword(
         },
     ],
 )
-def test_search_rejects_invalid_params(client, params):
-    response = client.get(reverse("document-list"), params)
+def test_search_rejects_invalid_params(authenticated_client, params):
+    response = authenticated_client.get(reverse("document-list"), params)
 
     assert response.status_code == 400

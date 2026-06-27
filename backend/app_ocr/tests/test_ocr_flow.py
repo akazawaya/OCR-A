@@ -8,7 +8,6 @@ import numpy as np
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
-from rest_framework.test import APIClient
 
 from app_ocr.consumers import OcrProgressConsumer
 from app_ocr.etc.tools import inspect_file, render_page
@@ -24,11 +23,6 @@ from app_ocr.tasks import (
 )
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures"
-
-
-@pytest.fixture
-def api_client():
-    return APIClient()
 
 
 # AWSのOCR推論用EC2を起動するための有効化引数をOFF
@@ -365,13 +359,16 @@ class TestTasks:
 
 @pytest.mark.django_db
 class TestOcrApi:
-    def test_ocr_creates_cache_job_and_dispatches_task(self, api_client):
+    def test_ocr_creates_cache_job_and_dispatches_task(
+        self,
+        authenticated_client,
+    ):
         with (
             patch("app_ocr.views.uuid4", return_value="preview-job-1"),
             patch("app_ocr.views.set_preview_word_ocr_job") as mock_set_job,
             patch("app_ocr.views.ocr_word_task.apply_async") as mock_apply_async,
         ):
-            response = api_client.post(
+            response = authenticated_client.post(
                 reverse("word-ocr"),
                 {
                     "mode": "rewrite_content",
@@ -401,7 +398,7 @@ class TestOcrApi:
             queue="ocr_word_queue",
         )
 
-    def test_ocr_result_returns_cached_job(self, api_client):
+    def test_ocr_result_returns_cached_job(self, authenticated_client):
         with patch(
             "app_ocr.views.get_preview_word_ocr_job",
             return_value={
@@ -411,7 +408,7 @@ class TestOcrApi:
                 "content": "bbox text",
             },
         ):
-            response = api_client.get(
+            response = authenticated_client.get(
                 reverse(
                     "word-ocr-result",
                     kwargs={"preview_job_id": "preview-job-1"},
@@ -422,9 +419,9 @@ class TestOcrApi:
         assert response.data["state"] == State.SUCCESS
         assert response.data["content"] == "bbox text"
 
-    def test_ocr_result_returns_404_when_cache_expired(self, api_client):
+    def test_ocr_result_returns_404_when_cache_expired(self, authenticated_client):
         with patch("app_ocr.views.get_preview_word_ocr_job", return_value=None):
-            response = api_client.get(
+            response = authenticated_client.get(
                 reverse(
                     "word-ocr-result",
                     kwargs={"preview_job_id": "preview-job-1"},

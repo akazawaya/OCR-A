@@ -3,12 +3,6 @@ from unittest.mock import Mock, call, patch
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
-from rest_framework.test import APIClient
-
-
-@pytest.fixture
-def api_client():
-    return APIClient()
 
 
 def make_uploaded_pdf():
@@ -21,7 +15,7 @@ def make_uploaded_pdf():
 
 @pytest.mark.django_db
 def test_ocr_ensures_gpu_worker_before_dispatching_pages(
-    api_client,
+    authenticated_client,
     django_capture_on_commit_callbacks,
     settings,
     tmp_path,
@@ -46,7 +40,7 @@ def test_ocr_ensures_gpu_worker_before_dispatching_pages(
         ) as mock_dispatch_ocr_pages_task,
         django_capture_on_commit_callbacks(execute=True),
     ):
-        response = api_client.post(
+        response = authenticated_client.post(
             reverse("document-ocr"),
             {"file": make_uploaded_pdf()},
             format="multipart",
@@ -65,7 +59,7 @@ def test_ocr_ensures_gpu_worker_before_dispatching_pages(
 
 @pytest.mark.django_db
 def test_word_ocr_ensures_gpu_worker_before_dispatching_task(
-    api_client,
+    authenticated_client,
     settings,
 ):
     settings.ENABLE_GPU_WORKER_AUTOSTART = True
@@ -85,7 +79,7 @@ def test_word_ocr_ensures_gpu_worker_before_dispatching_task(
             side_effect=lambda **kwargs: call_order.dispatch(**kwargs),
         ) as mock_apply_async,
     ):
-        response = api_client.post(
+        response = authenticated_client.post(
             reverse("word-ocr"),
             {
                 "mode": "rewrite_content",
