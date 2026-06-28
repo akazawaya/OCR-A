@@ -6,8 +6,6 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
-
-# from app_ocr.permissions import IsOwnerOrReadOnly
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
@@ -91,6 +89,10 @@ class DocumentViewSet(viewsets.ModelViewSet):
     # DRFのデフォルトではordering対象と認識されなくなるため、明示する
     ordering_fields = ["created", "file_name", "state"]
 
+    # get_querysetをオーバーライドしてuserによるfilterを追加する
+    def get_queryset(self):
+        return Document.objects.filter(owner=self.request.user)
+
     def build_document_serializer_from_file(self, file):
         upload_serializer = DocumentUploadSerializer(data={"file": file})
         upload_serializer.is_valid(raise_exception=True)
@@ -173,12 +175,20 @@ class PageViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["doc"]
 
+    # get_querysetをオーバーライドしてuserによるfilterを追加する
+    def get_queryset(self):
+        return Page.objects.filter(doc__owner=self.request.user)
+
 
 class WordViewSet(viewsets.ModelViewSet):
     queryset = Word.objects.all()
     serializer_class = WordSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["page", "page__doc"]
+
+    # get_querysetをオーバーライドしてuserによるfilterを追加する
+    def get_queryset(self):
+        return Word.objects.filter(page__doc__owner=self.request.user)
 
     @action(
         detail=False,
