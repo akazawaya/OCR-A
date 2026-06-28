@@ -16,7 +16,7 @@ def user_client_factory(db):
         username=None,
         password="testpass123",
         account_kind="registered",
-        ocr_access_tier=None,
+        ocr_access_tier="standard",
     ):
         user = user_model.objects.create_user(
             username=username or f"testuser-{uuid4().hex}",
@@ -26,8 +26,7 @@ def user_client_factory(db):
             "user": user,
             "account_kind": account_kind,
         }
-        if ocr_access_tier is not None:
-            profile_kwargs["ocr_access_tier"] = ocr_access_tier
+        profile_kwargs["ocr_access_tier"] = ocr_access_tier
         UserAccount.objects.create(**profile_kwargs)
         client = APIClient()
         client.force_login(user)
@@ -38,5 +37,5 @@ def user_client_factory(db):
 
 @pytest.fixture
 def authenticated_client(user_client_factory):
-    client, _ = user_client_factory(ocr_access_tier="none")
+    client, _ = user_client_factory()
     return client
