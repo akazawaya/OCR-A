@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.validators import (
     FileExtensionValidator,
     MaxValueValidator,
@@ -55,9 +56,34 @@ class State(models.IntegerChoices):
 
 
 # Userモデルはdjango.contrib.auth.modelsから自動で作成される
+class UserAccount(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    # adminアカウントはaccountスキーマを無視した存在とする
+    # AUTH_USER_MODELは明示的せずとも、デフォルトでauth.Userが用いられる
+    account_kind = models.CharField(
+        max_length=20,
+        choices=[
+            ("guest", "ゲストユーザー"),
+            ("registered", "登録ユーザー"),
+        ],
+    )
+
+    ocr_access_tier = models.CharField(
+        max_length=20,
+        choices=[
+            ("none", "不可"),
+            ("standard", "通常"),
+        ],
+        default="none",
+    )
+
+    is_suspended = models.BooleanField(default=False)
 
 
 class Document(models.Model):
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="documents"
+    )
     id = models.BigAutoField(primary_key=True)
 
     # Document.deleteの実行時、保存ファイルも削除するためのオーバーライド
