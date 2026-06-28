@@ -12,12 +12,13 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.parsers import FormParser, MultiPartParser
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from app_ocr.etc.tools import inspect_file
 from app_ocr.filters import DocumentFilterSet
 from app_ocr.models import Document, FileType, Page, State, Word
+from app_ocr.permissions import HasOcrAccess
 from app_ocr.serializers import (
     DocumentSerializer,
     DocumentUploadSerializer,
@@ -132,7 +133,12 @@ class DocumentViewSet(viewsets.ModelViewSet):
                 delete_document_files(document, prefix)
             raise
 
-    @action(detail=False, methods=["post"], url_path="ocr")
+    @action(
+        detail=False,
+        methods=["post"],
+        url_path="ocr",
+        permission_classes=[IsAuthenticated, HasOcrAccess],
+    )
     def ocr(self, request):
         file = request.FILES.get("file")
         serializer = self.build_document_serializer_from_file(file)
@@ -174,7 +180,12 @@ class WordViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["page", "page__doc"]
 
-    @action(detail=False, methods=["post"], url_path="ocr")
+    @action(
+        detail=False,
+        methods=["post"],
+        url_path="ocr",
+        permission_classes=[IsAuthenticated, HasOcrAccess],
+    )
     def ocr(self, request):
         serializer = PreviewWordOcrRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
