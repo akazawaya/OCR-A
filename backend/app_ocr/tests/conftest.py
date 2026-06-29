@@ -30,6 +30,7 @@ def user_client_factory(db):
         UserAccount.objects.create(**profile_kwargs)
         client = APIClient()
         client.force_login(user)
+        client.user = user
         return client, user
 
     return make_user_client

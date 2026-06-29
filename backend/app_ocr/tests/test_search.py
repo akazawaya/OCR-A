@@ -7,12 +7,13 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
-def search_test_data(tmp_path):
+def search_test_data(authenticated_client, tmp_path):
     def create_document_with_words(file_name, words):
         file_path = tmp_path / file_name
         file_path.write_bytes(b"dummy")
 
         document = Document.objects.create(
+            owner=authenticated_client.user,
             file=str(file_path),
             file_name=file_name,
             file_type=1,

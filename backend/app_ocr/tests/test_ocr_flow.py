@@ -178,12 +178,17 @@ class TestTasks:
         )
 
     @pytest.mark.django_db
-    def test_dispatch_ocr_pages_task_sets_processing_and_dispatches_each_page(self):
+    def test_dispatch_ocr_pages_task_sets_processing_and_dispatches_each_page(
+        self,
+        django_user_model,
+    ):
+        owner = django_user_model.objects.create_user(username="ocr-dispatch-owner")
         with (
             patch("app_ocr.tasks.notify_document_changed") as mock_notify,
             patch("app_ocr.tasks.ocr_page_task.delay") as mock_delay,
         ):
             doc = Document.objects.create(
+                owner=owner,
                 file_name="sample.pdf",
                 file_type=FileType.PDF,
                 total_pages=3,
@@ -205,12 +210,14 @@ class TestTasks:
         assert mock_delay.call_count == 3
 
     @pytest.mark.django_db
-    def test_ocr_page_task_success_when_all_pages_finish(self):
+    def test_ocr_page_task_success_when_all_pages_finish(self, django_user_model):
+        owner = django_user_model.objects.create_user(username="ocr-page-success-owner")
         with (
             patch("app_ocr.tasks.run_ocr_for_page"),
             patch("app_ocr.tasks.notify_document_changed") as mock_notify,
         ):
             doc = Document.objects.create(
+                owner=owner,
                 file_name="sample.pdf",
                 file_type=FileType.PDF,
                 total_pages=2,
@@ -239,7 +246,8 @@ class TestTasks:
         mock_notify.assert_called_once_with()
 
     @pytest.mark.django_db
-    def test_ocr_page_task_failed_when_run_ocr_raises(self):
+    def test_ocr_page_task_failed_when_run_ocr_raises(self, django_user_model):
+        owner = django_user_model.objects.create_user(username="ocr-page-failed-owner")
         with (
             patch(
                 "app_ocr.tasks.run_ocr_for_page",
@@ -248,6 +256,7 @@ class TestTasks:
             patch("app_ocr.tasks.notify_document_changed") as mock_notify,
         ):
             doc = Document.objects.create(
+                owner=owner,
                 file_name="sample.pdf",
                 file_type=FileType.PDF,
                 total_pages=1,
@@ -492,9 +501,10 @@ class TestConsumer:
 
 
 @pytest.mark.django_db
-def test_run_ocr_for_page_creates_page_and_words_from_ocr_result():
+def test_run_ocr_for_page_creates_page_and_words_from_ocr_result(django_user_model):
     # OCRエンジンを差し替え、OCRインスタンスが呼ばれたかの確認と、
     # mockの返り値で保存がなされたかを確認
+    owner = django_user_model.objects.create_user(username="run-ocr-page-owner")
     with (
         patch("app_ocr.service.ocr.get_engine") as mock_get_engine,
         patch("app_ocr.service.ocr.yomitoku_ocr") as mock_yomitoku_ocr,
@@ -512,6 +522,7 @@ def test_run_ocr_for_page_creates_page_and_words_from_ocr_result():
         ]
         file = make_uploaded_file_from_fixture("table.jpg", "image/jpeg")
         doc = Document.objects.create(
+            owner=owner,
             file=file,
             file_name="table.jpg",
             file_type=FileType.JPG,
@@ -533,8 +544,11 @@ def test_run_ocr_for_page_creates_page_and_words_from_ocr_result():
 
 
 @pytest.mark.django_db
-def test_run_ocr_for_bbox_returns_words_without_saving_page_or_words():
+def test_run_ocr_for_bbox_returns_words_without_saving_page_or_words(
+    django_user_model,
+):
     # 本質ではないが、run_ocr_for_bboxは単体では保存がされないことをアサ―トとする
+    owner = django_user_model.objects.create_user(username="run-ocr-bbox-owner")
     with (
         patch("app_ocr.service.ocr.get_engine") as mock_get_engine,
         patch("app_ocr.service.ocr.yomitoku_ocr") as mock_yomitoku_ocr,
@@ -552,6 +566,7 @@ def test_run_ocr_for_bbox_returns_words_without_saving_page_or_words():
         ]
         file = make_uploaded_file_from_fixture("table.jpg", "image/jpeg")
         doc = Document.objects.create(
+            owner=owner,
             file=file,
             file_name="table.jpg",
             file_type=FileType.JPG,
