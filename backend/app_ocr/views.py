@@ -120,7 +120,9 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
         try:
             with transaction.atomic():
-                document = serializer.save()
+                # owner(外部キー)はserializerの入力スキーマには含めないが、
+                # Documentモデルの保存には必須であるため追加する（ocrも同様）
+                document = serializer.save(owner=self.request.user)
                 create_pages_from_document_file(document)
                 document.state = State.SUCCESS
                 document.save(update_fields=["state"])
@@ -147,7 +149,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         document = None
         try:
             with transaction.atomic():
-                document = serializer.save()
+                document = serializer.save(owner=self.request.user)
                 document_id = document.pk
 
                 def enqueue_document_ocr():
