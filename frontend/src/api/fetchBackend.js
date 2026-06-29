@@ -7,15 +7,29 @@ const buildHttpError = ({ res, data, url }) => {
   return error;
 };
 
+const getCsrfToken = () => {
+  return document.cookie
+    .split("; ")
+    .find((row) => row.startsWith("csrftoken="))
+    ?.split("=")[1];
+};
+
 export const fetchBackend = async (url, options = {}) => {
   const { throwOnError = false, ...fetchOptions } = options;
+  const csrfToken = getCsrfToken();
+
   const headers = {
     Accept: "application/json",
+    ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
     ...(fetchOptions.headers ?? {}),
   };
 
   try {
-    const res = await fetch(url, { ...fetchOptions, headers });
+    const res = await fetch(url, {
+      credentials: "include",
+      ...fetchOptions,
+      headers,
+    });
     const data = res.status === 204 ? null : await res.json();
 
     if (!res.ok) {
