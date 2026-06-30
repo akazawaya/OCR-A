@@ -113,7 +113,6 @@ class Migration(migrations.Migration):
                         max_length=20,
                     ),
                 ),
-                ("is_suspended", models.BooleanField(default=False)),
                 (
                     "user",
                     models.OneToOneField(

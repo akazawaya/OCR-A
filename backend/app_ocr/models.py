@@ -77,8 +77,6 @@ class UserAccount(models.Model):
         default="none",
     )
 
-    is_suspended = models.BooleanField(default=False)
-
 
 class Document(models.Model):
     owner = models.ForeignKey(
