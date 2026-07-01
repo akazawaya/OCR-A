@@ -57,6 +57,11 @@ class State(models.IntegerChoices):
 
 # Userモデルはdjango.contrib.auth.modelsから自動で作成される
 class UserAccount(models.Model):
+    DEFAULT_OCR_ACCESS_TIER_BY_ACCOUNT_KIND = {
+        "guest": "none",
+        "registered": "standard",
+    }
+
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     # adminアカウントはaccountスキーマを無視した存在とする
     # AUTH_USER_MODELは明示的せずとも、デフォルトでauth.Userが用いられる
@@ -74,8 +79,14 @@ class UserAccount(models.Model):
             ("none", "不可"),
             ("standard", "通常"),
         ],
-        default="none",
     )
+
+    def save(self, *args, **kwargs):
+        if not self.ocr_access_tier:
+            self.ocr_access_tier = self.DEFAULT_OCR_ACCESS_TIER_BY_ACCOUNT_KIND[
+                self.account_kind
+            ]
+        return super().save(*args, **kwargs)
 
 
 class Document(models.Model):

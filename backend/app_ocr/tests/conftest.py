@@ -16,7 +16,7 @@ def user_client_factory(db):
         username=None,
         password="testpass123",
         account_kind="registered",
-        ocr_access_tier="standard",
+        ocr_access_tier=None,
     ):
         user = user_model.objects.create_user(
             username=username or f"testuser-{uuid4().hex}",
@@ -26,7 +26,8 @@ def user_client_factory(db):
             "user": user,
             "account_kind": account_kind,
         }
-        profile_kwargs["ocr_access_tier"] = ocr_access_tier
+        if ocr_access_tier is not None:
+            profile_kwargs["ocr_access_tier"] = ocr_access_tier
         UserAccount.objects.create(**profile_kwargs)
         client = APIClient()
         client.force_login(user)
