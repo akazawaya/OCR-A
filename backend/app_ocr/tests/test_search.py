@@ -1,47 +1,24 @@
 import pytest
 from django.urls import reverse
 
-from app_ocr.models import Document, Page, Word
-
 pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
-def search_test_data(authenticated_client, tmp_path):
+def search_test_data(
+    authenticated_client,
+    document_factory,
+    page_factory,
+    word_factory,
+):
     def create_document_with_words(file_name, words):
-        file_path = tmp_path / file_name
-        file_path.write_bytes(b"dummy")
-
-        document = Document.objects.create(
+        document = document_factory(
             owner=authenticated_client.user,
-            file=str(file_path),
             file_name=file_name,
-            file_type=1,
-            total_pages=1,
         )
+        page = page_factory(doc=document)
 
-        page = Page.objects.create(
-            doc=document,
-            image="dummy.png",
-            page_number=1,
-            width_px=100,
-            height_px=100,
-        )
-
-        word_objects = []
-        for index, content in enumerate(words):
-            word = Word.objects.create(
-                page=page,
-                bbox=[
-                    [index * 10, 0],
-                    [index * 10 + 10, 0],
-                    [index * 10 + 10, 10],
-                    [index * 10, 10],
-                ],
-                content=content,
-                direction=1,
-            )
-            word_objects.append(word)
+        word_objects = [word_factory(page=page, content=content) for content in words]
 
         return {
             "document": document,
@@ -228,7 +205,8 @@ def test_search_by_keyword_operator(
     assert result_ids == expected_ids
 
 
-# 単一の検索キーワードで keyword_operator を指定しても通常動作する
+# 単一の検索キーワードでも
+# keyword_operator を指定して通常動作する
 @pytest.mark.parametrize("keyword_operator", ["and", "or"])
 def test_search_allows_keyword_operator_with_single_keyword(
     authenticated_client,
