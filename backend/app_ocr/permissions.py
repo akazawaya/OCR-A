@@ -10,6 +10,9 @@ class HasOcrAccess(BasePermission):
         if not user or not user.is_authenticated:
             return False
 
+        if user.is_superuser:
+            return True
+
         profile = getattr(user, "useraccount", None)
         if profile is None:
             return False

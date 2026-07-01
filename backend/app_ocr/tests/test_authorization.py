@@ -54,7 +54,7 @@ def test_authorization_limits_lists_to_own_resources(
 
 
 @pytest.mark.parametrize(
-    "url_name,payload,patch_targets",
+    "url_name,payload,patch_targets,user_kwargs,expected_status,inspect_file_return",
     [
         (
             "document-ocr",
@@ -70,53 +70,170 @@ def test_authorization_limits_lists_to_own_resources(
                 "app_ocr.views.create_pages_from_document_file",
                 "app_ocr.views.dispatch_ocr_pages_task.delay",
             ],
+            {
+                "username": "limited",
+                "ocr_access_tier": "none",
+            },
+            status.HTTP_403_FORBIDDEN,
+            None,
         ),
         (
             "word-ocr",
-            lambda document, preview_word_ocr_request_factory: (
-                preview_word_ocr_request_factory(
-                    doc=document,
-                    page_number=document.pages.first().page_number,
-                )
-            ),
+            lambda document: {
+                "mode": "rewrite_content",
+                "preview_id": "preview:test",
+                "doc": document.id,
+                "page_number": document.pages.first().page_number,
+                "bbox": [[0, 0], [10, 0], [10, 10], [0, 10]],
+            },
             [
                 "app_ocr.views.set_preview_word_ocr_job",
                 "app_ocr.views.ocr_word_task.apply_async",
             ],
+            {
+                "username": "limited",
+                "ocr_access_tier": "none",
+            },
+            status.HTTP_403_FORBIDDEN,
+            None,
+        ),
+        (
+            "document-ocr",
+            lambda uploaded_file_factory: {
+                "file": uploaded_file_factory(
+                    "standard-ocr.jpg",
+                    "table.jpg",
+                    "image/jpeg",
+                )
+            },
+            [
+                "app_ocr.views.inspect_file",
+                "app_ocr.views.create_pages_from_document_file",
+                "app_ocr.views.dispatch_ocr_pages_task.delay",
+            ],
+            {
+                "username": "standard",
+                "ocr_access_tier": "standard",
+            },
+            status.HTTP_202_ACCEPTED,
+            ("jpg", 1),
+        ),
+        (
+            "word-ocr",
+            lambda document: {
+                "mode": "rewrite_content",
+                "preview_id": "preview:test",
+                "doc": document.id,
+                "page_number": document.pages.first().page_number,
+                "bbox": [[0, 0], [10, 0], [10, 10], [0, 10]],
+            },
+            [
+                "app_ocr.views.set_preview_word_ocr_job",
+                "app_ocr.views.ocr_word_task.apply_async",
+            ],
+            {
+                "username": "standard",
+                "ocr_access_tier": "standard",
+            },
+            status.HTTP_202_ACCEPTED,
+            None,
+        ),
+        (
+            "document-ocr",
+            lambda uploaded_file_factory: {
+                "file": uploaded_file_factory(
+                    "superuser-ocr.jpg",
+                    "table.jpg",
+                    "image/jpeg",
+                )
+            },
+            [
+                "app_ocr.views.inspect_file",
+                "app_ocr.views.create_pages_from_document_file",
+                "app_ocr.views.dispatch_ocr_pages_task.delay",
+            ],
+            {
+                "username": "admin",
+                "is_superuser": True,
+            },
+            status.HTTP_202_ACCEPTED,
+            ("jpg", 1),
+        ),
+        (
+            "word-ocr",
+            lambda document: {
+                "mode": "rewrite_content",
+                "preview_id": "preview:test",
+                "doc": document.id,
+                "page_number": document.pages.first().page_number,
+                "bbox": [[0, 0], [10, 0], [10, 10], [0, 10]],
+            },
+            [
+                "app_ocr.views.set_preview_word_ocr_job",
+                "app_ocr.views.ocr_word_task.apply_async",
+            ],
+            {
+                "username": "admin",
+                "is_superuser": True,
+            },
+            status.HTTP_202_ACCEPTED,
+            None,
         ),
     ],
 )
-def test_ocr_access_tier_none_blocks_ocr(
+def test_ocr_access_tier_controls_ocr_access(
     user_client_factory,
     document_factory,
     page_factory,
     uploaded_file_factory,
-    preview_word_ocr_request_factory,
+    settings,
+    tmp_path,
     url_name,
     payload,
     patch_targets,
+    user_kwargs,
+    expected_status,
+    inspect_file_return,
 ):
-    client, _ = user_client_factory(
-        username="limited",
-        ocr_access_tier="none",
-    )
+    client, _ = user_client_factory(**user_kwargs)
+    settings.MEDIA_ROOT = tmp_path
 
-    document = document_factory(owner=client.user, file_name="limited.pdf")
-    page_factory(doc=document)
+    document = None
+    if url_name == "word-ocr":
+        document = document_factory(owner=client.user, file_name="limited.pdf")
+        page_factory(doc=document)
 
     if url_name == "document-ocr":
         request_payload = payload(uploaded_file_factory)
     else:
-        request_payload = payload(document, preview_word_ocr_request_factory)
+        request_payload = payload(document)
 
     with ExitStack() as stack:
-        mocks = [stack.enter_context(patch(target)) for target in patch_targets]
+        mocks = []
+        for target in patch_targets:
+            if (
+                target == "app_ocr.views.inspect_file"
+                and inspect_file_return is not None
+            ):
+                mocks.append(
+                    stack.enter_context(patch(target, return_value=inspect_file_return))
+                )
+            else:
+                mocks.append(stack.enter_context(patch(target)))
         response = client.post(
             reverse(url_name),
             request_payload,
             format="multipart" if url_name == "document-ocr" else "json",
         )
 
-    assert response.status_code == status.HTTP_403_FORBIDDEN
-    for mock in mocks:
-        mock.assert_not_called()
+    assert response.status_code == expected_status
+    if expected_status == status.HTTP_403_FORBIDDEN:
+        for mock in mocks:
+            mock.assert_not_called()
+    elif url_name == "document-ocr":
+        mocks[0].assert_called_once()
+        for mock in mocks[1:]:
+            mock.assert_not_called()
+    else:
+        for mock in mocks:
+            mock.assert_called_once()

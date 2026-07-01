@@ -56,18 +56,25 @@ def user_client_factory(db):
         password="testpass123",
         account_kind="registered",
         ocr_access_tier=None,
+        is_superuser=False,
     ):
-        user = user_model.objects.create_user(
-            username=username or f"testuser-{uuid4().hex}",
-            password=password,
-        )
-        profile_kwargs = {
-            "user": user,
-            "account_kind": account_kind,
-        }
-        if ocr_access_tier is not None:
-            profile_kwargs["ocr_access_tier"] = ocr_access_tier
-        UserAccount.objects.create(**profile_kwargs)
+        if is_superuser:
+            user = user_model.objects.create_superuser(
+                username=username or f"testuser-{uuid4().hex}",
+                password=password,
+            )
+        else:
+            user = user_model.objects.create_user(
+                username=username or f"testuser-{uuid4().hex}",
+                password=password,
+            )
+            profile_kwargs = {
+                "user": user,
+                "account_kind": account_kind,
+            }
+            if ocr_access_tier is not None:
+                profile_kwargs["ocr_access_tier"] = ocr_access_tier
+            UserAccount.objects.create(**profile_kwargs)
         client = APIClient()
         client.force_login(user)
         client.user = user
