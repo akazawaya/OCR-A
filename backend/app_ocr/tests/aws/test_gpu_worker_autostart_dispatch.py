@@ -1,22 +1,14 @@
 from unittest.mock import Mock, call, patch
 
 import pytest
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
-
-
-def make_uploaded_pdf():
-    return SimpleUploadedFile(
-        "sample.pdf",
-        b"dummy content",
-        content_type="application/pdf",
-    )
 
 
 @pytest.mark.django_db
 def test_ocr_ensures_gpu_worker_before_dispatching_pages(
     authenticated_client,
     django_capture_on_commit_callbacks,
+    uploaded_file_factory,
     settings,
     tmp_path,
 ):
@@ -42,7 +34,7 @@ def test_ocr_ensures_gpu_worker_before_dispatching_pages(
     ):
         response = authenticated_client.post(
             reverse("document-ocr"),
-            {"file": make_uploaded_pdf()},
+            {"file": uploaded_file_factory()},
             format="multipart",
         )
 
@@ -60,6 +52,9 @@ def test_ocr_ensures_gpu_worker_before_dispatching_pages(
 @pytest.mark.django_db
 def test_word_ocr_ensures_gpu_worker_before_dispatching_task(
     authenticated_client,
+    document_factory,
+    page_factory,
+    preview_word_ocr_request_factory,
     settings,
 ):
     settings.ENABLE_GPU_WORKER_AUTOSTART = True
@@ -79,15 +74,15 @@ def test_word_ocr_ensures_gpu_worker_before_dispatching_task(
             side_effect=lambda **kwargs: call_order.dispatch(**kwargs),
         ) as mock_apply_async,
     ):
+        document = document_factory(
+            owner=authenticated_client.user,
+            file_name="limited.pdf",
+        )
+        page_factory(doc=document)
+        request_payload = preview_word_ocr_request_factory(document=document)
         response = authenticated_client.post(
             reverse("word-ocr"),
-            {
-                "mode": "rewrite_content",
-                "preview_id": "preview:1",
-                "doc": 1,
-                "page_number": 2,
-                "bbox": [1, 1, 20, 12],
-            },
+            request_payload,
             format="json",
         )
 
