@@ -79,13 +79,7 @@ def test_authorization_limits_lists_to_own_resources(
         ),
         (
             "word-ocr",
-            lambda document: {
-                "mode": "rewrite_content",
-                "preview_id": "preview:test",
-                "doc": document.id,
-                "page_number": document.pages.first().page_number,
-                "bbox": [[0, 0], [10, 0], [10, 10], [0, 10]],
-            },
+            None,
             [
                 "app_ocr.views.set_preview_word_ocr_job",
                 "app_ocr.views.ocr_word_task.apply_async",
@@ -120,13 +114,7 @@ def test_authorization_limits_lists_to_own_resources(
         ),
         (
             "word-ocr",
-            lambda document: {
-                "mode": "rewrite_content",
-                "preview_id": "preview:test",
-                "doc": document.id,
-                "page_number": document.pages.first().page_number,
-                "bbox": [[0, 0], [10, 0], [10, 10], [0, 10]],
-            },
+            None,
             [
                 "app_ocr.views.set_preview_word_ocr_job",
                 "app_ocr.views.ocr_word_task.apply_async",
@@ -161,13 +149,7 @@ def test_authorization_limits_lists_to_own_resources(
         ),
         (
             "word-ocr",
-            lambda document: {
-                "mode": "rewrite_content",
-                "preview_id": "preview:test",
-                "doc": document.id,
-                "page_number": document.pages.first().page_number,
-                "bbox": [[0, 0], [10, 0], [10, 10], [0, 10]],
-            },
+            None,
             [
                 "app_ocr.views.set_preview_word_ocr_job",
                 "app_ocr.views.ocr_word_task.apply_async",
@@ -186,6 +168,7 @@ def test_ocr_access_tier_controls_ocr_access(
     document_factory,
     page_factory,
     uploaded_file_factory,
+    preview_word_ocr_request_factory,
     settings,
     tmp_path,
     url_name,
@@ -206,7 +189,7 @@ def test_ocr_access_tier_controls_ocr_access(
     if url_name == "document-ocr":
         request_payload = payload(uploaded_file_factory)
     else:
-        request_payload = payload(document)
+        request_payload = preview_word_ocr_request_factory(document=document)
 
     with ExitStack() as stack:
         mocks = []

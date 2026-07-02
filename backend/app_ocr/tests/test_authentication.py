@@ -85,6 +85,7 @@ def test_logout_invalidates_session(api_client):
     ],
 )
 def test_anonymous_cannot_access_protected_api(
+    preview_word_ocr_request_factory,
     api_client,
     method,
     url_name,
@@ -99,13 +100,7 @@ def test_anonymous_cannot_access_protected_api(
     if payload_kind == "document_upload":
         payload = {"file": make_dummy_file()}
     elif payload_kind == "preview_word_ocr":
-        payload = {
-            "mode": "rewrite_content",
-            "preview_id": "preview:test",
-            "doc": 1,
-            "page_number": 1,
-            "bbox": [[0, 0], [10, 0], [10, 10], [0, 10]],
-        }
+        payload = preview_word_ocr_request_factory()
     else:
         payload = None
 

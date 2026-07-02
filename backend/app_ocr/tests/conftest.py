@@ -189,3 +189,29 @@ def word_factory(db, page_factory):
         return Word.objects.create(**word_kwargs)
 
     return make_word
+
+
+@pytest.fixture
+def preview_word_ocr_request_factory():
+    def make_preview_word_ocr_request(
+        *,
+        mode,
+        document=None,
+        doc=None,
+        page_number=None,
+        preview_id="preview:test",
+        bbox=DEFAULT_PREVIEW_WORD_BBOX,
+    ):
+        if document is not None:
+            doc = document.id
+            page_number = document.pages.first().page_number
+
+        return {
+            "mode": mode,
+            "preview_id": preview_id,
+            "doc": doc,
+            "page_number": page_number,
+            "bbox": bbox,
+        }
+
+    return make_preview_word_ocr_request
