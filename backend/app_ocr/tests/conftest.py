@@ -1,5 +1,4 @@
 from pathlib import Path
-from uuid import uuid4
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -17,7 +16,6 @@ DEFAULT_DOCUMENT_ID = 1
 DEFAULT_PAGE_NUMBER = 1
 DEFAULT_PASSWORD = "testpass123"
 DEFAULT_USERNAME = "testuser"
-DEFAULT_DOCUMENT_OWNER_USERNAME_PREFIX = "document-owner"
 DEFAULT_WORD_DIRECTION = Direction.HORIZONTAL
 DEFAULT_WORD_CONTENT = "test"
 
@@ -112,8 +110,7 @@ def document_factory(db, settings, tmp_path, uploaded_file_factory):
         settings.MEDIA_ROOT = tmp_path
         if owner is None:
             owner = user_model.objects.create_user(
-                username=username
-                or f"{DEFAULT_DOCUMENT_OWNER_USERNAME_PREFIX}-{uuid4().hex}",
+                username=username,
                 password=password,
             )
 
