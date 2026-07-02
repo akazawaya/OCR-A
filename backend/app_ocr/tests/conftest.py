@@ -12,6 +12,14 @@ FIXTURE_DIR = Path(__file__).parent / "fixtures"
 DEFAULT_UPLOAD_FILE_NAME = "sample.pdf"
 DEFAULT_UPLOAD_CONTENT_TYPE = "application/pdf"
 DEFAULT_PREVIEW_WORD_BBOX = [[0, 0], [10, 0], [10, 10], [0, 10]]
+DEFAULT_PREVIEW_WORD_OCR_MODE = "rewrite_content"
+DEFAULT_DOCUMENT_ID = 1
+DEFAULT_PAGE_NUMBER = 1
+DEFAULT_PASSWORD = "testpass123"
+DEFAULT_USERNAME = "testuser"
+DEFAULT_DOCUMENT_OWNER_USERNAME_PREFIX = "document-owner"
+DEFAULT_WORD_DIRECTION = Direction.HORIZONTAL
+DEFAULT_WORD_CONTENT = "test"
 
 
 def _guess_fixture_from_file_name(file_name):
@@ -52,20 +60,20 @@ def user_client_factory(db):
 
     def make_user_client(
         *,
-        username=None,
-        password="testpass123",
+        username=DEFAULT_USERNAME,
+        password=DEFAULT_PASSWORD,
         account_kind="registered",
         ocr_access_tier=None,
         is_superuser=False,
     ):
         if is_superuser:
             user = user_model.objects.create_superuser(
-                username=username or f"testuser-{uuid4().hex}",
+                username=username,
                 password=password,
             )
         else:
             user = user_model.objects.create_user(
-                username=username or f"testuser-{uuid4().hex}",
+                username=username,
                 password=password,
             )
             profile_kwargs = {
@@ -96,15 +104,16 @@ def document_factory(db, settings, tmp_path, uploaded_file_factory):
     def make_document(
         *,
         owner=None,
-        username=None,
-        password="testpass123",
+        username=DEFAULT_USERNAME,
+        password=DEFAULT_PASSWORD,
         file_name=DEFAULT_UPLOAD_FILE_NAME,
         file_type=None,
     ):
         settings.MEDIA_ROOT = tmp_path
         if owner is None:
             owner = user_model.objects.create_user(
-                username=username or f"document-owner-{uuid4().hex}",
+                username=username
+                or f"{DEFAULT_DOCUMENT_OWNER_USERNAME_PREFIX}-{uuid4().hex}",
                 password=password,
             )
 
@@ -137,9 +146,9 @@ def page_factory(db, document_factory):
         *,
         doc=None,
         owner=None,
-        username=None,
-        password="testpass123",
-        page_number=None,
+        username=DEFAULT_USERNAME,
+        password=DEFAULT_PASSWORD,
+        page_number=DEFAULT_PAGE_NUMBER,
     ):
         if doc is None:
             doc = document_factory(
@@ -148,11 +157,7 @@ def page_factory(db, document_factory):
                 password=password,
             )
 
-        page_kwargs = {"doc": doc}
-        if page_number is not None:
-            page_kwargs["page_number"] = page_number
-
-        return Page.objects.create(**page_kwargs)
+        return Page.objects.create(doc=doc, page_number=page_number)
 
     return make_page
 
@@ -164,11 +169,11 @@ def word_factory(db, page_factory):
         page=None,
         doc=None,
         owner=None,
-        username=None,
-        password="testpass123",
+        username=DEFAULT_USERNAME,
+        password=DEFAULT_PASSWORD,
         bbox=DEFAULT_PREVIEW_WORD_BBOX,
-        direction=Direction.HORIZONTAL,
-        content=None,
+        direction=DEFAULT_WORD_DIRECTION,
+        content=DEFAULT_WORD_CONTENT,
     ):
         if page is None:
             page = page_factory(
@@ -195,10 +200,10 @@ def word_factory(db, page_factory):
 def preview_word_ocr_request_factory():
     def make_preview_word_ocr_request(
         *,
-        mode,
+        mode=DEFAULT_PREVIEW_WORD_OCR_MODE,
         document=None,
         doc=None,
-        page_number=None,
+        page_number=DEFAULT_PAGE_NUMBER,
         preview_id="preview:test",
         bbox=DEFAULT_PREVIEW_WORD_BBOX,
     ):
