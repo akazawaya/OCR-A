@@ -18,6 +18,8 @@ DEFAULT_PASSWORD = "testpass123"
 DEFAULT_USERNAME = "testuser"
 DEFAULT_WORD_DIRECTION = Direction.HORIZONTAL
 DEFAULT_WORD_CONTENT = "test"
+# デフォルトのテストユーザーはOCR利用可能な registered とする
+DEFAULT_ACCOUNT_KIND = "registered"
 
 
 def _guess_fixture_from_file_name(file_name):
@@ -60,7 +62,7 @@ def user_client_factory(db):
         *,
         username=DEFAULT_USERNAME,
         password=DEFAULT_PASSWORD,
-        account_kind="registered",
+        account_kind=DEFAULT_ACCOUNT_KIND,
         ocr_access_tier=None,
         is_superuser=False,
     ):
