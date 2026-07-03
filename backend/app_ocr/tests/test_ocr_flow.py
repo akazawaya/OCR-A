@@ -6,7 +6,6 @@ from unittest.mock import Mock, call, patch
 import cv2
 import numpy as np
 import pytest
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
 from app_ocr.consumers import OcrProgressConsumer
@@ -32,23 +31,6 @@ def disable_gpu_worker_autostart(settings):
     settings.ENABLE_GPU_WORKER_AUTOSTART = False
 
 
-def make_dummy_file(filename, content_type):
-    return SimpleUploadedFile(
-        filename,
-        b"dummy content",
-        content_type=content_type,
-    )
-
-
-def make_uploaded_file_from_fixture(filename, content_type):
-    file_path = FIXTURE_DIR / filename
-    return SimpleUploadedFile(
-        name=filename,
-        content=file_path.read_bytes(),
-        content_type=content_type,
-    )
-
-
 """
 test_inspect_file
 inspect_file関数をテストする。
@@ -65,11 +47,12 @@ inspect_file関数をテストする。
 )
 def test_inspect_file(
     filename,
+    uploaded_file_from_fixture_factory,
     content_type,
     expected_ext,
     expected_total_pages,
 ):
-    file = make_uploaded_file_from_fixture(filename, content_type)
+    file = uploaded_file_from_fixture_factory(filename, content_type)
     ext, total_pages = inspect_file(file)
 
     assert ext == expected_ext
@@ -86,11 +69,12 @@ class TestRenderPage:
     )
     def test_returns_decodable_png_bytes(
         self,
+        uploaded_file_from_fixture_factory,
         filename,
         content_type,
         input_ext,
     ):
-        file = make_uploaded_file_from_fixture(filename, content_type)
+        file = uploaded_file_from_fixture_factory(filename, content_type)
 
         img_bytes = render_page(file=file, page_number=1, input_ext=input_ext)
 
@@ -114,22 +98,23 @@ class TestRenderPage:
     )
     def test_resets_file_pointer(
         self,
+        uploaded_file_from_fixture_factory,
         filename,
         content_type,
         input_ext,
     ):
-        file = make_uploaded_file_from_fixture(filename, content_type)
+        file = uploaded_file_from_fixture_factory(filename, content_type)
         render_page(file=file, page_number=1, input_ext=input_ext)
         assert file.tell() == 0
 
-    def test_rejects_invalid_page_number(self):
-        file = make_uploaded_file_from_fixture("table.jpg", "image/jpeg")
+    def test_rejects_invalid_page_number(self, uploaded_file_from_fixture_factory):
+        file = uploaded_file_from_fixture_factory()
 
         with pytest.raises(ValueError, match="page_number must be 1-based"):
             render_page(file=file, page_number=0, input_ext="jpg")
 
-    def test_rejects_unsupported_input_ext(self):
-        file = make_uploaded_file_from_fixture("table.jpg", "image/jpeg")
+    def test_rejects_unsupported_input_ext(self, uploaded_file_from_fixture_factory):
+        file = uploaded_file_from_fixture_factory()
 
         with pytest.raises(ValueError, match="Unsupported file format"):
             render_page(file=file, page_number=1, input_ext="txt")
@@ -501,7 +486,9 @@ class TestConsumer:
 
 
 @pytest.mark.django_db
-def test_run_ocr_for_page_creates_page_and_words_from_ocr_result(django_user_model):
+def test_run_ocr_for_page_creates_page_and_words_from_ocr_result(
+    django_user_model, uploaded_file_from_fixture_factory
+):
     # OCRエンジンを差し替え、OCRインスタンスが呼ばれたかの確認と、
     # mockの返り値で保存がなされたかを確認
     owner = django_user_model.objects.create_user(username="run-ocr-page-owner")
@@ -520,7 +507,7 @@ def test_run_ocr_for_page_creates_page_and_words_from_ocr_result(django_user_mod
                 "det_score": 0.8,
             }
         ]
-        file = make_uploaded_file_from_fixture("table.jpg", "image/jpeg")
+        file = uploaded_file_from_fixture_factory("table.jpg", "image/jpeg")
         doc = Document.objects.create(
             owner=owner,
             file=file,
@@ -545,7 +532,7 @@ def test_run_ocr_for_page_creates_page_and_words_from_ocr_result(django_user_mod
 
 @pytest.mark.django_db
 def test_run_ocr_for_bbox_returns_words_without_saving_page_or_words(
-    django_user_model,
+    django_user_model, uploaded_file_from_fixture_factory
 ):
     # 本質ではないが、run_ocr_for_bboxは単体では保存がされないことをアサ―トとする
     owner = django_user_model.objects.create_user(username="run-ocr-bbox-owner")
@@ -564,7 +551,7 @@ def test_run_ocr_for_bbox_returns_words_without_saving_page_or_words(
                 "det_score": 0.85,
             }
         ]
-        file = make_uploaded_file_from_fixture("table.jpg", "image/jpeg")
+        file = uploaded_file_from_fixture_factory("table.jpg", "image/jpeg")
         doc = Document.objects.create(
             owner=owner,
             file=file,
@@ -616,8 +603,8 @@ class TestYomitokuAdapter:
 
         get_engine.cache_clear()
 
-    def test_yomitoku_ocr_returns_word_dicts(self):
-        file = make_uploaded_file_from_fixture("table.jpg", "image/jpeg")
+    def test_yomitoku_ocr_returns_word_dicts(self, uploaded_file_from_fixture_factory):
+        file = uploaded_file_from_fixture_factory("table.jpg", "image/jpeg")
         img_bytes = file.read()
         word = SimpleNamespace(
             points=[[0, 0], [10, 0], [10, 10], [0, 10]],

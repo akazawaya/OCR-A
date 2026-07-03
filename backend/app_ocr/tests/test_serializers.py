@@ -1,16 +1,7 @@
 import pytest
-from django.core.files.uploadedfile import SimpleUploadedFile
 
 from app_ocr.input_constraints import MAX_UPLOAD_FILE_SIZE
 from app_ocr.serializers import DocumentUploadSerializer
-
-
-def make_dummy_file(filename, content_type, content=b"dummy content"):
-    return SimpleUploadedFile(
-        filename,
-        content,
-        content_type=content_type,
-    )
 
 
 class TestDocumentUploadSerializer:
@@ -23,9 +14,11 @@ class TestDocumentUploadSerializer:
             ("test.pdf", "application/pdf"),
         ],
     )
-    def test_accepts_supported_extension(self, filename, content_type):
+    def test_accepts_supported_extension(
+        self, dummy_file_factory, filename, content_type
+    ):
         serializer = DocumentUploadSerializer(
-            data={"file": make_dummy_file(filename, content_type)}
+            data={"file": dummy_file_factory(filename, content_type)}
         )
 
         assert serializer.is_valid()
@@ -38,19 +31,19 @@ class TestDocumentUploadSerializer:
             ("test.bmp", "image/bmp"),
         ],
     )
-    def test_rejects_unsupported_extension(self, filename, content_type):
+    def test_rejects_unsupported_extension(
+        self, dummy_file_factory, filename, content_type
+    ):
         serializer = DocumentUploadSerializer(
-            data={"file": make_dummy_file(filename, content_type)}
+            data={"file": dummy_file_factory(filename, content_type)}
         )
 
         assert not serializer.is_valid()
         assert str(serializer.errors["file"][0]) == "拡張子が非対応です。"
         assert serializer.errors["file"][0].code == "unsupported_extension"
 
-    def test_rejects_too_large_file(self):
-        file = make_dummy_file(
-            "too_large.jpg",
-            "image/jpeg",
+    def test_rejects_too_large_file(self, dummy_file_factory):
+        file = dummy_file_factory(
             content=b"a" * (MAX_UPLOAD_FILE_SIZE + 1),
         )
 
@@ -60,8 +53,8 @@ class TestDocumentUploadSerializer:
         assert str(serializer.errors["file"][0]) == "ファイルサイズが大きすぎます。"
         assert serializer.errors["file"][0].code == "file_too_large"
 
-    def test_rejects_too_long_file_name(self):
-        file = make_dummy_file(f"{'a' * 101}.jpg", "image/jpeg")
+    def test_rejects_too_long_file_name(self, dummy_file_factory):
+        file = dummy_file_factory(f"{'a' * 101}.jpg")
         serializer = DocumentUploadSerializer(data={"file": file})
 
         assert not serializer.is_valid()

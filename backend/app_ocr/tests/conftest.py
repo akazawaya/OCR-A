@@ -10,6 +10,7 @@ from app_ocr.models import Direction, Document, FileType, Page, UserAccount, Wor
 FIXTURE_DIR = Path(__file__).parent / "fixtures"
 DEFAULT_UPLOAD_FILE_NAME = "sample.pdf"
 DEFAULT_UPLOAD_CONTENT_TYPE = "application/pdf"
+DEFAULT_UPLOAD_FILE_TYPE = FileType.PDF
 DEFAULT_PREVIEW_WORD_BBOX = [[0, 0], [10, 0], [10, 10], [0, 10]]
 DEFAULT_PREVIEW_WORD_OCR_MODE = "rewrite_content"
 DEFAULT_DOCUMENT_ID = 1
@@ -22,36 +23,31 @@ DEFAULT_WORD_CONTENT = "test"
 DEFAULT_ACCOUNT_KIND = "registered"
 
 
-def _guess_fixture_from_file_name(file_name):
-    suffix = Path(file_name).suffix.lower()
-    if suffix in {".jpg", ".jpeg"}:
-        return "table.jpg", "image/jpeg", FileType.JPG
-    return DEFAULT_UPLOAD_FILE_NAME, DEFAULT_UPLOAD_CONTENT_TYPE, FileType.PDF
+@pytest.fixture
+def dummy_file_factory():
+    def make_dummy_file(
+        filename=DEFAULT_UPLOAD_FILE_NAME,
+        content_type=DEFAULT_UPLOAD_CONTENT_TYPE,
+        content=b"dummy content",
+    ):
+        return SimpleUploadedFile(filename, content, content_type=content_type)
 
-
-def _build_uploaded_file(uploaded_name, source_fixture_name, content_type):
-    file_path = FIXTURE_DIR / source_fixture_name
-    return SimpleUploadedFile(
-        name=uploaded_name,
-        content=file_path.read_bytes(),
-        content_type=content_type,
-    )
+    return make_dummy_file
 
 
 @pytest.fixture
-def uploaded_file_factory():
-    def make_uploaded_file(
-        uploaded_name=DEFAULT_UPLOAD_FILE_NAME,
-        source_fixture_name=DEFAULT_UPLOAD_FILE_NAME,
-        content_type=DEFAULT_UPLOAD_CONTENT_TYPE,
+def uploaded_file_from_fixture_factory():
+    def make_uploaded_file_from_fixture(
+        filename=DEFAULT_UPLOAD_FILE_NAME, content_type=DEFAULT_UPLOAD_CONTENT_TYPE
     ):
-        return _build_uploaded_file(
-            uploaded_name=uploaded_name,
-            source_fixture_name=source_fixture_name,
+        file_path = FIXTURE_DIR / filename
+        return SimpleUploadedFile(
+            name=filename,
+            content=file_path.read_bytes(),
             content_type=content_type,
         )
 
-    return make_uploaded_file
+    return make_uploaded_file_from_fixture
 
 
 @pytest.fixture
@@ -98,7 +94,7 @@ def authenticated_client(user_client_factory):
 
 
 @pytest.fixture
-def document_factory(db, settings, tmp_path, uploaded_file_factory):
+def document_factory(db, settings, tmp_path, dummy_file_factory):
     user_model = get_user_model()
 
     def make_document(
@@ -107,34 +103,28 @@ def document_factory(db, settings, tmp_path, uploaded_file_factory):
         username=DEFAULT_USERNAME,
         password=DEFAULT_PASSWORD,
         file_name=DEFAULT_UPLOAD_FILE_NAME,
-        file_type=None,
+        file_type=DEFAULT_UPLOAD_FILE_TYPE,
+        file=None,
     ):
         settings.MEDIA_ROOT = tmp_path
+
         if owner is None:
             owner = user_model.objects.create_user(
                 username=username,
                 password=password,
             )
 
-        (
-            source_fixture_name,
-            content_type,
-            default_file_type,
-        ) = _guess_fixture_from_file_name(file_name)
-        file_type = file_type or default_file_type
+        upload_file = file or dummy_file_factory(
+            filename=file_name,
+            content_type=DEFAULT_UPLOAD_CONTENT_TYPE,
+        )
 
-        document_kwargs = {
-            "owner": owner,
-            "file": uploaded_file_factory(
-                uploaded_name=file_name,
-                source_fixture_name=source_fixture_name,
-                content_type=content_type,
-            ),
-            "file_name": file_name,
-            "file_type": file_type,
-        }
-
-        return Document.objects.create(**document_kwargs)
+        return Document.objects.create(
+            owner=owner,
+            file=upload_file,
+            file_name=file_name,
+            file_type=file_type,
+        )
 
     return make_document
 

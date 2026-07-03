@@ -58,13 +58,7 @@ def test_authorization_limits_lists_to_own_resources(
     [
         (
             "document-ocr",
-            lambda uploaded_file_factory: {
-                "file": uploaded_file_factory(
-                    "guest-ocr.jpg",
-                    "table.jpg",
-                    "image/jpeg",
-                )
-            },
+            lambda dummy_file_factory: {"file": dummy_file_factory()},
             [
                 "app_ocr.views.inspect_file",
                 "app_ocr.views.create_pages_from_document_file",
@@ -93,13 +87,7 @@ def test_authorization_limits_lists_to_own_resources(
         ),
         (
             "document-ocr",
-            lambda uploaded_file_factory: {
-                "file": uploaded_file_factory(
-                    "standard-ocr.jpg",
-                    "table.jpg",
-                    "image/jpeg",
-                )
-            },
+            lambda dummy_file_factory: {"file": dummy_file_factory()},
             [
                 "app_ocr.views.inspect_file",
                 "app_ocr.views.create_pages_from_document_file",
@@ -128,13 +116,7 @@ def test_authorization_limits_lists_to_own_resources(
         ),
         (
             "document-ocr",
-            lambda uploaded_file_factory: {
-                "file": uploaded_file_factory(
-                    "superuser-ocr.jpg",
-                    "table.jpg",
-                    "image/jpeg",
-                )
-            },
+            lambda dummy_file_factory: {"file": dummy_file_factory()},
             [
                 "app_ocr.views.inspect_file",
                 "app_ocr.views.create_pages_from_document_file",
@@ -167,7 +149,7 @@ def test_ocr_access_tier_controls_ocr_access(
     user_client_factory,
     document_factory,
     page_factory,
-    uploaded_file_factory,
+    dummy_file_factory,
     preview_word_ocr_request_factory,
     settings,
     tmp_path,
@@ -187,7 +169,7 @@ def test_ocr_access_tier_controls_ocr_access(
         page_factory(doc=document)
 
     if url_name == "document-ocr":
-        request_payload = payload(uploaded_file_factory)
+        request_payload = payload(dummy_file_factory)
     else:
         request_payload = preview_word_ocr_request_factory(document=document)
 

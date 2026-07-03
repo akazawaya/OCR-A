@@ -1,6 +1,5 @@
 import pytest
 from django.contrib.auth import get_user_model
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -14,10 +13,6 @@ LOGOUT_URL = "/api/auth/logout/"
 @pytest.fixture
 def api_client():
     return APIClient()
-
-
-def make_dummy_file(filename="test.jpg", content_type="image/jpeg", content=b"dummy"):
-    return SimpleUploadedFile(filename, content, content_type=content_type)
 
 
 def create_user(username="alice", password="password1234"):
@@ -87,6 +82,7 @@ def test_logout_invalidates_session(api_client):
 def test_anonymous_cannot_access_protected_api(
     preview_word_ocr_request_factory,
     api_client,
+    dummy_file_factory,
     method,
     url_name,
     payload_kind,
@@ -98,7 +94,7 @@ def test_anonymous_cannot_access_protected_api(
     settings.MEDIA_ROOT = tmp_path
 
     if payload_kind == "document_upload":
-        payload = {"file": make_dummy_file()}
+        payload = {"file": dummy_file_factory()}
     elif payload_kind == "preview_word_ocr":
         payload = preview_word_ocr_request_factory()
     else:

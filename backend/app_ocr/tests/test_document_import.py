@@ -2,7 +2,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from rest_framework import status
 
@@ -14,32 +13,16 @@ FIXTURE_DIR = Path(__file__).parent / "fixtures"
 pytestmark = pytest.mark.django_db
 
 
-def make_dummy_file(filename, content_type):
-    return SimpleUploadedFile(
-        filename,
-        b"dummy content",
-        content_type=content_type,
-    )
-
-
-def make_uploaded_file_from_fixture(filename, content_type):
-    file_path = FIXTURE_DIR / filename
-    return SimpleUploadedFile(
-        name=filename,
-        content=file_path.read_bytes(),
-        content_type=content_type,
-    )
-
-
 class TestImportWithoutOcr:
     def test_import_produces_viewable_document(
         self,
+        uploaded_file_from_fixture_factory,
         authenticated_client,
         settings,
         tmp_path,
     ):
         settings.MEDIA_ROOT = tmp_path
-        file = make_uploaded_file_from_fixture("table.jpg", "image/jpeg")
+        file = uploaded_file_from_fixture_factory()
         response = authenticated_client.post(
             reverse("document-list"),
             {"file": file},
@@ -58,12 +41,13 @@ class TestImportWithoutOcr:
 
     def test_invalid_input_is_rejected_without_persistence(
         self,
+        dummy_file_factory,
         authenticated_client,
         settings,
         tmp_path,
     ):
         settings.MEDIA_ROOT = tmp_path
-        file = make_dummy_file("test.txt", "text/plain")
+        file = dummy_file_factory("test.txt", "text/plain")
 
         response = authenticated_client.post(
             reverse("document-list"),
@@ -78,12 +62,13 @@ class TestImportWithoutOcr:
 
     def test_failure_after_persistence_removes_database_and_storage_resources(
         self,
+        uploaded_file_from_fixture_factory,
         authenticated_client,
         settings,
         tmp_path,
     ):
         settings.MEDIA_ROOT = tmp_path
-        file = make_uploaded_file_from_fixture("table.jpg", "image/jpeg")
+        file = uploaded_file_from_fixture_factory()
 
         with patch(
             "app_ocr.views.create_pages_from_document_file",
@@ -104,13 +89,14 @@ class TestImportWithoutOcr:
 class TestImportWithOcr:
     def test_import_persists_input_and_schedules_ocr(
         self,
+        uploaded_file_from_fixture_factory,
         authenticated_client,
         django_capture_on_commit_callbacks,
         settings,
         tmp_path,
     ):
         settings.MEDIA_ROOT = tmp_path
-        file = make_uploaded_file_from_fixture("table.jpg", "image/jpeg")
+        file = uploaded_file_from_fixture_factory()
         with (
             patch("app_ocr.views.notify_document_changed"),
             patch("app_ocr.views.dispatch_ocr_pages_task.delay") as mock_dispatch,
@@ -132,12 +118,13 @@ class TestImportWithOcr:
 
     def test_invalid_input_is_rejected_without_persistence(
         self,
+        dummy_file_factory,
         authenticated_client,
         settings,
         tmp_path,
     ):
         settings.MEDIA_ROOT = tmp_path
-        file = make_dummy_file("test.txt", "text/plain")
+        file = dummy_file_factory("test.txt", "text/plain")
 
         with patch("app_ocr.views.dispatch_ocr_pages_task.delay") as mock_dispatch:
             response = authenticated_client.post(
@@ -155,12 +142,13 @@ class TestImportWithOcr:
 
     def test_failure_after_persistence_removes_database_and_storage_resources(
         self,
+        uploaded_file_from_fixture_factory,
         authenticated_client,
         settings,
         tmp_path,
     ):
         settings.MEDIA_ROOT = tmp_path
-        file = make_uploaded_file_from_fixture("table.jpg", "image/jpeg")
+        file = uploaded_file_from_fixture_factory()
 
         with patch(
             "app_ocr.views.transaction.on_commit",

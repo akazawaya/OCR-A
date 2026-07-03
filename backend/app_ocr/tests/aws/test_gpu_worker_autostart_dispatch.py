@@ -8,7 +8,7 @@ from django.urls import reverse
 def test_ocr_ensures_gpu_worker_before_dispatching_pages(
     authenticated_client,
     django_capture_on_commit_callbacks,
-    uploaded_file_factory,
+    dummy_file_factory,
     settings,
     tmp_path,
 ):
@@ -34,7 +34,7 @@ def test_ocr_ensures_gpu_worker_before_dispatching_pages(
     ):
         response = authenticated_client.post(
             reverse("document-ocr"),
-            {"file": uploaded_file_factory()},
+            {"file": dummy_file_factory()},
             format="multipart",
         )
 
