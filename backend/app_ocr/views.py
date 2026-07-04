@@ -51,6 +51,18 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
 class AuthViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
 
+    @action(detail=False, methods=["get"])
+    def me(self, request):
+        user = request.user
+
+        return Response(
+            {
+                "authenticated": user.is_authenticated,
+                "username": user.username if user.is_authenticated else None,
+            },
+            status=status.HTTP_200_OK,
+        )
+
     @action(detail=False, methods=["post"])
     def login(self, request):
         username = request.data.get("username")
@@ -77,18 +89,6 @@ class AuthViewSet(viewsets.ViewSet):
     def logout(self, request):
         logout(request)
         return Response({"detail": "ログアウト成功"})
-
-    @action(detail=False, methods=["get"])
-    def me(self, request):
-        user = request.user
-
-        return Response(
-            {
-                "authenticated": user.is_authenticated,
-                "username": user.username if user.is_authenticated else None,
-            },
-            status=status.HTTP_200_OK,
-        )
 
 
 class DocumentViewSet(viewsets.ModelViewSet):
