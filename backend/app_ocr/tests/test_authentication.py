@@ -4,6 +4,8 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from app_ocr.tests.conftest import DEFAULT_PASSWORD
+
 pytestmark = pytest.mark.django_db
 
 LOGIN_URL = "/api/auth/login/"
@@ -16,22 +18,26 @@ def api_client():
     return APIClient()
 
 
-def create_user(username="alice", password="password1234"):
+def create_user(username="alice", password=DEFAULT_PASSWORD):
     user_model = get_user_model()
     return user_model.objects.create_user(username=username, password=password)
+
+
+def login_user(api_client, user, password=DEFAULT_PASSWORD):
+    return api_client.post(
+        LOGIN_URL,
+        {
+            "username": user.username,
+            "password": password,
+        },
+        format="json",
+    )
 
 
 def test_login_returns_success(api_client):
     user = create_user()
 
-    response = api_client.post(
-        LOGIN_URL,
-        {
-            "username": user.username,
-            "password": "password1234",
-        },
-        format="json",
-    )
+    response = login_user(api_client, user)
 
     assert response.status_code == status.HTTP_200_OK
     assert api_client.session["_auth_user_id"] == str(user.id)
@@ -40,14 +46,7 @@ def test_login_returns_success(api_client):
 def test_me_returns_authenticated_username(api_client):
     user = create_user()
 
-    login_response = api_client.post(
-        LOGIN_URL,
-        {
-            "username": user.username,
-            "password": "password1234",
-        },
-        format="json",
-    )
+    login_response = login_user(api_client, user)
     assert login_response.status_code == status.HTTP_200_OK
 
     response = api_client.get(ME_URL)
@@ -62,14 +61,7 @@ def test_me_returns_authenticated_username(api_client):
 def test_logout_invalidates_session(api_client):
     user = create_user()
 
-    login_response = api_client.post(
-        LOGIN_URL,
-        {
-            "username": user.username,
-            "password": "password1234",
-        },
-        format="json",
-    )
+    login_response = login_user(api_client, user)
     assert login_response.status_code == status.HTTP_200_OK
     assert api_client.session["_auth_user_id"] == str(user.id)
 
