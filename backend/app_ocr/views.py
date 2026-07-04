@@ -78,6 +78,18 @@ class AuthViewSet(viewsets.ViewSet):
         logout(request)
         return Response({"detail": "ログアウト成功"})
 
+    @action(detail=False, methods=["get"])
+    def me(self, request):
+        user = request.user
+
+        return Response(
+            {
+                "authenticated": user.is_authenticated,
+                "username": user.username if user.is_authenticated else None,
+            },
+            status=status.HTTP_200_OK,
+        )
+
 
 class DocumentViewSet(viewsets.ModelViewSet):
     queryset = Document.objects.all()

@@ -8,6 +8,7 @@ pytestmark = pytest.mark.django_db
 
 LOGIN_URL = "/api/auth/login/"
 LOGOUT_URL = "/api/auth/logout/"
+ME_URL = "/api/auth/me/"
 
 
 @pytest.fixture
@@ -34,6 +35,28 @@ def test_login_returns_success(api_client):
 
     assert response.status_code == status.HTTP_200_OK
     assert api_client.session["_auth_user_id"] == str(user.id)
+
+
+def test_me_returns_authenticated_username(api_client):
+    user = create_user()
+
+    login_response = api_client.post(
+        LOGIN_URL,
+        {
+            "username": user.username,
+            "password": "password1234",
+        },
+        format="json",
+    )
+    assert login_response.status_code == status.HTTP_200_OK
+
+    response = api_client.get(ME_URL)
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data == {
+        "authenticated": True,
+        "username": user.username,
+    }
 
 
 def test_logout_invalidates_session(api_client):
