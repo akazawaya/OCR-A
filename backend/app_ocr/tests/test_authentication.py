@@ -66,7 +66,7 @@ def test_logout_invalidates_session(api_client):
     assert api_client.session["_auth_user_id"] == str(user.id)
 
     logout_response = api_client.post(LOGOUT_URL, format="json")
-    assert logout_response.status_code == status.HTTP_200_OK
+    assert logout_response.status_code == status.HTTP_204_NO_CONTENT
     assert "_auth_user_id" not in api_client.session
 
     response = api_client.get(reverse("document-list"))

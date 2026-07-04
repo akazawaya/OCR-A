@@ -71,7 +71,6 @@ class AuthViewSet(viewsets.ViewSet):
 
         if user is None:
             return Response(
-                {"detail": "ログイン失敗"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -79,7 +78,6 @@ class AuthViewSet(viewsets.ViewSet):
 
         return Response(
             {
-                "detail": "ログイン成功",
                 "user": UserSerializer(user).data,
             },
             status=status.HTTP_200_OK,
@@ -88,7 +86,9 @@ class AuthViewSet(viewsets.ViewSet):
     @action(detail=False, methods=["post"])
     def logout(self, request):
         logout(request)
-        return Response({"detail": "ログアウト成功"})
+        return Response(
+            status=status.HTTP_204_NO_CONTENT,
+        )
 
 
 class DocumentViewSet(viewsets.ModelViewSet):
