@@ -2,6 +2,7 @@ import { beforeAll, beforeEach, afterEach, afterAll, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 import { setupServer } from "msw/node";
 
+import { authApiHandlers, resetMockUser } from "./msw/authApiHandlers";
 import { documentsApiHandlers } from "./msw/documentsApiHandlers";
 import { MOCK_API_BASE_URL } from "./msw/config";
 import { pagesApiHandlers } from "./msw/pagesApiHandlers";
@@ -9,6 +10,7 @@ import { wordsApiHandlers } from "./msw/wordsApiHandlers";
 import { wsHandlers } from "./msw/wsHandlers";
 
 const server = setupServer(
+  ...authApiHandlers,
   ...documentsApiHandlers,
   ...pagesApiHandlers,
   ...wordsApiHandlers,
@@ -24,6 +26,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  resetMockUser();
 });
 
 afterEach(() => {
