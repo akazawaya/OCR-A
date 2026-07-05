@@ -1,4 +1,5 @@
 import { fetchBackend } from "../fetchBackend";
+import { authActionSpec } from "../../appConfig";
 
 export const postCollection = async ({ collectionUrl, body }) => {
   const { res, data } = await fetchBackend(collectionUrl, {
@@ -57,4 +58,24 @@ export const ocrPreviewWord = async ({ actionUrl, previewWord, mode, doc }) => {
     throwOnError: true,
   });
   return data.preview_job_id;
+};
+
+export const login = async ({ username, password }) => {
+  const { data } = await fetchBackend(authActionSpec.loginUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+    throwOnError: true,
+  });
+
+  return data;
+};
+
+export const logout = async () => {
+  const { res } = await fetchBackend(authActionSpec.logoutUrl, {
+    method: "POST",
+    throwOnError: true,
+  });
+
+  return res;
 };

@@ -1,5 +1,5 @@
 import { fetchBackend } from "../fetchBackend";
-import { wordOcrAccessSpec } from "../../appConfig";
+import { wordOcrAccessSpec, authActionSpec } from "../../appConfig";
 
 export const getCollectionItem = async ({ collectionUrl, id }) => {
   const { data } = await fetchBackend(`${collectionUrl}${id}/`);
@@ -15,5 +15,13 @@ export const getPreviewWordOcrResult = async ({ previewJobId }) => {
   const { data } = await fetchBackend(
     wordOcrAccessSpec.resultUrl(previewJobId),
   );
+  return data;
+};
+
+export const getMe = async () => {
+  const { data } = await fetchBackend(authActionSpec.meUrl, {
+    throwOnError: true,
+  });
+
   return data;
 };
