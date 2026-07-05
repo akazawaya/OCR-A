@@ -29,6 +29,12 @@ const makeAccessSpec = ({ schemaKey, collection }) => {
   };
 };
 
+export const authActionSpec = {
+  meUrl: API_BASE_URL + "auth/me/",
+  loginUrl: API_BASE_URL + "auth/login/",
+  logoutUrl: API_BASE_URL + "auth/logout/",
+};
+
 export const documentAccessSpec = makeAccessSpec({
   schemaKey: "Document",
   collection: "documents",
@@ -83,6 +89,10 @@ export const wordSpec = attachResourceSpec(wordAccessSpec, wordUiSpec);
 // template:React Routerのdynamic paramsを用いた抽象URL。App.jsx の <Route path=...> に渡して定義に使う。
 // to: 遷移先URLを生成する関数。Link の to や navigate() に渡す具体URLを作る。
 export const routePaths = Object.freeze({
+  login: {
+    template: "/login",
+    to: () => "/login",
+  },
   docs: {
     template: "/documents",
     to: () => "/documents",
