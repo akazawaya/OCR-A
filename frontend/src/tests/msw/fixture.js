@@ -6,6 +6,12 @@ export const defaultMockDocuments = [
   { id: 3, file_name: "gamma-alpha.pdf", state: "FAILED" },
 ];
 
+export const defaultMockAuthUser = {
+  id: 1,
+  username: "testuser",
+  password: "testpass123",
+};
+
 export const defaultMockPages = [
   {
     id: 1,
