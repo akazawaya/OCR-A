@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+import LoginPage from "./pages/LoginPage";
 import DocumentsPage from "./pages/DocumentsPage";
 import ViewerPage from "./pages/ViewerPage";
 import { routePaths } from "./appConfig";
@@ -14,7 +15,9 @@ const App = () => {
       <BrowserRouter>
         <div className="h-dvh overflow-hidden">
           <Routes>
-            <Route element={<DocumentsPage />} path="/" />
+            <Route element={<LoginPage />} path="/" />
+            <Route element={<LoginPage />} path={routePaths.login.template} />
+
             <Route
               element={<DocumentsPage />}
               path={routePaths.docs.template}
