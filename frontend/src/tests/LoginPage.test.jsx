@@ -7,6 +7,7 @@ import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import userEvent from "@testing-library/user-event";
 import { render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "sonner";
 
 import LoginPage from "../pages/LoginPage";
 
@@ -37,6 +38,7 @@ const renderLoginPage = () => {
             element={
               <>
                 <LoginPage />
+                <Toaster />
                 <LocationProbe />
               </>
             }
@@ -77,7 +79,7 @@ describe("LoginPage", () => {
     await user.type(screen.getByLabelText("パスワード"), "wrong-password");
     await user.click(screen.getByRole("button", { name: "ログイン" }));
 
-    expect(await screen.findByText("ログインに失敗しました。")).toBeVisible();
+    expect(await screen.findByText("ログインに失敗しました")).toBeVisible();
     expect(screen.getByTestId("location-display")).toHaveTextContent(
       LOGIN_PATH,
     );
