@@ -65,14 +65,14 @@ describe("RequireAuth", () => {
 
     renderProtectedDocumentsRoute();
 
-    expect(screen.getByTestId("location-display")).toHaveTextContent(
+    expect(await screen.findByTestId("location-display")).toHaveTextContent(
       DOCUMENTS_PATH,
     );
   });
 
   test("未認証時はDocumentPageからLoginPageへリダイレクトする", async () => {
     renderProtectedDocumentsRoute();
-    expect(screen.getByTestId("location-display")).toHaveTextContent(
+    expect(await screen.findByTestId("location-display")).toHaveTextContent(
       LOGIN_PATH,
     );
   });
