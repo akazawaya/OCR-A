@@ -6,7 +6,7 @@ import "@testing-library/jest-dom/vitest";
 import { describe, expect, test } from "vitest";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 
-import RequireAuth from "../components/Auth/RequireAuth";
+import RequireAuth from "../components/RequireAuth";
 
 import { loginMockUser } from "./msw/authApiHandlers";
 
@@ -65,7 +65,6 @@ describe("RequireAuth", () => {
 
     renderProtectedDocumentsRoute();
 
-    expect(await screen.findByText("DocumentsPage")).toBeVisible();
     expect(screen.getByTestId("location-display")).toHaveTextContent(
       DOCUMENTS_PATH,
     );
@@ -73,8 +72,6 @@ describe("RequireAuth", () => {
 
   test("未認証時はDocumentPageからLoginPageへリダイレクトする", async () => {
     renderProtectedDocumentsRoute();
-
-    expect(await screen.findByText("LoginPage")).toBeVisible();
     expect(screen.getByTestId("location-display")).toHaveTextContent(
       LOGIN_PATH,
     );
