@@ -34,7 +34,7 @@ const renderAppSidebar = ({ initialEntry = VIEWER_PATH } = {}) => {
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[initialEntry]}>
-        <AppSidebar />
+        <AppSidebar user={defaultMockAuthUser} />
         <Routes>
           <Route element={<LocationProbe />} path={LOGIN_PATH} />
           <Route element={<LocationProbe />} path={DOCUMENTS_PATH} />
@@ -46,23 +46,16 @@ const renderAppSidebar = ({ initialEntry = VIEWER_PATH } = {}) => {
 };
 
 describe("AppSidebar", () => {
-  test("認証時はユーザー名の表記がある", async () => {
-    loginMockUser();
+  test("ユーザー名が反映され、表示される", async () => {
     renderAppSidebar();
-
-    expect(await screen.findByText(defaultMockAuthUser.username)).toBeVisible();
+    expect(screen.getByText(defaultMockAuthUser.username)).toBeVisible();
   });
 
-  test("未認証時は未ログインの表記がある", async () => {
-    renderAppSidebar();
-    expect(await screen.findByText("未ログイン")).toBeVisible();
-  });
-
-  test("タスク一覧ボタンをクリックするとDocumentsPageへ遷移する", async () => {
+  test("トップページボタンをクリックするとDocumentsPageへ遷移する", async () => {
     renderAppSidebar();
     const user = userEvent.setup();
 
-    await user.click(screen.getByRole("button", { name: "タスク一覧" }));
+    await user.click(screen.getByRole("button", { name: "トップページ" }));
 
     expect(screen.getByTestId("location-display")).toHaveTextContent(
       DOCUMENTS_PATH,
