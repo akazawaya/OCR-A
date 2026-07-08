@@ -7,7 +7,7 @@ import "@testing-library/jest-dom/vitest";
 import { describe, expect, test } from "vitest";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 
-import AppSidebar from "../components/AppSidebar";
+import AppSidebar from "../components/Auth/AppSidebar";
 
 import { loginMockUser } from "./msw/authApiHandlers";
 import { MOCK_API_BASE_URL } from "./msw/config";

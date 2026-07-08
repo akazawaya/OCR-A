@@ -6,7 +6,7 @@ import "@testing-library/jest-dom/vitest";
 import { describe, expect, test } from "vitest";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 
-import RequireAuth from "../components/RequireAuth";
+import AuthLayout from "../components/Auth/AuthLayout";
 
 import { loginMockUser } from "./msw/authApiHandlers";
 
@@ -33,7 +33,7 @@ const renderProtectedDocumentsRoute = ({
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[initialEntry]}>
         <Routes>
-          <Route element={<RequireAuth />}>
+          <Route element={<AuthLayout />}>
             <Route
               element={
                 <>
@@ -59,7 +59,7 @@ const renderProtectedDocumentsRoute = ({
   );
 };
 
-describe("RequireAuth", () => {
+describe("AuthLayout", () => {
   test("認証時は保護対象ページ(代表でDocumentsPage)を表示する", async () => {
     loginMockUser();
 

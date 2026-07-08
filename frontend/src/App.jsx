@@ -7,7 +7,7 @@ import LoginPage from "./pages/LoginPage";
 import DocumentsPage from "./pages/DocumentsPage";
 import ViewerPage from "./pages/ViewerPage";
 import { routePaths } from "./appConfig";
-import RequireAuth from "./components/RequireAuth";
+import AuthLayout from "./components/Auth/AuthLayout";
 
 const queryClient = new QueryClient();
 
@@ -20,7 +20,7 @@ const App = () => {
             <Route element={<LoginPage />} path="/" />
             <Route element={<LoginPage />} path={routePaths.login.template} />
 
-            <Route element={<RequireAuth />}>
+            <Route element={<AuthLayout />}>
               <Route
                 element={<DocumentsPage />}
                 path={routePaths.docs.template}
