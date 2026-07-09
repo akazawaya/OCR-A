@@ -10,13 +10,12 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.parsers import FormParser, MultiPartParser
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, DjangoModelPermissions, IsAuthenticated
 from rest_framework.response import Response
 
 from app_ocr.etc.tools import inspect_file
 from app_ocr.filters import DocumentFilterSet
 from app_ocr.models import Document, FileType, Page, State, Word
-from app_ocr.permissions import HasOcrAccess
 from app_ocr.serializers import (
     DocumentSerializer,
     DocumentUploadSerializer,
@@ -153,7 +152,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         detail=False,
         methods=["post"],
         url_path="ocr",
-        permission_classes=[IsAuthenticated, HasOcrAccess],
+        permission_classes=[IsAuthenticated, DjangoModelPermissions],
     )
     def ocr(self, request):
         file = request.FILES.get("file")
@@ -208,7 +207,7 @@ class WordViewSet(viewsets.ModelViewSet):
         detail=False,
         methods=["post"],
         url_path="ocr",
-        permission_classes=[IsAuthenticated, HasOcrAccess],
+        permission_classes=[IsAuthenticated, DjangoModelPermissions],
     )
     def ocr(self, request):
         serializer = PreviewWordOcrRequestSerializer(data=request.data)
