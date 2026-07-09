@@ -2,10 +2,11 @@ from pathlib import Path
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group, Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APIClient
 
-from app_ocr.models import Direction, Document, FileType, Page, UserAccount, Word
+from app_ocr.models import Direction, Document, FileType, Page, Word
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures"
 DEFAULT_UPLOAD_FILE_NAME = "sample.pdf"
@@ -19,8 +20,6 @@ DEFAULT_PASSWORD = "testpass123"
 DEFAULT_USERNAME = "testuser"
 DEFAULT_WORD_DIRECTION = Direction.HORIZONTAL
 DEFAULT_WORD_CONTENT = "test"
-# デフォルトのテストユーザーはOCR利用可能な registered とする
-DEFAULT_ACCOUNT_KIND = "registered"
 
 
 @pytest.fixture
@@ -51,6 +50,22 @@ def uploaded_file_from_fixture_factory():
 
 
 @pytest.fixture
+def group_factory(db):
+    def make_group(*, name="test-group", permissions=()):
+        group = Group.objects.create(name=name)
+        if permissions:
+            group.permissions.add(
+                *Permission.objects.filter(
+                    content_type__app_label="app_ocr",
+                    codename__in=permissions,
+                )
+            )
+        return group
+
+    return make_group
+
+
+@pytest.fixture
 def user_client_factory(db):
     user_model = get_user_model()
 
@@ -58,9 +73,8 @@ def user_client_factory(db):
         *,
         username=DEFAULT_USERNAME,
         password=DEFAULT_PASSWORD,
-        account_kind=DEFAULT_ACCOUNT_KIND,
-        ocr_access_tier=None,
         is_superuser=False,
+        groups=(),
     ):
         if is_superuser:
             user = user_model.objects.create_superuser(
@@ -72,13 +86,8 @@ def user_client_factory(db):
                 username=username,
                 password=password,
             )
-            profile_kwargs = {
-                "user": user,
-                "account_kind": account_kind,
-            }
-            if ocr_access_tier is not None:
-                profile_kwargs["ocr_access_tier"] = ocr_access_tier
-            UserAccount.objects.create(**profile_kwargs)
+            if groups:
+                user.groups.add(*groups)
         client = APIClient()
         client.force_login(user)
         client.user = user
@@ -88,8 +97,12 @@ def user_client_factory(db):
 
 
 @pytest.fixture
-def authenticated_client(user_client_factory):
-    client, _ = user_client_factory()
+def authenticated_client(user_client_factory, group_factory):
+    ocr_group = group_factory(
+        name="ocr-users",
+        permissions=("add_document", "add_word"),
+    )
+    client, _ = user_client_factory(groups=[ocr_group])
     return client
 
 

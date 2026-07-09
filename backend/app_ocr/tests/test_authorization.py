@@ -54,7 +54,10 @@ def test_authorization_limits_lists_to_own_resources(
 
 
 @pytest.mark.parametrize(
-    "url_name,payload,patch_targets,user_kwargs,expected_status,inspect_file_return",
+    (
+        "url_name,payload,patch_targets,username,is_superuser,"
+        "group_permissions,expected_status,inspect_file_return"
+    ),
     [
         (
             "document-ocr",
@@ -64,10 +67,9 @@ def test_authorization_limits_lists_to_own_resources(
                 "app_ocr.views.create_pages_from_document_file",
                 "app_ocr.views.dispatch_ocr_pages_task.delay",
             ],
-            {
-                "username": "limited",
-                "ocr_access_tier": "none",
-            },
+            "without-document-permission",
+            False,
+            (),
             status.HTTP_403_FORBIDDEN,
             None,
         ),
@@ -78,10 +80,9 @@ def test_authorization_limits_lists_to_own_resources(
                 "app_ocr.views.set_preview_word_ocr_job",
                 "app_ocr.views.ocr_word_task.apply_async",
             ],
-            {
-                "username": "limited",
-                "ocr_access_tier": "none",
-            },
+            "without-word-permission",
+            False,
+            (),
             status.HTTP_403_FORBIDDEN,
             None,
         ),
@@ -93,10 +94,9 @@ def test_authorization_limits_lists_to_own_resources(
                 "app_ocr.views.create_pages_from_document_file",
                 "app_ocr.views.dispatch_ocr_pages_task.delay",
             ],
-            {
-                "username": "standard",
-                "ocr_access_tier": "standard",
-            },
+            "with-document-permission",
+            False,
+            ("add_document",),
             status.HTTP_202_ACCEPTED,
             ("jpg", 1),
         ),
@@ -107,10 +107,9 @@ def test_authorization_limits_lists_to_own_resources(
                 "app_ocr.views.set_preview_word_ocr_job",
                 "app_ocr.views.ocr_word_task.apply_async",
             ],
-            {
-                "username": "standard",
-                "ocr_access_tier": "standard",
-            },
+            "with-word-permission",
+            False,
+            ("add_word",),
             status.HTTP_202_ACCEPTED,
             None,
         ),
@@ -122,10 +121,9 @@ def test_authorization_limits_lists_to_own_resources(
                 "app_ocr.views.create_pages_from_document_file",
                 "app_ocr.views.dispatch_ocr_pages_task.delay",
             ],
-            {
-                "username": "admin",
-                "is_superuser": True,
-            },
+            "document-admin",
+            True,
+            (),
             status.HTTP_202_ACCEPTED,
             ("jpg", 1),
         ),
@@ -136,17 +134,17 @@ def test_authorization_limits_lists_to_own_resources(
                 "app_ocr.views.set_preview_word_ocr_job",
                 "app_ocr.views.ocr_word_task.apply_async",
             ],
-            {
-                "username": "admin",
-                "is_superuser": True,
-            },
+            "word-admin",
+            True,
+            (),
             status.HTTP_202_ACCEPTED,
             None,
         ),
     ],
 )
-def test_ocr_access_tier_controls_ocr_access(
+def test_group_model_permissions_control_ocr_access(
     user_client_factory,
+    group_factory,
     document_factory,
     page_factory,
     dummy_file_factory,
@@ -156,11 +154,25 @@ def test_ocr_access_tier_controls_ocr_access(
     url_name,
     payload,
     patch_targets,
-    user_kwargs,
+    username,
+    is_superuser,
+    group_permissions,
     expected_status,
     inspect_file_return,
 ):
-    client, _ = user_client_factory(**user_kwargs)
+    groups = []
+    if group_permissions:
+        groups = [
+            group_factory(
+                name=f"{username}-group",
+                permissions=group_permissions,
+            )
+        ]
+    client, _ = user_client_factory(
+        username=username,
+        is_superuser=is_superuser,
+        groups=groups,
+    )
     settings.MEDIA_ROOT = tmp_path
 
     document = None
