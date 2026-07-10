@@ -5,12 +5,13 @@ import "@testing-library/jest-dom/vitest";
 import { describe, expect, test } from "vitest";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import userEvent from "@testing-library/user-event";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 
 import LoginPage from "../pages/LoginPage";
 
+import { getCreatedUsers } from "./msw/authApiHandlers";
 import { defaultMockAuthUser } from "./msw/fixture";
 
 const LOGIN_PATH = "/login";
@@ -52,6 +53,23 @@ const renderLoginPage = () => {
 };
 
 describe("LoginPage", () => {
+  test("ゲストユーザーでログインをクリックするとuserが追加される", async () => {
+    renderLoginPage();
+
+    const user = userEvent.setup();
+    await user.click(
+      screen.getByRole("button", { name: "ゲストユーザーでログイン" }),
+    );
+
+    await waitFor(() => {
+      expect(getCreatedUsers()).toHaveLength(1);
+    });
+    expect(getCreatedUsers()[0].username).toMatch(/^guest_/);
+    expect(await screen.findByTestId("location-display")).toHaveTextContent(
+      DOCUMENTS_PATH,
+    );
+  });
+
   test("ログイン成功時はDocumentsPageへ遷移する", async () => {
     renderLoginPage();
 

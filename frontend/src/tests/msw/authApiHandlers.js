@@ -5,13 +5,23 @@ import { defaultMockAuthUser } from "./fixture";
 
 let isAuthenticated = false;
 let user = structuredClone(defaultMockAuthUser);
+let receivedLoginRequestBody = null;
+let createdUsers = [];
 
 export const resetMockUser = () => {
   isAuthenticated = false;
   user = structuredClone(defaultMockAuthUser);
+  receivedLoginRequestBody = null;
+  createdUsers = [];
 };
 export const loginMockUser = () => {
   isAuthenticated = true;
+};
+export const getReceivedLoginRequestBody = () => {
+  return receivedLoginRequestBody;
+};
+export const getCreatedUsers = () => {
+  return createdUsers;
 };
 export const authApiHandlers = [
   http.get(`${MOCK_API_BASE_URL}/auth/me/`, () => {
@@ -21,8 +31,29 @@ export const authApiHandlers = [
     });
   }),
 
+  http.post(`${MOCK_API_BASE_URL}/users/`, async () => {
+    user = {
+      id: 999,
+      username: `guest_${Date.now().toString(36)}`,
+      password: defaultMockAuthUser.password,
+    };
+    createdUsers = [...createdUsers, structuredClone(user)];
+    isAuthenticated = true;
+
+    return HttpResponse.json(
+      {
+        user: {
+          id: user.id,
+          username: user.username,
+        },
+      },
+      { status: 201 },
+    );
+  }),
+
   http.post(`${MOCK_API_BASE_URL}/auth/login/`, async ({ request }) => {
     const body = await request.json();
+    receivedLoginRequestBody = structuredClone(body);
     if (body.username === user.username && body.password === user.password) {
       isAuthenticated = true;
       return HttpResponse.json(
