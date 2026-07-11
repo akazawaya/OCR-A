@@ -39,6 +39,10 @@ export const documentAccessSpec = makeAccessSpec({
   schemaKey: "Document",
   collection: "documents",
 });
+export const userAccessSpec = makeAccessSpec({
+  schemaKey: "User",
+  collection: "users",
+});
 export const pageAccessSpec = makeAccessSpec({
   schemaKey: "Page",
   collection: "pages",

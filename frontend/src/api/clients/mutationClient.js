@@ -1,5 +1,5 @@
 import { fetchBackend } from "../fetchBackend";
-import { authActionSpec } from "../../appConfig";
+import { authActionSpec, userAccessSpec } from "../../appConfig";
 
 export const postCollection = async ({ collectionUrl, body }) => {
   const { res, data } = await fetchBackend(collectionUrl, {
@@ -74,6 +74,24 @@ export const login = async ({ username, password }) => {
 export const logout = async () => {
   const { res } = await fetchBackend(authActionSpec.logoutUrl, {
     method: "POST",
+    throwOnError: true,
+  });
+
+  return res;
+};
+
+export const createUser = async () => {
+  const { data } = await fetchBackend(userAccessSpec.collectionUrl, {
+    method: "POST",
+    throwOnError: true,
+  });
+
+  return data;
+};
+
+export const deleteCurrentUser = async () => {
+  const { res } = await fetchBackend(`${userAccessSpec.collectionUrl}me/`, {
+    method: "DELETE",
     throwOnError: true,
   });
 
