@@ -11,7 +11,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const { mutate: loginHandler } = useMutation({
+  const { mutate: loginMutation } = useMutation({
     mutationFn: () => login({ username, password }),
     onSuccess: () => {
       navigate(routePaths.docs.to());
@@ -65,7 +65,7 @@ const LoginPage = () => {
         />
       </label>
 
-      <button onClick={() => loginHandler()}>ログイン</button>
+      <button onClick={() => loginMutation()}>ログイン</button>
 
       <button onClick={() => createUserMutation()}>
         ゲストユーザーでログイン
