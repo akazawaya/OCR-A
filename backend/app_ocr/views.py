@@ -1,8 +1,9 @@
+import secrets
 from uuid import uuid4
 
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
@@ -42,9 +43,49 @@ from app_ocr.tasks import (
 )
 
 
-class UserViewSet(viewsets.ReadOnlyModelViewSet):
+class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    def get_permissions(self):
+        if self.action == "create":
+            return [AllowAny()]
+
+        return super().get_permissions()
+
+    def create(self, request):
+        username = f"guest_{uuid4().hex}"
+        password = secrets.token_urlsafe(32)
+
+        user = User.objects.create_user(
+            username=username,
+            password=password,
+        )
+
+        guest_group = Group.objects.get(name="guest")
+        user.groups.add(guest_group)
+
+        login(request, user)
+
+        return Response(
+            UserSerializer(user).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+    @action(
+        detail=False,
+        methods=["delete"],
+        permission_classes=[IsAuthenticated],
+    )
+    def me(self, request):
+        user = request.user
+        if not user.groups.filter(name="guest").exists():
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        logout(request)
+        user.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class AuthViewSet(viewsets.ViewSet):
