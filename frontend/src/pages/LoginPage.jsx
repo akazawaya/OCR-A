@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-import { login } from "../api/clients/mutationClient";
+import { createUser, login } from "../api/clients/mutationClient";
 import { routePaths } from "../appConfig";
 
 const LoginPage = () => {
@@ -13,6 +13,23 @@ const LoginPage = () => {
 
   const { mutate: loginHandler } = useMutation({
     mutationFn: () => login({ username, password }),
+    onSuccess: () => {
+      navigate(routePaths.docs.to());
+    },
+    onError: () => {
+      toast.error("ログインに失敗しました", {
+        position: "top-center",
+        classNames: {
+          toast: "!border !border-red-300 !bg-red-50 !text-red-800 ",
+          title: "!font-semibold !text-red-800",
+          description: "!text-red-700",
+        },
+      });
+    },
+  });
+
+  const { mutate: createUserMutation } = useMutation({
+    mutationFn: () => createUser(),
     onSuccess: () => {
       navigate(routePaths.docs.to());
     },
@@ -49,6 +66,10 @@ const LoginPage = () => {
       </label>
 
       <button onClick={() => loginHandler()}>ログイン</button>
+
+      <button onClick={() => createUserMutation()}>
+        ゲストユーザーでログイン
+      </button>
     </div>
   );
 };
