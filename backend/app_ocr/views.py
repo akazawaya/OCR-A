@@ -1,9 +1,8 @@
-import secrets
 from uuid import uuid4
 
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import User
 from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
@@ -23,6 +22,7 @@ from app_ocr.serializers import (
     PageSerializer,
     PreviewWordOcrJobResultSerializer,
     PreviewWordOcrRequestSerializer,
+    UserCreateSerializer,
     UserSerializer,
     WordSerializer,
 )
@@ -54,16 +54,9 @@ class UserViewSet(viewsets.ModelViewSet):
         return super().get_permissions()
 
     def create(self, request):
-        username = f"guest_{uuid4().hex}"
-        password = secrets.token_urlsafe(32)
-
-        user = User.objects.create_user(
-            username=username,
-            password=password,
-        )
-
-        guest_group = Group.objects.get(name="guest")
-        user.groups.add(guest_group)
+        serializer = UserCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
 
         login(request, user)
 

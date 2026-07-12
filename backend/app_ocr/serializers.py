@@ -1,6 +1,9 @@
+import secrets
+from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from django.contrib.auth.models import User
+from django.contrib.auth import password_validation
+from django.contrib.auth.models import Group, User
 from rest_framework import serializers
 
 from app_ocr.input_constraints import (
@@ -16,6 +19,46 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["id", "username"]
+
+
+class UserCreateSerializer(serializers.Serializer):
+    type = serializers.ChoiceField(choices=["guest", "registered"])
+    username = serializers.CharField(required=False)
+    password = serializers.CharField(required=False, write_only=True)
+
+    def validate(self, attrs):
+        if attrs["type"] != "registered":
+            return attrs
+
+        username = attrs.get("username")
+        password = attrs.get("password")
+
+        if not username:
+            raise serializers.ValidationError({"username": "この項目は必須です。"})
+        if not password:
+            raise serializers.ValidationError({"password": "この項目は必須です。"})
+        if User.objects.filter(username=username).exists():
+            raise serializers.ValidationError(
+                {"username": "このユーザー名は既に使われています。"}
+            )
+
+        password_validation.validate_password(password)
+        return attrs
+
+    def create(self, validated_data):
+        if validated_data["type"] == "guest":
+            user = User.objects.create_user(
+                username=f"guest_{uuid4().hex}",
+                password=secrets.token_urlsafe(32),
+            )
+            guest_group = Group.objects.get(name="guest")
+            user.groups.add(guest_group)
+            return user
+
+        return User.objects.create_user(
+            username=validated_data["username"],
+            password=validated_data["password"],
+        )
 
 
 class DocumentSerializer(serializers.ModelSerializer):
