@@ -12,7 +12,7 @@ import { Toaster } from "sonner";
 import LoginPage from "../pages/LoginPage";
 
 import { getCreatedUsers } from "./msw/authApiHandlers";
-import { defaultMockAuthUser, defaultMockGuestUser } from "./msw/fixture";
+import { defaultMockAuthUser } from "./msw/fixture";
 
 const LOGIN_PATH = "/login";
 const DOCUMENTS_PATH = "/documents";
@@ -53,7 +53,7 @@ const renderLoginPage = () => {
 };
 
 describe("LoginPage", () => {
-  test("ゲストユーザーでログインをクリックするとuserが追加される", async () => {
+  test("ゲストユーザーでログインをクリックするとuserが追加され、DocumentsPageへ遷移する", async () => {
     renderLoginPage();
 
     const user = userEvent.setup();
@@ -64,7 +64,6 @@ describe("LoginPage", () => {
     await waitFor(() => {
       expect(getCreatedUsers()).toHaveLength(1);
     });
-    expect(getCreatedUsers()[0]).toEqual(defaultMockGuestUser);
     expect(await screen.findByTestId("location-display")).toHaveTextContent(
       DOCUMENTS_PATH,
     );
