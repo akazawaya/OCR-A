@@ -70,6 +70,9 @@ const LoginPage = () => {
       <button onClick={() => createUserMutation()}>
         ゲストユーザーでログイン
       </button>
+
+      <p>アカウントをお持ちでない方は</p>
+      <button onClick={() => navigate(routePaths.signup.to())}>新規登録</button>
     </div>
   );
 };

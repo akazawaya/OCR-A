@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 
 import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
 import DocumentsPage from "./pages/DocumentsPage";
 import ViewerPage from "./pages/ViewerPage";
 import { routePaths } from "./appConfig";
@@ -19,6 +20,7 @@ const App = () => {
           <Routes>
             <Route element={<LoginPage />} path="/" />
             <Route element={<LoginPage />} path={routePaths.login.template} />
+            <Route element={<SignupPage />} path={routePaths.signup.template} />
 
             <Route element={<AuthLayout />}>
               <Route
