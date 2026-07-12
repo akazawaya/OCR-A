@@ -80,9 +80,11 @@ export const logout = async () => {
   return res;
 };
 
-export const createUser = async () => {
+export const createUser = async (body = { type: "guest" }) => {
   const { data } = await fetchBackend(userAccessSpec.collectionUrl, {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
     throwOnError: true,
   });
 
