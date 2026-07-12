@@ -1,5 +1,6 @@
 import pytest
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -32,6 +33,64 @@ def login_user(api_client, user, password=DEFAULT_PASSWORD):
         },
         format="json",
     )
+
+
+def test_create_guest_user_returns_success_and_logs_in(api_client):
+    guest_group = Group.objects.create(name="guest")
+
+    response = api_client.post(
+        reverse("user-list"),
+        {"type": "guest"},
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    user = get_user_model().objects.get(id=response.data["id"])
+    assert user.has_usable_password()
+    assert list(user.groups.all()) == [guest_group]
+    assert api_client.session["_auth_user_id"] == str(user.id)
+
+
+def test_create_registered_user_returns_success_and_logs_in(api_client):
+    username = "registered-user"
+
+    response = api_client.post(
+        reverse("user-list"),
+        {
+            "type": "registered",
+            "username": username,
+            "password": DEFAULT_PASSWORD,
+        },
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    user = get_user_model().objects.get(username=username)
+    assert response.data == {
+        "id": user.id,
+        "username": username,
+    }
+    assert user.check_password(DEFAULT_PASSWORD)
+    assert list(user.groups.all()) == []
+    assert api_client.session["_auth_user_id"] == str(user.id)
+
+
+def test_create_registered_user_rejects_duplicate_username(api_client):
+    create_user(username="registered-user")
+
+    response = api_client.post(
+        reverse("user-list"),
+        {
+            "type": "registered",
+            "username": "registered-user",
+            "password": DEFAULT_PASSWORD,
+        },
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert get_user_model().objects.filter(username="registered-user").count() == 1
+    assert "_auth_user_id" not in api_client.session
 
 
 def test_login_returns_success(api_client):
