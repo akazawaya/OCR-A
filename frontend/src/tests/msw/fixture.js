@@ -12,6 +12,12 @@ export const defaultMockAuthUser = {
   password: "testpass123",
 };
 
+export const defaultMockGuestUser = {
+  id: 999,
+  username: "use",
+  password: "testpass123",
+};
+
 export const defaultMockPages = [
   {
     id: 1,

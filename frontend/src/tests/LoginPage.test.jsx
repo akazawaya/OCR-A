@@ -12,7 +12,7 @@ import { Toaster } from "sonner";
 import LoginPage from "../pages/LoginPage";
 
 import { getCreatedUsers } from "./msw/authApiHandlers";
-import { defaultMockAuthUser } from "./msw/fixture";
+import { defaultMockAuthUser, defaultMockGuestUser } from "./msw/fixture";
 
 const LOGIN_PATH = "/login";
 const DOCUMENTS_PATH = "/documents";
@@ -64,7 +64,7 @@ describe("LoginPage", () => {
     await waitFor(() => {
       expect(getCreatedUsers()).toHaveLength(1);
     });
-    expect(getCreatedUsers()[0].username).toMatch(/^guest_/);
+    expect(getCreatedUsers()[0]).toEqual(defaultMockGuestUser);
     expect(await screen.findByTestId("location-display")).toHaveTextContent(
       DOCUMENTS_PATH,
     );

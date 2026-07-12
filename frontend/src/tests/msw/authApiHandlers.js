@@ -1,7 +1,7 @@
 import { http, HttpResponse } from "msw";
 
 import { MOCK_API_BASE_URL } from "./config";
-import { defaultMockAuthUser } from "./fixture";
+import { defaultMockAuthUser, defaultMockGuestUser } from "./fixture";
 
 let isAuthenticated = false;
 let user = structuredClone(defaultMockAuthUser);
@@ -32,11 +32,7 @@ export const authApiHandlers = [
   }),
 
   http.post(`${MOCK_API_BASE_URL}/users/`, async () => {
-    user = {
-      id: 999,
-      username: `guest_${Date.now().toString(36)}`,
-      password: defaultMockAuthUser.password,
-    };
+    user = structuredClone(defaultMockGuestUser);
     createdUsers = [...createdUsers, structuredClone(user)];
     isAuthenticated = true;
 
