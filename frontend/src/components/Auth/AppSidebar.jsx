@@ -1,12 +1,13 @@
 import { useNavigate } from "react-router-dom";
 
-import { routePaths } from "../../appConfig";
+import { routePaths, userSpec } from "../../appConfig";
 
 const AppSidebar = ({
-  data: { username },
+  data: { username: _username },
   events: { onClickLogoutButton },
 }) => {
   const navigate = useNavigate();
+  const username = userSpec.ui.username.format(_username);
   return (
     <div>
       <div>{username}</div>

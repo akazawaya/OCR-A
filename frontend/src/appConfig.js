@@ -59,7 +59,18 @@ export const wordOcrAccessSpec = {
   actionUrl: API_BASE_URL + "words/ocr/",
   resultUrl: (previewJobId) => API_BASE_URL + `words/ocr/${previewJobId}/`,
 };
-// 表示するフィールド/列を選ぶ（表示名の翻訳も兼ねる）
+
+// 表示するフィールド/列を選ぶ（表示名の翻訳、整形も兼ねる）
+const userUiSpec = Object.freeze({
+  username: {
+    format: (username) => {
+      if (!username.startsWith("guest_")) return username;
+      const suffix = username.slice("guest_".length);
+      return `guest_${suffix.slice(0, 10)}...`;
+    },
+  },
+});
+
 const documentUiSpec = Object.freeze({
   table: [
     { key: "created", label: "作成日時" },
@@ -82,6 +93,8 @@ const attachResourceSpec = (accessSpec, uiSpec = {}) => ({
   ...accessSpec,
   ui: Object.freeze(uiSpec),
 });
+
+export const userSpec = attachResourceSpec(userAccessSpec, userUiSpec);
 
 export const documentSpec = attachResourceSpec(
   documentAccessSpec,
