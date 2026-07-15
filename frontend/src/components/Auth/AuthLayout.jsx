@@ -32,7 +32,7 @@ const AuthLayout = () => {
   }
 
   return (
-    <div className="flex h-full min-h-0">
+    <div>
       <AppSidebar
         data={{ username: data.username }}
         events={{ onClickLogoutButton: logoutMutation }}

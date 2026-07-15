@@ -61,15 +61,6 @@ export const wordOcrAccessSpec = {
 };
 
 // 表示するフィールド/列を選ぶ（表示名の翻訳、整形も兼ねる）
-const userUiSpec = Object.freeze({
-  username: {
-    format: (username) => {
-      if (!username.startsWith("guest_")) return username;
-      const suffix = username.slice("guest_".length);
-      return `guest_${suffix.slice(0, 10)}...`;
-    },
-  },
-});
 
 const documentUiSpec = Object.freeze({
   table: [
@@ -93,8 +84,6 @@ const attachResourceSpec = (accessSpec, uiSpec = {}) => ({
   ...accessSpec,
   ui: Object.freeze(uiSpec),
 });
-
-export const userSpec = attachResourceSpec(userAccessSpec, userUiSpec);
 
 export const documentSpec = attachResourceSpec(
   documentAccessSpec,
