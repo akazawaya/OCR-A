@@ -5,7 +5,7 @@ import { getMe } from "../../api/clients/collectionClient";
 import { logout } from "../../api/clients/mutationClient";
 import { authActionSpec, routePaths } from "../../appConfig";
 
-import AppSidebar from "./AppSidebar";
+import UserMenu from "./UserMenu";
 
 const AuthLayout = () => {
   const queryClient = useQueryClient();
@@ -33,7 +33,7 @@ const AuthLayout = () => {
 
   return (
     <div>
-      <AppSidebar
+      <UserMenu
         data={{ username: data.username }}
         events={{ onClickLogoutButton: logoutMutation }}
       />

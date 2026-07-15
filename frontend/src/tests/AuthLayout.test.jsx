@@ -89,7 +89,7 @@ describe("AuthLayout", () => {
   });
 });
 
-describe("AppSidebar", () => {
+describe("UserMenu", () => {
   test("ユーザー名が反映され、表示される", async () => {
     loginMockUser();
     renderAuthLayout();
@@ -99,7 +99,7 @@ describe("AppSidebar", () => {
       screen.queryByText(defaultMockAuthUser.username),
     ).not.toBeInTheDocument();
     await user.click(
-      await screen.findByRole("button", { name: "サイドバー開閉ボタン" }),
+      await screen.findByRole("button", { name: "ユーザーメニュー開閉ボタン" }),
     );
     expect(await screen.findByText(defaultMockAuthUser.username)).toBeVisible();
   });
@@ -110,7 +110,7 @@ describe("AppSidebar", () => {
     const user = userEvent.setup();
 
     await user.click(
-      await screen.findByRole("button", { name: "サイドバー開閉ボタン" }),
+      await screen.findByRole("button", { name: "ユーザーメニュー開閉ボタン" }),
     );
     await screen.findByText(defaultMockAuthUser.username);
     await user.click(screen.getByRole("button", { name: "トップページ" }));
@@ -126,7 +126,7 @@ describe("AppSidebar", () => {
     const user = userEvent.setup();
 
     await user.click(
-      await screen.findByRole("button", { name: "サイドバー開閉ボタン" }),
+      await screen.findByRole("button", { name: "ユーザーメニュー開閉ボタン" }),
     );
     await screen.findByText(defaultMockAuthUser.username);
     await user.click(screen.getByRole("button", { name: "ログアウト" }));

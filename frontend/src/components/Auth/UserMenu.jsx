@@ -4,17 +4,14 @@ import { User } from "lucide-react";
 
 import { routePaths } from "../../appConfig";
 
-const AppSidebar = ({
-  data: { username },
-  events: { onClickLogoutButton },
-}) => {
+const UserMenu = ({ data: { username }, events: { onClickLogoutButton } }) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   return (
     <div className="absolute m-2">
       <div className="flex items-center gap-1">
         <button
-          aria-label={"サイドバー開閉ボタン"}
+          aria-label={"ユーザーメニュー開閉ボタン"}
           className="z-10 flex h-10 w-10 items-center justify-center rounded-md bg-gray-300 hover:bg-gray-400"
           onClick={() => setIsOpen((current) => !current)}
         >
@@ -44,4 +41,4 @@ const AppSidebar = ({
   );
 };
 
-export default AppSidebar;
+export default UserMenu;
