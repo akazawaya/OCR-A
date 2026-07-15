@@ -8,7 +8,7 @@ const UserMenu = ({ data: { username }, events: { onClickLogoutButton } }) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   return (
-    <div className="absolute m-2">
+    <div>
       <div className="flex items-center gap-1">
         <button
           aria-label={"ユーザーメニュー開閉ボタン"}
@@ -22,7 +22,7 @@ const UserMenu = ({ data: { username }, events: { onClickLogoutButton } }) => {
         </div>
       </div>
       {isOpen && (
-        <div className="z-9 flex w-48 flex-col rounded-md bg-gray-200 p-3">
+        <div className="absolute bottom-full z-9 flex w-48 flex-col rounded-md bg-gray-200 p-3">
           <button
             className="hover:text-gray-400"
             onClick={() => navigate(routePaths.docs.to())}
