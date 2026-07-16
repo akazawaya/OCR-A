@@ -33,7 +33,7 @@ const AuthLayout = () => {
 
   return (
     <div>
-      <div className="fixed bottom-2 left-2">
+      <div className="fixed bottom-2 left-2 z-10">
         <UserMenu
           data={{ username: data.username }}
           events={{ onClickLogoutButton: logoutMutation }}

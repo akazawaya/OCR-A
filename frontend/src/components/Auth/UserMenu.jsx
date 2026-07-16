@@ -12,7 +12,7 @@ const UserMenu = ({ data: { username }, events: { onClickLogoutButton } }) => {
       <div className="flex items-center gap-1">
         <button
           aria-label={"ユーザーメニュー開閉ボタン"}
-          className="z-10 flex h-10 w-10 items-center justify-center rounded-md bg-gray-300 hover:bg-gray-400"
+          className="flex h-10 w-10 items-center justify-center rounded-md bg-gray-300 hover:bg-gray-400"
           onClick={() => setIsOpen((current) => !current)}
         >
           <User />
@@ -22,7 +22,7 @@ const UserMenu = ({ data: { username }, events: { onClickLogoutButton } }) => {
         </div>
       </div>
       {isOpen && (
-        <div className="absolute bottom-full z-9 flex w-48 flex-col rounded-md bg-gray-200 p-3">
+        <div className="absolute bottom-full flex w-48 flex-col rounded-md bg-gray-200 p-3">
           <button
             className="hover:text-gray-400"
             onClick={() => navigate(routePaths.docs.to())}
