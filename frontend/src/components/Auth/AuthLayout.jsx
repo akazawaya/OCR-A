@@ -32,14 +32,14 @@ const AuthLayout = () => {
   }
 
   return (
-    <div>
+    <div className="flex h-full">
       <div className="fixed bottom-2 left-2 z-10">
         <UserMenu
           data={{ username: data.username }}
           events={{ onClickLogoutButton: logoutMutation }}
         />
       </div>
-      <main className="min-w-0 flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto">
         <Outlet />
       </main>
     </div>
