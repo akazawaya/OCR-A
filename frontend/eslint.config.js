@@ -45,6 +45,12 @@ export default defineConfig([
       "react-hooks/exhaustive-deps": "error",
       "react-hooks/rules-of-hooks": "error",
       "react-refresh/only-export-components": "warn",
+      "jsx-a11y/label-has-associated-control": [
+        "error",
+        {
+          controlComponents: ["TextInput", "Button"],
+        },
+      ],
       "react/jsx-sort-props": [
         "warn",
         {

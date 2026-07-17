@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Upload } from "lucide-react";
 
 import { searchOptionDefs } from "../../logic/urlQuery/searchQueryUtils";
+import Button from "../ui/Button";
 
 const DocumentToolbar = ({
   data: { draftSearchQuery, appliedSearchQuery },
@@ -79,8 +80,7 @@ const DocumentToolbar = ({
         </label>
 
         <div className="flex h-full flex-col items-center justify-center gap-1">
-          <button
-            className="w-fit rounded-md bg-indigo-500 p-2 text-white enabled:cursor-pointer enabled:hover:bg-indigo-600 disabled:cursor-not-allowed disabled:bg-gray-400"
+          <Button
             disabled={!selectedFile}
             onClick={() =>
               onClickPostDocumentButton(selectedFile, {
@@ -89,9 +89,8 @@ const DocumentToolbar = ({
             }
           >
             保存＆OCR
-          </button>
-          <button
-            className="w-fit rounded-md bg-indigo-500 p-2 text-white enabled:cursor-pointer enabled:hover:bg-indigo-600 disabled:cursor-not-allowed disabled:bg-gray-400"
+          </Button>
+          <Button
             disabled={!selectedFile}
             onClick={() =>
               onClickPostDocumentButton(selectedFile, {
@@ -100,7 +99,7 @@ const DocumentToolbar = ({
             }
           >
             保存のみ
-          </button>
+          </Button>
         </div>
       </div>
       <div className="text-sm">
@@ -115,18 +114,8 @@ const DocumentToolbar = ({
             value={draftSearchQuery.keyword}
             onChange={(e) => onChangeSearchInput("keyword", e.target.value)}
           />
-          <button
-            className="w-fit cursor-pointer rounded-md bg-indigo-500 px-2 py-1 text-white hover:bg-indigo-600"
-            onClick={onClickSearchButton}
-          >
-            検索
-          </button>
-          <button
-            className="w-fit cursor-pointer rounded-md bg-indigo-500 px-2 py-1 text-white hover:bg-indigo-600"
-            onClick={onClickResetSearchButton}
-          >
-            リセット
-          </button>
+          <Button onClick={onClickSearchButton}>検索</Button>
+          <Button onClick={onClickResetSearchButton}>リセット</Button>
         </div>
         <div className="flex gap-1">
           {renderRadioSection("fieldName", "フィールド名")}

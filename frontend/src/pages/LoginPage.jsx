@@ -5,6 +5,8 @@ import { toast } from "sonner";
 
 import { createUser, login } from "../api/clients/mutationClient";
 import { routePaths } from "../appConfig";
+import Button from "../components/ui/Button";
+import TextInput from "../components/ui/TextInput";
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");
@@ -46,11 +48,10 @@ const LoginPage = () => {
   });
 
   return (
-    <div className="mt-20 flex flex-col items-center">
+    <div className="mx-auto mt-32 flex w-fit flex-col items-center gap-1 rounded-md border border-gray-400 bg-white p-2">
       <label>
         ユーザー名
-        <input
-          type="text"
+        <TextInput
           value={username}
           onChange={(event) => setUsername(event.target.value)}
         />
@@ -58,21 +59,21 @@ const LoginPage = () => {
 
       <label>
         パスワード
-        <input
+        <TextInput
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
         />
       </label>
 
-      <button onClick={() => loginMutation()}>ログイン</button>
+      <Button onClick={() => loginMutation()}>ログイン</Button>
 
-      <button onClick={() => createUserMutation()}>
+      <Button color="gray" onClick={() => createUserMutation()}>
         ゲストユーザーでログイン
-      </button>
+      </Button>
 
       <p>アカウントをお持ちでない方は</p>
-      <button onClick={() => navigate(routePaths.signup.to())}>新規登録</button>
+      <Button onClick={() => navigate(routePaths.signup.to())}>新規登録</Button>
     </div>
   );
 };

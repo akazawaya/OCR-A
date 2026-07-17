@@ -5,6 +5,8 @@ import { toast } from "sonner";
 
 import { createUser } from "../api/clients/mutationClient";
 import { routePaths } from "../appConfig";
+import Button from "../components/ui/Button";
+import TextInput from "../components/ui/TextInput";
 
 const SignupPage = () => {
   const [username, setUsername] = useState("");
@@ -53,41 +55,46 @@ const SignupPage = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <label>
-        ユーザー名
-        <input
-          type="text"
-          value={username}
-          onChange={(event) => setUsername(event.target.value)}
-        />
-      </label>
+    <div className="mx-auto mt-50 flex w-fit flex-col items-center rounded-md border border-gray-400 bg-white p-2">
+      <form onSubmit={handleSubmit}>
+        <label>
+          ユーザー名
+          <TextInput
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+          />
+        </label>
 
-      <label>
-        パスワード
-        <input
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-        />
-      </label>
+        <label>
+          パスワード
+          <TextInput
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+        </label>
 
-      <label>
-        パスワード確認
-        <input
-          type="password"
-          value={passwordConfirmation}
-          onChange={(event) => setPasswordConfirmation(event.target.value)}
-        />
-      </label>
+        <label>
+          パスワード確認
+          <TextInput
+            type="password"
+            value={passwordConfirmation}
+            onChange={(event) => setPasswordConfirmation(event.target.value)}
+          />
+        </label>
 
-      <button type="submit">アカウント作成</button>
+        <Button type="submit">アカウント作成</Button>
 
-      <p>すでにアカウントをお持ちの方は</p>
-      <button type="button" onClick={() => navigate(routePaths.login.to())}>
-        ログイン
-      </button>
-    </form>
+        <p>すでにアカウントをお持ちの方は</p>
+        <Button
+          color="gray"
+          type="button"
+          onClick={() => navigate(routePaths.login.to())}
+        >
+          ログイン
+        </Button>
+      </form>
+    </div>
   );
 };
 
