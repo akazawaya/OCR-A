@@ -7,6 +7,7 @@ import { createUser } from "../api/clients/mutationClient";
 import { routePaths } from "../appConfig";
 import Button from "../components/ui/Button";
 import TextInput from "../components/ui/TextInput";
+import { toastStyles } from "../components/ui/toastStyles";
 
 const SignupPage = () => {
   const [username, setUsername] = useState("");
@@ -25,14 +26,7 @@ const SignupPage = () => {
       navigate(routePaths.docs.to());
     },
     onError: () => {
-      toast.error("アカウント作成に失敗しました", {
-        position: "top-center",
-        classNames: {
-          toast: "!border !border-red-300 !bg-red-50 !text-red-800 ",
-          title: "!font-semibold !text-red-800",
-          description: "!text-red-700",
-        },
-      });
+      toast.error("アカウント作成に失敗しました", toastStyles.error);
     },
   });
 
@@ -40,14 +34,7 @@ const SignupPage = () => {
     event.preventDefault();
 
     if (password !== passwordConfirmation) {
-      toast.error("パスワードが一致しません", {
-        position: "top-center",
-        classNames: {
-          toast: "!border !border-red-300 !bg-red-50 !text-red-800 ",
-          title: "!font-semibold !text-red-800",
-          description: "!text-red-700",
-        },
-      });
+      toast.error("パスワードが一致しません", toastStyles.error);
       return;
     }
 
@@ -55,7 +42,7 @@ const SignupPage = () => {
   };
 
   return (
-    <div className="mx-auto mt-50 flex w-fit flex-col items-center rounded-md border border-gray-400 bg-white p-2">
+    <div className="mx-auto mt-32 flex w-fit flex-col items-center rounded-md border border-gray-400 bg-white p-2">
       <form
         className="flex flex-col items-center gap-2 bg-white"
         onSubmit={handleSubmit}

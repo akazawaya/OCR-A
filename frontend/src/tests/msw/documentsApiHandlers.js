@@ -62,7 +62,7 @@ export const documentsApiHandlers = [
 
   // create の mock は、アップロード導線の代表確認を責務とする。
   // 詳細なファイル検証は backend 側で担う。
-  // frontend では擬似的な拡張子非対応エラーのみ mock し、alert の確認に留める。
+  // frontend では擬似的な拡張子非対応エラーのみ mock し、toast.error の確認に留める。
   http.post(`${MOCK_API_BASE_URL}/documents/`, async ({ request }) => {
     const formData = await request.formData();
     const file = formData.get("file");

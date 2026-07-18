@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
+import { toastStyles } from "../components/ui/toastStyles";
 import {
   documentOcrAccessSpec,
   documentSpec,
@@ -116,7 +118,7 @@ const DocumentsPage = () => {
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: [collectionUrl] }),
     onError: (error) => {
-      window.alert(error.data.file[0]);
+      toast.error(error.data.file[0], toastStyles.error);
     },
   });
 
@@ -124,7 +126,7 @@ const DocumentsPage = () => {
     mutationFn: ({ formData }) =>
       postFormData({ url: documentOcrActionUrl, formData }),
     onError: (error) => {
-      window.alert(error.data.file[0]);
+      toast.error(error.data.file[0], toastStyles.error);
     },
     // これはocrロジック内のws送信によりinvalidateQueries更新を実施する
   });

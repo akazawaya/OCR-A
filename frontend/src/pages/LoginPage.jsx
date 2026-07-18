@@ -7,6 +7,7 @@ import { createUser, login } from "../api/clients/mutationClient";
 import { routePaths } from "../appConfig";
 import Button from "../components/ui/Button";
 import TextInput from "../components/ui/TextInput";
+import { toastStyles } from "../components/ui/toastStyles";
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");
@@ -19,14 +20,7 @@ const LoginPage = () => {
       navigate(routePaths.docs.to());
     },
     onError: () => {
-      toast.error("ログインに失敗しました", {
-        position: "top-center",
-        classNames: {
-          toast: "!border !border-red-300 !bg-red-50 !text-red-800 ",
-          title: "!font-semibold !text-red-800",
-          description: "!text-red-700",
-        },
-      });
+      toast.error("ログインに失敗しました", toastStyles.error);
     },
   });
 
@@ -36,14 +30,7 @@ const LoginPage = () => {
       navigate(routePaths.docs.to());
     },
     onError: () => {
-      toast.error("ログインに失敗しました", {
-        position: "top-center",
-        classNames: {
-          toast: "!border !border-red-300 !bg-red-50 !text-red-800 ",
-          title: "!font-semibold !text-red-800",
-          description: "!text-red-700",
-        },
-      });
+      toast.error("ログインに失敗しました", toastStyles.error);
     },
   });
 
