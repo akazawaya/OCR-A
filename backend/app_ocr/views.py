@@ -73,9 +73,6 @@ class UserViewSet(viewsets.ModelViewSet):
     )
     def me(self, request):
         user = request.user
-        if not user.groups.filter(name="guest").exists():
-            return Response(status=status.HTTP_403_FORBIDDEN)
-
         logout(request)
         user.delete()
 
