@@ -49,25 +49,31 @@ const LoginPage = () => {
 
   return (
     <div className="mx-auto mt-32 flex w-fit flex-col items-center gap-1 rounded-md border border-gray-400 bg-white p-2">
-      <label>
-        ユーザー名
-        <TextInput
-          value={username}
-          onChange={(event) => setUsername(event.target.value)}
-        />
-      </label>
+      <form
+        className="flex flex-col items-center gap-2 bg-white"
+        onSubmit={(e) => {
+          e.preventDefault();
+          loginMutation();
+        }}
+      >
+        <label>
+          ユーザー名
+          <TextInput
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+          />
+        </label>
 
-      <label>
-        パスワード
-        <TextInput
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-        />
-      </label>
-
-      <Button onClick={() => loginMutation()}>ログイン</Button>
-
+        <label>
+          パスワード
+          <TextInput
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+        </label>
+        <Button>ログイン</Button>
+      </form>
       <Button color="gray" onClick={() => createUserMutation()}>
         ゲストユーザーでログイン
       </Button>

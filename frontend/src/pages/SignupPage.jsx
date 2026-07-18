@@ -56,7 +56,10 @@ const SignupPage = () => {
 
   return (
     <div className="mx-auto mt-50 flex w-fit flex-col items-center rounded-md border border-gray-400 bg-white p-2">
-      <form onSubmit={handleSubmit}>
+      <form
+        className="flex flex-col items-center gap-2 bg-white"
+        onSubmit={handleSubmit}
+      >
         <label>
           ユーザー名
           <TextInput
@@ -84,7 +87,8 @@ const SignupPage = () => {
         </label>
 
         <Button type="submit">アカウント作成</Button>
-
+      </form>
+      <div className="mt-8 flex flex-col items-center">
         <p>すでにアカウントをお持ちの方は</p>
         <Button
           color="gray"
@@ -93,7 +97,7 @@ const SignupPage = () => {
         >
           ログイン
         </Button>
-      </form>
+      </div>
     </div>
   );
 };
