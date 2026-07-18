@@ -61,6 +61,24 @@ class UserCreateSerializer(serializers.Serializer):
         )
 
 
+class UserPasswordChangeSerializer(serializers.Serializer):
+    current_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        user = self.context["request"].user
+        current_password = attrs.get("current_password")
+        new_password = attrs.get("new_password")
+
+        if not user.check_password(current_password):
+            raise serializers.ValidationError(
+                {"current_password": "現在のパスワードが一致しません。"}
+            )
+
+        password_validation.validate_password(new_password, user=user)
+        return attrs
+
+
 class DocumentSerializer(serializers.ModelSerializer):
     state = serializers.CharField(source="get_state_display", read_only=True)
     created = serializers.DateTimeField(

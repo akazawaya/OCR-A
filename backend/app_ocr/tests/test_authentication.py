@@ -5,13 +5,14 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from app_ocr.tests.conftest import DEFAULT_PASSWORD
+from app_ocr.tests.conftest import DEFAULT_NEW_PASSWORD, DEFAULT_PASSWORD
 
 pytestmark = pytest.mark.django_db
 
 LOGIN_URL = "/api/auth/login/"
 LOGOUT_URL = "/api/auth/logout/"
 ME_URL = "/api/auth/me/"
+PASSWORD_URL = "/api/users/me/password/"
 
 
 @pytest.fixture
@@ -130,6 +131,57 @@ def test_logout_invalidates_session(api_client):
 
     response = api_client.get(reverse("document-list"))
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_change_password_updates_password_and_keeps_session(api_client):
+    user = create_user()
+    login_response = login_user(api_client, user)
+    assert login_response.status_code == status.HTTP_200_OK
+
+    response = api_client.post(
+        PASSWORD_URL,
+        {
+            "current_password": DEFAULT_PASSWORD,
+            "new_password": DEFAULT_NEW_PASSWORD,
+            "new_password_confirmation": DEFAULT_NEW_PASSWORD,
+        },
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert api_client.session["_auth_user_id"] == str(user.id)
+
+    api_client.post(LOGOUT_URL, format="json")
+
+    login_response = api_client.post(
+        LOGIN_URL,
+        {
+            "username": user.username,
+            "password": DEFAULT_NEW_PASSWORD,
+        },
+        format="json",
+    )
+    assert login_response.status_code == status.HTTP_200_OK
+
+
+def test_change_password_rejects_wrong_current_password(api_client):
+    user = create_user()
+    login_response = login_user(api_client, user)
+    assert login_response.status_code == status.HTTP_200_OK
+
+    response = api_client.post(
+        PASSWORD_URL,
+        {
+            "current_password": "wrong-password",
+            "new_password": DEFAULT_NEW_PASSWORD,
+            "new_password_confirmation": DEFAULT_NEW_PASSWORD,
+        },
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "current_password" in response.data
+    assert user.check_password(DEFAULT_PASSWORD)
 
 
 @pytest.mark.parametrize(
