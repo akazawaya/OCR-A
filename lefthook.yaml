@@ -18,11 +18,15 @@ pre-commit:
     backend_ruff_format:
       root: "backend"
       glob: "backend/**/*.py"
+      exclude:
+        - "backend/**/migrations/*.py"
       run: uv run ruff format "{staged_files}"
       stage_fixed: true
 
     backend_ruff_fix:
       root: "backend"
       glob: "backend/**/*.py"
+      exclude:
+        - "backend/**/migrations/*.py"
       run: uv run ruff check --fix "{staged_files}"
       stage_fixed: true
