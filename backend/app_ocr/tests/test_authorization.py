@@ -18,8 +18,8 @@ def test_authorization_limits_lists_to_own_resources(
     page_factory,
     word_factory,
 ):
-    alice_client, _ = user_client_factory(username="alice")
-    bob_client, _ = user_client_factory(username="bob")
+    alice_client, _ = user_client_factory(email="alice@example.invalid")
+    bob_client, _ = user_client_factory(email="bob@example.invalid")
 
     alice_document = document_factory(owner=alice_client.user, file_name="alice.pdf")
     bob_document = document_factory(owner=bob_client.user, file_name="bob.pdf")
@@ -55,7 +55,7 @@ def test_authorization_limits_lists_to_own_resources(
 
 @pytest.mark.parametrize(
     (
-        "url_name,payload,patch_targets,username,is_superuser,"
+        "url_name,payload,patch_targets,email,is_superuser,"
         "group_permissions,expected_status,inspect_file_return"
     ),
     [
@@ -154,7 +154,7 @@ def test_group_model_permissions_control_ocr_access(
     url_name,
     payload,
     patch_targets,
-    username,
+    email,
     is_superuser,
     group_permissions,
     expected_status,
@@ -164,12 +164,12 @@ def test_group_model_permissions_control_ocr_access(
     if group_permissions:
         groups = [
             group_factory(
-                name=f"{username}-group",
+                name=f"{email}-group",
                 permissions=group_permissions,
             )
         ]
     client, _ = user_client_factory(
-        username=username,
+        email=email,
         is_superuser=is_superuser,
         groups=groups,
     )

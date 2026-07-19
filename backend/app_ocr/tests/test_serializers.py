@@ -2,29 +2,32 @@ import pytest
 from django.contrib.auth import get_user_model
 
 from app_ocr.input_constraints import MAX_UPLOAD_FILE_SIZE
-from app_ocr.serializers import DocumentUploadSerializer, UserCreateSerializer
-from app_ocr.tests.conftest import DEFAULT_PASSWORD, DEFAULT_USERNAME
+from app_ocr.serializers import (
+    DocumentUploadSerializer,
+    UserCreateSerializer,
+)
+from app_ocr.tests.conftest import DEFAULT_EMAIL, DEFAULT_PASSWORD
 
 
 class TestUserCreateSerializer:
     @pytest.mark.django_db
-    def test_rejects_duplicate_username(self):
+    def test_rejects_duplicate_email(self):
         get_user_model().objects.create_user(
-            username=DEFAULT_USERNAME,
+            email=DEFAULT_EMAIL,
             password=DEFAULT_PASSWORD,
         )
 
         serializer = UserCreateSerializer(
             data={
                 "type": "registered",
-                "username": DEFAULT_USERNAME,
+                "email": DEFAULT_EMAIL,
                 "password": DEFAULT_PASSWORD,
             }
         )
 
         assert not serializer.is_valid()
-        assert str(serializer.errors["username"][0]) == (
-            "このユーザー名は既に使われています。"
+        assert str(serializer.errors["email"][0]) == (
+            "このメールアドレスは既に使われています。"
         )
 
 

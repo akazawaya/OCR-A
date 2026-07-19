@@ -20,6 +20,7 @@ from app_ocr.tasks import (
     ocr_page_task,
     ocr_word_task,
 )
+from app_ocr.tests.conftest import DEFAULT_EMAIL
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures"
 
@@ -167,7 +168,7 @@ class TestTasks:
         self,
         django_user_model,
     ):
-        owner = django_user_model.objects.create_user(username="ocr-dispatch-owner")
+        owner = django_user_model.objects.create_user(email=DEFAULT_EMAIL)
         with (
             patch("app_ocr.tasks.notify_document_changed") as mock_notify,
             patch("app_ocr.tasks.ocr_page_task.delay") as mock_delay,
@@ -196,7 +197,7 @@ class TestTasks:
 
     @pytest.mark.django_db
     def test_ocr_page_task_success_when_all_pages_finish(self, django_user_model):
-        owner = django_user_model.objects.create_user(username="ocr-page-success-owner")
+        owner = django_user_model.objects.create_user(email=DEFAULT_EMAIL)
         with (
             patch("app_ocr.tasks.run_ocr_for_page"),
             patch("app_ocr.tasks.notify_document_changed") as mock_notify,
@@ -232,7 +233,7 @@ class TestTasks:
 
     @pytest.mark.django_db
     def test_ocr_page_task_failed_when_run_ocr_raises(self, django_user_model):
-        owner = django_user_model.objects.create_user(username="ocr-page-failed-owner")
+        owner = django_user_model.objects.create_user(email=DEFAULT_EMAIL)
         with (
             patch(
                 "app_ocr.tasks.run_ocr_for_page",
@@ -491,7 +492,7 @@ def test_run_ocr_for_page_creates_page_and_words_from_ocr_result(
 ):
     # OCRエンジンを差し替え、OCRインスタンスが呼ばれたかの確認と、
     # mockの返り値で保存がなされたかを確認
-    owner = django_user_model.objects.create_user(username="run-ocr-page-owner")
+    owner = django_user_model.objects.create_user(email=DEFAULT_EMAIL)
     with (
         patch("app_ocr.service.ocr.get_engine") as mock_get_engine,
         patch("app_ocr.service.ocr.yomitoku_ocr") as mock_yomitoku_ocr,
@@ -535,7 +536,7 @@ def test_run_ocr_for_bbox_returns_words_without_saving_page_or_words(
     django_user_model, uploaded_file_from_fixture_factory
 ):
     # 本質ではないが、run_ocr_for_bboxは単体では保存がされないことをアサ―トとする
-    owner = django_user_model.objects.create_user(username="run-ocr-bbox-owner")
+    owner = django_user_model.objects.create_user(email=DEFAULT_EMAIL)
     with (
         patch("app_ocr.service.ocr.get_engine") as mock_get_engine,
         patch("app_ocr.service.ocr.yomitoku_ocr") as mock_yomitoku_ocr,

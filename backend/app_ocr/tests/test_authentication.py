@@ -5,7 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from app_ocr.tests.conftest import DEFAULT_NEW_PASSWORD, DEFAULT_PASSWORD
+from app_ocr.tests.conftest import DEFAULT_EMAIL, DEFAULT_NEW_PASSWORD, DEFAULT_PASSWORD
 
 pytestmark = pytest.mark.django_db
 
@@ -20,16 +20,16 @@ def api_client():
     return APIClient()
 
 
-def create_user(username="alice", password=DEFAULT_PASSWORD):
+def create_user(email=DEFAULT_EMAIL, password=DEFAULT_PASSWORD):
     user_model = get_user_model()
-    return user_model.objects.create_user(username=username, password=password)
+    return user_model.objects.create_user(email=email, password=password)
 
 
 def login_user(api_client, user, password=DEFAULT_PASSWORD):
     return api_client.post(
         LOGIN_URL,
         {
-            "username": user.username,
+            "email": user.email,
             "password": password,
         },
         format="json",
@@ -53,44 +53,44 @@ def test_create_guest_user_returns_success_and_logs_in(api_client):
 
 
 def test_create_registered_user_returns_success_and_logs_in(api_client):
-    username = "registered-user"
+    email = DEFAULT_EMAIL
 
     response = api_client.post(
         reverse("user-list"),
         {
             "type": "registered",
-            "username": username,
+            "email": email,
             "password": DEFAULT_PASSWORD,
         },
         format="json",
     )
 
     assert response.status_code == status.HTTP_201_CREATED
-    user = get_user_model().objects.get(username=username)
+    user = get_user_model().objects.get(email=email)
     assert response.data == {
         "id": user.id,
-        "username": username,
+        "email": email,
     }
     assert user.check_password(DEFAULT_PASSWORD)
     assert list(user.groups.all()) == []
     assert api_client.session["_auth_user_id"] == str(user.id)
 
 
-def test_create_registered_user_rejects_duplicate_username(api_client):
-    create_user(username="registered-user")
+def test_create_registered_user_rejects_duplicate_email(api_client):
+    create_user()
 
     response = api_client.post(
         reverse("user-list"),
         {
             "type": "registered",
-            "username": "registered-user",
+            "email": DEFAULT_EMAIL,
             "password": DEFAULT_PASSWORD,
         },
         format="json",
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert get_user_model().objects.filter(username="registered-user").count() == 1
+    assert get_user_model().objects.filter(email=DEFAULT_EMAIL).count() == 1
     assert "_auth_user_id" not in api_client.session
 
 
@@ -103,7 +103,7 @@ def test_login_returns_success(api_client):
     assert api_client.session["_auth_user_id"] == str(user.id)
 
 
-def test_me_returns_authenticated_username(api_client):
+def test_me_returns_authenticated_email(api_client):
     user = create_user()
 
     login_response = login_user(api_client, user)
@@ -114,7 +114,7 @@ def test_me_returns_authenticated_username(api_client):
     assert response.status_code == status.HTTP_200_OK
     assert response.data == {
         "authenticated": True,
-        "username": user.username,
+        "email": user.email,
     }
 
 
@@ -156,7 +156,7 @@ def test_change_password_updates_password_and_keeps_session(api_client):
     login_response = api_client.post(
         LOGIN_URL,
         {
-            "username": user.username,
+            "email": user.email,
             "password": DEFAULT_NEW_PASSWORD,
         },
         format="json",

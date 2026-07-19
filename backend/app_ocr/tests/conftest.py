@@ -16,9 +16,9 @@ DEFAULT_PREVIEW_WORD_BBOX = [[0, 0], [10, 0], [10, 10], [0, 10]]
 DEFAULT_PREVIEW_WORD_OCR_MODE = "rewrite_content"
 DEFAULT_DOCUMENT_ID = 1
 DEFAULT_PAGE_NUMBER = 1
+DEFAULT_EMAIL = "testuser@example.invalid"
 DEFAULT_PASSWORD = "testpass123"
 DEFAULT_NEW_PASSWORD = "new-testpass123"
-DEFAULT_USERNAME = "testuser"
 DEFAULT_WORD_DIRECTION = Direction.HORIZONTAL
 DEFAULT_WORD_CONTENT = "test"
 
@@ -72,19 +72,19 @@ def user_client_factory(db):
 
     def make_user_client(
         *,
-        username=DEFAULT_USERNAME,
+        email=DEFAULT_EMAIL,
         password=DEFAULT_PASSWORD,
         is_superuser=False,
         groups=(),
     ):
         if is_superuser:
             user = user_model.objects.create_superuser(
-                username=username,
+                email=email,
                 password=password,
             )
         else:
             user = user_model.objects.create_user(
-                username=username,
+                email=email,
                 password=password,
             )
             if groups:
@@ -114,7 +114,7 @@ def document_factory(db, settings, tmp_path, dummy_file_factory):
     def make_document(
         *,
         owner=None,
-        username=DEFAULT_USERNAME,
+        email=DEFAULT_EMAIL,
         password=DEFAULT_PASSWORD,
         file_name=DEFAULT_UPLOAD_FILE_NAME,
         file_type=DEFAULT_UPLOAD_FILE_TYPE,
@@ -124,7 +124,7 @@ def document_factory(db, settings, tmp_path, dummy_file_factory):
 
         if owner is None:
             owner = user_model.objects.create_user(
-                username=username,
+                email=email,
                 password=password,
             )
 
@@ -149,14 +149,14 @@ def page_factory(db, document_factory):
         *,
         doc=None,
         owner=None,
-        username=DEFAULT_USERNAME,
+        email=DEFAULT_EMAIL,
         password=DEFAULT_PASSWORD,
         page_number=DEFAULT_PAGE_NUMBER,
     ):
         if doc is None:
             doc = document_factory(
                 owner=owner,
-                username=username,
+                email=email,
                 password=password,
             )
 
@@ -172,7 +172,7 @@ def word_factory(db, page_factory):
         page=None,
         doc=None,
         owner=None,
-        username=DEFAULT_USERNAME,
+        email=DEFAULT_EMAIL,
         password=DEFAULT_PASSWORD,
         bbox=DEFAULT_PREVIEW_WORD_BBOX,
         direction=DEFAULT_WORD_DIRECTION,
@@ -182,7 +182,7 @@ def word_factory(db, page_factory):
             page = page_factory(
                 doc=doc,
                 owner=owner,
-                username=username,
+                email=email,
                 password=password,
             )
 
