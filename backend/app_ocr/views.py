@@ -1,8 +1,13 @@
 from uuid import uuid4
 
 from django.conf import settings
-from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
-from django.contrib.auth.models import User
+from django.contrib.auth import (
+    authenticate,
+    get_user_model,
+    login,
+    logout,
+    update_session_auth_hash,
+)
 from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
@@ -42,6 +47,8 @@ from app_ocr.tasks import (
     notify_document_changed,
     ocr_word_task,
 )
+
+User = get_user_model()
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -111,16 +118,16 @@ class AuthViewSet(viewsets.ViewSet):
         return Response(
             {
                 "authenticated": user.is_authenticated,
-                "username": user.username if user.is_authenticated else None,
+                "email": user.email if user.is_authenticated else None,
             },
             status=status.HTTP_200_OK,
         )
 
     @action(detail=False, methods=["post"])
     def login(self, request):
-        username = request.data.get("username")
+        email = request.data.get("email")
         password = request.data.get("password")
-        user = authenticate(request, username=username, password=password)
+        user = authenticate(request, email=email, password=password)
 
         if user is None:
             return Response(
