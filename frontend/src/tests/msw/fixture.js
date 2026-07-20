@@ -8,7 +8,7 @@ export const defaultMockDocuments = [
 
 export const defaultMockAuthUser = {
   id: 1,
-  username: "testuser",
+  email: "testuser@example.invalid",
   password: "testpass123",
 };
 

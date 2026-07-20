@@ -10,7 +10,7 @@ import TextInput from "../components/ui/TextInput";
 import { toastStyles } from "../components/ui/toastStyles";
 
 const SignupPage = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ const SignupPage = () => {
     mutationFn: () =>
       createUser({
         type: "registered",
-        username,
+        email,
         password,
       }),
     onSuccess: () => {
@@ -48,10 +48,10 @@ const SignupPage = () => {
         onSubmit={handleSubmit}
       >
         <label>
-          ユーザー名
+          メールアドレス
           <TextInput
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
           />
         </label>
 

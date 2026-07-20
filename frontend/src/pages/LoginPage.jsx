@@ -10,12 +10,12 @@ import TextInput from "../components/ui/TextInput";
 import { toastStyles } from "../components/ui/toastStyles";
 
 const LoginPage = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
   const { mutate: loginMutation } = useMutation({
-    mutationFn: () => login({ username, password }),
+    mutationFn: () => login({ email, password }),
     onSuccess: () => {
       navigate(routePaths.docs.to());
     },
@@ -44,10 +44,10 @@ const LoginPage = () => {
         }}
       >
         <label>
-          ユーザー名
+          メールアドレス
           <TextInput
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
           />
         </label>
 

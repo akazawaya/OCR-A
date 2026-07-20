@@ -72,8 +72,8 @@ describe("SignupPage", () => {
 
     const user = userEvent.setup();
     await user.type(
-      screen.getByLabelText("ユーザー名"),
-      defaultMockAuthUser.username,
+      screen.getByLabelText("メールアドレス"),
+      defaultMockAuthUser.email,
     );
     await user.type(
       screen.getByLabelText("パスワード"),
@@ -90,7 +90,7 @@ describe("SignupPage", () => {
     });
     expect(getReceivedCreateUserRequestBody()).toEqual({
       type: "registered",
-      username: defaultMockAuthUser.username,
+      email: defaultMockAuthUser.email,
       password: defaultMockAuthUser.password,
     });
     expect(await screen.findByTestId("location-display")).toHaveTextContent(
@@ -103,8 +103,8 @@ describe("SignupPage", () => {
 
     const user = userEvent.setup();
     await user.type(
-      screen.getByLabelText("ユーザー名"),
-      defaultMockAuthUser.username,
+      screen.getByLabelText("メールアドレス"),
+      defaultMockAuthUser.email,
     );
     await user.type(
       screen.getByLabelText("パスワード"),

@@ -4,7 +4,7 @@ import { User } from "lucide-react";
 
 import { routePaths } from "../../appConfig";
 
-const UserMenu = ({ data: { username }, events: { onClickLogoutButton } }) => {
+const UserMenu = ({ data: { email }, events: { onClickLogoutButton } }) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   return (
@@ -18,7 +18,7 @@ const UserMenu = ({ data: { username }, events: { onClickLogoutButton } }) => {
           <User />
         </button>
         <div className={`w-full ${isOpen ? "break-all" : "truncate"}`}>
-          {username}
+          {email}
         </div>
       </div>
       {isOpen && (

@@ -60,11 +60,11 @@ export const ocrPreviewWord = async ({ actionUrl, previewWord, mode, doc }) => {
   return data.preview_job_id;
 };
 
-export const login = async ({ username, password }) => {
+export const login = async ({ email, password }) => {
   const { data } = await fetchBackend(authActionSpec.loginUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify({ email, password }),
     throwOnError: true,
   });
 

@@ -90,18 +90,18 @@ describe("AuthLayout", () => {
 });
 
 describe("UserMenu", () => {
-  test("ユーザー名が反映され、表示される", async () => {
+  test("メールアドレスが反映され、表示される", async () => {
     loginMockUser();
     renderAuthLayout();
     const user = userEvent.setup();
 
     expect(
-      screen.queryByText(defaultMockAuthUser.username),
+      screen.queryByText(defaultMockAuthUser.email),
     ).not.toBeInTheDocument();
     await user.click(
       await screen.findByRole("button", { name: "ユーザーメニュー開閉ボタン" }),
     );
-    expect(await screen.findByText(defaultMockAuthUser.username)).toBeVisible();
+    expect(await screen.findByText(defaultMockAuthUser.email)).toBeVisible();
   });
 
   test("トップページボタンをクリックするとDocumentsPageへ遷移する", async () => {
@@ -112,7 +112,7 @@ describe("UserMenu", () => {
     await user.click(
       await screen.findByRole("button", { name: "ユーザーメニュー開閉ボタン" }),
     );
-    await screen.findByText(defaultMockAuthUser.username);
+    await screen.findByText(defaultMockAuthUser.email);
     await user.click(screen.getByRole("button", { name: "トップページ" }));
 
     expect(screen.getByTestId("location-display")).toHaveTextContent(
@@ -128,7 +128,7 @@ describe("UserMenu", () => {
     await user.click(
       await screen.findByRole("button", { name: "ユーザーメニュー開閉ボタン" }),
     );
-    await screen.findByText(defaultMockAuthUser.username);
+    await screen.findByText(defaultMockAuthUser.email);
     await user.click(screen.getByRole("button", { name: "ログアウト" }));
 
     expect(await screen.findByText("LoginPage")).toBeVisible();

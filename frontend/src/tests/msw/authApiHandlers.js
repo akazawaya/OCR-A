@@ -32,7 +32,7 @@ export const authApiHandlers = [
   http.get(`${MOCK_API_BASE_URL}/auth/me/`, () => {
     return HttpResponse.json({
       authenticated: isAuthenticated,
-      username: isAuthenticated ? user.username : null,
+      email: isAuthenticated ? user.email : null,
     });
   }),
 
@@ -40,18 +40,18 @@ export const authApiHandlers = [
     const body = await request.json();
     receivedCreateUserRequestBody = structuredClone(body);
 
-    // username重複のバリデーションチェックのテストはここでは行わない。backendで担う。
+    // email重複のバリデーションチェックのテストはここでは行わない。backendで担う。
     if (body.type === "registered") {
-      if (!body.username || !body.password) {
+      if (!body.email || !body.password) {
         return HttpResponse.json(
-          { detail: "username and password are required" },
+          { detail: "email and password are required" },
           { status: 400 },
         );
       }
 
       user = {
         id: defaultMockAuthUser.id,
-        username: body.username,
+        email: body.email,
         password: body.password,
       };
       createdUsers = [...createdUsers, structuredClone(user)];
@@ -60,7 +60,7 @@ export const authApiHandlers = [
       return HttpResponse.json(
         {
           id: user.id,
-          username: user.username,
+          email: user.email,
         },
         { status: 201 },
       );
@@ -73,7 +73,7 @@ export const authApiHandlers = [
     return HttpResponse.json(
       {
         id: user.id,
-        username: user.username,
+        email: user.email,
       },
       { status: 201 },
     );
@@ -82,13 +82,13 @@ export const authApiHandlers = [
   http.post(`${MOCK_API_BASE_URL}/auth/login/`, async ({ request }) => {
     const body = await request.json();
     receivedLoginRequestBody = structuredClone(body);
-    if (body.username === user.username && body.password === user.password) {
+    if (body.email === user.email && body.password === user.password) {
       isAuthenticated = true;
       return HttpResponse.json(
         {
           user: {
             id: user.id,
-            username: user.username,
+            email: user.email,
           },
         },
         { status: 200 },

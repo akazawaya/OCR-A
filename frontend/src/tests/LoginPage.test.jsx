@@ -74,8 +74,8 @@ describe("LoginPage", () => {
 
     const user = userEvent.setup();
     await user.type(
-      screen.getByLabelText("ユーザー名"),
-      defaultMockAuthUser.username,
+      screen.getByLabelText("メールアドレス"),
+      defaultMockAuthUser.email,
     );
     await user.type(
       screen.getByLabelText("パスワード"),
@@ -92,7 +92,7 @@ describe("LoginPage", () => {
     renderLoginPage();
 
     const user = userEvent.setup();
-    await user.type(screen.getByLabelText("ユーザー名"), "unknown");
+    await user.type(screen.getByLabelText("メールアドレス"), "unknown");
     await user.type(screen.getByLabelText("パスワード"), "wrong-password");
     await user.click(screen.getByRole("button", { name: "ログイン" }));
 
