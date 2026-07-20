@@ -7,6 +7,7 @@ let isAuthenticated = false;
 let user = structuredClone(defaultMockAuthUser);
 let receivedLoginRequestBody = null;
 let receivedCreateUserRequestBody = null;
+let receivedPasswordChangeRequestBody = null;
 let createdUsers = [];
 
 export const resetMockUser = () => {
@@ -14,6 +15,7 @@ export const resetMockUser = () => {
   user = structuredClone(defaultMockAuthUser);
   receivedLoginRequestBody = null;
   receivedCreateUserRequestBody = null;
+  receivedPasswordChangeRequestBody = null;
   createdUsers = [];
 };
 export const loginMockUser = () => {
@@ -27,6 +29,9 @@ export const getReceivedCreateUserRequestBody = () => {
 };
 export const getCreatedUsers = () => {
   return createdUsers;
+};
+export const getReceivedPasswordChangeRequestBody = () => {
+  return receivedPasswordChangeRequestBody;
 };
 export const authApiHandlers = [
   http.get(`${MOCK_API_BASE_URL}/auth/me/`, () => {
@@ -82,7 +87,11 @@ export const authApiHandlers = [
   http.post(`${MOCK_API_BASE_URL}/auth/login/`, async ({ request }) => {
     const body = await request.json();
     receivedLoginRequestBody = structuredClone(body);
-    if (body.email === user.email && body.password === user.password) {
+    if (
+      user !== null &&
+      body.email === user.email &&
+      body.password === user.password
+    ) {
       isAuthenticated = true;
       return HttpResponse.json(
         {
@@ -98,6 +107,27 @@ export const authApiHandlers = [
   }),
 
   http.post(`${MOCK_API_BASE_URL}/auth/logout/`, () => {
+    isAuthenticated = false;
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.post(`${MOCK_API_BASE_URL}/users/me/password/`, async ({ request }) => {
+    const body = await request.json();
+    receivedPasswordChangeRequestBody = structuredClone(body);
+
+    if (body.current_password !== user.password) {
+      return HttpResponse.json(
+        { current_password: ["現在のパスワードが一致しません。"] },
+        { status: 400 },
+      );
+    }
+
+    user = { ...user, password: body.new_password };
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.delete(`${MOCK_API_BASE_URL}/users/me/`, () => {
+    user = null;
     isAuthenticated = false;
     return new HttpResponse(null, { status: 204 });
   }),
