@@ -7,6 +7,7 @@ import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import DocumentsPage from "./pages/DocumentsPage";
 import ViewerPage from "./pages/ViewerPage";
+import SettingPage from "./pages/SettingPage";
 import { routePaths } from "./appConfig";
 import AuthLayout from "./components/Auth/AuthLayout";
 
@@ -30,6 +31,10 @@ const App = () => {
               <Route
                 element={<ViewerPage />}
                 path={routePaths.viewer.template}
+              />
+              <Route
+                element={<SettingPage />}
+                path={routePaths.setting.template}
               />
             </Route>
           </Routes>

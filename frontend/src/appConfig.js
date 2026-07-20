@@ -103,6 +103,10 @@ export const routePaths = Object.freeze({
     template: "/signup",
     to: () => "/signup",
   },
+  setting: {
+    template: "/setting",
+    to: () => "/setting",
+  },
   docs: {
     template: "/documents",
     to: () => "/documents",

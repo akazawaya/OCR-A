@@ -99,3 +99,23 @@ export const deleteCurrentUser = async () => {
 
   return res;
 };
+
+export const changeCurrentUserPassword = async ({
+  currentPassword,
+  newPassword,
+}) => {
+  const { res } = await fetchBackend(
+    `${userAccessSpec.collectionUrl}me/password/`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        current_password: currentPassword,
+        new_password: newPassword,
+      }),
+      throwOnError: true,
+    },
+  );
+
+  return res;
+};

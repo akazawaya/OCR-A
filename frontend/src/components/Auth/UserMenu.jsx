@@ -31,6 +31,12 @@ const UserMenu = ({ data: { email }, events: { onClickLogoutButton } }) => {
           </button>
           <button
             className="hover:text-gray-400"
+            onClick={() => navigate(routePaths.setting.to())}
+          >
+            アカウント設定
+          </button>
+          <button
+            className="hover:text-gray-400"
             onClick={() => onClickLogoutButton()}
           >
             ログアウト
