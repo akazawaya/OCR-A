@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -9,6 +8,7 @@ import {
   deleteCurrentUser,
 } from "../api/clients/mutationClient";
 import { routePaths } from "../appConfig";
+import AlertDialog from "../components/ui/AlertDialog";
 import Button from "../components/ui/Button";
 import TextInput from "../components/ui/TextInput";
 import { toastStyles } from "../components/ui/toastStyles";
@@ -110,12 +110,10 @@ const SettingPage = () => {
         onOpenChange={setIsDeleteDialogOpen}
       >
         <AlertDialog.Portal>
-          <AlertDialog.Overlay className="fixed inset-0 z-50 bg-black/40" />
-          <AlertDialog.Content className="fixed top-1/2 left-1/2 z-50 w-[min(90vw,28rem)] -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white p-6 shadow-2xl outline-none">
-            <AlertDialog.Title className="text-lg font-semibold text-gray-900">
-              アカウントを削除しますか？
-            </AlertDialog.Title>
-            <AlertDialog.Description className="mt-3 text-sm leading-6 text-gray-600">
+          <AlertDialog.Overlay />
+          <AlertDialog.Content>
+            <AlertDialog.Title>アカウントを削除しますか？</AlertDialog.Title>
+            <AlertDialog.Description>
               アカウントに紐づくデータはすべて削除されます。この操作は取り消せません。
             </AlertDialog.Description>
             <div className="mt-6 flex justify-end gap-2">
