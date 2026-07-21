@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { RouterProvider } from "react-router-dom";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
@@ -13,34 +13,45 @@ import AuthLayout from "./components/Auth/AuthLayout";
 
 const queryClient = new QueryClient();
 
+const router = [
+  {
+    path: "/",
+    element: <LoginPage />,
+  },
+  {
+    path: routePaths.login.template,
+    element: <LoginPage />,
+  },
+  {
+    path: routePaths.signup.template,
+    element: <SignupPage />,
+  },
+  {
+    element: <AuthLayout />,
+    children: [
+      {
+        path: routePaths.docs.template,
+        element: <DocumentsPage />,
+      },
+      {
+        path: routePaths.viewer.template,
+        element: <ViewerPage />,
+      },
+      {
+        path: routePaths.setting.template,
+        element: <SettingPage />,
+      },
+    ],
+  },
+];
+
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <div className="h-dvh overflow-hidden">
-          <Routes>
-            <Route element={<LoginPage />} path="/" />
-            <Route element={<LoginPage />} path={routePaths.login.template} />
-            <Route element={<SignupPage />} path={routePaths.signup.template} />
-
-            <Route element={<AuthLayout />}>
-              <Route
-                element={<DocumentsPage />}
-                path={routePaths.docs.template}
-              />
-              <Route
-                element={<ViewerPage />}
-                path={routePaths.viewer.template}
-              />
-              <Route
-                element={<SettingPage />}
-                path={routePaths.setting.template}
-              />
-            </Route>
-          </Routes>
-        </div>
-        <Toaster />
-      </BrowserRouter>
+      <div className="h-dvh overflow-hidden">
+        <RouterProvider router={router} />
+      </div>
+      <Toaster />
 
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>

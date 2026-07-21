@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { vi } from "vitest";
 
 import ViewerPage from "../pages/ViewerPage";
@@ -18,16 +18,19 @@ export const renderViewerPage = () => {
     },
   });
 
+  const router = createMemoryRouter(
+    [
+      {
+        path: "/documents/:primaryKey/viewer",
+        element: <ViewerPage />,
+      },
+    ],
+    { initialEntries: ["/documents/1/viewer"] },
+  );
+
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={["/documents/1/viewer"]}>
-        <Routes>
-          <Route
-            element={<ViewerPage />}
-            path="/documents/:primaryKey/viewer"
-          />
-        </Routes>
-      </MemoryRouter>
+      <RouterProvider router={router} />
     </QueryClientProvider>,
   );
 };

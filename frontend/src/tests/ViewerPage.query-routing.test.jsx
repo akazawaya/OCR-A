@@ -3,7 +3,7 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { createMemoryRouter, RouterProvider } from "react-router-dom";
 
 import "@testing-library/jest-dom/vitest";
 import ViewerPage from "../pages/ViewerPage";
@@ -27,16 +27,19 @@ const renderViewerPage = (initialEntry) => {
     },
   });
 
+  const router = createMemoryRouter(
+    [
+      {
+        path: "/documents/:primaryKey/viewer",
+        element: <ViewerPage />,
+      },
+    ],
+    { initialEntries: [initialEntry] },
+  );
+
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[initialEntry]}>
-        <Routes>
-          <Route
-            element={<ViewerPage />}
-            path="/documents/:primaryKey/viewer"
-          />
-        </Routes>
-      </MemoryRouter>
+      <RouterProvider router={router} />
     </QueryClientProvider>,
   );
 };
