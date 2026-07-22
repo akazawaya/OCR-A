@@ -269,7 +269,7 @@ const ViewerPage = () => {
                   if (blocker.state === "blocked") blocker.proceed();
                 }}
               >
-                破棄して続ける
+                保存せず移動
               </AlertDialog.Action>
             </div>
           </AlertDialog.Content>

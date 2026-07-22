@@ -208,14 +208,14 @@ const DocumentsPage = () => {
               を削除します。この操作は取り消せません。
             </AlertDialog.Description>
             <div className="mt-6 flex justify-end gap-2">
-              <AlertDialog.Cancel>いいえ</AlertDialog.Cancel>
+              <AlertDialog.Cancel>キャンセル</AlertDialog.Cancel>
               <AlertDialog.Action
                 onClick={() => {
                   deleteDocumentMutation({ id: documentToDelete.id });
                   setDocumentToDelete(null);
                 }}
               >
-                はい
+                削除
               </AlertDialog.Action>
             </div>
           </AlertDialog.Content>

@@ -99,9 +99,9 @@ describe("SettingPage", () => {
     await user.click(screen.getByRole("button", { name: "アカウントを削除" }));
 
     const dialog = screen.getByRole("alertdialog", {
-      name: "アカウントを削除しますか？",
+      name: "本当に削除してよろしいですか？",
     });
-    await user.click(within(dialog).getByRole("button", { name: "削除する" }));
+    await user.click(within(dialog).getByRole("button", { name: "削除" }));
 
     expect(await screen.findByTestId("location-display")).toHaveTextContent(
       LOGIN_PATH,

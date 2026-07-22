@@ -23,7 +23,7 @@ describe("DocumentsPage deleteButton", () => {
     const dialog = screen.getByRole("alertdialog", {
       name: "本当に削除してよろしいですか？",
     });
-    await user.click(within(dialog).getByRole("button", { name: "はい" }));
+    await user.click(within(dialog).getByRole("button", { name: "削除" }));
 
     await waitFor(() =>
       expect(

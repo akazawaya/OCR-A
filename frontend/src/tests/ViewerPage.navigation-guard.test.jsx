@@ -90,7 +90,7 @@ describe("ViewerPage navigation guard", () => {
       name: "編集を中止して移動しますか？",
     });
     await user.click(
-      within(dialog).getByRole("button", { name: "破棄して続ける" }),
+      within(dialog).getByRole("button", { name: "保存せず移動" }),
     );
 
     expect(screen.getByTestId("location-display")).toHaveTextContent(

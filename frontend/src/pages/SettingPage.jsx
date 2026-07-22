@@ -112,7 +112,9 @@ const SettingPage = () => {
         <AlertDialog.Portal>
           <AlertDialog.Overlay />
           <AlertDialog.Content>
-            <AlertDialog.Title>アカウントを削除しますか？</AlertDialog.Title>
+            <AlertDialog.Title>
+              本当に削除してよろしいですか？
+            </AlertDialog.Title>
             <AlertDialog.Description>
               アカウントに紐づくデータはすべて削除されます。この操作は取り消せません。
             </AlertDialog.Description>
@@ -127,7 +129,7 @@ const SettingPage = () => {
                   deleteUserMutation();
                 }}
               >
-                {isDeletingUser ? "削除中..." : "削除する"}
+                {isDeletingUser ? "削除中..." : "削除"}
               </AlertDialog.Action>
             </div>
           </AlertDialog.Content>
