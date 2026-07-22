@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRef } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 
 import { getMe } from "../../api/clients/collectionClient";
@@ -9,6 +10,7 @@ import UserMenu from "./UserMenu";
 
 const AuthLayout = () => {
   const queryClient = useQueryClient();
+  const logoutBlockerRef = useRef(null);
   const { data, isPending } = useQuery({
     queryKey: [authActionSpec.meUrl],
     queryFn: getMe,
@@ -25,6 +27,17 @@ const AuthLayout = () => {
     },
   });
 
+  const handleLogoutClick = () => {
+    if (logoutBlockerRef.current) {
+      // logoutBlockerRefはisEditModeのとき、
+      // ViewerPage側からlogoutMutationを受取れる関数として更新される。
+      // このとき、ここではlogoutMutationをViewerPageへ渡して処理を代替させる
+      logoutBlockerRef.current(logoutMutation);
+      return;
+    }
+    logoutMutation();
+  };
+
   if (isPending) return null;
 
   if (!data.authenticated) {
@@ -36,12 +49,12 @@ const AuthLayout = () => {
       <div className="fixed bottom-2 left-2 z-10">
         <UserMenu
           data={{ email: data.email }}
-          events={{ onClickLogoutButton: logoutMutation }}
+          events={{ onClickLogoutButton: handleLogoutClick }}
         />
       </div>
-      <main className="flex-1 overflow-auto">
-        <Outlet />
-      </main>
+      <div className="flex-1 overflow-auto">
+        <Outlet context={{ logoutBlockerRef }} />
+      </div>
     </div>
   );
 };

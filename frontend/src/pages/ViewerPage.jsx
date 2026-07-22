@@ -1,6 +1,11 @@
 import { useMemo, useRef, useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useBlocker, useLocation, useParams } from "react-router-dom";
+import {
+  useBlocker,
+  useLocation,
+  useOutletContext,
+  useParams,
+} from "react-router-dom";
 
 import {
   documentAccessSpec,
@@ -38,6 +43,8 @@ const ViewerPage = () => {
   const { search } = useLocation();
   // この search はURIの?以降のqueryString全体のため、searchQueryと混同しないように注意
   const { primaryKey } = useParams();
+  const outletContext = useOutletContext();
+  const { logoutBlockerRef } = outletContext;
 
   const { collectionUrl: documentCollectionUrl } = documentAccessSpec;
   const documentQueryKey = useMemo(
@@ -246,18 +253,36 @@ const ViewerPage = () => {
   });
   const blocker = useBlocker(editState.isEditMode);
 
+  const [pendingLogoutMutation, setPendingLogoutMutation] = useState(null);
+
+  useEffect(() => {
+    if (!logoutBlockerRef) return;
+    if (!editState.isEditMode) return;
+    logoutBlockerRef.current = (logoutMutation) => {
+      setPendingLogoutMutation(() => logoutMutation);
+    };
+
+    return () => {
+      logoutBlockerRef.current = null;
+    };
+  }, [editState.isEditMode, logoutBlockerRef]);
+
+  const isDialogOpen =
+    blocker.state === "blocked" || pendingLogoutMutation !== null;
+
   return (
     <>
       <AlertDialog.Root
-        open={blocker.state === "blocked"}
+        open={isDialogOpen}
         onOpenChange={(open) => {
           if (!open && blocker.state === "blocked") blocker.reset();
+          if (!open && isDialogOpen) setPendingLogoutMutation(null);
         }}
       >
         <AlertDialog.Portal>
           <AlertDialog.Overlay />
           <AlertDialog.Content>
-            <AlertDialog.Title>編集を中止して移動しますか？</AlertDialog.Title>
+            <AlertDialog.Title>このページを離れますか？</AlertDialog.Title>
             <AlertDialog.Description>
               編集中の内容は保存されません。
             </AlertDialog.Description>
@@ -266,10 +291,15 @@ const ViewerPage = () => {
               <AlertDialog.Action
                 onClick={(event) => {
                   event.preventDefault();
+                  if (pendingLogoutMutation) {
+                    pendingLogoutMutation();
+                    setPendingLogoutMutation(null);
+                    return;
+                  }
                   if (blocker.state === "blocked") blocker.proceed();
                 }}
               >
-                保存せず移動
+                保存せずページを離れる
               </AlertDialog.Action>
             </div>
           </AlertDialog.Content>
