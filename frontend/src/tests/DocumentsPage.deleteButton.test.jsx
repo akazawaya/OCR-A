@@ -20,6 +20,11 @@ describe("DocumentsPage deleteButton", () => {
     const user = userEvent.setup();
     await user.click(within(targetRow).getByRole("button", { name: "削除" }));
 
+    const dialog = screen.getByRole("alertdialog", {
+      name: "本当に削除してよろしいですか？",
+    });
+    await user.click(within(dialog).getByRole("button", { name: "はい" }));
+
     await waitFor(() =>
       expect(
         screen.queryByRole("cell", { name: "beta-report.pdf" }),
