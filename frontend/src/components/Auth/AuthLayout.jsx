@@ -11,7 +11,7 @@ import UserMenu from "./UserMenu";
 const AuthLayout = () => {
   const queryClient = useQueryClient();
   const logoutBlockerRef = useRef(null);
-  const { data, isPending } = useQuery({
+  const { data, isPending, isFetching } = useQuery({
     queryKey: [authActionSpec.meUrl],
     queryFn: getMe,
     retry: false,
@@ -38,7 +38,7 @@ const AuthLayout = () => {
     logoutMutation();
   };
 
-  if (isPending) return null;
+  if (isPending || isFetching) return null;
 
   if (!data.authenticated) {
     return <Navigate to={routePaths.login.to()} replace />;
