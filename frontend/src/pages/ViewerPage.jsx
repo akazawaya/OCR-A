@@ -1,6 +1,6 @@
 import { useMemo, useRef, useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useLocation, useParams } from "react-router-dom";
+import { useBlocker, useLocation, useParams } from "react-router-dom";
 
 import {
   documentAccessSpec,
@@ -31,6 +31,7 @@ import ViewerTopBar from "../components/Viewer/ViewerTopBar";
 import ViewerImage from "../components/Viewer/ViewerImage/ViewerImage";
 import ViewerTable from "../components/Viewer/ViewerTable";
 import { ViewerEditHotkeys } from "../components/Viewer/ViewerEditHotkeys";
+import AlertDialog from "../components/ui/AlertDialog";
 
 const ViewerPage = () => {
   const queryClient = useQueryClient();
@@ -243,9 +244,37 @@ const ViewerPage = () => {
     pageNumberByPageId,
     previewJob,
   });
+  const blocker = useBlocker(editState.isEditMode);
 
   return (
     <>
+      <AlertDialog.Root
+        open={blocker.state === "blocked"}
+        onOpenChange={(open) => {
+          if (!open && blocker.state === "blocked") blocker.reset();
+        }}
+      >
+        <AlertDialog.Portal>
+          <AlertDialog.Overlay />
+          <AlertDialog.Content>
+            <AlertDialog.Title>編集を中止して移動しますか？</AlertDialog.Title>
+            <AlertDialog.Description>
+              編集中の内容は保存されません。
+            </AlertDialog.Description>
+            <div className="mt-6 flex justify-end gap-2">
+              <AlertDialog.Cancel>編集を続ける</AlertDialog.Cancel>
+              <AlertDialog.Action
+                onClick={(event) => {
+                  event.preventDefault();
+                  if (blocker.state === "blocked") blocker.proceed();
+                }}
+              >
+                破棄して続ける
+              </AlertDialog.Action>
+            </div>
+          </AlertDialog.Content>
+        </AlertDialog.Portal>
+      </AlertDialog.Root>
       <ViewerEditHotkeys
         data={{}}
         events={{

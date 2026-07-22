@@ -1,4 +1,4 @@
-import { RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
@@ -13,7 +13,7 @@ import AuthLayout from "./components/Auth/AuthLayout";
 
 const queryClient = new QueryClient();
 
-const router = [
+const router = createBrowserRouter([
   {
     path: "/",
     element: <LoginPage />,
@@ -43,7 +43,7 @@ const router = [
       },
     ],
   },
-];
+]);
 
 const App = () => {
   return (

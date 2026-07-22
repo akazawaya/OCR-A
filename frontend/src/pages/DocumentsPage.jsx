@@ -21,6 +21,7 @@ import { toggleSortQuery } from "../logic/urlQuery/sortQueryUtils";
 import { useSearchQuery } from "../logic/urlQuery/useSearchQuery";
 import DocumentToolbar from "../components/Document/DocumentToolbar";
 import DocumentTable from "../components/Document/DocumentTable";
+import AlertDialog from "../components/ui/AlertDialog";
 
 const DocumentsPage = () => {
   const navigate = useNavigate();
@@ -37,6 +38,7 @@ const DocumentsPage = () => {
   const [appliedSortQuery, setAppliedSortQuery] = useState({ ordering: "" });
   const [appliedSearchQuery, setAppliedSearchQuery] =
     useState(draftSearchQuery);
+  const [documentToDelete, setDocumentToDelete] = useState(null);
 
   const dataRouter = useCallback(
     (resource) => navigate(routePaths.viewer.to(resource.id)),
@@ -108,8 +110,8 @@ const DocumentsPage = () => {
       queryClient.invalidateQueries({ queryKey: [collectionUrl] }),
   });
   const deleteRow = useCallback(
-    (resource) => deleteDocumentMutation({ id: resource.id }),
-    [deleteDocumentMutation],
+    (resource) => setDocumentToDelete(resource),
+    [],
   );
 
   const { mutate: postDocumentMutation } = useMutation({
@@ -189,6 +191,36 @@ const DocumentsPage = () => {
           }}
         />
       )}
+      <AlertDialog.Root
+        open={documentToDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setDocumentToDelete(null);
+        }}
+      >
+        <AlertDialog.Portal>
+          <AlertDialog.Overlay />
+          <AlertDialog.Content>
+            <AlertDialog.Title>
+              本当に削除してよろしいですか？
+            </AlertDialog.Title>
+            <AlertDialog.Description>
+              {documentToDelete?.file_name}
+              を削除します。この操作は取り消せません。
+            </AlertDialog.Description>
+            <div className="mt-6 flex justify-end gap-2">
+              <AlertDialog.Cancel>いいえ</AlertDialog.Cancel>
+              <AlertDialog.Action
+                onClick={() => {
+                  deleteDocumentMutation({ id: documentToDelete.id });
+                  setDocumentToDelete(null);
+                }}
+              >
+                はい
+              </AlertDialog.Action>
+            </div>
+          </AlertDialog.Content>
+        </AlertDialog.Portal>
+      </AlertDialog.Root>
     </div>
   );
 };
