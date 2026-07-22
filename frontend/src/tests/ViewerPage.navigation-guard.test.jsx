@@ -15,12 +15,14 @@ import AuthLayout from "../components/Auth/AuthLayout";
 import ViewerPage from "../pages/ViewerPage";
 
 import { loginMockUser } from "./msw/authApiHandlers";
+import { MOCK_API_BASE_URL } from "./msw/config";
 import {
   setupCanvasTextMeasureMock,
   setupDefaultViewerMocks,
 } from "./ViewerPage.test-utils";
 
 const DOCUMENTS_PATH = "/documents";
+const LOGIN_PATH = "/login";
 const VIEWER_PATH = "/documents/1/viewer";
 
 const LocationProbe = () => {
@@ -56,6 +58,10 @@ const renderViewerWithAuthLayout = () => {
           },
         ],
       },
+      {
+        path: LOGIN_PATH,
+        element: <LocationProbe />,
+      },
     ],
     { initialEntries: [VIEWER_PATH] },
   );
@@ -87,14 +93,44 @@ describe("ViewerPage navigation guard", () => {
       VIEWER_PATH,
     );
     const dialog = screen.getByRole("alertdialog", {
-      name: "編集を中止して移動しますか？",
+      name: "このページを離れますか？",
     });
     await user.click(
-      within(dialog).getByRole("button", { name: "保存せず移動" }),
+      within(dialog).getByRole("button", { name: "保存せずページを離れる" }),
     );
 
     expect(screen.getByTestId("location-display")).toHaveTextContent(
       DOCUMENTS_PATH,
+    );
+  });
+
+  test("編集中は確認後にログアウトAPIを実行する", async () => {
+    renderViewerWithAuthLayout();
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "編集" }));
+    await user.click(
+      screen.getByRole("button", { name: "ユーザーメニュー開閉ボタン" }),
+    );
+    await user.click(screen.getByRole("button", { name: "ログアウト" }));
+
+    expect(screen.getByTestId("location-display")).toHaveTextContent(
+      VIEWER_PATH,
+    );
+    const meBeforeConfirmation = await fetch(`${MOCK_API_BASE_URL}/auth/me/`);
+    await expect(meBeforeConfirmation.json()).resolves.toMatchObject({
+      authenticated: true,
+    });
+
+    const dialog = screen.getByRole("alertdialog", {
+      name: "このページを離れますか？",
+    });
+    await user.click(
+      within(dialog).getByRole("button", { name: "保存せずページを離れる" }),
+    );
+
+    expect(await screen.findByTestId("location-display")).toHaveTextContent(
+      LOGIN_PATH,
     );
   });
 });
