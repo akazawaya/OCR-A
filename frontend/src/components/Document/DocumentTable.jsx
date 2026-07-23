@@ -33,34 +33,43 @@ const DocumentTable = ({
         </tr>
       </thead>
       <tbody>
-        {rows.map((r) => (
-          <tr
-            key={r.id}
-            className="cursor-pointer border border-gray-400 hover:bg-gray-200"
-            onClick={onClickRow && (() => onClickRow(r))}
-          >
-            {columns.map((c) => (
-              <td key={c.key} className="border border-gray-400 px-1">
-                {c.format ? c.format(r[c.key]) : r[c.key]}
-              </td>
-            ))}
-            {onClickDeleteButton && (
-              <td
-                key="__delete"
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-              >
-                <button
-                  className="w-fit cursor-pointer bg-red-500 text-white hover:bg-red-600"
-                  onClick={() => onClickDeleteButton(r)}
+        {rows.map((r) => {
+          const isRowClickable = Boolean(onClickRow) && r.state === "完了";
+
+          return (
+            <tr
+              key={r.id}
+              aria-disabled={!isRowClickable}
+              className={
+                isRowClickable
+                  ? "cursor-pointer border border-gray-400 hover:bg-gray-200"
+                  : "cursor-not-allowed border border-gray-400 text-gray-500"
+              }
+              onClick={isRowClickable ? () => onClickRow(r) : undefined}
+            >
+              {columns.map((c) => (
+                <td key={c.key} className="border border-gray-400 px-1">
+                  {c.format ? c.format(r[c.key]) : r[c.key]}
+                </td>
+              ))}
+              {onClickDeleteButton && (
+                <td
+                  key="__delete"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
                 >
-                  削除
-                </button>
-              </td>
-            )}
-          </tr>
-        ))}
+                  <button
+                    className="w-fit cursor-pointer bg-red-500 text-white hover:bg-red-600"
+                    onClick={() => onClickDeleteButton(r)}
+                  >
+                    削除
+                  </button>
+                </td>
+              )}
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );

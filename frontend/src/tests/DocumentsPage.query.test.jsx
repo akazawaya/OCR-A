@@ -105,7 +105,21 @@ describe("DocumentsPage query", () => {
     );
   });
 
-  test("routingQuery:行クリックでviewerへページ遷移する", async () => {
+  test("routingQuery:完了したDocumentの行クリックでviewerへページ遷移する", async () => {
+    renderDocumentsPage();
+
+    const targetCell = await screen.findByRole("cell", {
+      name: "alpha-report.pdf",
+    });
+    const user = userEvent.setup();
+    await user.click(targetCell);
+
+    expect(screen.getByTestId("location-display")).toHaveTextContent(
+      "/documents/1/viewer",
+    );
+  });
+
+  test("routingQuery:完了していないDocumentの行クリックではviewerへ遷移しない", async () => {
     renderDocumentsPage();
 
     const targetCell = await screen.findByRole("cell", {
@@ -115,7 +129,7 @@ describe("DocumentsPage query", () => {
     await user.click(targetCell);
 
     expect(screen.getByTestId("location-display")).toHaveTextContent(
-      "/documents/2/viewer",
+      "/documents",
     );
   });
 });
