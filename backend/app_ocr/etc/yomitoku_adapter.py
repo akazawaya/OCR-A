@@ -21,16 +21,16 @@ def yomitoku_ocr(img_bytes, ocr_instance, bbox=None):
     words = []
     offset = None
 
-    arr = np.frombuffer(img_bytes, dtype=np.uint8)
-    img_bgr = cv2.imdecode(arr, cv2.IMREAD_COLOR)
-    if img_bgr is None:
+    img_arr_1d = np.frombuffer(img_bytes, dtype=np.uint8)
+    img_arr_bgr = cv2.imdecode(img_arr_1d, cv2.IMREAD_COLOR)
+    if img_arr_bgr is None:
         raise ValueError("Invalid image bytes")
 
     if bbox is not None:
-        img_bgr, offset = crop_img_by_bbox(img_bgr, bbox)
+        img_arr_bgr, offset = crop_img_by_bbox(img_arr_bgr, bbox)
 
-    img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
-    results, _ = ocr_instance(img_rgb)
+    img_arr_rgb = cv2.cvtColor(img_arr_bgr, cv2.COLOR_BGR2RGB)
+    results, _ = ocr_instance(img_arr_rgb)
     for w in results.words:
         points = w.points
         if offset is not None:

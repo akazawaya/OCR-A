@@ -65,14 +65,20 @@ def render_page(file, page_number, input_ext, output_ext=".png", dpi=300):
         if input_ext == "pdf":
             pdf = pypdfium2.PdfDocument(file)
             page = pdf[page_number - 1]
-            img_pixels = page.render(scale=dpi / 72, rotation=0).to_numpy()
-            img_bytes = cv2.imencode(output_ext, img_pixels)[1].tobytes()
+            # preserved:色・階調・透明度を可能な限り維持した画像配列
+            img_arr_preserved = page.render(
+                scale=dpi / 72,
+                rotation=0,
+                fill_color=(255, 255, 255, 0),
+            ).to_numpy()
+            img_bytes = cv2.imencode(output_ext, img_arr_preserved)[1].tobytes()
             return img_bytes
 
-        file_bytes = file.read()
-        file_bytes_uint8_ndarray = np.frombuffer(file_bytes, np.uint8)
-        img_pixels = cv2.imdecode(file_bytes_uint8_ndarray, cv2.IMREAD_UNCHANGED)
-        img_bytes = cv2.imencode(output_ext, img_pixels)[1].tobytes()
+        # jpg, pngの場合、output_extに拡張子を揃えるためエンコード、デコードを経由する
+        img_bytes = file.read()
+        img_arr_1d = np.frombuffer(img_bytes, np.uint8)
+        img_arr_unchanged = cv2.imdecode(img_arr_1d, cv2.IMREAD_UNCHANGED)
+        img_bytes = cv2.imencode(output_ext, img_arr_unchanged)[1].tobytes()
         return img_bytes
     finally:
         if pdf is not None:

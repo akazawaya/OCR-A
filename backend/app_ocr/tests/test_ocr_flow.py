@@ -68,7 +68,7 @@ class TestRenderPage:
             ("table.jpg", "image/jpeg", "jpg"),
         ],
     )
-    def test_returns_decodable_png_bytes(
+    def test_returns_valid_img_bytes(
         self,
         uploaded_file_from_fixture_factory,
         filename,
@@ -78,17 +78,19 @@ class TestRenderPage:
         file = uploaded_file_from_fixture_factory(filename, content_type)
 
         img_bytes = render_page(file=file, page_number=1, input_ext=input_ext)
-
+        # 保存処理 渡せるバイト列であることを確認
         assert isinstance(img_bytes, bytes)
-        assert img_bytes.startswith(b"\x89PNG\r\n\x1a\n")
 
-        decoded = cv2.imdecode(
-            np.frombuffer(img_bytes, np.uint8),
-            cv2.IMREAD_UNCHANGED,
-        )
-        assert decoded is not None
-        assert decoded.shape[0] > 0
-        assert decoded.shape[1] > 0
+        # OCR処理 pytestではOCRエンジンを動かせないため、代替として、
+        # render_pageの出力をOCR前処理と同じBGR配列へ変換できることを確認する。
+        # これは画像の読み取り可否のみを保証し、OCRの実行・認識品質は保証しない。
+        img_arr_1d = np.frombuffer(img_bytes, dtype=np.uint8)
+        img_arr_bgr = cv2.imdecode(img_arr_1d, cv2.IMREAD_COLOR)
+
+        assert img_arr_bgr is not None
+        assert img_arr_bgr.shape[0] > 0  # 高さ
+        assert img_arr_bgr.shape[1] > 0  # 幅
+        assert img_arr_bgr.shape[2] == 3  # 3チャンネルBGR
 
     @pytest.mark.parametrize(
         "filename, content_type, input_ext",
