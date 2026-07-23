@@ -78,9 +78,10 @@ beforeEach(() => {
   setupDefaultViewerMocks();
   setupCanvasTextMeasureMock();
 });
-// useBlockerの遷移ガードは「トップページ」を代表としてテストする
+
 describe("ViewerPage navigation guard", () => {
   test("編集中にトップページを選択すると確認後に遷移する", async () => {
+    // useBlockerの遷移ガードは「トップページ」を代表としてテストする
     renderViewerWithAuthLayout();
     const user = userEvent.setup();
 
@@ -132,5 +133,21 @@ describe("ViewerPage navigation guard", () => {
     expect(await screen.findByTestId("location-display")).toHaveTextContent(
       LOGIN_PATH,
     );
+  });
+
+  test("編集中はブラウザを閉じる操作をガードする", async () => {
+    // useBeforeUnloadの遷移ガードは「ブラウザの離脱」を代表としてテストする
+    renderViewerWithAuthLayout();
+    const user = userEvent.setup();
+
+    const beforeEditEvent = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(beforeEditEvent);
+    expect(beforeEditEvent.defaultPrevented).toBe(false);
+
+    await user.click(await screen.findByRole("button", { name: "編集" }));
+
+    const editingEvent = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(editingEvent);
+    expect(editingEvent.defaultPrevented).toBe(true);
   });
 });

@@ -1,6 +1,7 @@
-import { useMemo, useRef, useEffect, useState } from "react";
+import { useCallback, useMemo, useRef, useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  useBeforeUnload,
   useBlocker,
   useLocation,
   useOutletContext,
@@ -252,6 +253,15 @@ const ViewerPage = () => {
     previewJob,
   });
   const blocker = useBlocker(editState.isEditMode);
+  useBeforeUnload(
+    useCallback(
+      (event) => {
+        if (!editState.isEditMode) return;
+        event.preventDefault();
+      },
+      [editState.isEditMode],
+    ),
+  );
 
   const [pendingLogoutMutation, setPendingLogoutMutation] = useState(null);
 
