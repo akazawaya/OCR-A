@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createMemoryRouter, RouterProvider } from "react-router-dom";
+import { createMemoryRouter, Outlet, RouterProvider } from "react-router-dom";
 import { vi } from "vitest";
 
 import ViewerPage from "../pages/ViewerPage";
@@ -10,7 +10,9 @@ import { resetMockWords } from "./msw/wordsApiHandlers";
 // pageAccessSpec/wordSpec は、setupでVITE_API_BASE_URLをstub済みの想定。
 // ※実際の通信関数はmockすること！
 
-export const renderViewerPage = () => {
+export const renderViewerPage = ({
+  initialEntry = "/documents/1/viewer",
+} = {}) => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -21,11 +23,16 @@ export const renderViewerPage = () => {
   const router = createMemoryRouter(
     [
       {
-        path: "/documents/:primaryKey/viewer",
-        element: <ViewerPage />,
+        element: <Outlet context={{ logoutBlockerRef: { current: null } }} />,
+        children: [
+          {
+            path: "/documents/:primaryKey/viewer",
+            element: <ViewerPage />,
+          },
+        ],
       },
     ],
-    { initialEntries: ["/documents/1/viewer"] },
+    { initialEntries: [initialEntry] },
   );
 
   return render(
