@@ -1,9 +1,9 @@
 import { PREVIEW_WORD_OCR_STATE } from "../../logic/viewer/previewWordOcrContract";
 
 export const defaultMockDocuments = [
-  { id: 1, file_name: "alpha-report.pdf", state: "SUCCESS" },
-  { id: 2, file_name: "beta-report.pdf", state: "QUEUED" },
-  { id: 3, file_name: "gamma-alpha.pdf", state: "FAILED" },
+  { id: 1, file_name: "alpha-report.pdf", state: "完了" },
+  { id: 2, file_name: "beta-report.pdf", state: "待機中" },
+  { id: 3, file_name: "gamma-alpha.pdf", state: "失敗" },
 ];
 
 export const defaultMockAuthUser = {
