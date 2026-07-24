@@ -13,8 +13,17 @@ FIXTURE_DIR = Path(__file__).parent / "fixtures"
 pytestmark = pytest.mark.django_db
 
 
-class TestImportWithoutOcr:
-    def test_import_produces_viewable_document(
+def assert_no_document_upload_resources_remain(tmp_path):
+    assert Document.objects.count() == 0
+    assert Page.objects.count() == 0
+    assert not any(path.is_file() for path in tmp_path.rglob("*"))
+
+
+# Failedはwithout_ocr,with_ocrの双方でアサートが似通っているため、parametrizeで共通化
+# 対してSuccessはアサートしたいデータ対象が異なるため、
+# without_ocr,with_ocrを個別でテストケースを用意する
+class TestSuccessfulDocumentUpload:
+    def test_without_ocr_generates_page_images(
         self,
         uploaded_file_from_fixture_factory,
         authenticated_client,
@@ -28,66 +37,21 @@ class TestImportWithoutOcr:
             {"file": file},
             format="multipart",
         )
+
+        assert response.status_code == status.HTTP_201_CREATED
 
         document_id = response.data["id"]
         document = Document.objects.get(id=document_id)
         pages = list(document.pages.order_by("page_number"))
 
-        assert response.status_code == status.HTTP_201_CREATED
         assert document.file.storage.exists(document.file.name)
-        assert len(pages) == document.total_pages
+        assert [page.page_number for page in pages] == list(
+            range(1, document.total_pages + 1)
+        )
         assert all(page.image for page in pages)
         assert all(page.image.storage.exists(page.image.name) for page in pages)
 
-    def test_invalid_input_is_rejected_without_persistence(
-        self,
-        dummy_file_factory,
-        authenticated_client,
-        settings,
-        tmp_path,
-    ):
-        settings.MEDIA_ROOT = tmp_path
-        file = dummy_file_factory("test.txt", "text/plain")
-
-        response = authenticated_client.post(
-            reverse("document-list"),
-            {"file": file},
-            format="multipart",
-        )
-
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert Document.objects.count() == 0
-        assert Page.objects.count() == 0
-        assert not any(path.is_file() for path in tmp_path.rglob("*"))
-
-    def test_failure_after_persistence_removes_database_and_storage_resources(
-        self,
-        uploaded_file_from_fixture_factory,
-        authenticated_client,
-        settings,
-        tmp_path,
-    ):
-        settings.MEDIA_ROOT = tmp_path
-        file = uploaded_file_from_fixture_factory()
-
-        with patch(
-            "app_ocr.views.create_pages_from_document_file",
-            side_effect=RuntimeError("page creation failed"),
-        ):
-            with pytest.raises(RuntimeError):
-                authenticated_client.post(
-                    reverse("document-list"),
-                    {"file": file},
-                    format="multipart",
-                )
-
-        assert Document.objects.count() == 0
-        assert Page.objects.count() == 0
-        assert not any(path.is_file() for path in tmp_path.rglob("*"))
-
-
-class TestImportWithOcr:
-    def test_import_persists_input_and_schedules_ocr(
+    def test_with_ocr_schedules_ocr_without_creating_pages(
         self,
         uploaded_file_from_fixture_factory,
         authenticated_client,
@@ -116,10 +80,18 @@ class TestImportWithOcr:
         assert Page.objects.filter(doc=document).count() == 0
         mock_dispatch.assert_called_once_with(document.id)
 
-    def test_invalid_input_is_rejected_without_persistence(
+
+class TestFailedDocumentUpload:
+    @pytest.mark.parametrize(
+        "route_name",
+        ["document-list", "document-ocr"],
+        ids=["without_ocr", "with_ocr"],
+    )
+    def test_rejects_invalid_input_without_persistence(
         self,
         dummy_file_factory,
         authenticated_client,
+        route_name,
         settings,
         tmp_path,
     ):
@@ -128,39 +100,41 @@ class TestImportWithOcr:
 
         with patch("app_ocr.views.dispatch_ocr_pages_task.delay") as mock_dispatch:
             response = authenticated_client.post(
-                reverse("document-ocr"),
+                reverse(route_name),
                 {"file": file},
                 format="multipart",
             )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-        assert Document.objects.count() == 0
-        assert Page.objects.count() == 0
-        assert not any(path.is_file() for path in tmp_path.rglob("*"))
+        assert_no_document_upload_resources_remain(tmp_path)
         mock_dispatch.assert_not_called()
 
-    def test_failure_after_persistence_removes_database_and_storage_resources(
+    @pytest.mark.parametrize(
+        ("route_name", "patch_target"),
+        [
+            ("document-list", "app_ocr.views.create_pages_from_document_file"),
+            ("document-ocr", "app_ocr.views.transaction.on_commit"),
+        ],
+        ids=["without_ocr", "with_ocr"],
+    )
+    def test_rolls_back_saved_resources_on_failure(
         self,
         uploaded_file_from_fixture_factory,
         authenticated_client,
+        route_name,
+        patch_target,
         settings,
         tmp_path,
     ):
         settings.MEDIA_ROOT = tmp_path
         file = uploaded_file_from_fixture_factory()
 
-        with patch(
-            "app_ocr.views.transaction.on_commit",
-            side_effect=RuntimeError("on_commit failed"),
-        ):
+        with patch(patch_target, side_effect=RuntimeError("forced failure")):
             with pytest.raises(RuntimeError):
                 authenticated_client.post(
-                    reverse("document-ocr"),
+                    reverse(route_name),
                     {"file": file},
                     format="multipart",
                 )
 
-        assert Document.objects.count() == 0
-        assert Page.objects.count() == 0
-        assert not any(path.is_file() for path in tmp_path.rglob("*"))
+        assert_no_document_upload_resources_remain(tmp_path)
