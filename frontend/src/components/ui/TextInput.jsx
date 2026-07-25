@@ -16,7 +16,7 @@ const TextInput = ({ className = "", type = "text", ...props }) => {
   return (
     <div className="relative w-full">
       <input
-        className={`${baseInputClassName} ${className}`}
+        className={`${baseInputClassName} pr-8 ${className}`}
         type={isPasswordVisible ? "text" : "password"}
         {...props}
       />
