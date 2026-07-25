@@ -7,6 +7,7 @@ import { createUser } from "../api/clients/mutationClient";
 import { routePaths } from "../appConfig";
 import Button from "../components/ui/Button";
 import TextInput from "../components/ui/TextInput";
+import { formClassNames } from "../components/ui/formClassNames";
 import { toastStyles } from "../components/ui/toastStyles";
 
 const SignupPage = () => {
@@ -42,12 +43,9 @@ const SignupPage = () => {
   };
 
   return (
-    <div className="mx-auto mt-32 flex w-fit flex-col items-center rounded-md border border-gray-400 bg-white p-2">
-      <form
-        className="flex flex-col items-center gap-2 bg-white"
-        onSubmit={handleSubmit}
-      >
-        <label>
+    <div className={formClassNames.authPanel}>
+      <form className={formClassNames.inputPanel} onSubmit={handleSubmit}>
+        <label className={formClassNames.fieldLabel}>
           メールアドレス
           <TextInput
             value={email}
@@ -55,7 +53,7 @@ const SignupPage = () => {
           />
         </label>
 
-        <label>
+        <label className={formClassNames.fieldLabel}>
           パスワード
           <TextInput
             type="password"
@@ -64,7 +62,7 @@ const SignupPage = () => {
           />
         </label>
 
-        <label>
+        <label className={formClassNames.fieldLabel}>
           パスワード確認
           <TextInput
             type="password"

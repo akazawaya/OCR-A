@@ -11,6 +11,7 @@ import { routePaths } from "../appConfig";
 import AlertDialog from "../components/ui/AlertDialog";
 import Button from "../components/ui/Button";
 import TextInput from "../components/ui/TextInput";
+import { formClassNames } from "../components/ui/formClassNames";
 import { toastStyles } from "../components/ui/toastStyles";
 
 const SettingPage = () => {
@@ -64,12 +65,9 @@ const SettingPage = () => {
   return (
     <div className="flex flex-col items-center justify-center gap-1 border-2 p-2">
       <p>アカウント設定</p>
-      <form
-        className="flex flex-col items-center gap-2 bg-white"
-        onSubmit={handleSubmit}
-      >
+      <form className={formClassNames.inputPanel} onSubmit={handleSubmit}>
         <div>パスワードを変更</div>
-        <label>
+        <label className={formClassNames.fieldLabel}>
           現在のパスワード
           <TextInput
             type="password"
@@ -78,7 +76,7 @@ const SettingPage = () => {
           />
         </label>
 
-        <label>
+        <label className={formClassNames.fieldLabel}>
           新しいパスワード
           <TextInput
             type="password"
@@ -87,7 +85,7 @@ const SettingPage = () => {
           />
         </label>
 
-        <label>
+        <label className={formClassNames.fieldLabel}>
           新しいパスワード（確認）
           <TextInput
             type="password"
