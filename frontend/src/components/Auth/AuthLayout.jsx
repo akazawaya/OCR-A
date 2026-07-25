@@ -38,7 +38,13 @@ const AuthLayout = () => {
     logoutMutation();
   };
 
-  if (isPending || isFetching) return null;
+  // フェッチ処理中 かつ 非認証の場合、初回の認証試行中と解釈して遷移判断を保留。
+  // フェッチ処理中 かつ 認証済みの場合、
+  // ViewerPageはQuery Cacheに編集中のデータを保持しており、ここでnullを返すと、
+  // ViewerPageがアンマウントされる。その後の再マウント時にwordsが再取得され、
+  // 編集中のキャッシュがDBのデータで上書きされる。
+  // そのため、この場合はOutletへ処理を進め、アンマウントが発生しないよう区別する。
+  if (isPending || (isFetching && !data.authenticated)) return null;
 
   if (!data.authenticated) {
     return <Navigate to={routePaths.login.to()} replace />;
