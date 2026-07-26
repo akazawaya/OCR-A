@@ -7,7 +7,7 @@ import { createUser, login } from "../api/clients/mutationClient";
 import { routePaths } from "../appConfig";
 import Button from "../components/ui/Button";
 import TextInput from "../components/ui/TextInput";
-import { formClassNames } from "../components/ui/formClassNames";
+import { authClassNames, formClassNames } from "../components/ui/classNames";
 import { toastStyles } from "../components/ui/toastStyles";
 
 const LoginPage = () => {
@@ -36,7 +36,7 @@ const LoginPage = () => {
   });
 
   return (
-    <div className={`${formClassNames.authPanel} gap-1`}>
+    <div className={authClassNames.panel}>
       <form
         className={formClassNames.inputPanel}
         onSubmit={(e) => {

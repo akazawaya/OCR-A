@@ -11,7 +11,7 @@ import { routePaths } from "../appConfig";
 import AlertDialog from "../components/ui/AlertDialog";
 import Button from "../components/ui/Button";
 import TextInput from "../components/ui/TextInput";
-import { formClassNames } from "../components/ui/formClassNames";
+import { formClassNames } from "../components/ui/classNames";
 import { toastStyles } from "../components/ui/toastStyles";
 
 const SettingPage = () => {
