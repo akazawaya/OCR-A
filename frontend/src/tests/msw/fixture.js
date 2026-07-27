@@ -293,6 +293,57 @@ export const sortMockWords = {
   ],
 };
 
+export const viewerTableSortMockWords = [
+  {
+    id: "score-null",
+    page: 101,
+    page__page_number: 1,
+    page__doc: "1",
+    bbox: [
+      [100, 100],
+      [160, 100],
+      [160, 130],
+      [100, 130],
+    ],
+    content: "charlie",
+    direction: 1,
+    rec_score: null,
+    det_score: null,
+  },
+  {
+    id: "score-high",
+    page: 101,
+    page__page_number: 1,
+    page__doc: "1",
+    bbox: [
+      [200, 100],
+      [260, 100],
+      [260, 130],
+      [200, 130],
+    ],
+    content: "alpha",
+    direction: 1,
+    rec_score: 0.7,
+    det_score: 0.8,
+  },
+  {
+    id: "score-low",
+    page: 101,
+    page__page_number: 1,
+    page__doc: "1",
+    bbox: [
+      [300, 100],
+      [360, 100],
+      [360, 130],
+      [300, 130],
+    ],
+    content: "bravo",
+    direction: 1,
+    rec_score: 0.1,
+    det_score: 0.09,
+  },
+];
+
 // OCR preview fixture
 // 1. 結果が空のケース
 // 2. 結果が複数wordに分割されるケース
