@@ -48,6 +48,57 @@ export const defaultMockWords = [
   },
 ];
 
+export const dragModeMockWords = [
+  {
+    id: 1,
+    content: "範囲内A",
+    bbox: [
+      [100, 100],
+      [200, 100],
+      [200, 200],
+      [100, 200],
+    ],
+    page: 1,
+    page__page_number: 1,
+    page__doc: "1",
+    direction: 1,
+    rec_score: 0.9,
+    det_score: 0.8,
+  },
+  {
+    id: 2,
+    content: "範囲内B",
+    bbox: [
+      [300, 100],
+      [400, 100],
+      [400, 200],
+      [300, 200],
+    ],
+    page: 1,
+    page__page_number: 1,
+    page__doc: "1",
+    direction: 1,
+    rec_score: 0.7,
+    det_score: 0.6,
+  },
+  {
+    id: 3,
+    content: "範囲外",
+    bbox: [
+      [700, 500],
+      [800, 500],
+      [800, 600],
+      [700, 600],
+    ],
+    page: 1,
+    page__page_number: 1,
+    page__doc: "1",
+    direction: 1,
+    rec_score: 0.5,
+    det_score: 0.4,
+  },
+];
+
 export const queryRoutingMockPages = [
   {
     id: 101,

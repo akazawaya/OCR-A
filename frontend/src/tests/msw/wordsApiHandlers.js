@@ -11,6 +11,9 @@ let ocrResultByPreviewJobId = new Map([
   [ocrJobMock.previewJobId, structuredClone(ocrJobMock.result)],
 ]);
 let ocrWaitPromise = null;
+let deletedWordIds = [];
+let postedWordBodies = [];
+let patchedWordRequests = [];
 
 export const resetMockWords = () => {
   words = structuredClone(defaultMockWords);
@@ -19,6 +22,9 @@ export const resetMockWords = () => {
     [ocrJobMock.previewJobId, structuredClone(ocrJobMock.result)],
   ]);
   ocrWaitPromise = null;
+  deletedWordIds = [];
+  postedWordBodies = [];
+  patchedWordRequests = [];
 };
 export const setMockWords = (anotherFixtute) => {
   words = structuredClone(anotherFixtute);
@@ -33,6 +39,10 @@ export const setMockOcrJob = ({
   previewJobId = nextPreviewJobId;
   ocrResultByPreviewJobId.set(previewJobId, structuredClone(result));
 };
+export const getMockDeletedWordIds = () => [...deletedWordIds];
+export const getMockPostedWordBodies = () => structuredClone(postedWordBodies);
+export const getMockPatchedWordRequests = () =>
+  structuredClone(patchedWordRequests);
 
 const buildPreviewJobResult = ({ body, rawResult }) => {
   const result = structuredClone(rawResult);
@@ -81,6 +91,7 @@ export const wordsApiHandlers = [
     }
 
     return request.json().then((data) => {
+      patchedWordRequests.push({ id, body: structuredClone(data) });
       words[wordIndex] = { ...words[wordIndex], ...data };
       return HttpResponse.json(words[wordIndex]);
     });
@@ -88,6 +99,7 @@ export const wordsApiHandlers = [
 
   http.post(`${MOCK_API_BASE_URL}/words/`, async ({ request }) => {
     const body = await request.json();
+    postedWordBodies.push(structuredClone(body));
 
     const nextId = Math.max(0, ...words.map((word) => Number(word.id))) + 1;
 
@@ -99,6 +111,8 @@ export const wordsApiHandlers = [
       bbox: body.bbox,
       direction: body.direction,
       content: body.content ?? "",
+      rec_score: body.rec_score,
+      det_score: body.det_score,
     };
 
     words = [...words, createdWord];
@@ -109,6 +123,7 @@ export const wordsApiHandlers = [
   http.patch(`${MOCK_API_BASE_URL}/words/:id/`, async ({ params, request }) => {
     const id = Number(params.id);
     const body = await request.json();
+    patchedWordRequests.push({ id, body: structuredClone(body) });
     const index = words.findIndex((word) => Number(word.id) === id);
 
     if (index === -1) {
@@ -125,6 +140,7 @@ export const wordsApiHandlers = [
 
   http.delete(`${MOCK_API_BASE_URL}/words/:id/`, ({ params }) => {
     const id = Number(params.id);
+    deletedWordIds.push(id);
     words = words.filter((p) => p.id !== id);
     return new HttpResponse(null, { status: 204 });
   }),
