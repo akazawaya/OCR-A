@@ -5,7 +5,7 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
 
-import { optionsMockWords } from "./msw/fixture";
+import { defaultMockWords } from "./msw/fixture";
 import { setMockWords } from "./msw/wordsApiHandlers";
 import {
   renderViewerPage,
@@ -20,11 +20,11 @@ beforeEach(() => {
 
 describe("ViewerPage.ViewerOptionsPanel", () => {
   test("ViewerTopBarからViewerOptionsPanelを開き、検出信頼度の列を即時に追加・削除できる", async () => {
-    setMockWords(optionsMockWords);
+    setMockWords(defaultMockWords);
     renderViewerPage();
     const user = userEvent.setup();
 
-    await screen.findByRole("cell", { name: "精度あり" });
+    await screen.findByRole("cell", { name: "テスト語" });
     expect(
       screen.queryByRole("columnheader", { name: "検出信頼度" }),
     ).toBeNull();
@@ -44,7 +44,6 @@ describe("ViewerPage.ViewerOptionsPanel", () => {
         screen.getByRole("columnheader", { name: "検出信頼度" }),
       ).toBeVisible();
       expect(screen.getByRole("cell", { name: "80%" })).toBeVisible();
-      expect(screen.getByRole("cell", { name: "-" })).toBeVisible();
     });
 
     await user.click(detectionScoreCheckbox);

@@ -45,6 +45,8 @@ export const defaultMockWords = [
     ],
     content: "テスト語",
     direction: 1,
+    det_score: 0.8,
+    rec_score: 0.9,
   },
 ];
 
