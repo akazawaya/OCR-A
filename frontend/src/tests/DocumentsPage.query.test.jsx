@@ -8,7 +8,7 @@ import "@testing-library/jest-dom/vitest";
 import { renderDocumentsPage } from "./DocumentsPage.test-utils";
 
 describe("DocumentsPage query", () => {
-  test("searchQuery:検索条件の絞り込みにより該当データのみDocumentsTableに残る", async () => {
+  test("searchQuery:検索条件の絞り込みにより該当データのみDocumentTableに残る", async () => {
     renderDocumentsPage();
 
     const keywordInput = screen.getByRole("textbox");
@@ -45,7 +45,7 @@ describe("DocumentsPage query", () => {
     expect(screen.getByLabelText("OR")).toBeChecked();
   });
 
-  test("sortQuery:並び替えがDocumentsTableで機能する", async () => {
+  test("sortQuery:並び替えがDocumentTableで機能する", async () => {
     renderDocumentsPage();
 
     expect(
