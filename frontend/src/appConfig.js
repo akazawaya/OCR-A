@@ -73,8 +73,28 @@ const documentUiSpec = Object.freeze({
     },
   ],
 });
+const formatScoreAsPercent = (value) => {
+  if (value == null) return "-";
+  return `${Math.round(Number(value) * 100)}%`;
+};
+
 const wordUiSpec = Object.freeze({
-  table: [{ key: "content" }],
+  table: [
+    {
+      key: "content",
+      label: "本文",
+    },
+    {
+      key: "det_score",
+      label: "検出信頼度",
+      format: formatScoreAsPercent,
+    },
+    {
+      key: "rec_score",
+      label: "認識信頼度",
+      format: formatScoreAsPercent,
+    },
+  ],
 });
 
 // attachResourceSpec:accessSpec（入口）と uiSpec（表示定義）を束ねる

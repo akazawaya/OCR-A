@@ -10,6 +10,7 @@ import {
   Undo2,
   Redo2,
   Save,
+  Settings,
   X,
 } from "lucide-react";
 
@@ -17,6 +18,8 @@ import {
   VIEWER_ZOOM,
   VIEWER_ROTATE_STEP,
 } from "../../logic/viewer/viewerPageConstants";
+
+import { ViewerOptionsPanel } from "./ViewerOptionsPanel";
 
 const renderTextField = (foo, commitFoo, inputRef, ariaLabel, disabled) => (
   // 外部の foo が変わったときにinputRef.current.value = ... で表示を同期
@@ -56,6 +59,9 @@ const ViewerTopBar = ({
     canZoomIn = false,
     isOcring = false,
     isPrintMode = false,
+    isOptionsPanelOpen = false,
+    tableColumns = [],
+    visibleColumnKeys = [],
   } = {},
   events: {
     onClickPrintButton,
@@ -67,6 +73,8 @@ const ViewerTopBar = ({
     onClickPageStepButton,
     onClickZoomStepButton,
     onClickRotateStepButton,
+    onClickOptionsButton,
+    onChangeColumnVisibility,
     onEnterPageInput,
     onEnterZoomInput,
     onEnterRotateInput,
@@ -112,7 +120,7 @@ const ViewerTopBar = ({
 
   const isBaseDisabled = isOcring || isPrintMode;
   return (
-    <div className="flex items-center justify-center gap-5 border bg-gray-200 px-2 py-1">
+    <div className="relative flex items-center justify-center gap-5 border bg-gray-200 px-2 py-1">
       <div className="flex items-center gap-0.5">
         {renderIconButton({
           label: "前のページ",
@@ -176,6 +184,13 @@ const ViewerTopBar = ({
           isBaseDisabled,
         )}
       </div>
+      {renderIconButton({
+        label: "表示設定",
+        icon: Settings,
+        className: actionButtonWithDisabledClassName,
+        disabled: isBaseDisabled,
+        onClick: onClickOptionsButton,
+      })}
       {!isEditMode ? (
         renderIconButton({
           label: "出力",
@@ -235,6 +250,15 @@ const ViewerTopBar = ({
         <span className="text-sm text-gray-600" role="status">
           OCR実行中...
         </span>
+      )}
+      {isOptionsPanelOpen && (
+        <ViewerOptionsPanel
+          data={{
+            columns: tableColumns,
+            visibleColumnKeys,
+          }}
+          events={{ onChangeColumnVisibility }}
+        />
       )}
     </div>
   );

@@ -33,6 +33,12 @@ const ContentEditInput = ({
     />
   );
 };
+
+const formatCellValue = (row, column) => {
+  const value = row[column.key];
+  return column.format ? column.format(value) : value;
+};
+
 const ViewerTable = ({
   data: {
     columns = [],
@@ -57,7 +63,7 @@ const ViewerTable = ({
   // edit中のinputの幅は事前に固定値を取る
   const maxContentLength = Math.max(
     20,
-    ...rows.flatMap((r) => columns.map((c) => String(r[c.key]).length)),
+    ...rows.map((row) => String(row.content ?? "").length),
   );
 
   const rootRef = useRef(null);
@@ -77,6 +83,19 @@ const ViewerTable = ({
 
   return (
     <table ref={rootRef}>
+      <thead>
+        <tr>
+          {isEditMode && <th aria-label="操作" />}
+          {columns.map((column) => (
+            <th
+              key={column.key}
+              className="border border-gray-400 px-1 text-left"
+            >
+              {column.label}
+            </th>
+          ))}
+        </tr>
+      </thead>
       <tbody>
         {rows.map((r) => {
           const isSelected = r.id === selectedId;
@@ -139,9 +158,7 @@ const ViewerTable = ({
 
               {columns.map((c) => (
                 <td key={c.key} className="px-1">
-                  {!isEditMode ? (
-                    <span className="inline-block min-w-max">{r[c.key]}</span>
-                  ) : (
+                  {isEditMode && c.key === "content" ? (
                     <ContentEditInput
                       content={r[c.key]}
                       inputSize={maxContentLength}
@@ -149,6 +166,10 @@ const ViewerTable = ({
                         onChangeContentDraft(r.id, nextContent, prevContent)
                       }
                     />
+                  ) : (
+                    <span className="inline-block min-w-max">
+                      {formatCellValue(r, c)}
+                    </span>
                   )}
                 </td>
               ))}

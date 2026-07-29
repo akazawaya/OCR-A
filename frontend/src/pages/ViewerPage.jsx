@@ -39,6 +39,8 @@ import ViewerTable from "../components/Viewer/ViewerTable";
 import { ViewerEditHotkeys } from "../components/Viewer/ViewerEditHotkeys";
 import AlertDialog from "../components/ui/AlertDialog";
 
+const ALWAYS_VISIBLE_WORD_COLUMN_KEYS = Object.freeze(["content"]);
+
 const ViewerPage = () => {
   const queryClient = useQueryClient();
   const { search } = useLocation();
@@ -134,13 +136,35 @@ const ViewerPage = () => {
     return new Map(pages.map((page) => [String(page.id), page.page_number]));
   }, [pages]);
 
-  const wordTableColumns = wordSpec.ui.table.map(({ key, label }) => ({
-    key,
-    label,
-  }));
-
   const pageState = useViewerPageState({ maxPage: pages.length });
   const selection = useSelection();
+  const [isOptionsPanelOpen, setIsOptionsPanelOpen] = useState(false);
+  // viewerTableの表示カラム関連
+  const [visibleWordColumnKeys, setVisibleWordColumnKeys] = useState(() => [
+    ...ALWAYS_VISIBLE_WORD_COLUMN_KEYS,
+  ]);
+  const wordTableColumns = useMemo(
+    () =>
+      wordSpec.ui.table.filter((column) =>
+        visibleWordColumnKeys.includes(column.key),
+      ),
+    [visibleWordColumnKeys],
+  );
+  const optionalWordTableColumns = wordSpec.ui.table.filter(
+    (column) => !ALWAYS_VISIBLE_WORD_COLUMN_KEYS.includes(column.key),
+  );
+  const onChangeColumnVisibility = useCallback((columnKey, isVisible) => {
+    setVisibleWordColumnKeys((currentVisibleColumnKeys) => {
+      if (isVisible) {
+        return currentVisibleColumnKeys.includes(columnKey)
+          ? currentVisibleColumnKeys
+          : [...currentVisibleColumnKeys, columnKey];
+      }
+      return currentVisibleColumnKeys.filter(
+        (visibleColumnKey) => visibleColumnKey !== columnKey,
+      );
+    });
+  }, []);
   const contentRef = useRef(null);
   const { isPrintMode, openPrintDialog } = usePrint({
     contentRef,
@@ -339,6 +363,9 @@ const ViewerPage = () => {
               canZoomIn: pageState.canZoomIn,
               isOcring: editState.isOcring,
               isPrintMode,
+              isOptionsPanelOpen,
+              tableColumns: optionalWordTableColumns,
+              visibleColumnKeys: visibleWordColumnKeys,
             }}
             events={{
               onClickPrintButton: openPrintDialog,
@@ -353,6 +380,9 @@ const ViewerPage = () => {
               onEnterPageInput: pageState.commitPage,
               onEnterZoomInput: pageState.commitZoom,
               onEnterRotateInput: pageState.commitRotate,
+              onClickOptionsButton: () =>
+                setIsOptionsPanelOpen((isOpen) => !isOpen),
+              onChangeColumnVisibility,
             }}
           />
         </div>
