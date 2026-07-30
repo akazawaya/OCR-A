@@ -34,8 +34,9 @@ const selectionButtons = [
   },
 ];
 
-const selectionModeButtonClassName =
-  "aria-pressed:bg-gray-700 aria-pressed:text-white aria-pressed:hover:bg-gray-700";
+const selectionModeLabelClassName =
+  "inline-flex h-8 w-5 cursor-pointer items-center justify-center rounded-md border border-black bg-white hover:bg-gray-100 has-checked:bg-gray-700 has-checked:text-white has-checked:hover:bg-gray-700";
+const selectionModeIconClassName = "h-4 w-4";
 
 const actionButtons = [
   { label: "削除", icon: Trash2 },
@@ -57,15 +58,22 @@ export const ViewerEditToolbar = () => {
       role="toolbar"
     >
       <div className="flex items-center gap-1">
-        {selectionButtons.map(({ mode, label, icon }) => (
-          <ViewerIconButton
+        {selectionButtons.map(({ mode, label, icon: Icon }) => (
+          <label
             key={mode}
-            aria-pressed={selectionMode === mode}
-            className={selectionModeButtonClassName}
-            icon={icon}
-            label={label}
-            onClick={() => onSelectionMode(mode)}
-          />
+            className={selectionModeLabelClassName}
+            title={label}
+          >
+            <input
+              aria-label={label}
+              checked={selectionMode === mode}
+              className="sr-only"
+              name="viewer-selection-mode"
+              type="radio"
+              onChange={() => onSelectionMode(mode)}
+            />
+            <Icon className={selectionModeIconClassName} />
+          </label>
         ))}
       </div>
 
