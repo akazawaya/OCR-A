@@ -20,6 +20,8 @@ import {
 } from "../../logic/viewer/viewerPageConstants";
 
 import { ViewerOptionsPanel } from "./ViewerOptionsPanel";
+import { ViewerEditToolbar } from "./ViewerEditToolbar";
+import { ViewerIconButton } from "./ViewerIconButton";
 
 const renderTextField = (foo, commitFoo, inputRef, ariaLabel, disabled) => (
   // 外部の foo が変わったときにinputRef.current.value = ... で表示を同期
@@ -93,164 +95,132 @@ const ViewerTopBar = ({
     rotateRef.current.value = rotate;
   }, [page, zoom, rotate]);
 
-  const actionButtonClassName =
-    "inline-flex h-8 w-5 items-center justify-center rounded-md border border-black bg-white cursor-pointer hover:bg-gray-100";
-  const actionButtonDisabledStateClassName =
-    "disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 disabled:opacity-50 disabled:hover:bg-gray-100";
-  const actionButtonWithDisabledClassName = `${actionButtonClassName} ${actionButtonDisabledStateClassName}`;
-  const iconClassName = "h-4 w-4";
-
-  const renderIconButton = ({
-    label,
-    icon: Icon,
-    className,
-    disabled,
-    onClick,
-  }) => (
-    <button
-      aria-label={label}
-      className={className}
-      disabled={disabled}
-      title={label}
-      onClick={onClick}
-    >
-      <Icon className={iconClassName} />
-    </button>
-  );
-
   const isBaseDisabled = isOcring || isPrintMode;
   return (
-    <div className="relative flex items-center justify-center gap-5 border bg-gray-200 px-2 py-1">
-      <div className="flex items-center gap-0.5">
-        {renderIconButton({
-          label: "前のページ",
-          icon: ChevronLeft,
-          className: actionButtonWithDisabledClassName,
-          disabled: isBaseDisabled || !canGoPrevPage,
-          onClick: () => onClickPageStepButton((a) => a - 1),
-        })}
-        {renderTextField(
-          page,
-          onEnterPageInput,
-          pageRef,
-          "page",
-          isBaseDisabled,
+    <div className="relative border bg-gray-200">
+      <div className="flex items-center justify-center gap-5 px-2 py-1">
+        <div className="flex items-center gap-0.5">
+          <ViewerIconButton
+            disabled={isBaseDisabled || !canGoPrevPage}
+            icon={ChevronLeft}
+            label="前のページ"
+            onClick={() => onClickPageStepButton((a) => a - 1)}
+          />
+          {renderTextField(
+            page,
+            onEnterPageInput,
+            pageRef,
+            "page",
+            isBaseDisabled,
+          )}
+          / {maxPage}
+          <ViewerIconButton
+            disabled={isBaseDisabled || !canGoNextPage}
+            icon={ChevronRight}
+            label="次のページ"
+            onClick={() => onClickPageStepButton((a) => a + 1)}
+          />
+        </div>
+        <div className="flex items-center gap-0.5">
+          <ViewerIconButton
+            disabled={isBaseDisabled || !canZoomOut}
+            icon={ZoomOut}
+            label="縮小"
+            onClick={() => onClickZoomStepButton((a) => a - VIEWER_ZOOM.STEP)}
+          />
+          {renderTextField(
+            zoom,
+            onEnterZoomInput,
+            zoomRef,
+            "zoom",
+            isBaseDisabled,
+          )}
+          <ViewerIconButton
+            disabled={isBaseDisabled || !canZoomIn}
+            icon={ZoomIn}
+            label="拡大"
+            onClick={() => onClickZoomStepButton((a) => a + VIEWER_ZOOM.STEP)}
+          />
+        </div>
+        <div className="flex items-center gap-0.5">
+          <ViewerIconButton
+            disabled={isBaseDisabled}
+            icon={RotateCw}
+            label="回転"
+            onClick={() =>
+              onClickRotateStepButton((a) => a + VIEWER_ROTATE_STEP)
+            }
+          />
+          {renderTextField(
+            rotate,
+            onEnterRotateInput,
+            rotateRef,
+            "rotate",
+            isBaseDisabled,
+          )}
+        </div>
+        <ViewerIconButton
+          disabled={isBaseDisabled}
+          icon={Settings}
+          label="表示設定"
+          onClick={onClickOptionsButton}
+        />
+        {!isEditMode ? (
+          <ViewerIconButton
+            disabled={isBaseDisabled}
+            icon={Printer}
+            label="出力"
+            onClick={onClickPrintButton}
+          />
+        ) : (
+          <></>
         )}
-        / {maxPage}
-        {renderIconButton({
-          label: "次のページ",
-          icon: ChevronRight,
-          className: actionButtonWithDisabledClassName,
-          disabled: isBaseDisabled || !canGoNextPage,
-          onClick: () => onClickPageStepButton((a) => a + 1),
-        })}
-      </div>
-      <div className="flex items-center gap-0.5">
-        {renderIconButton({
-          label: "縮小",
-          icon: ZoomOut,
-          className: actionButtonWithDisabledClassName,
-          disabled: isBaseDisabled || !canZoomOut,
-          onClick: () => onClickZoomStepButton((a) => a - VIEWER_ZOOM.STEP),
-        })}
-        {renderTextField(
-          zoom,
-          onEnterZoomInput,
-          zoomRef,
-          "zoom",
-          isBaseDisabled,
+        {!isEditMode ? (
+          <ViewerIconButton
+            disabled={isBaseDisabled}
+            icon={Pencil}
+            label="編集"
+            onClick={onClickEditButton}
+          />
+        ) : (
+          <>
+            <div className="flex items-center gap-0.5">
+              <ViewerIconButton
+                disabled={isBaseDisabled || !canUndo}
+                icon={Undo2}
+                label="元に戻す"
+                onClick={onClickUndoButton}
+              />
+              <ViewerIconButton
+                disabled={isBaseDisabled || !canRedo}
+                icon={Redo2}
+                label="やり直す"
+                onClick={onClickRedoButton}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <ViewerIconButton
+                disabled={isBaseDisabled}
+                icon={Save}
+                label="保存"
+                onClick={onClickSaveButton}
+              />
+              <ViewerIconButton
+                disabled={isBaseDisabled}
+                icon={X}
+                label="中止"
+                onClick={onClickCancelButton}
+              />
+            </div>
+          </>
         )}
-        {renderIconButton({
-          label: "拡大",
-          icon: ZoomIn,
-          className: actionButtonWithDisabledClassName,
-          disabled: isBaseDisabled || !canZoomIn,
-          onClick: () => onClickZoomStepButton((a) => a + VIEWER_ZOOM.STEP),
-        })}
-      </div>
-      <div className="flex items-center gap-0.5">
-        {renderIconButton({
-          label: "回転",
-          icon: RotateCw,
-          className: actionButtonWithDisabledClassName,
-          disabled: isBaseDisabled,
-          onClick: () => onClickRotateStepButton((a) => a + VIEWER_ROTATE_STEP),
-        })}
-        {renderTextField(
-          rotate,
-          onEnterRotateInput,
-          rotateRef,
-          "rotate",
-          isBaseDisabled,
+        {isOcring && (
+          <span className="text-sm text-gray-600" role="status">
+            OCR実行中...
+          </span>
         )}
       </div>
-      {renderIconButton({
-        label: "表示設定",
-        icon: Settings,
-        className: actionButtonWithDisabledClassName,
-        disabled: isBaseDisabled,
-        onClick: onClickOptionsButton,
-      })}
-      {!isEditMode ? (
-        renderIconButton({
-          label: "出力",
-          icon: Printer,
-          className: actionButtonWithDisabledClassName,
-          disabled: isBaseDisabled,
-          onClick: onClickPrintButton,
-        })
-      ) : (
-        <></>
-      )}
-      {!isEditMode ? (
-        renderIconButton({
-          label: "編集",
-          icon: Pencil,
-          className: actionButtonWithDisabledClassName,
-          disabled: isBaseDisabled,
-          onClick: onClickEditButton,
-        })
-      ) : (
-        <>
-          <div className="flex items-center gap-0.5">
-            {renderIconButton({
-              label: "元に戻す",
-              icon: Undo2,
-              className: actionButtonWithDisabledClassName,
-              disabled: isBaseDisabled || !canUndo,
-              onClick: onClickUndoButton,
-            })}
-            {renderIconButton({
-              label: "やり直す",
-              icon: Redo2,
-              className: actionButtonWithDisabledClassName,
-              disabled: isBaseDisabled || !canRedo,
-              onClick: onClickRedoButton,
-            })}
-          </div>
-          <div className="flex items-center gap-2">
-            {renderIconButton({
-              label: "保存",
-              icon: Save,
-              className: actionButtonWithDisabledClassName,
-              disabled: isBaseDisabled,
-              onClick: onClickSaveButton,
-            })}
-            {renderIconButton({
-              label: "中止",
-              icon: X,
-              className: actionButtonWithDisabledClassName,
-              disabled: isBaseDisabled,
-              onClick: onClickCancelButton,
-            })}
-          </div>
-        </>
-      )}
-      {isOcring && (
-        <span className="text-sm text-gray-600" role="status">
-          OCR実行中...
-        </span>
-      )}
+      {isEditMode && <ViewerEditToolbar />}
       {isOptionsPanelOpen && (
         <ViewerOptionsPanel
           data={{

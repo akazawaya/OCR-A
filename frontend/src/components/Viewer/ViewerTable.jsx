@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { ScanLine, ScanText, Trash2 } from "lucide-react";
 
 import { useScroll } from "../../logic/layout/useScroll";
 
@@ -48,17 +47,8 @@ const ViewerTable = ({
     selectedId,
     selectedBy,
     isEditMode,
-    isOcring,
   } = {},
-  events: {
-    onHover,
-    onHoverClear,
-    onSelect,
-    onChangeContentDraft,
-    onClickDeleteButton,
-    onClickOcrRewriteButton,
-    onClickOcrReplaceButton,
-  } = {},
+  events: { onHover, onHoverClear, onSelect, onChangeContentDraft } = {},
 }) => {
   // edit中のinputの幅は事前に固定値を取る
   const maxContentLength = Math.max(
@@ -78,14 +68,10 @@ const ViewerTable = ({
     shouldScroll,
   });
 
-  const editButtonClassName =
-    "cursor-pointer border border-gray-400 text-black disabled:cursor-not-allowed disabled:opacity-50";
-
   return (
     <table ref={rootRef}>
       <thead>
         <tr>
-          {isEditMode && <th aria-label="操作" />}
           {columns.map((column) => (
             <th
               key={column.key}
@@ -116,46 +102,6 @@ const ViewerTable = ({
               onMouseEnter={() => onHover(r.id)}
               onMouseLeave={onHoverClear}
             >
-              {isEditMode && (
-                <td className="sticky left-0 z-2">
-                  <div className="flex items-center">
-                    <button
-                      aria-label="削除"
-                      className={`${editButtonClassName} bg-red-100 hover:bg-red-300 disabled:hover:bg-red-100`}
-                      disabled={isOcring}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onClickDeleteButton(r.id);
-                      }}
-                    >
-                      <Trash2 className="h-4" />
-                    </button>
-                    <button
-                      aria-label="OCR書換"
-                      className={`${editButtonClassName} bg-green-100 hover:bg-green-300 disabled:hover:bg-green-100`}
-                      disabled={isOcring}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onClickOcrRewriteButton(r);
-                      }}
-                    >
-                      <ScanLine className="h-4" />
-                    </button>
-                    <button
-                      aria-label="OCR置換"
-                      className={`${editButtonClassName} bg-blue-100 hover:bg-blue-300 disabled:hover:bg-blue-100`}
-                      disabled={isOcring}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onClickOcrReplaceButton(r);
-                      }}
-                    >
-                      <ScanText className="h-4" />
-                    </button>
-                  </div>
-                </td>
-              )}
-
               {columns.map((c) => (
                 <td key={c.key} className="px-1">
                   {isEditMode && c.key === "content" ? (
