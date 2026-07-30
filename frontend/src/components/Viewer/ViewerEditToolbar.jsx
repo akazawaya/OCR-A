@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   MousePointer2,
   ScanLine,
@@ -38,18 +37,42 @@ const selectionModeLabelClassName =
   "inline-flex h-8 w-5 cursor-pointer items-center justify-center rounded-md border border-black bg-white hover:bg-gray-100 has-checked:bg-gray-700 has-checked:text-white has-checked:hover:bg-gray-700";
 const selectionModeIconClassName = "h-4 w-4";
 
-const actionButtons = [
-  { label: "削除", icon: Trash2 },
-  { label: "OCR書換", icon: ScanLine },
-  { label: "OCR置換", icon: ScanText },
-];
-
-export const ViewerEditToolbar = () => {
-  const [selectionMode, setSelectionMode] = useState(SELECTION_MODE.CLICK);
-
-  const onSelectionMode = (nextSelectionMode) => {
-    setSelectionMode(nextSelectionMode);
-  };
+export const ViewerEditToolbar = ({
+  data: {
+    selectedWords = [],
+    selectionMode = SELECTION_MODE.CLICK,
+    isOcring = false,
+  } = {},
+  events: {
+    onChangeSelectionMode,
+    onClickDeleteButton,
+    onClickOcrRewriteButton,
+    onClickOcrReplaceButton,
+  } = {},
+} = {}) => {
+  const selectedWord = selectedWords[0];
+  const hasSelection = selectedWords.length > 0;
+  const hasSingleSelection = selectedWords.length === 1;
+  const actionButtons = [
+    {
+      label: "削除",
+      icon: Trash2,
+      disabled: !hasSelection,
+      onClick: () => onClickDeleteButton(selectedWords.map((word) => word.id)),
+    },
+    {
+      label: "OCR書換",
+      icon: ScanLine,
+      disabled: !hasSingleSelection,
+      onClick: () => onClickOcrRewriteButton(selectedWord),
+    },
+    {
+      label: "OCR置換",
+      icon: ScanText,
+      disabled: !hasSingleSelection,
+      onClick: () => onClickOcrReplaceButton(selectedWord),
+    },
+  ];
 
   return (
     <div
@@ -70,7 +93,7 @@ export const ViewerEditToolbar = () => {
               className="sr-only"
               name="viewer-selection-mode"
               type="radio"
-              onChange={() => onSelectionMode(mode)}
+              onChange={() => onChangeSelectionMode(mode)}
             />
             <Icon className={selectionModeIconClassName} />
           </label>
@@ -78,8 +101,14 @@ export const ViewerEditToolbar = () => {
       </div>
 
       <div className="flex items-center gap-1">
-        {actionButtons.map(({ label, icon }) => (
-          <ViewerIconButton key={label} icon={icon} label={label} disabled />
+        {actionButtons.map(({ label, icon, disabled, onClick }) => (
+          <ViewerIconButton
+            key={label}
+            disabled={isOcring || disabled}
+            icon={icon}
+            label={label}
+            onClick={onClick}
+          />
         ))}
       </div>
     </div>

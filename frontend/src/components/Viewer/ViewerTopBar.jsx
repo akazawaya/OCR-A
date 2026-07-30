@@ -62,6 +62,7 @@ const ViewerTopBar = ({
     isOcring = false,
     isPrintMode = false,
     isOptionsPanelOpen = false,
+    selectedWord,
     tableColumns = [],
     visibleColumnKeys = [],
   } = {},
@@ -76,6 +77,9 @@ const ViewerTopBar = ({
     onClickZoomStepButton,
     onClickRotateStepButton,
     onClickOptionsButton,
+    onClickDeleteButton,
+    onClickOcrRewriteButton,
+    onClickOcrReplaceButton,
     onChangeColumnVisibility,
     onEnterPageInput,
     onEnterZoomInput,
@@ -220,7 +224,16 @@ const ViewerTopBar = ({
           </span>
         )}
       </div>
-      {isEditMode && <ViewerEditToolbar />}
+      {isEditMode && (
+        <ViewerEditToolbar
+          data={{ selectedWord, isOcring }}
+          events={{
+            onClickDeleteButton,
+            onClickOcrRewriteButton,
+            onClickOcrReplaceButton,
+          }}
+        />
+      )}
       {isOptionsPanelOpen && (
         <ViewerOptionsPanel
           data={{

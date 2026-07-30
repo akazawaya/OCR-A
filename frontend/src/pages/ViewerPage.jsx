@@ -138,6 +138,9 @@ const ViewerPage = () => {
 
   const pageState = useViewerPageState({ maxPage: pages.length });
   const selection = useSelection();
+  const selectedWord = sortedWords.find(
+    (word) => word.id === selection.selectedId,
+  );
   const [isOptionsPanelOpen, setIsOptionsPanelOpen] = useState(false);
   // viewerTableの表示カラム関連
   const [visibleWordColumnKeys, setVisibleWordColumnKeys] = useState(() => [
@@ -364,6 +367,7 @@ const ViewerPage = () => {
               isOcring: editState.isOcring,
               isPrintMode,
               isOptionsPanelOpen,
+              selectedWord,
               tableColumns: optionalWordTableColumns,
               visibleColumnKeys: visibleWordColumnKeys,
             }}
@@ -382,6 +386,9 @@ const ViewerPage = () => {
               onEnterRotateInput: pageState.commitRotate,
               onClickOptionsButton: () =>
                 setIsOptionsPanelOpen((isOpen) => !isOpen),
+              onClickDeleteButton: editState.addPendingDeleteById,
+              onClickOcrReplaceButton: editState.replacePreviewWordByOcr,
+              onClickOcrRewriteButton: editState.rewritePreviewWordContentByOcr,
               onChangeColumnVisibility,
             }}
           />
@@ -433,10 +440,6 @@ const ViewerPage = () => {
                 }}
                 events={{
                   onChangeContentDraft: editState.changeContentDraftById,
-                  onClickDeleteButton: editState.addPendingDeleteById,
-                  onClickOcrReplaceButton: editState.replacePreviewWordByOcr,
-                  onClickOcrRewriteButton:
-                    editState.rewritePreviewWordContentByOcr,
                   onHover: selection.hover,
                   onHoverClear: selection.clearHovered,
                   onSelect: selection.commitSelect,
