@@ -62,9 +62,6 @@ const ViewerTopBar = ({
     isOcring = false,
     isPrintMode = false,
     isOptionsPanelOpen = false,
-    selectedWord,
-    tableColumns = [],
-    visibleColumnKeys = [],
   } = {},
   events: {
     onClickPrintButton,
@@ -77,14 +74,14 @@ const ViewerTopBar = ({
     onClickZoomStepButton,
     onClickRotateStepButton,
     onClickOptionsButton,
-    onClickDeleteButton,
-    onClickOcrRewriteButton,
-    onClickOcrReplaceButton,
-    onChangeColumnVisibility,
     onEnterPageInput,
     onEnterZoomInput,
     onEnterRotateInput,
   } = {},
+  viewerEditToolbarData = {},
+  viewerEditToolbarEvents,
+  viewerOptionsPanelData,
+  viewerOptionsPanelEvents,
 } = {}) => {
   // useRef(null)はfooRef.currentというプロパティを作成
   // fooRef.currentに入るのがDOMの <input> 要素になったとき、そのDOM要素がvalueプロパティを持つ
@@ -226,21 +223,14 @@ const ViewerTopBar = ({
       </div>
       {isEditMode && (
         <ViewerEditToolbar
-          data={{ selectedWord, isOcring }}
-          events={{
-            onClickDeleteButton,
-            onClickOcrRewriteButton,
-            onClickOcrReplaceButton,
-          }}
+          data={{ ...viewerEditToolbarData, isOcring }}
+          events={viewerEditToolbarEvents}
         />
       )}
       {isOptionsPanelOpen && (
         <ViewerOptionsPanel
-          data={{
-            columns: tableColumns,
-            visibleColumnKeys,
-          }}
-          events={{ onChangeColumnVisibility }}
+          data={viewerOptionsPanelData}
+          events={viewerOptionsPanelEvents}
         />
       )}
     </div>

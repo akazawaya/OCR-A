@@ -141,6 +141,7 @@ const ViewerPage = () => {
   const selectedWord = sortedWords.find(
     (word) => word.id === selection.selectedId,
   );
+  const selectedWords = selectedWord ? [selectedWord] : []; // まだuseSelectionの複数選択のロジックができていないので暫定
   const [isOptionsPanelOpen, setIsOptionsPanelOpen] = useState(false);
   // viewerTableの表示カラム関連
   const [visibleWordColumnKeys, setVisibleWordColumnKeys] = useState(() => [
@@ -367,9 +368,6 @@ const ViewerPage = () => {
               isOcring: editState.isOcring,
               isPrintMode,
               isOptionsPanelOpen,
-              selectedWord,
-              tableColumns: optionalWordTableColumns,
-              visibleColumnKeys: visibleWordColumnKeys,
             }}
             events={{
               onClickPrintButton: openPrintDialog,
@@ -386,9 +384,21 @@ const ViewerPage = () => {
               onEnterRotateInput: pageState.commitRotate,
               onClickOptionsButton: () =>
                 setIsOptionsPanelOpen((isOpen) => !isOpen),
-              onClickDeleteButton: editState.addPendingDeleteById,
+            }}
+            viewerEditToolbarData={{
+              selectedWords,
+            }}
+            viewerEditToolbarEvents={{
+              onClickDeleteButton: (wordIds) =>
+                wordIds.forEach(editState.addPendingDeleteById),
               onClickOcrReplaceButton: editState.replacePreviewWordByOcr,
               onClickOcrRewriteButton: editState.rewritePreviewWordContentByOcr,
+            }}
+            viewerOptionsPanelData={{
+              columns: optionalWordTableColumns,
+              visibleColumnKeys: visibleWordColumnKeys,
+            }}
+            viewerOptionsPanelEvents={{
               onChangeColumnVisibility,
             }}
           />
