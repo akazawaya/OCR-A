@@ -69,14 +69,33 @@ const getEditToolbarButton = (name) =>
 const getSelectionModeRadio = (name) =>
   within(getEditToolbar()).getByRole("radio", { name });
 
-const selectWordOnImage = async (user, content = FIRST_WORD_CONTENT) => {
+const selectWordOnWordOverlay = async (user, content = FIRST_WORD_CONTENT) => {
   await user.click(await screen.findByRole("button", { name: content }));
 };
 
 // editMode時のみAllByDisplayValueでtdを取得可能となる点に注意
-const selectWordFromTable = async (user, content = FIRST_WORD_CONTENT) => {
+const selectWordOnViewerTable = async (user, content = FIRST_WORD_CONTENT) => {
   const inputs = await screen.findAllByDisplayValue(content);
   await user.click(inputs[0]);
+};
+
+const shiftClickWordOnViewerTable = async (user, content) => {
+  await user.keyboard("{Shift>}");
+  await selectWordOnViewerTable(user, content);
+  await user.keyboard("{/Shift}");
+};
+
+// Ctrl/Metaの代表としてCtrlを押下する
+const ctrlClickWordOnViewerTable = async (user, content) => {
+  await user.keyboard("{Control>}");
+  await selectWordOnViewerTable(user, content);
+  await user.keyboard("{/Control}");
+};
+// Shift混合時もCtrl/Metaの代表としてCtrlを押下する
+const shiftAndCtrlClickWordOnViewerTable = async (user, content) => {
+  await user.keyboard("{Shift>}{Control>}");
+  await selectWordOnViewerTable(user, content);
+  await user.keyboard("{/Control}{/Shift}");
 };
 
 const switchSelectionMode = async (user, mode) => {
@@ -86,10 +105,21 @@ const switchSelectionMode = async (user, mode) => {
 // クリック選択のshiftを兼ねた押下
 // >で「押下状態を維持」　/ で「keyを離す」を組み合わせて
 // Shiftを押しながらcontentをclickし、そのあとshiftを離す挙動を再現
-const shiftClickWordOnImage = async (user, content) => {
+const shiftClickWordOnWordOverlay = async (user, content) => {
   await user.keyboard("{Shift>}");
-  await selectWordOnImage(user, content);
+  await selectWordOnWordOverlay(user, content);
   await user.keyboard("{/Shift}");
+};
+
+const ctrlClickWordOnWordOverlay = async (user, content) => {
+  await user.keyboard("{Control>}");
+  await selectWordOnWordOverlay(user, content);
+  await user.keyboard("{/Control}");
+};
+const shiftAndCtrlClickWordOnWordOverlay = async (user, content) => {
+  await user.keyboard("{Shift>}{Control>}");
+  await selectWordOnWordOverlay(user, content);
+  await user.keyboard("{/Control}{/Shift}");
 };
 
 // svgはpage単位だが、pageが識別可能な属性を付与していないため、単に先頭のsvgを取る
@@ -323,7 +353,7 @@ describe("ViewerPage", () => {
       renderViewerPage();
       const user = await enterEditMode();
 
-      await selectWordFromTable(user);
+      await selectWordOnViewerTable(user);
       expect(getEditToolbarButton("削除")).toBeEnabled();
       await user.click(getEditToolbarButton("削除"));
 
@@ -337,45 +367,75 @@ describe("ViewerPage", () => {
         screen.queryByRole("button", { name: FIRST_WORD_CONTENT }),
       ).toBeNull();
     });
+    describe("ViewerTableの装飾キーを伴う行選択", () => {
+      test("Ctrlクリックで複数選択し、選択したWordをまとめて削除できる", async () => {
+        setMockWords(dragModeMockWords);
+        renderViewerPage();
+        const user = await enterEditMode();
 
-    test("複数選択時は削除だけ実行でき、選択したWordをまとめて削除できる", async () => {
-      setMockWords(dragModeMockWords);
-      renderViewerPage();
-      const user = await enterEditMode();
+        await selectWordOnViewerTable(user, "範囲内A");
+        await ctrlClickWordOnViewerTable(user, "範囲内B");
 
-      await selectWordOnImage(user, "範囲内A");
-      await shiftClickWordOnImage(user, "範囲内B");
+        expect(getEditToolbarButton("削除")).toBeEnabled();
+        expect(getEditToolbarButton("OCR書換")).toBeDisabled();
+        expect(getEditToolbarButton("OCR置換")).toBeDisabled();
 
-      expect(getEditToolbarButton("削除")).toBeEnabled();
-      expect(getEditToolbarButton("OCR書換")).toBeDisabled();
-      expect(getEditToolbarButton("OCR置換")).toBeDisabled();
+        await user.click(getEditToolbarButton("削除"));
 
-      await user.click(getEditToolbarButton("削除"));
+        expect(screen.queryByDisplayValue("範囲内A")).toBeNull();
+        expect(screen.queryByDisplayValue("範囲内B")).toBeNull();
+        expect(screen.getByDisplayValue("範囲外")).toBeVisible();
 
-      expect(screen.queryByDisplayValue("範囲内A")).toBeNull();
-      expect(screen.queryByDisplayValue("範囲内B")).toBeNull();
-      expect(screen.getByDisplayValue("範囲外")).toBeVisible();
+        await user.click(screen.getByRole("button", { name: "保存" }));
 
-      await user.click(screen.getByRole("button", { name: "保存" }));
-
-      await waitFor(() => {
-        expect(getMockDeletedWordIds()).toHaveLength(2);
+        await waitFor(() => {
+          expect(getMockDeletedWordIds()).toHaveLength(2);
+        });
+        expect(getMockDeletedWordIds()).toEqual(expect.arrayContaining([1, 2]));
+        expect(within(getViewerTable()).queryByText("範囲内A")).toBeNull();
+        expect(within(getViewerTable()).queryByText("範囲内B")).toBeNull();
+        expect(
+          within(getViewerTable()).getByRole("cell", { name: "範囲外" }),
+        ).toBeVisible();
       });
-      expect(getMockDeletedWordIds()).toEqual(expect.arrayContaining([1, 2]));
-      expect(within(getViewerTable()).queryByText("範囲内A")).toBeNull();
-      expect(within(getViewerTable()).queryByText("範囲内B")).toBeNull();
-      expect(
-        within(getViewerTable()).getByRole("cell", { name: "範囲外" }),
-      ).toBeVisible();
+
+      test("Shiftクリックの選択範囲はanchorと最後にクリックした行の間へ置き換わる", async () => {
+        setMockWords(dragModeMockWords);
+        renderViewerPage();
+        const user = await enterEditMode();
+
+        await selectWordOnViewerTable(user, "範囲内A");
+        await shiftClickWordOnViewerTable(user, "範囲外");
+        await shiftClickWordOnViewerTable(user, "範囲内B");
+        await user.click(getEditToolbarButton("削除"));
+
+        expect(screen.queryByDisplayValue("範囲内A")).toBeNull();
+        expect(screen.queryByDisplayValue("範囲内B")).toBeNull();
+        expect(screen.getByDisplayValue("範囲外")).toBeVisible();
+      });
+
+      test("CtrlとShiftを押したクリックでは既存選択へ範囲を追加する", async () => {
+        setMockWords(dragModeMockWords);
+        renderViewerPage();
+        const user = await enterEditMode();
+
+        await selectWordOnViewerTable(user, "範囲内A");
+        await ctrlClickWordOnViewerTable(user, "範囲外");
+        await shiftAndCtrlClickWordOnViewerTable(user, "範囲内B");
+        await user.click(getEditToolbarButton("削除"));
+
+        expect(screen.queryByDisplayValue("範囲内A")).toBeNull();
+        expect(screen.queryByDisplayValue("範囲内B")).toBeNull();
+        expect(screen.queryByDisplayValue("範囲外")).toBeNull();
+      });
     });
   });
-
   describe("削除操作を代表としたUndo/Redoの確認", () => {
     test("Undo/Redoボタンで削除操作を戻せる", async () => {
       renderViewerPage();
       const user = await enterEditMode();
 
-      await selectWordOnImage(user);
+      await selectWordOnWordOverlay(user);
       await user.click(getEditToolbarButton("削除"));
       await user.click(screen.getByRole("button", { name: "元に戻す" }));
 
@@ -391,7 +451,7 @@ describe("ViewerPage", () => {
       renderViewerPage();
       const user = await enterEditMode();
 
-      await selectWordOnImage(user);
+      await selectWordOnWordOverlay(user);
       await user.click(getEditToolbarButton("削除"));
       document.activeElement.blur();
       fireEvent.keyDown(window, { key: "z", ctrlKey: true });
@@ -403,7 +463,7 @@ describe("ViewerPage", () => {
       renderViewerPage();
       const user = await enterEditMode();
 
-      await selectWordOnImage(user);
+      await selectWordOnWordOverlay(user);
       await user.click(getEditToolbarButton("削除"));
       document.activeElement.blur();
       fireEvent.keyDown(window, { key: "z", ctrlKey: true });
@@ -417,8 +477,8 @@ describe("ViewerPage", () => {
       renderViewerPage();
       const user = await enterEditMode();
 
-      await selectWordOnImage(user, "範囲内A");
-      await shiftClickWordOnImage(user, "範囲内B");
+      await selectWordOnViewerTable(user, "範囲内A");
+      await shiftClickWordOnViewerTable(user, "範囲内B");
       await user.click(getEditToolbarButton("削除"));
 
       expect(screen.queryByDisplayValue("範囲内A")).toBeNull();
@@ -495,57 +555,81 @@ describe("ViewerPage", () => {
       expect(dragAddBboxRadio).toBeChecked();
     });
 
-    test("「クリック選択」ではドラッグは作用せず、Wordの単一クリックが機能する", async () => {
-      setMockWords(dragModeMockWords);
-      renderViewerPage();
-      const user = await enterEditMode();
-      await screen.findByRole("button", { name: "範囲内A" });
-      const cellCountBeforeDrag = getViewerTableCells().length;
-      const svg = getFirstSelectionArea();
-      mockSelectionAreaRect(svg, DEFAULT_SELECTION_AREA_RECT);
+    describe("クリック選択モード", () => {
+      test("ドラッグは作用せず、Wordクリックが機能する", async () => {
+        setMockWords(dragModeMockWords);
+        renderViewerPage();
+        const user = await enterEditMode();
+        await screen.findByRole("button", { name: "範囲内A" });
+        const cellCountBeforeDrag = getViewerTableCells().length;
+        const svg = getFirstSelectionArea();
+        mockSelectionAreaRect(svg, DEFAULT_SELECTION_AREA_RECT);
 
-      dragSelectionArea(svg, DEFAULT_DRAG_SELECTION);
+        dragSelectionArea(svg, DEFAULT_DRAG_SELECTION);
 
-      expect(getViewerTableCells()).toHaveLength(cellCountBeforeDrag);
-      expect(getEditToolbarButton("削除")).toBeDisabled();
+        expect(getViewerTableCells()).toHaveLength(cellCountBeforeDrag);
+        expect(getEditToolbarButton("削除")).toBeDisabled();
 
-      await selectWordOnImage(user, "範囲内A");
+        await selectWordOnWordOverlay(user, "範囲内A");
 
-      expect(getEditToolbarButton("削除")).toBeEnabled();
-      expect(getEditToolbarButton("OCR書換")).toBeEnabled();
-      expect(getEditToolbarButton("OCR置換")).toBeEnabled();
+        expect(getEditToolbarButton("削除")).toBeEnabled();
+        expect(getEditToolbarButton("OCR書換")).toBeEnabled();
+        expect(getEditToolbarButton("OCR置換")).toBeEnabled();
 
-      await selectWordOnImage(user, "範囲内B");
-      await user.click(getEditToolbarButton("削除"));
+        await selectWordOnWordOverlay(user, "範囲内B");
+        await user.click(getEditToolbarButton("削除"));
 
-      expect(screen.getByDisplayValue("範囲内A")).toBeVisible();
-      expect(screen.queryByDisplayValue("範囲内B")).toBeNull();
-      expect(screen.getByDisplayValue("範囲外")).toBeVisible();
-    });
+        expect(screen.getByDisplayValue("範囲内A")).toBeVisible();
+        expect(screen.queryByDisplayValue("範囲内B")).toBeNull();
+        expect(screen.getByDisplayValue("範囲外")).toBeVisible();
+      });
 
-    test("「クリック選択」ではShiftクリックで複数選択が可能で、選択済みWordを再度Shiftクリックすると解除できる", async () => {
-      setMockWords(dragModeMockWords);
-      renderViewerPage();
-      const user = await enterEditMode();
+      describe("WordOverlayの修飾キーを伴うWord選択", () => {
+        test("Ctrl/Metaクリックで選択状態を反転する(代表でCtrlのみ)", async () => {
+          setMockWords(dragModeMockWords);
+          renderViewerPage();
+          const user = await enterEditMode();
 
-      await selectWordOnImage(user, "範囲内A");
-      await shiftClickWordOnImage(user, "範囲内B");
+          await selectWordOnWordOverlay(user, "範囲内A");
+          await ctrlClickWordOnWordOverlay(user, "範囲内B");
+          await ctrlClickWordOnWordOverlay(user, "範囲内A");
+          await user.click(getEditToolbarButton("削除"));
 
-      expect(getEditToolbarButton("削除")).toBeEnabled();
-      expect(getEditToolbarButton("OCR書換")).toBeDisabled();
-      expect(getEditToolbarButton("OCR置換")).toBeDisabled();
+          expect(screen.getByDisplayValue("範囲内A")).toBeVisible();
+          expect(screen.queryByDisplayValue("範囲内B")).toBeNull();
+          expect(screen.getByDisplayValue("範囲外")).toBeVisible();
+        });
 
-      await shiftClickWordOnImage(user, "範囲内A");
+        test("Shiftクリックで選択範囲を置き換える", async () => {
+          setMockWords(dragModeMockWords);
+          renderViewerPage();
+          const user = await enterEditMode();
 
-      expect(getEditToolbarButton("削除")).toBeEnabled();
-      expect(getEditToolbarButton("OCR書換")).toBeEnabled();
-      expect(getEditToolbarButton("OCR置換")).toBeEnabled();
+          await selectWordOnWordOverlay(user, "範囲内A");
+          await shiftClickWordOnWordOverlay(user, "範囲外");
+          await shiftClickWordOnWordOverlay(user, "範囲内B");
+          await user.click(getEditToolbarButton("削除"));
 
-      await user.click(getEditToolbarButton("削除"));
+          expect(screen.queryByDisplayValue("範囲内A")).toBeNull();
+          expect(screen.queryByDisplayValue("範囲内B")).toBeNull();
+          expect(screen.getByDisplayValue("範囲外")).toBeVisible();
+        });
 
-      expect(screen.getByDisplayValue("範囲内A")).toBeVisible();
-      expect(screen.queryByDisplayValue("範囲内B")).toBeNull();
-      expect(screen.getByDisplayValue("範囲外")).toBeVisible();
+        test("Ctrl/Meta+Shiftクリックで既存選択へ範囲を追加する(代表でCtrlのみ)", async () => {
+          setMockWords(dragModeMockWords);
+          renderViewerPage();
+          const user = await enterEditMode();
+
+          await selectWordOnWordOverlay(user, "範囲内A");
+          await ctrlClickWordOnWordOverlay(user, "範囲外");
+          await shiftAndCtrlClickWordOnWordOverlay(user, "範囲内B");
+          await user.click(getEditToolbarButton("削除"));
+
+          expect(screen.queryByDisplayValue("範囲内A")).toBeNull();
+          expect(screen.queryByDisplayValue("範囲内B")).toBeNull();
+          expect(screen.queryByDisplayValue("範囲外")).toBeNull();
+        });
+      });
     });
 
     test("「ドラッグ選択」では単一クリックは作用せず、範囲内のWordsだけを選択できる", async () => {
@@ -613,7 +697,7 @@ describe("ViewerPage", () => {
       });
       renderViewerPage();
       const user = await enterEditMode();
-      await selectWordOnImage(user);
+      await selectWordOnWordOverlay(user);
       await user.click(getEditToolbarButton("OCR書換"));
 
       await waitFor(() => {
@@ -645,7 +729,7 @@ describe("ViewerPage", () => {
       });
       renderViewerPage();
       const user = await enterEditMode();
-      await selectWordOnImage(user);
+      await selectWordOnWordOverlay(user);
       await switchSelectionMode(user, DRAG_ADD_BBOX_MODE);
       const svg = getFirstSelectionArea();
       mockSelectionAreaRect(svg, DEFAULT_SELECTION_AREA_RECT);
@@ -675,7 +759,7 @@ describe("ViewerPage", () => {
       });
       renderViewerPage();
       const user = await enterEditMode();
-      await selectWordOnImage(user);
+      await selectWordOnWordOverlay(user);
       await user.click(getEditToolbarButton("OCR書換"));
 
       await waitFor(() => {
@@ -699,7 +783,7 @@ describe("ViewerPage", () => {
       });
       renderViewerPage();
       const user = await enterEditMode();
-      await selectWordOnImage(user);
+      await selectWordOnWordOverlay(user);
       await user.click(getEditToolbarButton("OCR書換"));
       await waitFor(() => {
         expect(screen.getByRole("status")).toHaveTextContent("OCR実行中...");
@@ -728,7 +812,7 @@ describe("ViewerPage", () => {
       });
       renderViewerPage();
       const user = await enterEditMode();
-      await selectWordOnImage(user);
+      await selectWordOnWordOverlay(user);
       await user.click(getEditToolbarButton("OCR置換"));
 
       await waitFor(() => {
@@ -754,7 +838,7 @@ describe("ViewerPage", () => {
       });
       renderViewerPage();
       const user = await enterEditMode();
-      await selectWordOnImage(user);
+      await selectWordOnWordOverlay(user);
       await user.click(getEditToolbarButton("OCR置換"));
 
       await waitFor(() => {
@@ -781,7 +865,7 @@ describe("ViewerPage", () => {
       });
       renderViewerPage();
       const user = await enterEditMode();
-      await selectWordOnImage(user);
+      await selectWordOnWordOverlay(user);
       await user.click(getEditToolbarButton("OCR置換"));
 
       await waitFor(() => {
