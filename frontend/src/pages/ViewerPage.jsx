@@ -431,7 +431,11 @@ const ViewerPage = () => {
                 wordOverlayEvents={{
                   onHoverWord: selection.hover,
                   onHoverClearWord: selection.clearHovered,
-                  onSelectWord: selection.commitSelect,
+                  onClickWord: selection.replaceSelection,
+                  onClickWordWithCtrlOrMeta: selection.toggleSelection,
+                  onClickWordWithShift: selection.addSelectionRange,
+                  onClickWordWithShiftAndCtrlOrMeta:
+                    selection.replaceSelectionRange,
                   onBboxDrawComplete: editState.addPendingPostByBbox,
                 }}
               />
@@ -443,8 +447,9 @@ const ViewerPage = () => {
                   rows: sortedWords,
                   page: pageState.page,
                   hoveredId: selection.hoveredId,
-                  selectedId: selection.selectedId,
+                  selectedIds: selection.selectedIds,
                   selectedBy: selection.selectedBy,
+                  anchorId: selection.anchorId,
                   isEditMode: editState.isEditMode,
                   isOcring: editState.isOcring,
                 }}
@@ -452,7 +457,10 @@ const ViewerPage = () => {
                   onChangeContentDraft: editState.changeContentDraftById,
                   onHover: selection.hover,
                   onHoverClear: selection.clearHovered,
-                  onSelect: selection.commitSelect,
+                  onClickRow: selection.replaceSelection,
+                  onClickRowWithCtrlOrMeta: selection.toggleSelection,
+                  onClickRowWithShift: selection.replaceSelectionRange,
+                  onClickRowWithShiftAndCtrlOrMeta: selection.addSelectionRange,
                 }}
               />
             </div>
