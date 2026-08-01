@@ -1,11 +1,23 @@
 import { useMemo } from "react";
 
 import { buildWordOverlayLayout } from "../../../../logic/layout/buildWordOverlayLayout";
+import { getIdsBetween } from "../../../../logic/layout/useSelection";
 import {
+  bboxToBounds,
   bboxToRect,
   rectToBbox,
 } from "../../../../logic/transforms/bboxTransforms";
 import { useDragRectState } from "../../../../logic/drag/useDragRectState";
+
+// 暫定でここに置く　交差したものすべて対象とする
+const bboxesIntersect = (bboxA, bboxB) => {
+  const a = bboxToBounds(bboxA);
+  const b = bboxToBounds(bboxB);
+
+  return (
+    a.xMin < b.xMax && a.xMax > b.xMin && a.yMin < b.yMax && a.yMax > b.yMin
+  );
+};
 
 const WordOverlay = ({
   data: {
@@ -15,18 +27,47 @@ const WordOverlay = ({
     rotate,
     words = [],
     hoveredWordId,
-    selectedWordId,
+    selectedIds = new Set(),
+    anchorId,
     isEditMode,
     isOcring,
     isPrintMode,
+    selectionMode,
   } = {},
   events: {
     onHoverWord,
     onHoverClearWord,
-    onSelectWord,
-    onBboxDrawComplete,
+    onClickWord,
+    onClickWordWithCtrlOrMeta,
+    onClickWordWithShift,
+    onClickWordWithShiftAndCtrlOrMeta,
+    onDragSelectWords,
+    onDragComplete,
   } = {},
 }) => {
+  const wordsOnPage = words.filter((w) => Number(w.page) === Number(pageId));
+  const isClickMode = selectionMode === "click";
+  const isDragSelectMode = selectionMode === "drag-select";
+  const isDragAddBboxMode = selectionMode === "drag-add-bbox";
+  const canClickWord = !isEditMode || isClickMode;
+  const canDrag =
+    isEditMode && !isOcring && (isDragSelectMode || isDragAddBboxMode);
+
+  const handleDragComplete = (pageId, bbox, direction) => {
+    if (isDragSelectMode) {
+      // useDragRectStateは無視して、交差したものすべてを選択対象とする
+      const ids = wordsOnPage
+        .filter((word) => bboxesIntersect(word.bbox, bbox))
+        .map((word) => word.id);
+      onDragSelectWords(ids);
+      return;
+    }
+    if (isDragAddBboxMode) {
+      // useDragRectStateで新たなbboxを作らせる
+      onDragComplete(pageId, bbox, direction);
+    }
+  };
+
   const {
     draftRect,
     onPointerDown,
@@ -37,10 +78,8 @@ const WordOverlay = ({
     imageSizePx,
     rotate,
     pageId,
-    onBboxDrawComplete,
+    onDragComplete: handleDragComplete,
   });
-
-  const wordsOnPage = words.filter((w) => Number(w.page) === Number(pageId));
   const pendingPostsOnPage = useMemo(() => {
     return wordsOnPage.filter((w) => w.isPendingPost);
   }, [wordsOnPage]);
@@ -63,10 +102,10 @@ const WordOverlay = ({
       <svg
         aria-label="文字範囲選択エリア"
         viewBox={`0 0 ${imageSizePx.w} ${imageSizePx.h}`}
-        onPointerCancel={isEditMode && !isOcring ? onPointerCancel : undefined}
-        onPointerDown={isEditMode && !isOcring ? onPointerDown : undefined}
-        onPointerMove={isEditMode && !isOcring ? onPointerMove : undefined}
-        onPointerUp={isEditMode && !isOcring ? onPointerUp : undefined}
+        onPointerCancel={canDrag ? onPointerCancel : undefined}
+        onPointerDown={canDrag ? onPointerDown : undefined}
+        onPointerMove={canDrag ? onPointerMove : undefined}
+        onPointerUp={canDrag ? onPointerUp : undefined}
       >
         {isEditMode && draftBbox && (
           <rect
@@ -83,7 +122,7 @@ const WordOverlay = ({
         ))}
 
         {wordLayout.map((w) => {
-          const isSelected = w.id === selectedWordId;
+          const isSelected = selectedIds.has(w.id);
           const isHover = w.id === hoveredWordId;
           return (
             <rect
@@ -110,6 +149,8 @@ const WordOverlay = ({
           <span
             key={w.id}
             className={`absolute flex items-center justify-center leading-none ${
+              canClickWord ? "" : "pointer-events-none"
+            } ${
               w.span.mode === "vertical"
                 ? "[text-orientation:upright] [writing-mode:vertical-rl]"
                 : ""
@@ -121,11 +162,35 @@ const WordOverlay = ({
               fontSize: `${w.span.fontPx}px`,
             }}
             tabIndex={0}
-            onClick={() => onSelectWord(w.id, "image")}
+            onClick={
+              canClickWord
+                ? (event) => {
+                    const withCtrlOrMeta = event.ctrlKey || event.metaKey;
+                    if (event.shiftKey) {
+                      const ids = getIdsBetween(
+                        words.map((word) => word.id),
+                        anchorId,
+                        w.id,
+                      );
+                      if (withCtrlOrMeta) {
+                        onClickWordWithShiftAndCtrlOrMeta(ids);
+                      } else {
+                        onClickWordWithShift(ids);
+                      }
+                      return;
+                    }
+                    if (withCtrlOrMeta) {
+                      onClickWordWithCtrlOrMeta(w.id, "image");
+                      return;
+                    }
+                    onClickWord(w.id, "image");
+                  }
+                : undefined
+            }
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
-                onSelectWord(w.id, "image");
+                onClickWord(w.id, "image");
               } // 現状意味がないので強化検討対象
             }}
             onMouseEnter={() => onHoverWord(w.id)}

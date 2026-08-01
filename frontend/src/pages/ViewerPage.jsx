@@ -138,10 +138,10 @@ const ViewerPage = () => {
 
   const pageState = useViewerPageState({ maxPage: pages.length });
   const selection = useSelection();
-  const selectedWord = sortedWords.find(
-    (word) => word.id === selection.selectedId,
+  const selectedWords = sortedWords.filter((word) =>
+    selection.selectedIds.has(word.id),
   );
-  const selectedWords = selectedWord ? [selectedWord] : []; // まだuseSelectionの複数選択のロジックができていないので暫定
+  const [selectionMode, setSelectionMode] = useState("click");
   const [isOptionsPanelOpen, setIsOptionsPanelOpen] = useState(false);
   // viewerTableの表示カラム関連
   const [visibleWordColumnKeys, setVisibleWordColumnKeys] = useState(() => [
@@ -387,8 +387,10 @@ const ViewerPage = () => {
             }}
             viewerEditToolbarData={{
               selectedWords,
+              selectionMode,
             }}
             viewerEditToolbarEvents={{
+              onChangeSelectionMode: setSelectionMode,
               onClickDeleteButton: (wordIds) =>
                 wordIds.forEach(editState.addPendingDeleteById),
               onClickOcrReplaceButton: editState.replacePreviewWordByOcr,
@@ -418,25 +420,28 @@ const ViewerPage = () => {
                   contentRef,
                   rotate: pageState.rotate,
                   zoom: pageState.zoom,
-                  selectedId: selection.selectedId,
+                  selectedId: selection.scrollTargetId,
                   selectedBy: selection.selectedBy,
                 }}
                 wordOverlayData={{
                   words: sortedWords,
                   hoveredWordId: selection.hoveredId,
-                  selectedWordId: selection.selectedId,
+                  selectedIds: selection.selectedIds,
+                  anchorId: selection.anchorId,
+                  selectionMode,
                   isEditMode: editState.isEditMode,
-                  isDragRectDisabled: editState.isOcring,
+                  isOcring: editState.isOcring,
                 }}
                 wordOverlayEvents={{
                   onHoverWord: selection.hover,
                   onHoverClearWord: selection.clearHovered,
                   onClickWord: selection.replaceSelection,
                   onClickWordWithCtrlOrMeta: selection.toggleSelection,
-                  onClickWordWithShift: selection.addSelectionRange,
+                  onClickWordWithShift: selection.replaceSelectionRange,
                   onClickWordWithShiftAndCtrlOrMeta:
-                    selection.replaceSelectionRange,
-                  onBboxDrawComplete: editState.addPendingPostByBbox,
+                    selection.addSelectionRange,
+                  onDragSelectWords: selection.replaceSelectionRange,
+                  onDragComplete: editState.addPendingPostByBbox,
                 }}
               />
             </div>
@@ -450,6 +455,7 @@ const ViewerPage = () => {
                   selectedIds: selection.selectedIds,
                   selectedBy: selection.selectedBy,
                   anchorId: selection.anchorId,
+                  scrollTargetId: selection.scrollTargetId,
                   isEditMode: editState.isEditMode,
                   isOcring: editState.isOcring,
                 }}

@@ -50,7 +50,7 @@ export const useDragRectState = ({
   imageSizePx = {},
   rotate = 0,
   pageId,
-  onBboxDrawComplete,
+  onDragComplete,
 } = {}) => {
   const imageW = imageSizePx.w;
   const imageH = imageSizePx.h;
@@ -104,7 +104,7 @@ export const useDragRectState = ({
     const aspect = rect.height / rect.width;
     const direction = aspect >= 2 ? 2 : 1;
 
-    onBboxDrawComplete(pageId, bbox, direction);
+    onDragComplete(pageId, bbox, direction);
   };
 
   return {

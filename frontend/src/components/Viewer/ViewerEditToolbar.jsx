@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   MousePointer2,
   ScanLine,
@@ -33,14 +32,14 @@ const selectionModeLabelClassName =
 const selectionModeIconClassName = "h-4 w-4";
 
 export const ViewerEditToolbar = ({
-  data: { selectedWords = [], isOcring = false } = {},
+  data: { selectedWords = [], selectionMode = "click", isOcring = false } = {},
   events: {
+    onChangeSelectionMode,
     onClickDeleteButton,
     onClickOcrRewriteButton,
     onClickOcrReplaceButton,
   } = {},
 } = {}) => {
-  const [selectionMode, setSelectionMode] = useState("click");
   const selectedWord = selectedWords[0];
   const hasSelection = selectedWords.length > 0;
   const hasSingleSelection = selectedWords.length === 1;
@@ -84,7 +83,7 @@ export const ViewerEditToolbar = ({
               className="sr-only"
               name="viewer-selection-mode"
               type="radio"
-              onChange={() => setSelectionMode(mode)}
+              onChange={() => onChangeSelectionMode(mode)}
             />
             <Icon className={selectionModeIconClassName} />
           </label>
