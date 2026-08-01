@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
+import { getIdsBetween } from "../../logic/layout/useSelection";
 import { useScroll } from "../../logic/layout/useScroll";
 
 const ContentEditInput = ({
@@ -44,11 +45,21 @@ const ViewerTable = ({
     rows = [],
     page,
     hoveredId,
-    selectedId,
+    selectedIds,
     selectedBy,
+    anchorId,
+    scrollTargetId,
     isEditMode,
   } = {},
-  events: { onHover, onHoverClear, onSelect, onChangeContentDraft } = {},
+  events: {
+    onChangeContentDraft,
+    onHover,
+    onHoverClear,
+    onClickRow,
+    onClickRowWithCtrlOrMeta,
+    onClickRowWithShift,
+    onClickRowWithShiftAndCtrlOrMeta,
+  } = {},
 }) => {
   // edit中のinputの幅は事前に固定値を取る
   const maxContentLength = Math.max(
@@ -64,7 +75,7 @@ const ViewerTable = ({
   useScroll({
     rootRef,
     targetAttrName: "data-word",
-    targetAttrValue: selectedId,
+    targetAttrValue: scrollTargetId,
     shouldScroll,
   });
 
@@ -84,7 +95,7 @@ const ViewerTable = ({
       </thead>
       <tbody>
         {rows.map((r) => {
-          const isSelected = r.id === selectedId;
+          const isSelected = selectedIds.has(r.id);
           const isHover = r.id === hoveredId;
           return (
             <tr
@@ -98,7 +109,27 @@ const ViewerTable = ({
               }`}
               data-page={r.page__page_number}
               data-word={r.id}
-              onClick={() => onSelect(r.id, "table")}
+              onClick={(event) => {
+                const withCtrlOrMeta = event.ctrlKey || event.metaKey;
+                if (event.shiftKey) {
+                  const ids = getIdsBetween(
+                    rows.map((row) => row.id),
+                    anchorId,
+                    r.id,
+                  );
+                  if (withCtrlOrMeta) {
+                    onClickRowWithShiftAndCtrlOrMeta(ids);
+                  } else {
+                    onClickRowWithShift(ids);
+                  }
+                  return;
+                }
+                if (withCtrlOrMeta) {
+                  onClickRowWithCtrlOrMeta(r.id, "table");
+                  return;
+                }
+                onClickRow(r.id, "table");
+              }}
               onMouseEnter={() => onHover(r.id)}
               onMouseLeave={onHoverClear}
             >
