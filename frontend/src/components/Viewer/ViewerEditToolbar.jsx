@@ -10,25 +10,19 @@ import {
 
 import { ViewerIconButton } from "./ViewerIconButton";
 
-const SELECTION_MODE = {
-  CLICK: "click",
-  DRAG_SELECT: "drag-select",
-  DRAG_ADD_BBOX: "drag-add-bbox",
-};
-
 const selectionButtons = [
   {
-    mode: SELECTION_MODE.CLICK,
+    mode: "click",
     label: "クリック選択",
     icon: MousePointer2,
   },
   {
-    mode: SELECTION_MODE.DRAG_SELECT,
+    mode: "drag-select",
     label: "ドラッグ選択",
     icon: SquareDashedMousePointer,
   },
   {
-    mode: SELECTION_MODE.DRAG_ADD_BBOX,
+    mode: "drag-add-bbox",
     label: "ドラッグで枠追加",
     icon: SquareDashed,
   },
@@ -46,7 +40,7 @@ export const ViewerEditToolbar = ({
     onClickOcrReplaceButton,
   } = {},
 } = {}) => {
-  const [selectionMode, setSelectionMode] = useState(SELECTION_MODE.CLICK);
+  const [selectionMode, setSelectionMode] = useState("click");
   const selectedWord = selectedWords[0];
   const hasSelection = selectedWords.length > 0;
   const hasSingleSelection = selectedWords.length === 1;
