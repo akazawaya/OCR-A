@@ -6,18 +6,18 @@ import Button from "../ui/Button";
 
 const DocumentToolbar = ({
   data: { draftSearchQuery, appliedSearchQuery },
-  events: {
-    onClickSearchButton,
-    onChangeSearchInput,
-    onClickResetSearchButton,
-    onClickPostDocumentButton: _onClickPostDocumentButton,
+  actions: {
+    applySearch,
+    updateSearchQuery,
+    clearSearch,
+    postFormDataFile,
   } = {},
 }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
 
-  const onClickPostDocumentButton = (file, { shouldStartOcr }) => {
-    _onClickPostDocumentButton(file, { shouldStartOcr });
+  const postSelectedFile = (shouldStartOcr) => {
+    postFormDataFile(selectedFile, { shouldStartOcr });
     setSelectedFile(null);
     fileInputRef.current.value = "";
   };
@@ -41,7 +41,7 @@ const DocumentToolbar = ({
               name={queryKey}
               type="radio"
               value={option.value}
-              onChange={(e) => onChangeSearchInput(queryKey, e.target.value)}
+              onChange={(e) => updateSearchQuery(queryKey, e.target.value)}
             />
             <span>{option.label}</span>
           </label>
@@ -82,21 +82,13 @@ const DocumentToolbar = ({
         <div className="flex h-full flex-col items-center justify-center gap-1">
           <Button
             disabled={!selectedFile}
-            onClick={() =>
-              onClickPostDocumentButton(selectedFile, {
-                shouldStartOcr: true,
-              })
-            }
+            onClick={() => postSelectedFile(true)}
           >
             保存＆OCR
           </Button>
           <Button
             disabled={!selectedFile}
-            onClick={() =>
-              onClickPostDocumentButton(selectedFile, {
-                shouldStartOcr: false,
-              })
-            }
+            onClick={() => postSelectedFile(false)}
           >
             保存のみ
           </Button>
@@ -112,10 +104,10 @@ const DocumentToolbar = ({
             className="w-fit rounded border border-gray-300 bg-gray-100 p-1 text-left leading-1 text-gray-700 transition-colors duration-200 outline-none focus:border-indigo-500 focus:bg-transparent focus:ring-2 focus:ring-indigo-200"
             type="text"
             value={draftSearchQuery.keyword}
-            onChange={(e) => onChangeSearchInput("keyword", e.target.value)}
+            onChange={(e) => updateSearchQuery("keyword", e.target.value)}
           />
-          <Button onClick={onClickSearchButton}>検索</Button>
-          <Button onClick={onClickResetSearchButton}>リセット</Button>
+          <Button onClick={applySearch}>検索</Button>
+          <Button onClick={clearSearch}>リセット</Button>
         </div>
         <div className="flex gap-1">
           {renderRadioSection("fieldName", "フィールド名")}

@@ -34,15 +34,14 @@ const WordOverlay = ({
     isPrintMode,
     selectionMode,
   } = {},
-  events: {
-    onHoverWord,
-    onHoverClearWord,
-    onClickWord,
-    onClickWordWithCtrlOrMeta,
-    onClickWordWithShift,
-    onClickWordWithShiftAndCtrlOrMeta,
-    onDragSelectWords,
-    onDragComplete,
+  actions: {
+    hover,
+    clearHovered,
+    replaceSelection,
+    toggleSelection,
+    replaceSelectionRange,
+    addSelectionRange,
+    addPendingPostByBbox,
   } = {},
 }) => {
   const wordsOnPage = words.filter((w) => Number(w.page) === Number(pageId));
@@ -59,12 +58,12 @@ const WordOverlay = ({
       const ids = wordsOnPage
         .filter((word) => bboxesIntersect(word.bbox, bbox))
         .map((word) => word.id);
-      onDragSelectWords(ids);
+      replaceSelectionRange(ids);
       return;
     }
     if (isDragAddBboxMode) {
       // useDragRectStateで新たなbboxを作らせる
-      onDragComplete(pageId, bbox, direction);
+      addPendingPostByBbox(pageId, bbox, direction);
     }
   };
 
@@ -173,28 +172,28 @@ const WordOverlay = ({
                         w.id,
                       );
                       if (withCtrlOrMeta) {
-                        onClickWordWithShiftAndCtrlOrMeta(ids);
+                        addSelectionRange(ids);
                       } else {
-                        onClickWordWithShift(ids);
+                        replaceSelectionRange(ids);
                       }
                       return;
                     }
                     if (withCtrlOrMeta) {
-                      onClickWordWithCtrlOrMeta(w.id, "image");
+                      toggleSelection(w.id, "image");
                       return;
                     }
-                    onClickWord(w.id, "image");
+                    replaceSelection(w.id, "image");
                   }
                 : undefined
             }
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
-                onClickWord(w.id, "image");
+                replaceSelection(w.id, "image");
               } // 現状意味がないので強化検討対象
             }}
-            onMouseEnter={() => onHoverWord(w.id)}
-            onMouseLeave={onHoverClearWord}
+            onMouseEnter={() => hover(w.id)}
+            onMouseLeave={clearHovered}
           >
             {w.span.text}
           </span>

@@ -165,13 +165,13 @@ const DocumentsPage = () => {
     <div className="flex flex-col gap-2 p-2 text-center">
       <p>DocumentsPage</p>
       <DocumentToolbar
-        data={{ draftSearchQuery, appliedSearchQuery }}
-        events={{
-          onClickSearchButton: applySearch,
-          onChangeSearchInput: updateSearchQuery,
-          onClickResetSearchButton: clearSearch,
-          onClickPostDocumentButton: postFormDataFile,
+        actions={{
+          applySearch,
+          updateSearchQuery,
+          clearSearch,
+          postFormDataFile,
         }}
+        data={{ draftSearchQuery, appliedSearchQuery }}
       />
       {isPending ? (
         <div>Now Loading...</div>
@@ -179,15 +179,15 @@ const DocumentsPage = () => {
         <div>読み込みに失敗しました</div>
       ) : (
         <DocumentTable
+          actions={{
+            columnsSort,
+            dataRouter,
+            deleteRow,
+          }}
           data={{
             columns: documentTableColumns,
             rows,
             ordering: appliedSortQuery.ordering,
-          }}
-          events={{
-            onClickColumn: columnsSort,
-            onClickRow: dataRouter,
-            onClickDeleteButton: deleteRow,
           }}
         />
       )}

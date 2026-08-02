@@ -157,7 +157,7 @@ const ViewerPage = () => {
   const optionalWordTableColumns = wordSpec.ui.table.filter(
     (column) => !ALWAYS_VISIBLE_WORD_COLUMN_KEYS.includes(column.key),
   );
-  const onChangeColumnVisibility = useCallback((columnKey, isVisible) => {
+  const changeColumnVisibility = useCallback((columnKey, isVisible) => {
     setVisibleWordColumnKeys((currentVisibleColumnKeys) => {
       if (isVisible) {
         return currentVisibleColumnKeys.includes(columnKey)
@@ -280,6 +280,12 @@ const ViewerPage = () => {
     pageNumberByPageId,
     previewJob,
   });
+  const toggleOptionsPanel = () => {
+    setIsOptionsPanelOpen((isOpen) => !isOpen);
+  };
+  const deleteSelectedWords = (wordIds) => {
+    wordIds.forEach(editState.addPendingDeleteById);
+  };
   const blocker = useBlocker(editState.isEditMode);
   useBeforeUnload(
     useCallback(
@@ -344,15 +350,30 @@ const ViewerPage = () => {
         </AlertDialog.Portal>
       </AlertDialog.Root>
       <ViewerEditHotkeys
-        data={{}}
-        events={{
-          onKeyDownUndo: editState.undo,
-          onKeyDownRedo: editState.redo,
+        actions={{
+          undo: editState.undo,
+          redo: editState.redo,
         }}
+        data={{}}
       />
       <div className="grid h-full grid-cols-[2fr_1fr] grid-rows-[auto_1fr] gap-2 overflow-hidden p-2">
         <div className="col-span-2">
           <ViewerTopBar
+            actions={{
+              openPrintDialog,
+              startEdit: editState.startEdit,
+              undo: editState.undo,
+              redo: editState.redo,
+              saveEdit: editState.saveEdit,
+              cancelEdit: editState.cancelEdit,
+              setPage: pageState.setPage,
+              setZoom: pageState.setZoom,
+              setRotate: pageState.setRotate,
+              commitPage: pageState.commitPage,
+              commitZoom: pageState.commitZoom,
+              commitRotate: pageState.commitRotate,
+              toggleOptionsPanel,
+            }}
             data={{
               maxPage: pages.length,
               page: pageState.page,
@@ -369,39 +390,23 @@ const ViewerPage = () => {
               isPrintMode,
               isOptionsPanelOpen,
             }}
-            events={{
-              onClickPrintButton: openPrintDialog,
-              onClickEditButton: editState.startEdit,
-              onClickUndoButton: editState.undo,
-              onClickRedoButton: editState.redo,
-              onClickSaveButton: editState.saveEdit,
-              onClickCancelButton: editState.cancelEdit,
-              onClickPageStepButton: pageState.setPage,
-              onClickZoomStepButton: pageState.setZoom,
-              onClickRotateStepButton: pageState.setRotate,
-              onEnterPageInput: pageState.commitPage,
-              onEnterZoomInput: pageState.commitZoom,
-              onEnterRotateInput: pageState.commitRotate,
-              onClickOptionsButton: () =>
-                setIsOptionsPanelOpen((isOpen) => !isOpen),
+            viewerEditToolbarActions={{
+              setSelectionMode,
+              deleteSelectedWords,
+              replacePreviewWordByOcr: editState.replacePreviewWordByOcr,
+              rewritePreviewWordContentByOcr:
+                editState.rewritePreviewWordContentByOcr,
             }}
             viewerEditToolbarData={{
               selectedWords,
               selectionMode,
             }}
-            viewerEditToolbarEvents={{
-              onChangeSelectionMode: setSelectionMode,
-              onClickDeleteButton: (wordIds) =>
-                wordIds.forEach(editState.addPendingDeleteById),
-              onClickOcrReplaceButton: editState.replacePreviewWordByOcr,
-              onClickOcrRewriteButton: editState.rewritePreviewWordContentByOcr,
+            viewerOptionsPanelActions={{
+              changeColumnVisibility,
             }}
             viewerOptionsPanelData={{
               columns: optionalWordTableColumns,
               visibleColumnKeys: visibleWordColumnKeys,
-            }}
-            viewerOptionsPanelEvents={{
-              onChangeColumnVisibility,
             }}
           />
         </div>
@@ -423,6 +428,15 @@ const ViewerPage = () => {
                   selectedId: selection.scrollTargetId,
                   selectedBy: selection.selectedBy,
                 }}
+                wordOverlayActions={{
+                  hover: selection.hover,
+                  clearHovered: selection.clearHovered,
+                  replaceSelection: selection.replaceSelection,
+                  toggleSelection: selection.toggleSelection,
+                  replaceSelectionRange: selection.replaceSelectionRange,
+                  addSelectionRange: selection.addSelectionRange,
+                  addPendingPostByBbox: editState.addPendingPostByBbox,
+                }}
                 wordOverlayData={{
                   words: sortedWords,
                   hoveredWordId: selection.hoveredId,
@@ -432,21 +446,19 @@ const ViewerPage = () => {
                   isEditMode: editState.isEditMode,
                   isOcring: editState.isOcring,
                 }}
-                wordOverlayEvents={{
-                  onHoverWord: selection.hover,
-                  onHoverClearWord: selection.clearHovered,
-                  onClickWord: selection.replaceSelection,
-                  onClickWordWithCtrlOrMeta: selection.toggleSelection,
-                  onClickWordWithShift: selection.replaceSelectionRange,
-                  onClickWordWithShiftAndCtrlOrMeta:
-                    selection.addSelectionRange,
-                  onDragSelectWords: selection.replaceSelectionRange,
-                  onDragComplete: editState.addPendingPostByBbox,
-                }}
               />
             </div>
             <div className="overflow-auto overscroll-contain">
               <ViewerTable
+                actions={{
+                  changeContentDraftById: editState.changeContentDraftById,
+                  hover: selection.hover,
+                  clearHovered: selection.clearHovered,
+                  replaceSelection: selection.replaceSelection,
+                  toggleSelection: selection.toggleSelection,
+                  replaceSelectionRange: selection.replaceSelectionRange,
+                  addSelectionRange: selection.addSelectionRange,
+                }}
                 data={{
                   columns: wordTableColumns,
                   rows: sortedWords,
@@ -458,15 +470,6 @@ const ViewerPage = () => {
                   scrollTargetId: selection.scrollTargetId,
                   isEditMode: editState.isEditMode,
                   isOcring: editState.isOcring,
-                }}
-                events={{
-                  onChangeContentDraft: editState.changeContentDraftById,
-                  onHover: selection.hover,
-                  onHoverClear: selection.clearHovered,
-                  onClickRow: selection.replaceSelection,
-                  onClickRowWithCtrlOrMeta: selection.toggleSelection,
-                  onClickRowWithShift: selection.replaceSelectionRange,
-                  onClickRowWithShiftAndCtrlOrMeta: selection.addSelectionRange,
                 }}
               />
             </div>

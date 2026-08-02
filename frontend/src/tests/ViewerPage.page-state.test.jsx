@@ -180,7 +180,7 @@ describe("ViewerPage", () => {
   // WordOverlay では zoom による描画更新のみを確認する。
   // PageScroll は既存の scrollIntoView テストでカバーできているため、ここでは確認しない。
   // --rotate は viewer-image-transform-* が img と WordOverlay をまとめて回転させるため、ViewerImage 側の確認で十分とする。
-  // また、onEnter による zoom 更新経路も ViewerImage 側でカバーできているため、ここでは onClickZoomStepButton のみを対象とする。
+  // また、commitZoom による zoom 更新経路も ViewerImage 側でカバーできているため、ここでは setZoom のみを対象とする。
   test("拡大ボタンを押すとOCR結果の文字サイズが更新される", async () => {
     renderViewerPage();
     const zoomUpButton = screen.getByRole("button", { name: "拡大" });

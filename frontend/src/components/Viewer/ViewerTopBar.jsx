@@ -63,25 +63,25 @@ const ViewerTopBar = ({
     isPrintMode = false,
     isOptionsPanelOpen = false,
   } = {},
-  events: {
-    onClickPrintButton,
-    onClickEditButton,
-    onClickSaveButton,
-    onClickCancelButton,
-    onClickUndoButton,
-    onClickRedoButton,
-    onClickPageStepButton,
-    onClickZoomStepButton,
-    onClickRotateStepButton,
-    onClickOptionsButton,
-    onEnterPageInput,
-    onEnterZoomInput,
-    onEnterRotateInput,
+  actions: {
+    openPrintDialog,
+    startEdit,
+    saveEdit,
+    cancelEdit,
+    undo,
+    redo,
+    setPage,
+    setZoom,
+    setRotate,
+    toggleOptionsPanel,
+    commitPage,
+    commitZoom,
+    commitRotate,
   } = {},
   viewerEditToolbarData = {},
-  viewerEditToolbarEvents,
+  viewerEditToolbarActions,
   viewerOptionsPanelData,
-  viewerOptionsPanelEvents,
+  viewerOptionsPanelActions,
 } = {}) => {
   // useRef(null)はfooRef.currentというプロパティを作成
   // fooRef.currentに入るのがDOMの <input> 要素になったとき、そのDOM要素がvalueプロパティを持つ
@@ -105,21 +105,15 @@ const ViewerTopBar = ({
             disabled={isBaseDisabled || !canGoPrevPage}
             icon={ChevronLeft}
             label="前のページ"
-            onClick={() => onClickPageStepButton((a) => a - 1)}
+            onClick={() => setPage((a) => a - 1)}
           />
-          {renderTextField(
-            page,
-            onEnterPageInput,
-            pageRef,
-            "page",
-            isBaseDisabled,
-          )}
-          / {maxPage}
+          {renderTextField(page, commitPage, pageRef, "page", isBaseDisabled)}/{" "}
+          {maxPage}
           <ViewerIconButton
             disabled={isBaseDisabled || !canGoNextPage}
             icon={ChevronRight}
             label="次のページ"
-            onClick={() => onClickPageStepButton((a) => a + 1)}
+            onClick={() => setPage((a) => a + 1)}
           />
         </div>
         <div className="flex items-center gap-0.5">
@@ -127,20 +121,14 @@ const ViewerTopBar = ({
             disabled={isBaseDisabled || !canZoomOut}
             icon={ZoomOut}
             label="縮小"
-            onClick={() => onClickZoomStepButton((a) => a - VIEWER_ZOOM.STEP)}
+            onClick={() => setZoom((a) => a - VIEWER_ZOOM.STEP)}
           />
-          {renderTextField(
-            zoom,
-            onEnterZoomInput,
-            zoomRef,
-            "zoom",
-            isBaseDisabled,
-          )}
+          {renderTextField(zoom, commitZoom, zoomRef, "zoom", isBaseDisabled)}
           <ViewerIconButton
             disabled={isBaseDisabled || !canZoomIn}
             icon={ZoomIn}
             label="拡大"
-            onClick={() => onClickZoomStepButton((a) => a + VIEWER_ZOOM.STEP)}
+            onClick={() => setZoom((a) => a + VIEWER_ZOOM.STEP)}
           />
         </div>
         <div className="flex items-center gap-0.5">
@@ -148,13 +136,11 @@ const ViewerTopBar = ({
             disabled={isBaseDisabled}
             icon={RotateCw}
             label="回転"
-            onClick={() =>
-              onClickRotateStepButton((a) => a + VIEWER_ROTATE_STEP)
-            }
+            onClick={() => setRotate((a) => a + VIEWER_ROTATE_STEP)}
           />
           {renderTextField(
             rotate,
-            onEnterRotateInput,
+            commitRotate,
             rotateRef,
             "rotate",
             isBaseDisabled,
@@ -164,14 +150,14 @@ const ViewerTopBar = ({
           disabled={isBaseDisabled}
           icon={Settings}
           label="表示設定"
-          onClick={onClickOptionsButton}
+          onClick={toggleOptionsPanel}
         />
         {!isEditMode ? (
           <ViewerIconButton
             disabled={isBaseDisabled}
             icon={Printer}
             label="出力"
-            onClick={onClickPrintButton}
+            onClick={openPrintDialog}
           />
         ) : (
           <></>
@@ -181,7 +167,7 @@ const ViewerTopBar = ({
             disabled={isBaseDisabled}
             icon={Pencil}
             label="編集"
-            onClick={onClickEditButton}
+            onClick={startEdit}
           />
         ) : (
           <>
@@ -190,13 +176,13 @@ const ViewerTopBar = ({
                 disabled={isBaseDisabled || !canUndo}
                 icon={Undo2}
                 label="元に戻す"
-                onClick={onClickUndoButton}
+                onClick={undo}
               />
               <ViewerIconButton
                 disabled={isBaseDisabled || !canRedo}
                 icon={Redo2}
                 label="やり直す"
-                onClick={onClickRedoButton}
+                onClick={redo}
               />
             </div>
             <div className="flex items-center gap-2">
@@ -204,13 +190,13 @@ const ViewerTopBar = ({
                 disabled={isBaseDisabled}
                 icon={Save}
                 label="保存"
-                onClick={onClickSaveButton}
+                onClick={saveEdit}
               />
               <ViewerIconButton
                 disabled={isBaseDisabled}
                 icon={X}
                 label="中止"
-                onClick={onClickCancelButton}
+                onClick={cancelEdit}
               />
             </div>
           </>
@@ -223,14 +209,14 @@ const ViewerTopBar = ({
       </div>
       {isEditMode && (
         <ViewerEditToolbar
+          actions={viewerEditToolbarActions}
           data={{ ...viewerEditToolbarData, isOcring }}
-          events={viewerEditToolbarEvents}
         />
       )}
       {isOptionsPanelOpen && (
         <ViewerOptionsPanel
+          actions={viewerOptionsPanelActions}
           data={viewerOptionsPanelData}
-          events={viewerOptionsPanelEvents}
         />
       )}
     </div>

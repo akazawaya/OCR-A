@@ -33,11 +33,11 @@ const selectionModeIconClassName = "h-4 w-4";
 
 export const ViewerEditToolbar = ({
   data: { selectedWords = [], selectionMode = "click", isOcring = false } = {},
-  events: {
-    onChangeSelectionMode,
-    onClickDeleteButton,
-    onClickOcrRewriteButton,
-    onClickOcrReplaceButton,
+  actions: {
+    setSelectionMode,
+    deleteSelectedWords,
+    rewritePreviewWordContentByOcr,
+    replacePreviewWordByOcr,
   } = {},
 } = {}) => {
   const selectedWord = selectedWords[0];
@@ -48,19 +48,19 @@ export const ViewerEditToolbar = ({
       label: "削除",
       icon: Trash2,
       disabled: !hasSelection,
-      onClick: () => onClickDeleteButton(selectedWords.map((word) => word.id)),
+      onClick: () => deleteSelectedWords(selectedWords.map((word) => word.id)),
     },
     {
       label: "OCR書換",
       icon: ScanLine,
       disabled: !hasSingleSelection,
-      onClick: () => onClickOcrRewriteButton(selectedWord),
+      onClick: () => rewritePreviewWordContentByOcr(selectedWord),
     },
     {
       label: "OCR置換",
       icon: ScanText,
       disabled: !hasSingleSelection,
-      onClick: () => onClickOcrReplaceButton(selectedWord),
+      onClick: () => replacePreviewWordByOcr(selectedWord),
     },
   ];
 
@@ -83,7 +83,7 @@ export const ViewerEditToolbar = ({
               className="sr-only"
               name="viewer-selection-mode"
               type="radio"
-              onChange={() => onChangeSelectionMode(mode)}
+              onChange={() => setSelectionMode(mode)}
             />
             <Icon className={selectionModeIconClassName} />
           </label>

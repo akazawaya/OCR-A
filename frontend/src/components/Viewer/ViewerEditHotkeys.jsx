@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 export const ViewerEditHotkeys = ({
   data: { viewerRootRef } = {},
-  events: { onKeyDownUndo, onKeyDownRedo } = {},
+  actions: { undo, redo } = {},
 }) => {
   useEffect(() => {
     const onWindowKeyDown = (e) => {
@@ -23,19 +23,19 @@ export const ViewerEditHotkeys = ({
 
       if (isMod && !e.shiftKey && key === "z") {
         e.preventDefault();
-        onKeyDownUndo();
+        undo();
         return;
       }
 
       if ((isMod && e.shiftKey && key === "z") || (e.ctrlKey && key === "y")) {
         e.preventDefault();
-        onKeyDownRedo();
+        redo();
       }
     };
 
     window.addEventListener("keydown", onWindowKeyDown);
     return () => window.removeEventListener("keydown", onWindowKeyDown);
-  }, [onKeyDownUndo, onKeyDownRedo, viewerRootRef]);
+  }, [undo, redo, viewerRootRef]);
 
   return null;
 };

@@ -4,7 +4,7 @@ import { User } from "lucide-react";
 
 import { routePaths } from "../../appConfig";
 
-const UserMenu = ({ data: { email }, events: { onClickLogoutButton } }) => {
+const UserMenu = ({ data: { email }, actions: { logoutCurrentUser } }) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   return (
@@ -37,7 +37,7 @@ const UserMenu = ({ data: { email }, events: { onClickLogoutButton } }) => {
           </button>
           <button
             className="hover:text-gray-400"
-            onClick={() => onClickLogoutButton()}
+            onClick={() => logoutCurrentUser()}
           >
             ログアウト
           </button>

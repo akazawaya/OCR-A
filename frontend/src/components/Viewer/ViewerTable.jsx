@@ -4,9 +4,8 @@ import { getIdsBetween } from "../../logic/layout/useSelection";
 import { useScroll } from "../../logic/layout/useScroll";
 
 const ContentEditInput = ({
-  content,
-  inputSize,
-  onChangeContentDraft,
+  data: { wordId, content, inputSize } = {},
+  actions: { changeContentDraftById } = {},
 } = {}) => {
   const [editingContent, setEditingContent] = useState(content);
 
@@ -15,7 +14,7 @@ const ContentEditInput = ({
   }, [content]);
 
   const finalizeEdit = () => {
-    onChangeContentDraft(editingContent, content);
+    changeContentDraftById(wordId, editingContent, content);
   };
   return (
     <input
@@ -51,14 +50,14 @@ const ViewerTable = ({
     scrollTargetId,
     isEditMode,
   } = {},
-  events: {
-    onChangeContentDraft,
-    onHover,
-    onHoverClear,
-    onClickRow,
-    onClickRowWithCtrlOrMeta,
-    onClickRowWithShift,
-    onClickRowWithShiftAndCtrlOrMeta,
+  actions: {
+    changeContentDraftById,
+    hover,
+    clearHovered,
+    replaceSelection,
+    toggleSelection,
+    replaceSelectionRange,
+    addSelectionRange,
   } = {},
 }) => {
   // edit中のinputの幅は事前に固定値を取る
@@ -118,30 +117,31 @@ const ViewerTable = ({
                     r.id,
                   );
                   if (withCtrlOrMeta) {
-                    onClickRowWithShiftAndCtrlOrMeta(ids);
+                    addSelectionRange(ids);
                   } else {
-                    onClickRowWithShift(ids);
+                    replaceSelectionRange(ids);
                   }
                   return;
                 }
                 if (withCtrlOrMeta) {
-                  onClickRowWithCtrlOrMeta(r.id, "table");
+                  toggleSelection(r.id, "table");
                   return;
                 }
-                onClickRow(r.id, "table");
+                replaceSelection(r.id, "table");
               }}
-              onMouseEnter={() => onHover(r.id)}
-              onMouseLeave={onHoverClear}
+              onMouseEnter={() => hover(r.id)}
+              onMouseLeave={clearHovered}
             >
               {columns.map((c) => (
                 <td key={c.key} className="px-1">
                   {isEditMode && c.key === "content" ? (
                     <ContentEditInput
-                      content={r[c.key]}
-                      inputSize={maxContentLength}
-                      onChangeContentDraft={(nextContent, prevContent) =>
-                        onChangeContentDraft(r.id, nextContent, prevContent)
-                      }
+                      actions={{ changeContentDraftById }}
+                      data={{
+                        wordId: r.id,
+                        content: r[c.key],
+                        inputSize: maxContentLength,
+                      }}
                     />
                   ) : (
                     <span className="inline-block min-w-max">

@@ -2,7 +2,7 @@ import { ArrowDownUp, ArrowDown, ArrowUp } from "lucide-react";
 
 const DocumentTable = ({
   data: { columns = [], rows = [], ordering = "" } = {},
-  events: { onClickColumn, onClickRow = null, onClickDeleteButton } = {},
+  actions: { columnsSort, dataRouter = null, deleteRow } = {},
 }) => {
   const buildSortIcon = (ordering, columnKey) => {
     const className = "h-[1em] w-[1em]";
@@ -21,7 +21,7 @@ const DocumentTable = ({
               <th
                 key={c.key}
                 className="cursor-pointer border border-gray-400 px-1 hover:bg-gray-200"
-                onClick={() => onClickColumn(c.key)}
+                onClick={() => columnsSort(c.key)}
               >
                 <span className="flex items-center justify-between gap-1">
                   {c.label}
@@ -34,7 +34,7 @@ const DocumentTable = ({
       </thead>
       <tbody>
         {rows.map((r) => {
-          const isRowClickable = Boolean(onClickRow) && r.state === "完了";
+          const isRowClickable = Boolean(dataRouter) && r.state === "完了";
 
           return (
             <tr
@@ -45,14 +45,14 @@ const DocumentTable = ({
                   ? "cursor-pointer border border-gray-400 hover:bg-gray-200"
                   : "cursor-not-allowed border border-gray-400 text-gray-500"
               }
-              onClick={isRowClickable ? () => onClickRow(r) : undefined}
+              onClick={isRowClickable ? () => dataRouter(r) : undefined}
             >
               {columns.map((c) => (
                 <td key={c.key} className="border border-gray-400 px-1">
                   {c.format ? c.format(r[c.key]) : r[c.key]}
                 </td>
               ))}
-              {onClickDeleteButton && (
+              {deleteRow && (
                 <td
                   key="__delete"
                   onClick={(e) => {
@@ -61,7 +61,7 @@ const DocumentTable = ({
                 >
                   <button
                     className="w-fit cursor-pointer bg-red-500 text-white hover:bg-red-600"
-                    onClick={() => onClickDeleteButton(r)}
+                    onClick={() => deleteRow(r)}
                   >
                     削除
                   </button>

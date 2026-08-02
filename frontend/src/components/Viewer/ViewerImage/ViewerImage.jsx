@@ -17,7 +17,7 @@ const ViewerImage = ({
     selectedId,
   } = {},
   wordOverlayData,
-  wordOverlayEvents,
+  wordOverlayActions,
 }) => {
   const localRef = useRef(null);
   const rootRef = contentRef ?? localRef;
@@ -79,6 +79,7 @@ const ViewerImage = ({
             >
               <img alt="" height={h} src={p.image} width={w} />
               <WordOverlay
+                actions={wordOverlayActions}
                 data={{
                   ...wordOverlayData,
                   pageId: p.id,
@@ -87,7 +88,6 @@ const ViewerImage = ({
                   imageSizePx: { w: imageW, h: imageH },
                   isPrintMode,
                 }}
-                events={wordOverlayEvents}
               />
             </div>
           </div>

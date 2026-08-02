@@ -1,6 +1,6 @@
 export const ViewerOptionsPanel = ({
   data: { columns = [], visibleColumnKeys = [] } = {},
-  events: { onChangeColumnVisibility } = {},
+  actions: { changeColumnVisibility } = {},
 } = {}) => {
   return (
     <div className="absolute top-full right-1 z-3 mt-1 rounded-md border bg-gray-200 p-3">
@@ -15,7 +15,7 @@ export const ViewerOptionsPanel = ({
                 checked={isVisible}
                 type="checkbox"
                 onChange={(event) =>
-                  onChangeColumnVisibility(column.key, event.target.checked)
+                  changeColumnVisibility(column.key, event.target.checked)
                 }
               />
               {column.label}

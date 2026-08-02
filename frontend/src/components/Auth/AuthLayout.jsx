@@ -27,7 +27,7 @@ const AuthLayout = () => {
     },
   });
 
-  const handleLogoutClick = () => {
+  const logoutCurrentUser = () => {
     if (logoutBlockerRef.current) {
       // logoutBlockerRefはisEditModeのとき、
       // ViewerPage側からlogoutMutationを受取れる関数として更新される。
@@ -54,8 +54,8 @@ const AuthLayout = () => {
     <div className="flex h-full">
       <div className="fixed bottom-2 left-2 z-10">
         <UserMenu
+          actions={{ logoutCurrentUser }}
           data={{ email: data.email }}
-          events={{ onClickLogoutButton: handleLogoutClick }}
         />
       </div>
       <div className="flex-1 overflow-auto">
