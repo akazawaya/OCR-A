@@ -179,10 +179,24 @@ const ViewerPage = () => {
 
   const { mutate: postWordMutation } = useMutation({
     mutationFn: async (wordPostInputs) => {
-      for (const { pageId, bbox, direction, content } of wordPostInputs) {
+      for (const {
+        pageId,
+        bbox,
+        direction,
+        content,
+        det_score,
+        rec_score,
+      } of wordPostInputs) {
         await postCollection({
           collectionUrl: wordCollectionUrl,
-          body: { page: pageId, bbox, direction, content },
+          body: {
+            page: pageId,
+            bbox,
+            direction,
+            content,
+            det_score,
+            rec_score,
+          },
         });
       }
     },
@@ -197,11 +211,11 @@ const ViewerPage = () => {
     mutationFn: async (wordPatchInputs) => {
       const snapshot = { ...(wordPatchInputs ?? {}) };
       const entries = Object.entries(snapshot);
-      for (const [wordId, content] of entries) {
+      for (const [wordId, patchBody] of entries) {
         await patchCollectionItem({
           collectionUrl: wordCollectionUrl,
           id: wordId,
-          body: { content },
+          body: patchBody,
         });
       }
     },

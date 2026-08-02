@@ -54,13 +54,13 @@ const buildSaveChangesFromHistory = (pastEntries = []) => {
         const { wordId, prev, next } = pastEntry.payload;
         if (pendingPostWordMap.has(wordId)) {
           const word = pendingPostWordMap.get(wordId);
-          pendingPostWordMap.set(wordId, { ...word, content: next });
+          pendingPostWordMap.set(wordId, { ...word, ...next });
         }
         const contentChange = patchStateById.get(wordId);
         if (!contentChange) {
-          patchStateById.set(wordId, { firstPrev: prev, lastNext: next });
+          patchStateById.set(wordId, { original: prev, current: next });
         } else {
-          contentChange.lastNext = next;
+          contentChange.current = next;
         }
         return;
       }
@@ -94,8 +94,13 @@ const buildSaveChangesFromHistory = (pastEntries = []) => {
 
   const pendingPatchContentById = Object.fromEntries(
     [...patchStateById.entries()]
-      .filter(([, { firstPrev, lastNext }]) => firstPrev !== lastNext)
-      .map(([wordId, { lastNext }]) => [wordId, lastNext]),
+      .filter(
+        ([, { original, current }]) =>
+          original.content !== current.content ||
+          original.det_score !== current.det_score ||
+          original.rec_score !== current.rec_score,
+      )
+      .map(([wordId, { current }]) => [wordId, current]),
   );
 
   return { pendingPostWordMap, pendingPatchContentById, pendingDeleteIdSet };
@@ -136,6 +141,8 @@ export const useViewerEditState = ({
       direction,
       content: "",
       page__page_number: pageNumber,
+      det_score: null,
+      rec_score: null,
     };
 
     queryClient.setQueryData(wordsQueryKey, (oldWords = []) => [
@@ -155,17 +162,38 @@ export const useViewerEditState = ({
   const changeContentDraftById = (wordId, nextContent, prevContent) => {
     if (isOcring) return;
     if (prevContent === nextContent) return;
+
+    let prev = null;
+    let next = null;
+
     queryClient.setQueryData(wordsQueryKey, (oldWords = []) =>
-      oldWords.map((word) =>
-        word.id === wordId ? { ...word, content: nextContent } : word,
-      ),
+      oldWords.map((word) => {
+        if (word.id !== wordId) return word;
+        prev = {
+          content: prevContent,
+          det_score: word.det_score ?? null,
+          rec_score: word.rec_score ?? null,
+        };
+        next = {
+          content: nextContent,
+          det_score: null,
+          rec_score: null,
+        };
+        return { ...word, ...next };
+      }),
     );
 
+    if (!prev || !next) return;
+    // テキスト内容に手を加えた場合、信頼度スコアを無効化する
     historyDispatch({
       type: "PUSH",
       entry: {
         type: "CHANGE_CONTENT_DRAFT",
-        payload: { wordId, prev: prevContent, next: nextContent },
+        payload: {
+          wordId,
+          prev,
+          next,
+        },
       },
     });
   };
@@ -229,9 +257,12 @@ export const useViewerEditState = ({
             ...word,
             content: previewJob.content,
             direction: previewJob.direction,
+            det_score: null,
+            rec_score: null,
           };
         });
       });
+      // rewrite_contenはbboxを人力入力に依存し、複数結果を結合するため、信頼度スコアは無効化する
       historyDispatch({
         type: "PUSH",
         entry: {
@@ -241,10 +272,14 @@ export const useViewerEditState = ({
             prev: {
               content: prevWord.content,
               direction: prevWord.direction,
+              det_score: prevWord.det_score,
+              rec_score: prevWord.rec_score,
             },
             next: {
               content: previewJob.content,
               direction: previewJob.direction,
+              det_score: null,
+              rec_score: null,
             },
           },
         },
@@ -271,6 +306,9 @@ export const useViewerEditState = ({
           bbox: word.bbox,
           direction: word.direction,
           content: word.content,
+          // replace_wordsはOCRエンジンそのものの返り値を使うため 信頼度スコアをそのまま採用する
+          det_score: word.det_score,
+          rec_score: word.rec_score,
         }));
 
       queryClient.setQueryData(wordsQueryKey, (oldWords) => {
@@ -300,7 +338,7 @@ export const useViewerEditState = ({
         const { wordId, prev } = entry.payload;
         queryClient.setQueryData(wordsQueryKey, (oldWords = []) =>
           oldWords.map((word) =>
-            word.id === wordId ? { ...word, content: prev } : word,
+            word.id === wordId ? { ...word, ...prev } : word,
           ),
         );
         return;
@@ -346,7 +384,7 @@ export const useViewerEditState = ({
         const { wordId, next } = entry.payload;
         queryClient.setQueryData(wordsQueryKey, (oldWords = []) =>
           oldWords.map((word) =>
-            word.id === wordId ? { ...word, content: next } : word,
+            word.id === wordId ? { ...word, ...next } : word,
           ),
         );
         return;
@@ -400,6 +438,9 @@ export const useViewerEditState = ({
       bbox: w.bbox,
       direction: w.direction,
       content: w.content ?? "",
+      // scoreはnullの時評価値がfalseとなるため、直で真偽値を評価する
+      det_score: w.det_score ?? null,
+      rec_score: w.rec_score ?? null,
     }));
 
     const deleteIds = [...pendingDeleteIdSet].filter((id) => !isPreviewId(id));
