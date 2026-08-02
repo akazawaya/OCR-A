@@ -1,17 +1,18 @@
 import { useCallback, useState } from "react";
 
-export const getIdsBetween = (ids, anchorId, targetId) => {
-  const anchorIndex = ids.indexOf(anchorId);
-  const targetIndex = ids.indexOf(targetId);
-
-  if (anchorIndex === -1 || targetIndex === -1) {
-    return [targetId];
+// 起点idと終点idからshift範囲選択時のID一覧を作る関数
+export const buildRangeSelectionIds = ({ orderedIds, startId, endId }) => {
+  const startIndex = orderedIds.indexOf(startId);
+  const endIndex = orderedIds.indexOf(endId);
+  // 履歴となるstartがない場合は単にendId(クリック操作があった際のidそのものの想定)を返す
+  if (startIndex === -1) {
+    return [endId];
   }
 
-  const startIndex = Math.min(anchorIndex, targetIndex);
-  const endIndex = Math.max(anchorIndex, targetIndex);
+  const lowerIndex = Math.min(startIndex, endIndex);
+  const upperIndex = Math.max(startIndex, endIndex);
 
-  return ids.slice(startIndex, endIndex + 1);
+  return orderedIds.slice(lowerIndex, upperIndex + 1);
 };
 
 // hover / select 状態と選択起点を管理する
@@ -19,7 +20,7 @@ export const useSelection = () => {
   const [hoveredId, setHoveredId] = useState(null);
   const [selectedIds, setSelectedIds] = useState(() => new Set());
   const [selectedBy, setSelectedBy] = useState(null); // コンポーネント間で相互にやり取りをする際の起点を示す
-  const [anchorId, setAnchorId] = useState(null); // shiftクリックの範囲起点用
+  const [shiftSelectionStartId, setShiftSelectionStartId] = useState(null); // shiftクリックの範囲起点用
   const [scrollTargetId, setScrollTargetId] = useState(null); //　単一クリック的な動作はscroll対象とする
   const hover = useCallback((id) => {
     setHoveredId(id);
@@ -30,7 +31,7 @@ export const useSelection = () => {
   // 通常クリック：択一選択
   const replaceSelection = useCallback((id, by) => {
     setSelectedIds(new Set([id]));
-    setAnchorId(id);
+    setShiftSelectionStartId(id);
     setScrollTargetId(id);
     setSelectedBy(by);
   }, []);
@@ -46,7 +47,7 @@ export const useSelection = () => {
       }
       return next;
     });
-    setAnchorId(id);
+    setShiftSelectionStartId(id);
     setScrollTargetId(id);
     setSelectedBy(by);
   }, []);
@@ -80,7 +81,7 @@ export const useSelection = () => {
     hoveredId,
     selectedIds,
     selectedBy,
-    anchorId,
+    shiftSelectionStartId,
     scrollTargetId,
     hover,
     clearHovered,

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import { getIdsBetween } from "../../logic/layout/useSelection";
+import { buildRangeSelectionIds } from "../../logic/layout/useSelection";
 import { useScroll } from "../../logic/layout/useScroll";
 
 const ContentEditInput = ({
@@ -46,7 +46,7 @@ const ViewerTable = ({
     hoveredId,
     selectedIds,
     selectedBy,
-    anchorId,
+    shiftSelectionStartId,
     scrollTargetId,
     isEditMode,
   } = {},
@@ -111,11 +111,11 @@ const ViewerTable = ({
               onClick={(event) => {
                 const withCtrlOrMeta = event.ctrlKey || event.metaKey;
                 if (event.shiftKey) {
-                  const ids = getIdsBetween(
-                    rows.map((row) => row.id),
-                    anchorId,
-                    r.id,
-                  );
+                  const ids = buildRangeSelectionIds({
+                    orderedIds: rows.map((row) => row.id),
+                    startId: shiftSelectionStartId,
+                    endId: r.id,
+                  });
                   if (withCtrlOrMeta) {
                     addSelectionRange(ids);
                   } else {

@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 
 import { buildWordOverlayLayout } from "../../../../logic/layout/buildWordOverlayLayout";
-import { getIdsBetween } from "../../../../logic/layout/useSelection";
+import { buildRangeSelectionIds } from "../../../../logic/layout/useSelection";
 import {
   bboxToBounds,
   bboxToRect,
@@ -28,7 +28,7 @@ const WordOverlay = ({
     words = [],
     hoveredWordId,
     selectedIds = new Set(),
-    anchorId,
+    shiftSelectionStartId,
     isEditMode,
     isOcring,
     isPrintMode,
@@ -166,11 +166,11 @@ const WordOverlay = ({
                 ? (event) => {
                     const withCtrlOrMeta = event.ctrlKey || event.metaKey;
                     if (event.shiftKey) {
-                      const ids = getIdsBetween(
-                        words.map((word) => word.id),
-                        anchorId,
-                        w.id,
-                      );
+                      const ids = buildRangeSelectionIds({
+                        orderedIds: words.map((word) => word.id),
+                        startId: shiftSelectionStartId,
+                        endId: w.id,
+                      });
                       if (withCtrlOrMeta) {
                         addSelectionRange(ids);
                       } else {
