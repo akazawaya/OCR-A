@@ -298,7 +298,7 @@ const ViewerPage = () => {
     setIsOptionsPanelOpen((isOpen) => !isOpen);
   };
   const deleteSelectedWords = (wordIds) => {
-    wordIds.forEach(editState.addPendingDeleteById);
+    editState.addPendingDeleteByIds(wordIds);
   };
   const blocker = useBlocker(editState.isEditMode);
   useBeforeUnload(

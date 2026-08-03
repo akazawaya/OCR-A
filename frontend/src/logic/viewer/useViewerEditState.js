@@ -202,19 +202,21 @@ export const useViewerEditState = ({
     });
   };
 
-  const addPendingDeleteById = (wordId) => {
+  const addPendingDeleteByIds = (wordIds) => {
     if (isOcring) return;
-    let deletedWord = null;
+    const wordIdSet = new Set(wordIds);
+    let deletedWords = [];
+
     queryClient.setQueryData(wordsQueryKey, (oldWords = []) => {
-      deletedWord = oldWords.find((word) => word.id === wordId) ?? null;
-      return oldWords.filter((word) => word.id !== wordId);
+      deletedWords = oldWords.filter((word) => wordIdSet.has(word.id));
+      return oldWords.filter((word) => !wordIdSet.has(word.id));
     });
-    if (!deletedWord) return;
+    if (deletedWords.length === 0) return;
 
     historyDispatch({
       type: "PUSH",
       entry: {
-        removeWords: [deletedWord],
+        removeWords: deletedWords,
         addWords: [],
       },
     });
@@ -321,7 +323,6 @@ export const useViewerEditState = ({
         },
       });
     }
-
     setIsOcring(false);
   }, [previewJob, queryClient, wordsQueryKey]);
 
@@ -407,7 +408,7 @@ export const useViewerEditState = ({
     saveEdit,
     cancelEdit,
     changeContentDraftById,
-    addPendingDeleteById,
+    addPendingDeleteByIds,
     addPendingPostByBbox,
     replacePreviewWordByOcr,
     rewritePreviewWordContentByOcr,
