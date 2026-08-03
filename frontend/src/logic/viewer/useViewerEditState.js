@@ -37,73 +37,86 @@ const historyReducer = (state, action) => {
   }
 };
 
+const applyWordChange = (words, removeWords, addWords) => {
+  const removeWordIdSet = new Set(removeWords.map((word) => word.id));
+  const addWordById = new Map(addWords.map((word) => [word.id, word]));
+  const retainedOrReplacedWords = [];
+  // 変更前のwords - removeWords + addWords = 変更後のwords として作業結果を構築する
+  words.forEach((word) => {
+    if (!removeWordIdSet.has(word.id)) {
+      retainedOrReplacedWords.push(word); // retain(元のwordを維持)
+    } else if (addWordById.has(word.id)) {
+      // idがremoveかつadd対象の場合は置換とみなす
+      retainedOrReplacedWords.push(addWordById.get(word.id)); // replace(元のwordを採用せず、同じ位置に更新後のwordを採用して置換)
+      addWordById.delete(word.id);
+    }
+    // removeにだけ存在するwordは結果(retainedOrReplacedWords及び返り値配列)へ含めないことで削除を反映
+  });
+  // add対象のみのwordsはループ外処理となる。最後に返り値配列に追加する形で反映
+  return [...retainedOrReplacedWords, ...addWordById.values()];
+};
+
+const patchableWordKeys = ["content", "direction", "det_score", "rec_score"];
+
 const buildSaveChangesFromHistory = (pastEntries = []) => {
-  const patchStateById = new Map();
-  const pendingPostWordMap = new Map();
-  const pendingDeleteIdSet = new Set();
+  const patchDraftMap = new Map(); // PATCHを作るための中間データ
+  const pendingPostWordMap = new Map(); // 最終的なPOST予定
+  const pendingDeleteIdSet = new Set(); // 最終的なDELETE予定
+  // 各履歴を「変更前のwords - removeWords + addWords」として解釈し、POST・PATCH・DELETEへ集約する
+  // Post/Deleteはただ変更内容を一方的に積めばいいことに対し、
+  // patchは変更前/変更後を比較した後、変更があった内容だけ積む必要があるため、一層多い
 
   pastEntries.forEach((pastEntry) => {
-    switch (pastEntry.type) {
-      case "ADD_PENDING_POST": {
-        const { word } = pastEntry.payload;
-        pendingPostWordMap.set(word.id, word);
-        return;
-      }
-
-      case "CHANGE_CONTENT_DRAFT": {
-        const { wordId, prev, next } = pastEntry.payload;
-        if (pendingPostWordMap.has(wordId)) {
-          const word = pendingPostWordMap.get(wordId);
-          pendingPostWordMap.set(wordId, { ...word, ...next });
-        }
-        const contentChange = patchStateById.get(wordId);
-        if (!contentChange) {
-          patchStateById.set(wordId, { original: prev, current: next });
-        } else {
-          contentChange.current = next;
-        }
-        return;
-      }
-
-      case "ADD_PENDING_DELETE": {
-        const { word } = pastEntry.payload;
-        if (pendingPostWordMap.has(word.id)) {
-          pendingPostWordMap.delete(word.id);
-          return;
-        }
+    const { removeWords, addWords } = pastEntry;
+    const removeWordById = new Map(removeWords.map((word) => [word.id, word]));
+    removeWords.forEach((word) => {
+      // addにも同じIDがあればpatchなので保留
+      if (addWords.some((addedWord) => addedWord.id === word.id)) return;
+      if (pendingPostWordMap.has(word.id)) {
+        pendingPostWordMap.delete(word.id);
+      } else {
         pendingDeleteIdSet.add(word.id);
+      }
+    });
+    addWords.forEach((word) => {
+      const removedWord = removeWordById.get(word.id);
+      if (!removedWord || pendingPostWordMap.has(word.id)) {
+        // removedWordとidが共存ではない → 単なるadd 新規POSTとして追加
+        // pendingPostに既存 → pendingPostの上書きとして更新
+        pendingPostWordMap.set(word.id, word); //setは新規追加と更新を兼ねる点に注意
         return;
       }
-
-      case "REPLACE_WORDS": {
-        const { removeWords, addWords } = pastEntry.payload;
-        removeWords.forEach((word) => {
-          if (pendingPostWordMap.has(word.id)) {
-            pendingPostWordMap.delete(word.id);
-          } else {
-            pendingDeleteIdSet.add(word.id);
-          }
+      const wordChange = patchDraftMap.get(word.id);
+      // patchの変更は全履歴を処理し終えた最終結果で検証したいため、
+      // originalで初回変更前の値を保持し、currentで最新の値を更新し、保持する。
+      if (!wordChange) {
+        patchDraftMap.set(word.id, {
+          original: removedWord,
+          current: word,
         });
-        addWords.forEach((word) => {
-          pendingPostWordMap.set(word.id, word);
-        });
-        return;
+      } else {
+        wordChange.current = word;
       }
-    }
+    });
   });
 
-  const pendingPatchContentById = Object.fromEntries(
-    [...patchStateById.entries()]
-      .filter(
-        ([, { original, current }]) =>
-          original.content !== current.content ||
-          original.det_score !== current.det_score ||
-          original.rec_score !== current.rec_score,
+  const pendingPatchChangeMap = new Map(
+    [...patchDraftMap.entries()]
+      // PATCH対象項目に1つでも差分があるwordのエントリーだけを残す
+      .filter(([, { original, current }]) =>
+        patchableWordKeys.some((key) => original[key] !== current[key]),
       )
-      .map(([wordId, { current }]) => [wordId, current]),
+      // 各wordを「wordId → 変更された項目」のMapエントリーへ変換
+      .map(([wordId, { original, current }]) => [
+        wordId, // キー
+        Object.fromEntries(
+          patchableWordKeys
+            .filter((key) => original[key] !== current[key])
+            .map((key) => [key, current[key]]), // 値
+        ),
+      ]),
   );
-
-  return { pendingPostWordMap, pendingPatchContentById, pendingDeleteIdSet };
+  return { pendingPostWordMap, pendingDeleteIdSet, pendingPatchChangeMap };
 };
 
 export const useViewerEditState = ({
@@ -121,7 +134,7 @@ export const useViewerEditState = ({
     historyReducer,
     initialHistoryState,
   );
-  const { pendingPostWordMap, pendingDeleteIdSet, pendingPatchContentById } =
+  const { pendingPostWordMap, pendingDeleteIdSet, pendingPatchChangeMap } =
     useMemo(
       () => buildSaveChangesFromHistory(historyState.past),
       [historyState.past],
@@ -153,8 +166,8 @@ export const useViewerEditState = ({
     historyDispatch({
       type: "PUSH",
       entry: {
-        type: "ADD_PENDING_POST",
-        payload: { word: previewWord },
+        removeWords: [],
+        addWords: [previewWord],
       },
     });
   };
@@ -162,38 +175,29 @@ export const useViewerEditState = ({
   const changeContentDraftById = (wordId, nextContent, prevContent) => {
     if (isOcring) return;
     if (prevContent === nextContent) return;
-
-    let prev = null;
-    let next = null;
+    let prevWord = null;
+    let nextWord = null;
 
     queryClient.setQueryData(wordsQueryKey, (oldWords = []) =>
       oldWords.map((word) => {
         if (word.id !== wordId) return word;
-        prev = {
-          content: prevContent,
-          det_score: word.det_score ?? null,
-          rec_score: word.rec_score ?? null,
-        };
-        next = {
+        prevWord = { ...word, content: prevContent };
+        nextWord = {
+          ...word,
           content: nextContent,
           det_score: null,
           rec_score: null,
         };
-        return { ...word, ...next };
+        return nextWord;
       }),
     );
-
-    if (!prev || !next) return;
+    if (!prevWord || !nextWord) return;
     // テキスト内容に手を加えた場合、信頼度スコアを無効化する
     historyDispatch({
       type: "PUSH",
       entry: {
-        type: "CHANGE_CONTENT_DRAFT",
-        payload: {
-          wordId,
-          prev,
-          next,
-        },
+        removeWords: [prevWord],
+        addWords: [nextWord],
       },
     });
   };
@@ -202,18 +206,16 @@ export const useViewerEditState = ({
     if (isOcring) return;
     let deletedWord = null;
     queryClient.setQueryData(wordsQueryKey, (oldWords = []) => {
-      deletedWord = oldWords.find((w) => w.id === wordId) ?? null;
-      return oldWords.filter((w) => w.id !== wordId);
+      deletedWord = oldWords.find((word) => word.id === wordId) ?? null;
+      return oldWords.filter((word) => word.id !== wordId);
     });
     if (!deletedWord) return;
 
     historyDispatch({
       type: "PUSH",
       entry: {
-        type: "ADD_PENDING_DELETE",
-        payload: {
-          word: deletedWord,
-        },
+        removeWords: [deletedWord],
+        addWords: [],
       },
     });
   };
@@ -245,7 +247,6 @@ export const useViewerEditState = ({
     const wordId = previewJob.preview_id;
     if (previewJob.mode === "rewrite_content") {
       // rewrite_contentはcontentとdirectionを置き換える
-      // ただし履歴はCHANGE_CONTENT_DRAFTと同列扱いとする
       let prevWord = null;
       queryClient.setQueryData(wordsQueryKey, (prevWords) => {
         return prevWords.map((word) => {
@@ -266,22 +267,16 @@ export const useViewerEditState = ({
       historyDispatch({
         type: "PUSH",
         entry: {
-          type: "CHANGE_CONTENT_DRAFT",
-          payload: {
-            wordId: prevWord.id,
-            prev: {
-              content: prevWord.content,
-              direction: prevWord.direction,
-              det_score: prevWord.det_score,
-              rec_score: prevWord.rec_score,
-            },
-            next: {
+          removeWords: [prevWord],
+          addWords: [
+            {
+              ...prevWord,
               content: previewJob.content,
               direction: previewJob.direction,
               det_score: null,
               rec_score: null,
             },
-          },
+          ],
         },
       });
     }
@@ -321,107 +316,27 @@ export const useViewerEditState = ({
       historyDispatch({
         type: "PUSH",
         entry: {
-          type: "REPLACE_WORDS",
-          payload: {
-            removeWords,
-            addWords,
-          },
+          removeWords,
+          addWords,
         },
       });
     }
 
     setIsOcring(false);
   }, [previewJob, queryClient, wordsQueryKey]);
+
   const applyUndoEntry = (entry) => {
-    switch (entry.type) {
-      case "CHANGE_CONTENT_DRAFT": {
-        const { wordId, prev } = entry.payload;
-        queryClient.setQueryData(wordsQueryKey, (oldWords = []) =>
-          oldWords.map((word) =>
-            word.id === wordId ? { ...word, ...prev } : word,
-          ),
-        );
-        return;
-      }
-      case "ADD_PENDING_DELETE": {
-        const { word } = entry.payload;
-        queryClient.setQueryData(wordsQueryKey, (oldWords = []) => {
-          if (oldWords.some((w) => w.id === word.id)) return oldWords;
-          return [...oldWords, word];
-        });
-        return;
-      }
-      case "ADD_PENDING_POST": {
-        const { word } = entry.payload;
-        queryClient.setQueryData(wordsQueryKey, (oldWords = []) => {
-          return oldWords.filter((w) => w.id !== word.id);
-        });
-        return;
-      }
-      case "REPLACE_WORDS": {
-        const { removeWords, addWords } = entry.payload;
-        queryClient.setQueryData(wordsQueryKey, (oldWords = []) => {
-          const addWordIdSet = new Set(addWords.map((w) => w.id));
-          const withoutAddedWords = oldWords.filter(
-            (word) => !addWordIdSet.has(word.id),
-          );
-          const existingIdSet = new Set(withoutAddedWords.map((w) => w.id));
-          const restoredWords = removeWords.filter(
-            (word) => !existingIdSet.has(word.id),
-          );
-          return [...withoutAddedWords, ...restoredWords];
-        });
-        return;
-      }
-      default:
-        return;
-    }
+    const { removeWords, addWords } = entry;
+    queryClient.setQueryData(wordsQueryKey, (oldWords = []) =>
+      applyWordChange(oldWords, addWords, removeWords),
+    );
   };
 
   const applyRedoEntry = (entry) => {
-    switch (entry.type) {
-      case "CHANGE_CONTENT_DRAFT": {
-        const { wordId, next } = entry.payload;
-        queryClient.setQueryData(wordsQueryKey, (oldWords = []) =>
-          oldWords.map((word) =>
-            word.id === wordId ? { ...word, ...next } : word,
-          ),
-        );
-        return;
-      }
-      case "ADD_PENDING_DELETE": {
-        const { word } = entry.payload;
-        queryClient.setQueryData(wordsQueryKey, (oldWords = []) =>
-          oldWords.filter((w) => w.id !== word.id),
-        );
-        return;
-      }
-      case "ADD_PENDING_POST": {
-        const { word } = entry.payload;
-        queryClient.setQueryData(wordsQueryKey, (oldWords = []) => {
-          if (oldWords.some((w) => w.id === word.id)) return oldWords;
-          return [...oldWords, word];
-        });
-        return;
-      }
-      case "REPLACE_WORDS": {
-        const { removeWords, addWords } = entry.payload;
-        queryClient.setQueryData(wordsQueryKey, (oldWords = []) => {
-          const removeWordIdSet = new Set(removeWords.map((w) => w.id));
-          const withoutRemovedWords = oldWords.filter(
-            (word) => !removeWordIdSet.has(word.id),
-          );
-          const existingIdSet = new Set(withoutRemovedWords.map((w) => w.id));
-          const addedWords = addWords.filter(
-            (word) => !existingIdSet.has(word.id),
-          );
-          return [...withoutRemovedWords, ...addedWords];
-        });
-        return;
-      }
-      default:
-        return;
-    }
+    const { removeWords, addWords } = entry;
+    queryClient.setQueryData(wordsQueryKey, (oldWords = []) =>
+      applyWordChange(oldWords, removeWords, addWords),
+    );
   };
 
   const startEdit = () => {
@@ -447,7 +362,7 @@ export const useViewerEditState = ({
     const deleteIdSet = new Set([...pendingDeleteIdSet].map(String));
 
     const patchPayload = Object.fromEntries(
-      Object.entries(pendingPatchContentById).filter(([id]) => {
+      [...pendingPatchChangeMap.entries()].filter(([id]) => {
         return !isPreviewId(id) && !deleteIdSet.has(String(id));
       }),
     );
