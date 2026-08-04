@@ -1,13 +1,13 @@
 import { useMemo } from "react";
 
-import { buildWordOverlayLayout } from "../../../../logic/layout/buildWordOverlayLayout";
-import { buildRangeSelectionIds } from "../../../../logic/layout/useSelection";
+import { buildWordOverlayLayout } from "../../../logic/layout/buildWordOverlayLayout";
+import { buildRangeSelectionIds } from "../../../logic/layout/useSelection";
 import {
   bboxToBounds,
   bboxToRect,
   rectToBbox,
-} from "../../../../logic/transforms/bboxTransforms";
-import { useDragRectState } from "../../../../logic/drag/useDragRectState";
+} from "../../../logic/transforms/bboxTransforms";
+import { useDragRectState } from "../../../logic/drag/useDragRectState";
 
 // 暫定でここに置く　交差したものすべて対象とする
 const bboxesIntersect = (bboxA, bboxB) => {

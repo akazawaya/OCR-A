@@ -17,11 +17,11 @@ import {
 import {
   VIEWER_ZOOM,
   VIEWER_ROTATE_STEP,
-} from "../../logic/viewer/viewerPageConstants";
+} from "../../../logic/viewer/viewerPageConstants";
 
-import { ViewerOptionsPanel } from "./ViewerOptionsPanel";
 import { ViewerEditToolbar } from "./ViewerEditToolbar";
 import { ViewerIconButton } from "./ViewerIconButton";
+import { ViewerOptionsPanel } from "./ViewerOptionsPanel";
 
 const renderTextField = (foo, commitFoo, inputRef, ariaLabel, disabled) => (
   // 外部の foo が変わったときにinputRef.current.value = ... で表示を同期

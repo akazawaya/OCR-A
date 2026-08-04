@@ -33,7 +33,7 @@ import { sortViewerWords } from "../logic/viewer/sortViewerWords";
 import { useSelection } from "../logic/layout/useSelection";
 import { useViewerEditState } from "../logic/viewer/useViewerEditState";
 import { normalizePreviewWordOcrJobResult } from "../logic/viewer/previewWordOcrContract";
-import ViewerTopBar from "../components/Viewer/ViewerTopBar";
+import ViewerTopBar from "../components/Viewer/ViewerTopbar/ViewerTopBar";
 import ViewerImage from "../components/Viewer/ViewerImage/ViewerImage";
 import ViewerTable from "../components/Viewer/ViewerTable";
 import { ViewerEditHotkeys } from "../components/Viewer/ViewerEditHotkeys";

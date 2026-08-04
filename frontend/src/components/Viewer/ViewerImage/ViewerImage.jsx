@@ -3,7 +3,7 @@ import { useRef } from "react";
 import { useScroll } from "../../../logic/layout/useScroll";
 import { useClientSizePx } from "../../../logic/layout/useClientSizePx";
 
-import WordOverlay from "./WordOverlay/WordOverlay";
+import WordOverlay from "./WordOverlay";
 
 const ViewerImage = ({
   data: {
