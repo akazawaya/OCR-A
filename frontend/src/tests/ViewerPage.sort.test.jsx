@@ -80,6 +80,37 @@ describe("ViewerPage sort", () => {
       ]);
     });
 
+    test("同じ列をクリックすると昇順、降順、ソート解除の順に切り替わる", async () => {
+      setMockPages(sortMockPages);
+      setMockWords(viewerTableSortMockWords);
+      renderViewerPage();
+      const user = userEvent.setup();
+
+      await screen.findByRole("cell", { name: "charlie" });
+      const contentHeader = screen.getByRole("columnheader", { name: /^本文/ });
+
+      await user.click(contentHeader);
+      expect(getColumnContents(contentHeader.cellIndex)).toEqual([
+        "alpha",
+        "bravo",
+        "charlie",
+      ]);
+
+      await user.click(contentHeader);
+      expect(getColumnContents(contentHeader.cellIndex)).toEqual([
+        "charlie",
+        "bravo",
+        "alpha",
+      ]);
+
+      await user.click(contentHeader);
+      expect(getColumnContents(contentHeader.cellIndex)).toEqual([
+        "charlie",
+        "alpha",
+        "bravo",
+      ]);
+    });
+
     // scoreの並び替え確認は検出信頼度を代表とする
     test("検出信頼度は数値として並び替え、nullは末尾に配置する", async () => {
       setMockPages(sortMockPages);
