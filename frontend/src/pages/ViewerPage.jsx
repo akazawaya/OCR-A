@@ -128,9 +128,17 @@ const ViewerPage = () => {
 
   const isPending = isDocumentsPending || isPagesPending || isWordsPending;
   const isError = isDocumentsError || isPagesError || isWordsError;
+  const [wordSort, setWordSort] = useState(null);
+  const toggleWordSort = useCallback((key) => {
+    setWordSort((currentWordSort) => {
+      if (currentWordSort?.key !== key) return { key, order: "asc" };
+      if (currentWordSort.order === "asc") return { key, order: "desc" };
+      return null;
+    });
+  }, []);
   const sortedWords = useMemo(
-    () => sortViewerWords({ words, pages }),
-    [words, pages],
+    () => sortViewerWords({ words, wordSort }),
+    [words, wordSort],
   );
   const pageNumberByPageId = useMemo(() => {
     return new Map(pages.map((page) => [String(page.id), page.page_number]));
@@ -466,6 +474,7 @@ const ViewerPage = () => {
               <ViewerTable
                 actions={{
                   changeContentDraftById: editState.changeContentDraftById,
+                  toggleWordSort,
                   hover: selection.hover,
                   clearHovered: selection.clearHovered,
                   replaceSelection: selection.replaceSelection,
@@ -476,6 +485,7 @@ const ViewerPage = () => {
                 data={{
                   columns: wordTableColumns,
                   rows: sortedWords,
+                  wordSort,
                   page: pageState.page,
                   hoveredId: selection.hoveredId,
                   selectedIds: selection.selectedIds,

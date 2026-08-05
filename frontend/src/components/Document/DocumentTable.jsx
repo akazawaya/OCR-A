@@ -1,17 +1,9 @@
-import { ArrowDownUp, ArrowDown, ArrowUp } from "lucide-react";
+import { SortIcon } from "../ui/SortIcon";
 
 const DocumentTable = ({
   data: { columns = [], rows = [], ordering = "" } = {},
   actions: { columnsSort, dataRouter = null, deleteRow } = {},
 }) => {
-  const buildSortIcon = (ordering, columnKey) => {
-    const className = "h-[1em] w-[1em]";
-
-    if (ordering === columnKey) return <ArrowUp className={className} />;
-    if (ordering === `-${columnKey}`)
-      return <ArrowDown className={className} />;
-    return <ArrowDownUp className={className} />;
-  };
   return (
     <table className="mx-auto">
       <thead>
@@ -25,7 +17,7 @@ const DocumentTable = ({
               >
                 <span className="flex items-center justify-between gap-1">
                   {c.label}
-                  {buildSortIcon(ordering, c.key)}
+                  <SortIcon columnKey={c.key} ordering={ordering} />
                 </span>
               </th>
             );

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { buildRangeSelectionIds } from "../../logic/layout/useSelection";
 import { useScroll } from "../../logic/layout/useScroll";
+import { SortIcon } from "../ui/SortIcon";
 
 const ContentEditInput = ({
   data: { wordId, content, inputSize } = {},
@@ -49,9 +50,11 @@ const ViewerTable = ({
     shiftSelectionStartId,
     scrollTargetId,
     isEditMode,
+    wordSort,
   } = {},
   actions: {
     changeContentDraftById,
+    toggleWordSort,
     hover,
     clearHovered,
     replaceSelection,
@@ -60,6 +63,10 @@ const ViewerTable = ({
     addSelectionRange,
   } = {},
 }) => {
+  const ordering = wordSort
+    ? `${wordSort.order === "desc" ? "-" : ""}${wordSort.key}`
+    : "";
+
   // edit中のinputの幅は事前に固定値を取る
   const maxContentLength = Math.max(
     20,
@@ -79,15 +86,19 @@ const ViewerTable = ({
   });
 
   return (
-    <table ref={rootRef}>
+    <table ref={rootRef} className="min-w-full">
       <thead>
         <tr>
           {columns.map((column) => (
             <th
               key={column.key}
-              className="border border-gray-400 px-1 text-left"
+              className="cursor-pointer border border-gray-400 px-1 text-left hover:bg-gray-200"
+              onClick={() => toggleWordSort(column.key)}
             >
-              {column.label}
+              <span className="flex items-center justify-between gap-1 whitespace-nowrap">
+                {column.label}
+                <SortIcon columnKey={column.key} ordering={ordering} />
+              </span>
             </th>
           ))}
         </tr>
