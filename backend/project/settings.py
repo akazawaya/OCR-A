@@ -13,17 +13,10 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-ALLOWED_HOSTS = os.environ["DJANGO_ALLOWED_HOSTS"].split()
-
-
+# os.environは環境変数をすべて文字列として返すため、
+# true/falseを単に渡してもbooleanとして認識されない。
+# 以下は環境変数の値true/falseををboolenに変換するための関数
 def env_bool(name, default=False):
     if name not in os.environ:
         return default
@@ -37,6 +30,29 @@ def env_bool(name, default=False):
         return False
     raise ValueError(f"{name} must be 'true' or 'false', got {value!r}")
 
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = env_bool("DJANGO_DEBUG", False)
+ALLOWED_HOSTS = os.environ["DJANGO_ALLOWED_HOSTS"].split()
+
+# falseではlocalhostログインが可能となる
+SESSION_COOKIE_SECURE = not DEBUG
+
+# CSRF対策用のcsrftoken
+# falseならブラウザはcsrftoken CookieをHTTPS通信だけでなく、HTTPでも許容する
+CSRF_COOKIE_SECURE = not DEBUG
+
+# リクエストのX-Forwarded-Protoヘッダーがhttpsなら、元の通信をHTTPSとして扱う
+SECURE_PROXY_SSL_HEADER = (
+    "HTTP_X_FORWARDED_PROTO",  # どのヘッダーを見るか
+    "https",  # その値が何ならHTTPSと判断するか
+)
 
 CELERY_BROKER_URL = os.environ["CELERY_BROKER_URL"]
 CELERY_TASK_DEFAULT_QUEUE = "ocr_document_queue"
@@ -79,6 +95,24 @@ PREVIEW_WORD_OCR_CACHE_TIMEOUT_SECONDS = 60 * 10
 ENABLE_GPU_WORKER_AUTOSTART = env_bool("ENABLE_GPU_WORKER_AUTOSTART", False)
 ENABLE_GPU_WORKER_AUTOSTOP = env_bool("ENABLE_GPU_WORKER_AUTOSTOP", False)
 ENABLE_S3_STORAGE = env_bool("ENABLE_S3_STORAGE", False)
+
+if ENABLE_S3_STORAGE:
+    STORAGES = {
+        # Document.fileやPage.imageはS3へ保存する
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+        },
+        # Django AdminのCSS・JSはSTATIC_ROOTへ集約する
+        "staticfiles": {
+            "BACKEND": ("django.contrib.staticfiles.storage.StaticFilesStorage"),
+        },
+    }
+    AWS_STORAGE_BUCKET_NAME = os.environ["AWS_STORAGE_BUCKET_NAME"]
+    AWS_S3_REGION_NAME = os.environ["AWS_S3_REGION_NAME"]
+    # AWS_QUERYSTRING_AUTH S3ファイルURLに 署名付きクエリ文字列を付ける
+    # Trueだと 非公開S3オブジェクトURLを一時的に読める
+    AWS_QUERYSTRING_AUTH = True
+
 
 ENABLE_AWS_INFRASTRUCTURE = ENABLE_S3_STORAGE or ENABLE_GPU_WORKER_AUTOSTART
 if ENABLE_AWS_INFRASTRUCTURE:
@@ -222,23 +256,19 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = "static/"
 
+STATIC_ROOT = BASE_DIR / "static"
+# デプロイ時にcollectstaticがDjangoの静的ファイルを集約する出力先ディレクトリ
+# DEBUG=Trueの場合、project/urls.pyが代わりにDjango経由でstaticファイル、
+# （AdminのCSS/JSなど）を配信するため、STATIC_ROOTが無視される点に注意
+STATIC_URL = "/static/"
+# ブラウザ側のCSS・JS・画像要求先URL
+
+# mediaは運用中に増減するユーザーデータ
+# これはDEBUG=...ではなく、ENABLE_S3_STORAGE環境変数でコントロールする
+# S3有効時はFileField/ImageFieldがS3ストレージを使用するため、使用されない。
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
-
-if ENABLE_S3_STORAGE:
-    STORAGES = {
-        "default": {
-            "BACKEND": "storages.backends.s3.S3Storage",
-        },
-    }
-    AWS_STORAGE_BUCKET_NAME = os.environ["AWS_STORAGE_BUCKET_NAME"]
-    AWS_S3_REGION_NAME = os.environ["AWS_S3_REGION_NAME"]
-    # AWS_QUERYSTRING_AUTH S3ファイルURLに 署名付きクエリ文字列を付ける
-    # Trueだと 非公開S3オブジェクトURLを一時的に読める
-    AWS_QUERYSTRING_AUTH = True
-
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
