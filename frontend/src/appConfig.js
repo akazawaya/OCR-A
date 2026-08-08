@@ -1,5 +1,6 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const apiBaseUrl = new URL(API_BASE_URL);
+const apiBaseUrl = new URL(API_BASE_URL, window.location.origin);
+// window.location.originは相対API URLを、現在表示中のサイトを基準に絶対URLへ解決する引数(本番用)
 apiBaseUrl.protocol = apiBaseUrl.protocol === "https:" ? "wss:" : "ws:";
 export const OCR_WS_URL = new URL("/ocr/", apiBaseUrl).toString();
 export const OPENAPI_URL = API_BASE_URL + "schema/";
