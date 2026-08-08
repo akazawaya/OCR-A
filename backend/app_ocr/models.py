@@ -57,7 +57,24 @@ class State(models.IntegerChoices):
                 return ext.value
 
 
-class UserManager(BaseUserManager):
+def delete_files_for_documents(documents):
+    for document in list(documents):
+        prefix = build_document_storage_prefix(document.id)
+        delete_document_files(document, prefix)
+
+
+# adminでのUser消去時(QuerySet.delete())のdocument.fileの削除
+class UserQuerySet(models.QuerySet):
+    def delete(self):
+        documents = Document.objects.using(self.db).filter(owner__in=self)
+        delete_files_for_documents(documents)
+        return super().delete()
+
+    delete.alters_data = True
+    delete.queryset_only = True
+
+
+class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
     use_in_migrations = True
 
     def create_user(self, email, password=None, **extra_fields):
@@ -85,19 +102,39 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
+    # User.delete時のdocument.fileの削除
+    # CASCADE時の削除ロジックのCollecterはオーバーライド介入が想定されていないため、
+    # delete_files_for_documents関数を伴うようにして削除する
+    def delete(self, *args, **kwargs):
+        delete_files_for_documents(self.documents.all())
+        return super().delete(*args, **kwargs)
+
     def __str__(self):
         return self.email
 
 
+# adminでのDocument消去時(QuerySet.delete())のdocument.fileの削除
+class DocumentQuerySet(models.QuerySet):
+    def delete(self):
+        delete_files_for_documents(self)
+        return super().delete()
+
+    delete.alters_data = True
+    delete.queryset_only = True
+
+
 class Document(models.Model):
     owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="documents"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="documents",
     )
     id = models.BigAutoField(primary_key=True)
 
+    objects = DocumentQuerySet.as_manager()
+
     # Document.deleteの実行時、保存ファイルも削除するためのオーバーライド
     # DRFの削除デフォルトは instance.delete() 経由のため、通常のAPIではこれを通る。
-    # QuerySet.delete() はこのオーバーライドを通らないため注意。
     def delete(self, *args, **kwargs):
         prefix = build_document_storage_prefix(self.id)
         delete_document_files(self, prefix)

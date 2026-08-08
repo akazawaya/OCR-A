@@ -133,12 +133,14 @@ def document_factory(db, settings, tmp_path, dummy_file_factory):
             content_type=DEFAULT_UPLOAD_CONTENT_TYPE,
         )
 
-        return Document.objects.create(
+        document = Document.objects.create(
             owner=owner,
-            file=upload_file,
             file_name=file_name,
             file_type=file_type,
         )
+        # 本番のDocumentSerializerと同様、ID確定後にファイルを保存する。
+        document.file.save(upload_file.name, upload_file, save=True)
+        return document
 
     return make_document
 
