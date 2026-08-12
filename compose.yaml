@@ -27,9 +27,13 @@ x-worker-common: &worker_common
 
 services:
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      target: ${FRONTEND_BUILD_TARGET}
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
     ports:
-      - "5173:5173"
+      - "${FRONTEND_HOST_PORT}:${FRONTEND_CONTAINER_PORT}"
     develop:
       watch:
         - action: sync
@@ -44,9 +48,8 @@ services:
           path: ./frontend/package-lock.json
     environment:
       VITE_API_BASE_URL: ${VITE_API_BASE_URL}
-    command:
-      ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
-    
+    command: ${FRONTEND_COMMAND}
+  
   backend:
     build: ./backend
     depends_on:
