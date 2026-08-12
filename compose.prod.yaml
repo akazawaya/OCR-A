@@ -1,0 +1,22 @@
+# 本番マルチビルド、配信用の上書き設定
+services:
+  frontend:
+    volumes:
+      # NginxからDjango AdminのCSS/JSを読み取る。
+      - django_static:/var/www/django-static:ro
+
+  backend:
+    # NginxからCompose内部ネットワーク経由でのみ接続するため、
+    # 元のcomposeのポートを上書きして閉じる
+    ports: !reset []
+    # 一方で、Unicornによる内部通信を続投する場合、
+    # backendコンテナが内部通信用に8000番を使用することは続投で良い
+    expose:
+      - "8000"
+    restart: unless-stopped
+    volumes:
+      # collectstaticの出力先。project/settings.pyのSTATIC_ROOTと一致させる。
+      - django_static:/app/static
+
+volumes:
+  django_static:
