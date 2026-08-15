@@ -1,4 +1,4 @@
-# 本番マルチビルド、配信用の上書き設定
+# 本番環境用の上書き設定
 services:
   frontend:
     volumes:
@@ -17,6 +17,33 @@ services:
     volumes:
       # collectstaticの出力先。project/settings.pyのSTATIC_ROOTと一致させる。
       - django_static:/app/static
+    # 本番では外部RDS・ElastiCacheを使用
+    depends_on: !reset []
+
+  worker_ocr_shared:
+    depends_on: !reset []
+
+  worker_document:
+    depends_on: !reset []
+
+  worker_preview_word:
+    depends_on: !reset []
+
+  worker_gpu_autostop:
+    depends_on: !reset []
+
+  celery_beat:
+    depends_on: !reset []
+
+  # CD時の docker compose up でローカル用DB・Brokerを無視する。
+  # local-infrastructure プロファイルに所属させ、これを呼ばないことで無視する
+  db:
+    profiles:
+      - local-infrastructure
+
+  broker:
+    profiles:
+      - local-infrastructure
 
 volumes:
   django_static:
