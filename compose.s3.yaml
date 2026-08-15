@@ -10,6 +10,10 @@ services:
     environment:
       <<: *s3_env
 
+  worker_ocr_shared:
+    environment:
+      <<: *s3_env
+
   worker_document:
     environment:
       <<: *s3_env

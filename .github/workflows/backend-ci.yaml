@@ -25,6 +25,8 @@ jobs:
       POSTGRES_HOST: ${{ vars.POSTGRES_HOST }}
       POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
       VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+      
+      COMPOSE_PROFILES: ${{ vars.COMPOSE_PROFILES }}
       CELERY_BROKER_URL: ${{ vars.CELERY_BROKER_URL }}
       CHANNEL_REDIS_URL: ${{ vars.CHANNEL_REDIS_URL }}
       CACHE_REDIS_URL: ${{ vars.CACHE_REDIS_URL }}

@@ -74,8 +74,30 @@ services:
     command:
       ["/app/.venv/bin/python", "-m", "uvicorn", "project.asgi:application", "--host", "0.0.0.0", "--port", "8000"]
 
+  worker_ocr_shared:
+    <<: *worker_common
+    profiles:
+      - ocr-shared
+    command:
+      [
+        "/app/.venv/bin/python",
+        "-m",
+        "celery",
+        "-A",
+        "project.celery:app",
+        "worker",
+        "-l",
+        "INFO",
+        "-Q",
+        "ocr_document_queue,ocr_word_queue",
+        "--concurrency",
+        "1",
+      ]
+
   worker_document:
     <<: *worker_common
+    profiles:
+      - ocr-dedicated
     command:
       [
         "/app/.venv/bin/python",
@@ -91,9 +113,11 @@ services:
         "--concurrency",
         "1",
       ]
-      
+
   worker_preview_word:
     <<: *worker_common
+    profiles:
+      - ocr-dedicated
     command:
       [
         "/app/.venv/bin/python",

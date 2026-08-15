@@ -8,6 +8,10 @@ services:
     environment:
       <<: *elasticache_env
 
+  worker_ocr_shared:
+    environment:
+      <<: *elasticache_env
+
   worker_document:
     environment:
       <<: *elasticache_env
