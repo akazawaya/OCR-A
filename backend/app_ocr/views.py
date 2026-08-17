@@ -1,5 +1,4 @@
-from uuid import uuid4
-
+from celery import states as celery_states
 from django.conf import settings
 from django.contrib.auth import (
     authenticate,
@@ -34,10 +33,6 @@ from app_ocr.serializers import (
 )
 from app_ocr.service.document import create_pages_from_document_file
 from app_ocr.service.gpu_worker.worker_instance import ensure_gpu_worker_running
-from app_ocr.service.preview_word_ocr_cache import (
-    get_preview_word_ocr_job,
-    set_preview_word_ocr_job,
-)
 from app_ocr.storage import (
     build_document_storage_prefix,
     delete_document_files,
@@ -49,6 +44,14 @@ from app_ocr.tasks import (
 )
 
 User = get_user_model()
+
+# Celeryの状態名をmodelsでのstateに変換する辞書
+CELERY_TO_OCR_STATE = {
+    celery_states.PENDING: State.QUEUED,
+    celery_states.STARTED: State.PROCESSING,
+    celery_states.SUCCESS: State.SUCCESS,
+    celery_states.FAILURE: State.FAILED,
+}
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -273,22 +276,14 @@ class WordViewSet(viewsets.ModelViewSet):
     def ocr(self, request):
         serializer = PreviewWordOcrRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        preview_job_id = str(uuid4())
-        set_preview_word_ocr_job(
-            preview_job_id,
-            {
-                "state": State.QUEUED,
-                **serializer.validated_data,
-            },
-        )
         if settings.ENABLE_GPU_WORKER_AUTOSTART:
             ensure_gpu_worker_running("worker_preview_word")
-        ocr_word_task.apply_async(
-            args=[preview_job_id],
+        task_result = ocr_word_task.apply_async(
+            kwargs=serializer.validated_data,
             queue="ocr_word_queue",
         )
         return Response(
-            {"preview_job_id": preview_job_id},
+            {"preview_job_id": task_result.id},
             status=status.HTTP_202_ACCEPTED,
         )
 
@@ -297,13 +292,19 @@ class WordViewSet(viewsets.ModelViewSet):
         methods=["get"],
         url_path=r"ocr/(?P<preview_job_id>[^/.]+)",
     )
-    def ocr_result(self, request, preview_job_id=None):
-        job = get_preview_word_ocr_job(preview_job_id)
-        if job is None:
-            return Response(
-                {"detail": "preview OCR job not found or expired."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        serializer = PreviewWordOcrJobResultSerializer(data=job)
+    def ocr_result(self, request, preview_job_id):
+        task_result = ocr_word_task.AsyncResult(preview_job_id)
+        result = {
+            "state": CELERY_TO_OCR_STATE.get(
+                task_result.state,
+                State.PROCESSING,
+            ),
+        }
+        if task_result.successful():
+            result.update(task_result.result)
+        elif task_result.failed():
+            result["error_message"] = str(task_result.result)
+
+        serializer = PreviewWordOcrJobResultSerializer(data=result)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.validated_data)

@@ -261,28 +261,8 @@ class TestTasks:
         assert doc.state == State.FAILED
         mock_notify.assert_called_once_with()
 
-    def test_ocr_word_task_updates_cache_and_notifies_success(self):
-        cache_snapshots = []
-
-        def record_cache_update(preview_job_id, payload):
-            cache_snapshots.append((preview_job_id, payload.copy()))
-
+    def test_ocr_word_task_returns_result(self):
         with (
-            patch(
-                "app_ocr.tasks.get_preview_word_ocr_job",
-                return_value={
-                    "state": State.QUEUED,
-                    "mode": "rewrite_content",
-                    "preview_id": "preview:1",
-                    "doc": 1,
-                    "page_number": 2,
-                    "bbox": [1, 1, 20, 12],
-                },
-            ),
-            patch(
-                "app_ocr.tasks.set_preview_word_ocr_job",
-                side_effect=record_cache_update,
-            ),
             patch(
                 "app_ocr.tasks.run_ocr_for_bbox",
                 return_value=[
@@ -293,78 +273,74 @@ class TestTasks:
                     }
                 ],
             ) as mock_run_ocr_for_bbox,
-            patch("app_ocr.tasks.notify_preview_word_ocr_changed") as mock_notify,
         ):
-            ocr_word_task("preview-job-1")
+            result = ocr_word_task.run(
+                mode="rewrite_content",
+                preview_id="preview:1",
+                doc=1,
+                page_number=2,
+                bbox=[1, 1, 20, 12],
+            )
 
         mock_run_ocr_for_bbox.assert_called_once_with(
             document_id=1,
             page_number=2,
             bbox=[1, 1, 20, 12],
         )
-        assert cache_snapshots[0] == (
-            "preview-job-1",
-            {
-                "state": State.PROCESSING,
-                "mode": "rewrite_content",
-                "preview_id": "preview:1",
-                "doc": 1,
-                "page_number": 2,
-                "bbox": [1, 1, 20, 12],
-            },
-        )
-        assert cache_snapshots[1][0] == "preview-job-1"
-        assert cache_snapshots[1][1]["state"] == State.SUCCESS
-        assert cache_snapshots[1][1]["content"] == "bbox text"
-        mock_notify.assert_called_once_with("preview-job-1", State.SUCCESS)
+        assert result == {
+            "mode": "rewrite_content",
+            "preview_id": "preview:1",
+            "content": "bbox text",
+        }
 
-    def test_ocr_word_task_updates_cache_and_notifies_failure(self):
-        cache_snapshots = []
-
-        def record_cache_update(preview_job_id, payload):
-            cache_snapshots.append((preview_job_id, payload.copy()))
-
-        with (
-            patch(
-                "app_ocr.tasks.get_preview_word_ocr_job",
-                return_value={
-                    "state": State.QUEUED,
-                    "mode": "replace_words",
-                    "preview_id": "preview:1",
-                    "doc": 1,
-                    "page_number": 2,
-                    "bbox": [1, 1, 20, 12],
-                },
-            ),
-            patch(
-                "app_ocr.tasks.set_preview_word_ocr_job",
-                side_effect=record_cache_update,
-            ),
-            patch(
-                "app_ocr.tasks.run_ocr_for_bbox",
-                side_effect=RuntimeError("ocr failed"),
-            ),
-            patch("app_ocr.tasks.notify_preview_word_ocr_changed") as mock_notify,
+    def test_ocr_word_task_reraises_failure(self):
+        with patch(
+            "app_ocr.tasks.run_ocr_for_bbox",
+            side_effect=RuntimeError("ocr failed"),
         ):
             with pytest.raises(RuntimeError):
-                ocr_word_task("preview-job-1")
+                ocr_word_task.run(
+                    mode="replace_words",
+                    preview_id="preview:1",
+                    doc=1,
+                    page_number=2,
+                    bbox=[1, 1, 20, 12],
+                )
 
-        assert cache_snapshots[-1][1]["state"] == State.FAILED
-        assert cache_snapshots[-1][1]["error_message"] == "ocr failed"
+    def test_ocr_word_task_success_hook_notifies(self):
+        with patch("app_ocr.tasks.notify_preview_word_ocr_changed") as mock_notify:
+            ocr_word_task.on_success(
+                retval={},
+                task_id="preview-job-1",
+                args=(),
+                kwargs={},
+            )
+
+        mock_notify.assert_called_once_with("preview-job-1", State.SUCCESS)
+
+    def test_ocr_word_task_failure_hook_notifies(self):
+        with patch("app_ocr.tasks.notify_preview_word_ocr_changed") as mock_notify:
+            ocr_word_task.on_failure(
+                exc=RuntimeError("ocr failed"),
+                task_id="preview-job-1",
+                args=(),
+                kwargs={},
+                einfo=None,
+            )
+
         mock_notify.assert_called_once_with("preview-job-1", State.FAILED)
 
 
 @pytest.mark.django_db
-class TestOcrApi:
-    def test_ocr_creates_cache_job_and_dispatches_task(
+class TestPreviewWordOcrApi:
+    def test_ocr_dispatches_task_and_returns_celery_task_id(
         self,
         authenticated_client,
     ):
-        with (
-            patch("app_ocr.views.uuid4", return_value="preview-job-1"),
-            patch("app_ocr.views.set_preview_word_ocr_job") as mock_set_job,
-            patch("app_ocr.views.ocr_word_task.apply_async") as mock_apply_async,
-        ):
+        with patch(
+            "app_ocr.views.ocr_word_task.apply_async",
+            return_value=SimpleNamespace(id="preview-job-1"),
+        ) as mock_apply_async:
             response = authenticated_client.post(
                 reverse("word-ocr"),
                 {
@@ -379,31 +355,31 @@ class TestOcrApi:
 
         assert response.status_code == 202
         assert response.data == {"preview_job_id": "preview-job-1"}
-        mock_set_job.assert_called_once_with(
-            "preview-job-1",
-            {
-                "state": State.QUEUED,
+        mock_apply_async.assert_called_once_with(
+            kwargs={
                 "mode": "rewrite_content",
                 "preview_id": "preview:1",
                 "doc": 1,
                 "page_number": 2,
                 "bbox": [1, 1, 20, 12],
             },
-        )
-        mock_apply_async.assert_called_once_with(
-            args=["preview-job-1"],
             queue="ocr_word_queue",
         )
 
-    def test_ocr_result_returns_cached_job(self, authenticated_client):
-        with patch(
-            "app_ocr.views.get_preview_word_ocr_job",
-            return_value={
-                "state": State.SUCCESS,
+    def test_ocr_result_returns_successful_task_result(self, authenticated_client):
+        task_result = SimpleNamespace(
+            state="SUCCESS",
+            result={
                 "mode": "rewrite_content",
                 "preview_id": "preview:1",
                 "content": "bbox text",
             },
+            successful=Mock(return_value=True),
+            failed=Mock(return_value=False),
+        )
+        with patch(
+            "app_ocr.views.ocr_word_task.AsyncResult",
+            return_value=task_result,
         ):
             response = authenticated_client.get(
                 reverse(
@@ -416,8 +392,17 @@ class TestOcrApi:
         assert response.data["state"] == State.SUCCESS
         assert response.data["content"] == "bbox text"
 
-    def test_ocr_result_returns_404_when_cache_expired(self, authenticated_client):
-        with patch("app_ocr.views.get_preview_word_ocr_job", return_value=None):
+    def test_ocr_result_returns_failed_task_error(self, authenticated_client):
+        task_result = SimpleNamespace(
+            state="FAILURE",
+            result=RuntimeError("ocr failed"),
+            successful=Mock(return_value=False),
+            failed=Mock(return_value=True),
+        )
+        with patch(
+            "app_ocr.views.ocr_word_task.AsyncResult",
+            return_value=task_result,
+        ):
             response = authenticated_client.get(
                 reverse(
                     "word-ocr-result",
@@ -425,7 +410,11 @@ class TestOcrApi:
                 )
             )
 
-        assert response.status_code == 404
+        assert response.status_code == 200
+        assert response.data == {
+            "state": State.FAILED,
+            "error_message": "ocr failed",
+        }
 
 
 class TestConsumer:

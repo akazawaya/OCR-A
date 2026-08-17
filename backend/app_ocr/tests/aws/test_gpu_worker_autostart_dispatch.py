@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -59,11 +60,12 @@ def test_word_ocr_ensures_gpu_worker_before_dispatching_task(
 ):
     settings.ENABLE_GPU_WORKER_AUTOSTART = True
     call_order = Mock()
-    # previewWord-ocrの書込みはredis-cache内でありロールバック不可のため、
-    # こちらはdjango_capture_on_commit_callbacksが不要。
+
+    def dispatch(**kwargs):
+        call_order.dispatch(**kwargs)
+        return SimpleNamespace(id="preview-job-1")
+
     with (
-        patch("app_ocr.views.uuid4", return_value="preview-job-1"),
-        patch("app_ocr.views.set_preview_word_ocr_job"),
         patch(
             "app_ocr.views.ensure_gpu_worker_running",
             side_effect=lambda worker_type: call_order.ensure(worker_type),
@@ -71,7 +73,7 @@ def test_word_ocr_ensures_gpu_worker_before_dispatching_task(
         ) as mock_ensure_gpu_worker_running,
         patch(
             "app_ocr.views.ocr_word_task.apply_async",
-            side_effect=lambda **kwargs: call_order.dispatch(**kwargs),
+            side_effect=dispatch,
         ) as mock_apply_async,
     ):
         document = document_factory(
@@ -89,10 +91,10 @@ def test_word_ocr_ensures_gpu_worker_before_dispatching_task(
     assert response.status_code == 202
     mock_ensure_gpu_worker_running.assert_called_once_with("worker_preview_word")
     mock_apply_async.assert_called_once_with(
-        args=["preview-job-1"],
+        kwargs=request_payload,
         queue="ocr_word_queue",
     )
     assert call_order.mock_calls == [
         call.ensure("worker_preview_word"),
-        call.dispatch(args=["preview-job-1"], queue="ocr_word_queue"),
+        call.dispatch(kwargs=request_payload, queue="ocr_word_queue"),
     ]

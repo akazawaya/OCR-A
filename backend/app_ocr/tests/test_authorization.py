@@ -77,7 +77,6 @@ def test_authorization_limits_lists_to_own_resources(
             "word-ocr",
             None,
             [
-                "app_ocr.views.set_preview_word_ocr_job",
                 "app_ocr.views.ocr_word_task.apply_async",
             ],
             "without-word-permission",
@@ -104,7 +103,6 @@ def test_authorization_limits_lists_to_own_resources(
             "word-ocr",
             None,
             [
-                "app_ocr.views.set_preview_word_ocr_job",
                 "app_ocr.views.ocr_word_task.apply_async",
             ],
             "with-word-permission",
@@ -131,7 +129,6 @@ def test_authorization_limits_lists_to_own_resources(
             "word-ocr",
             None,
             [
-                "app_ocr.views.set_preview_word_ocr_job",
                 "app_ocr.views.ocr_word_task.apply_async",
             ],
             "word-admin",
@@ -196,7 +193,10 @@ def test_group_model_permissions_control_ocr_access(
                     stack.enter_context(patch(target, return_value=inspect_file_return))
                 )
             else:
-                mocks.append(stack.enter_context(patch(target)))
+                mock = stack.enter_context(patch(target))
+                if target == "app_ocr.views.ocr_word_task.apply_async":
+                    mock.return_value.id = "preview-job-1"
+                mocks.append(mock)
         response = client.post(
             reverse(url_name),
             request_payload,

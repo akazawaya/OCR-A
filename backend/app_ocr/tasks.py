@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from asgiref.sync import async_to_sync
-from celery import shared_task
+from celery import Task, shared_task
 from channels.layers import get_channel_layer
 from django.conf import settings
 from django.utils import timezone
@@ -14,10 +14,6 @@ from app_ocr.service.gpu_worker.task_checker import (
 )
 from app_ocr.service.gpu_worker.worker_instance import stop_gpu_worker
 from app_ocr.service.ocr import run_ocr_for_bbox, run_ocr_for_page
-from app_ocr.service.preview_word_ocr_cache import (
-    get_preview_word_ocr_job,
-    set_preview_word_ocr_job,
-)
 
 
 def notify_document_changed():
@@ -40,6 +36,14 @@ def notify_preview_word_ocr_changed(preview_job_id, state):
             "state": state,
         },
     )
+
+
+class PreviewWordOcrTask(Task):
+    def on_success(self, retval, task_id, args, kwargs):
+        notify_preview_word_ocr_changed(task_id, State.SUCCESS)
+
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        notify_preview_word_ocr_changed(task_id, State.FAILED)
 
 
 @shared_task
@@ -103,30 +107,26 @@ def ocr_page_task(document_id, page_number):
             notify_document_changed()
 
 
-@shared_task
-def ocr_word_task(preview_job_id):
-    job = get_preview_word_ocr_job(preview_job_id)
-    if job is None:
-        return
-
-    job["state"] = State.PROCESSING
-    set_preview_word_ocr_job(preview_job_id, job)
-    try:
-        words = run_ocr_for_bbox(
-            document_id=job["doc"],
-            page_number=job["page_number"],
-            bbox=job["bbox"],
-        )
-        job["state"] = State.SUCCESS
-        if job["mode"] == "replace_words":
-            job["words"] = words
-        if job["mode"] == "rewrite_content":
-            job["content"] = "".join(word.get("content", "") for word in words)
-        set_preview_word_ocr_job(preview_job_id, job)
-        notify_preview_word_ocr_changed(preview_job_id, job["state"])
-    except Exception as e:
-        job["state"] = State.FAILED
-        job["error_message"] = str(e)
-        set_preview_word_ocr_job(preview_job_id, job)
-        notify_preview_word_ocr_changed(preview_job_id, job["state"])
-        raise
+@shared_task(base=PreviewWordOcrTask)
+def ocr_word_task(
+    *,
+    mode,
+    preview_id,
+    doc,
+    page_number,
+    bbox,
+):
+    words = run_ocr_for_bbox(
+        document_id=doc,
+        page_number=page_number,
+        bbox=bbox,
+    )
+    result = {
+        "mode": mode,
+        "preview_id": preview_id,
+    }
+    if mode == "replace_words":
+        result["words"] = words
+    if mode == "rewrite_content":
+        result["content"] = "".join(word.get("content", "") for word in words)
+    return result
