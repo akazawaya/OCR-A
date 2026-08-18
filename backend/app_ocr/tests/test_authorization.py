@@ -146,8 +146,7 @@ def test_group_model_permissions_control_ocr_access(
     page_factory,
     dummy_file_factory,
     preview_word_ocr_request_factory,
-    settings,
-    tmp_path,
+    isolated_media_storage,
     url_name,
     payload,
     patch_targets,
@@ -170,7 +169,6 @@ def test_group_model_permissions_control_ocr_access(
         is_superuser=is_superuser,
         groups=groups,
     )
-    settings.MEDIA_ROOT = tmp_path
 
     document = None
     if url_name == "word-ocr":

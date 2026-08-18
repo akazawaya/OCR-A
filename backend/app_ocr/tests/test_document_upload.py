@@ -13,10 +13,10 @@ FIXTURE_DIR = Path(__file__).parent / "fixtures"
 pytestmark = pytest.mark.django_db
 
 
-def assert_no_document_upload_resources_remain(tmp_path):
+def assert_no_document_upload_resources_remain(media_root):
     assert Document.objects.count() == 0
     assert Page.objects.count() == 0
-    assert not any(path.is_file() for path in tmp_path.rglob("*"))
+    assert not any(path.is_file() for path in media_root.rglob("*"))
 
 
 # Failedはwithout_ocr,with_ocrの双方でアサートが似通っているため、parametrizeで共通化
@@ -27,10 +27,8 @@ class TestSuccessfulDocumentUpload:
         self,
         uploaded_file_from_fixture_factory,
         authenticated_client,
-        settings,
-        tmp_path,
+        isolated_media_storage,
     ):
-        settings.MEDIA_ROOT = tmp_path
         file = uploaded_file_from_fixture_factory()
         response = authenticated_client.post(
             reverse("document-list"),
@@ -56,10 +54,8 @@ class TestSuccessfulDocumentUpload:
         uploaded_file_from_fixture_factory,
         authenticated_client,
         django_capture_on_commit_callbacks,
-        settings,
-        tmp_path,
+        isolated_media_storage,
     ):
-        settings.MEDIA_ROOT = tmp_path
         file = uploaded_file_from_fixture_factory()
         with (
             patch("app_ocr.views.notify_document_changed"),
@@ -92,10 +88,8 @@ class TestFailedDocumentUpload:
         dummy_file_factory,
         authenticated_client,
         route_name,
-        settings,
-        tmp_path,
+        isolated_media_storage,
     ):
-        settings.MEDIA_ROOT = tmp_path
         file = dummy_file_factory("test.txt", "text/plain")
 
         with patch("app_ocr.views.dispatch_ocr_pages_task.delay") as mock_dispatch:
@@ -106,7 +100,7 @@ class TestFailedDocumentUpload:
             )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert_no_document_upload_resources_remain(tmp_path)
+        assert_no_document_upload_resources_remain(isolated_media_storage)
         mock_dispatch.assert_not_called()
 
     @pytest.mark.parametrize(
@@ -123,10 +117,8 @@ class TestFailedDocumentUpload:
         authenticated_client,
         route_name,
         patch_target,
-        settings,
-        tmp_path,
+        isolated_media_storage,
     ):
-        settings.MEDIA_ROOT = tmp_path
         file = uploaded_file_from_fixture_factory()
 
         with patch(patch_target, side_effect=RuntimeError("forced failure")):
@@ -137,4 +129,4 @@ class TestFailedDocumentUpload:
                     format="multipart",
                 )
 
-        assert_no_document_upload_resources_remain(tmp_path)
+        assert_no_document_upload_resources_remain(isolated_media_storage)

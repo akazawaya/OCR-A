@@ -218,11 +218,8 @@ def test_anonymous_cannot_access_protected_api(
     payload_kind,
     format_,
     patch_target,
-    settings,
-    tmp_path,
+    isolated_media_storage,
 ):
-    settings.MEDIA_ROOT = tmp_path
-
     if payload_kind == "document_upload":
         payload = {"file": dummy_file_factory()}
     elif payload_kind == "preview_word_ocr":

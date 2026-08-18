@@ -10,11 +10,10 @@ def test_ocr_ensures_gpu_worker_before_dispatching_pages(
     authenticated_client,
     django_capture_on_commit_callbacks,
     dummy_file_factory,
+    isolated_media_storage,
     settings,
-    tmp_path,
 ):
     settings.ENABLE_GPU_WORKER_AUTOSTART = True
-    settings.MEDIA_ROOT = tmp_path
     call_order = Mock()
     # document-ocrのみ内部でのdb書込みを伴うため、transaction コールバックの順序を検証。
     # django_capture_on_commit_callbacksにより、
