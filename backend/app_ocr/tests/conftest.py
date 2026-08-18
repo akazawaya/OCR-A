@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -80,6 +81,16 @@ def uploaded_file_from_fixture_factory():
         )
 
     return make_uploaded_file_from_fixture
+
+
+# test中にmediaFileを差し替え、確実にテスト終了後に消えるようにする
+# TemporaryDirectoryはwithを抜けるときにcleanup()を呼ぶため、自動で消える
+@pytest.fixture
+def isolated_media_storage(settings):
+    with TemporaryDirectory(prefix="restocr-test-media-") as directory:
+        media_root = Path(directory)
+        settings.MEDIA_ROOT = media_root
+        yield media_root
 
 
 @pytest.fixture
@@ -170,8 +181,7 @@ def authenticated_client(user_client_factory, group_factory):
 @pytest.fixture
 def document_factory(
     db,
-    settings,
-    tmp_path,
+    isolated_media_storage,
     uploaded_file_from_fixture_factory,
     user_factory,
 ):
@@ -186,7 +196,6 @@ def document_factory(
         file_type=DEFAULT_DOCUMENT_FILE_TYPE,
         total_pages=DEFAULT_DOCUMENT_TOTAL_PAGES,
     ):
-        settings.MEDIA_ROOT = tmp_path
 
         if owner is GENERATE_DEFAULT:
             owner = user_factory(

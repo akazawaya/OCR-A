@@ -1,28 +1,22 @@
-import json
-from pathlib import Path
-from types import SimpleNamespace
-from unittest.mock import Mock, call, patch
+from unittest.mock import patch
 
 import cv2
 import numpy as np
 import pytest
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.urls import reverse
+from rest_framework import status
+from rest_framework.test import APIClient
 
-from app_ocr.consumers import OcrProgressConsumer
 from app_ocr.etc.tools import inspect_file, render_page
-from app_ocr.etc.yomitoku_adapter import get_engine, init_engine, yomitoku_ocr
-from app_ocr.models import Direction, Document, FileType, Page, State, Word
-from app_ocr.service.ocr import run_ocr_for_bbox, run_ocr_for_page
-from app_ocr.tasks import (
-    dispatch_ocr_pages_task,
-    notify_document_changed,
-    notify_preview_word_ocr_changed,
-    ocr_page_task,
-    ocr_word_task,
-)
-from app_ocr.tests.conftest import DEFAULT_EMAIL
+from app_ocr.models import Document, State
+from app_ocr.tasks import ocr_word_task
 
-FIXTURE_DIR = Path(__file__).parent / "fixtures"
+
+@pytest.fixture
+def api_client():
+    return APIClient()
 
 
 # AWSのOCR推論用EC2を起動するための有効化引数をOFF
@@ -30,6 +24,21 @@ FIXTURE_DIR = Path(__file__).parent / "fixtures"
 @pytest.fixture(autouse=True)
 def disable_gpu_worker_autostart(settings):
     settings.ENABLE_GPU_WORKER_AUTOSTART = False
+
+
+@pytest.fixture(autouse=True)
+def synchronous_celery_and_inmemory_channels(settings):
+    # .delay() .apply_async()でtaskをworkerに積まず即実行する設定
+    # send_task()は例外だが このテストではworkerの動作まで保証しないことを意味する
+    settings.CELERY_TASK_ALWAYS_EAGER = True
+    settings.CELERY_TASK_EAGER_PROPAGATES = True
+
+    # Redisを使い回すと実DBを汚す恐れがあるため。代わりのChannelを導入
+    settings.CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer",
+        }
+    }
 
 
 """
@@ -123,507 +132,149 @@ class TestRenderPage:
             render_page(file=file, page_number=1, input_ext="txt")
 
 
-class TestTasks:
-    def test_notify_document_changed_sends_group_message(self):
-        with (
-            patch("app_ocr.tasks.get_channel_layer") as mock_get_channel_layer,
-            patch("app_ocr.tasks.async_to_sync") as mock_async_to_sync,
-        ):
-            mock_channel_layer = mock_get_channel_layer.return_value
-            mock_group_send = mock_async_to_sync.return_value
+@pytest.fixture
+def ocr_document(
+    document_factory,
+    uploaded_file_from_fixture_factory,
+):
+    pdf_file = uploaded_file_from_fixture_factory(
+        "sample.pdf",
+        "application/pdf",
+    )
+    _, total_pages = inspect_file(pdf_file)
+    return document_factory(file=pdf_file, total_pages=total_pages)
 
-            notify_document_changed()
 
-        mock_async_to_sync.assert_called_once_with(mock_channel_layer.group_send)
-        mock_group_send.assert_called_once_with(
-            "broadcast",
-            {
-                "type": "document_changed",
-            },
-        )
+# ocrエンジンだけ実物が動かないように差し替える
+# ocr結果はアサートの関心外とする(自由に定義できる返り値mockを確認しても意味がないので)
+@pytest.fixture
+def mock_run_yomitoku_on_rendered_page(
+    uploaded_file_from_fixture_factory,
+):
+    image_file = uploaded_file_from_fixture_factory(
+        "table.jpg",
+        "image/jpeg",
+    )
+    valid_image_bytes = render_page(
+        file=image_file,
+        page_number=1,  # 固定返り値用のbytesを1枚目で使いまわす
+        input_ext="jpg",
+    )
 
-    def test_notify_preview_word_ocr_changed_sends_group_message(self):
-        with (
-            patch("app_ocr.tasks.get_channel_layer") as mock_get_channel_layer,
-            patch("app_ocr.tasks.async_to_sync") as mock_async_to_sync,
-        ):
-            mock_channel_layer = mock_get_channel_layer.return_value
-            mock_group_send = mock_async_to_sync.return_value
-
-            notify_preview_word_ocr_changed(
-                preview_job_id="preview-job-1",
-                state=State.SUCCESS,
-            )
-
-        mock_async_to_sync.assert_called_once_with(mock_channel_layer.group_send)
-        mock_group_send.assert_called_once_with(
-            "broadcast",
-            {
-                "type": "preview_word_ocr_changed",
-                "preview_job_id": "preview-job-1",
-                "state": State.SUCCESS,
-            },
-        )
-
-    @pytest.mark.django_db
-    def test_dispatch_ocr_pages_task_sets_processing_and_dispatches_each_page(
-        self,
-        django_user_model,
+    with patch(
+        "app_ocr.service.ocr._run_yomitoku_on_rendered_page",
+        # returnの代わりにdocument_idに紐づいて、
+        # _run_yomitoku_on_rendered_pageの想定返り値3つを返す関数を副作用として実行
+        side_effect=lambda document_id, page_number, bbox=None: (
+            Document.objects.get(pk=document_id),
+            valid_image_bytes,
+            [],
+        ),
     ):
-        owner = django_user_model.objects.create_user(email=DEFAULT_EMAIL)
-        with (
-            patch("app_ocr.tasks.notify_document_changed") as mock_notify,
-            patch("app_ocr.tasks.ocr_page_task.delay") as mock_delay,
-        ):
-            doc = Document.objects.create(
-                owner=owner,
-                file_name="sample.pdf",
-                file_type=FileType.PDF,
-                total_pages=3,
-            )
+        yield
 
-            dispatch_ocr_pages_task(document_id=doc.id)
 
-        doc.refresh_from_db()
+@pytest.mark.django_db(transaction=True)
+def test_document_ocr_success_notifies_channel(
+    authenticated_client,
+    uploaded_file_from_fixture_factory,
+    isolated_media_storage,
+    mock_run_yomitoku_on_rendered_page,
+    synchronous_celery_and_inmemory_channels,
+):
+    pdf_file = uploaded_file_from_fixture_factory(
+        "sample.pdf",
+        "application/pdf",
+    )
+    channel_layer = get_channel_layer()
+    channel_name = async_to_sync(channel_layer.new_channel)("test")
+    async_to_sync(channel_layer.group_add)("broadcast", channel_name)
 
-        assert doc.state == State.PROCESSING
-        mock_notify.assert_called_once_with()
-        mock_delay.assert_has_calls(
-            [
-                call(doc.id, 1),
-                call(doc.id, 2),
-                call(doc.id, 3),
-            ]
+    try:
+        response = authenticated_client.post(
+            reverse("document-ocr"),
+            data={"file": pdf_file},
+            format="multipart",
         )
-        assert mock_delay.call_count == 3
+        assert response.status_code == status.HTTP_202_ACCEPTED
 
-    @pytest.mark.django_db
-    def test_ocr_page_task_success_when_all_pages_finish(self, django_user_model):
-        owner = django_user_model.objects.create_user(email=DEFAULT_EMAIL)
-        with (
-            patch("app_ocr.tasks.run_ocr_for_page"),
-            patch("app_ocr.tasks.notify_document_changed") as mock_notify,
-        ):
-            doc = Document.objects.create(
-                owner=owner,
-                file_name="sample.pdf",
-                file_type=FileType.PDF,
-                total_pages=2,
-            )
-            page1 = Page.objects.create(doc=doc, page_number=1)
-            page2 = Page.objects.create(doc=doc, page_number=2)
+        # 想定のws通知は３回 Document作成時/PROCESSINGへの更新時/DocumentのSUCCESS更新時
+        messages = [
+            async_to_sync(channel_layer.receive)(channel_name) for _ in range(3)
+        ]
+    finally:
+        async_to_sync(channel_layer.group_discard)("broadcast", channel_name)
 
-            ocr_page_task(document_id=doc.id, page_number=page1.page_number)
+    document = Document.objects.get(pk=response.data["document"]["id"])
+    pages = list(document.pages.order_by("page_number"))
 
-            doc.refresh_from_db()
-            page1.refresh_from_db()
-            page2.refresh_from_db()
-
-            assert page1.state == State.SUCCESS
-            assert page2.state != State.SUCCESS
-            assert doc.state != State.SUCCESS
-            mock_notify.assert_not_called()
-
-            ocr_page_task(document_id=doc.id, page_number=page2.page_number)
-
-        doc.refresh_from_db()
-        page2.refresh_from_db()
-
-        assert page2.state == State.SUCCESS
-        assert doc.state == State.SUCCESS
-        mock_notify.assert_called_once_with()
-
-    @pytest.mark.django_db
-    def test_ocr_page_task_failed_when_run_ocr_raises(self, django_user_model):
-        owner = django_user_model.objects.create_user(email=DEFAULT_EMAIL)
-        with (
-            patch(
-                "app_ocr.tasks.run_ocr_for_page",
-                side_effect=RuntimeError("ocr failed"),
-            ),
-            patch("app_ocr.tasks.notify_document_changed") as mock_notify,
-        ):
-            doc = Document.objects.create(
-                owner=owner,
-                file_name="sample.pdf",
-                file_type=FileType.PDF,
-                total_pages=1,
-            )
-            page = Page.objects.create(doc=doc, page_number=1)
-
-            with pytest.raises(RuntimeError):
-                ocr_page_task(document_id=doc.id, page_number=page.page_number)
-
-        doc.refresh_from_db()
-        page.refresh_from_db()
-
-        assert page.state == State.FAILED
-        assert doc.state == State.FAILED
-        mock_notify.assert_called_once_with()
-
-    def test_ocr_word_task_returns_result(self):
-        with (
-            patch(
-                "app_ocr.tasks.run_ocr_for_bbox",
-                return_value=[
-                    {
-                        "bbox": [[1, 1], [20, 1], [20, 12], [1, 12]],
-                        "content": "bbox text",
-                        "direction": Direction.HORIZONTAL,
-                    }
-                ],
-            ) as mock_run_ocr_for_bbox,
-        ):
-            result = ocr_word_task.run(
-                mode="rewrite_content",
-                preview_id="preview:1",
-                doc=1,
-                page_number=2,
-                bbox=[1, 1, 20, 12],
-            )
-
-        mock_run_ocr_for_bbox.assert_called_once_with(
-            document_id=1,
-            page_number=2,
-            bbox=[1, 1, 20, 12],
-        )
-        assert result == {
-            "mode": "rewrite_content",
-            "preview_id": "preview:1",
-            "content": "bbox text",
-        }
-
-    def test_ocr_word_task_reraises_failure(self):
-        with patch(
-            "app_ocr.tasks.run_ocr_for_bbox",
-            side_effect=RuntimeError("ocr failed"),
-        ):
-            with pytest.raises(RuntimeError):
-                ocr_word_task.run(
-                    mode="replace_words",
-                    preview_id="preview:1",
-                    doc=1,
-                    page_number=2,
-                    bbox=[1, 1, 20, 12],
-                )
-
-    def test_ocr_word_task_success_hook_notifies(self):
-        with patch("app_ocr.tasks.notify_preview_word_ocr_changed") as mock_notify:
-            ocr_word_task.on_success(
-                retval={},
-                task_id="preview-job-1",
-                args=(),
-                kwargs={},
-            )
-
-        mock_notify.assert_called_once_with("preview-job-1", State.SUCCESS)
-
-    def test_ocr_word_task_failure_hook_notifies(self):
-        with patch("app_ocr.tasks.notify_preview_word_ocr_changed") as mock_notify:
-            ocr_word_task.on_failure(
-                exc=RuntimeError("ocr failed"),
-                task_id="preview-job-1",
-                args=(),
-                kwargs={},
-                einfo=None,
-            )
-
-        mock_notify.assert_called_once_with("preview-job-1", State.FAILED)
+    assert document.state == State.SUCCESS
+    assert len(pages) == document.total_pages
+    assert all(page.state == State.SUCCESS for page in pages)
+    assert messages == [
+        {"type": "document_changed"},  # Document作成時
+        {"type": "document_changed"},  # PROCESSINGへの更新時
+        {"type": "document_changed"},  # DocumentのSUCCESS更新時
+    ]
 
 
-@pytest.mark.django_db
-class TestPreviewWordOcrApi:
-    def test_ocr_dispatches_task_and_returns_celery_task_id(
-        self,
-        authenticated_client,
-    ):
-        with patch(
-            "app_ocr.views.ocr_word_task.apply_async",
-            return_value=SimpleNamespace(id="preview-job-1"),
-        ) as mock_apply_async:
-            response = authenticated_client.post(
+@pytest.mark.django_db(transaction=True)
+def test_word_ocr_success_notifies_channel_and_result_can_be_retrieved(
+    authenticated_client,
+    document_factory,
+    page_factory,
+    preview_word_ocr_request_factory,
+    isolated_media_storage,
+    mock_run_yomitoku_on_rendered_page,
+    synchronous_celery_and_inmemory_channels,
+    settings,
+):
+    # eager実行したTaskの状態と返り値をresult backendへ保存する(後半のGET API用)
+    settings.CELERY_TASK_STORE_EAGER_RESULT = True
+
+    document = document_factory(owner=authenticated_client.user)
+    page_factory(doc=document)
+    request_data = preview_word_ocr_request_factory(
+        document=document,
+        mode="replace_words",  # modeの選定には特に理由はない
+    )
+    channel_layer = get_channel_layer()
+    channel_name = async_to_sync(channel_layer.new_channel)("test")
+    async_to_sync(channel_layer.group_add)("broadcast", channel_name)
+    preview_job_id = None
+
+    try:
+        # 前半:OCR(POST) API
+        # Celeryのbind処理(taskの設定初期化)は冒頭のsettings変更より先のため、
+        # API実行時にもtaskを対象にstore_eager_resultの変更を明示する必要がある。
+        with patch.object(ocr_word_task, "store_eager_result", True):
+            post_response = authenticated_client.post(
                 reverse("word-ocr"),
-                {
-                    "mode": "rewrite_content",
-                    "preview_id": "preview:1",
-                    "doc": 1,
-                    "page_number": 2,
-                    "bbox": [1, 1, 20, 12],
-                },
+                data=request_data,
                 format="json",
             )
+        assert post_response.status_code == status.HTTP_202_ACCEPTED
 
-        assert response.status_code == 202
-        assert response.data == {"preview_job_id": "preview-job-1"}
-        mock_apply_async.assert_called_once_with(
-            kwargs={
-                "mode": "rewrite_content",
-                "preview_id": "preview:1",
-                "doc": 1,
-                "page_number": 2,
-                "bbox": [1, 1, 20, 12],
-            },
-            queue="ocr_word_queue",
-        )
-
-    def test_ocr_result_returns_successful_task_result(self, authenticated_client):
-        task_result = SimpleNamespace(
-            state="SUCCESS",
-            result={
-                "mode": "rewrite_content",
-                "preview_id": "preview:1",
-                "content": "bbox text",
-            },
-            successful=Mock(return_value=True),
-            failed=Mock(return_value=False),
-        )
-        with patch(
-            "app_ocr.views.ocr_word_task.AsyncResult",
-            return_value=task_result,
-        ):
-            response = authenticated_client.get(
-                reverse(
-                    "word-ocr-result",
-                    kwargs={"preview_job_id": "preview-job-1"},
-                )
-            )
-
-        assert response.status_code == 200
-        assert response.data["state"] == State.SUCCESS
-        assert response.data["content"] == "bbox text"
-
-    def test_ocr_result_returns_failed_task_error(self, authenticated_client):
-        task_result = SimpleNamespace(
-            state="FAILURE",
-            result=RuntimeError("ocr failed"),
-            successful=Mock(return_value=False),
-            failed=Mock(return_value=True),
-        )
-        with patch(
-            "app_ocr.views.ocr_word_task.AsyncResult",
-            return_value=task_result,
-        ):
-            response = authenticated_client.get(
-                reverse(
-                    "word-ocr-result",
-                    kwargs={"preview_job_id": "preview-job-1"},
-                )
-            )
-
-        assert response.status_code == 200
-        assert response.data == {
-            "state": State.FAILED,
-            "error_message": "ocr failed",
-        }
-
-
-class TestConsumer:
-    def test_connect_accepts_and_joins_broadcast_group(self):
-        consumer = OcrProgressConsumer()
-        consumer.accept = Mock()
-        consumer.channel_layer = Mock()
-        consumer.channel_name = "test-channel"
-
-        with patch("app_ocr.consumers.async_to_sync") as mock_async_to_sync:
-            mock_group_add = mock_async_to_sync.return_value
-            consumer.connect()
-
-        consumer.accept.assert_called_once()
-        assert consumer.group_name == "broadcast"
-        mock_async_to_sync.assert_called_once_with(consumer.channel_layer.group_add)
-        mock_group_add.assert_called_once_with("broadcast", "test-channel")
-
-    def test_disconnect_leaves_broadcast_group(self):
-        consumer = OcrProgressConsumer()
-        consumer.group_name = "broadcast"
-        consumer.channel_layer = Mock()
-        consumer.channel_name = "test-channel"
-
-        with patch("app_ocr.consumers.async_to_sync") as mock_async_to_sync:
-            mock_group_discard = mock_async_to_sync.return_value
-            consumer.disconnect(close_code=1000)
-
-        mock_async_to_sync.assert_called_once_with(consumer.channel_layer.group_discard)
-        mock_group_discard.assert_called_once_with("broadcast", "test-channel")
-
-    # payloadの中身は暫定かつ未使用のため、そこまで深掘りしない
-    def test_document_changed_sends_websocket_message(self):
-        consumer = OcrProgressConsumer()
-        consumer.send = Mock()
-        consumer.document_changed({})
-
-        consumer.send.assert_called_once()
-        sent_payload = json.loads(consumer.send.call_args.kwargs["text_data"])
-
-        assert sent_payload == {"type": "document_changed"}
-
-    def test_preview_word_ocr_changed_sends_websocket_message(self):
-        consumer = OcrProgressConsumer()
-        consumer.send = Mock()
-        consumer.preview_word_ocr_changed(
-            {
-                "preview_job_id": "preview-job-1",
-                "state": "SUCCESS",
-            }
-        )
-
-        consumer.send.assert_called_once()
-        sent_payload = json.loads(consumer.send.call_args.kwargs["text_data"])
-
-        assert sent_payload == {
-            "type": "preview_word_ocr_changed",
-            "preview_job_id": "preview-job-1",
-            "state": "SUCCESS",
-        }
-
-
-@pytest.mark.django_db
-def test_run_ocr_for_page_creates_page_and_words_from_ocr_result(
-    django_user_model, uploaded_file_from_fixture_factory
-):
-    # OCRエンジンを差し替え、OCRインスタンスが呼ばれたかの確認と、
-    # mockの返り値で保存がなされたかを確認
-    owner = django_user_model.objects.create_user(email=DEFAULT_EMAIL)
-    with (
-        patch("app_ocr.service.ocr.get_engine") as mock_get_engine,
-        patch("app_ocr.service.ocr.yomitoku_ocr") as mock_yomitoku_ocr,
-    ):
-        mock_ocr = object()
-        mock_get_engine.return_value = mock_ocr
-        mock_yomitoku_ocr.return_value = [
-            {
-                "points": [[0, 0], [10, 0], [10, 10], [0, 10]],
-                "content": "test",
-                "direction": "horizontal",
-                "rec_score": 0.9,
-                "det_score": 0.8,
-            }
-        ]
-        file = uploaded_file_from_fixture_factory("table.jpg", "image/jpeg")
-        doc = Document.objects.create(
-            owner=owner,
-            file=file,
-            file_name="table.jpg",
-            file_type=FileType.JPG,
-            total_pages=1,
-        )
-
-        result = run_ocr_for_page(document_id=doc.id, page_number=1)
-
-    page = Page.objects.get(doc=doc, page_number=1)
-    word = Word.objects.get(page=page)
-
-    assert result["doc_id"] == doc.id
-    assert result["page_number"] == 1
-    assert result["page_id"] == page.id
-    assert result["word_count"] == 1
-    assert word.content == "test"
-    assert word.rec_score == 0.9
-    assert word.det_score == 0.8
-
-
-@pytest.mark.django_db
-def test_run_ocr_for_bbox_returns_words_without_saving_page_or_words(
-    django_user_model, uploaded_file_from_fixture_factory
-):
-    # 本質ではないが、run_ocr_for_bboxは単体では保存がされないことをアサ―トとする
-    owner = django_user_model.objects.create_user(email=DEFAULT_EMAIL)
-    with (
-        patch("app_ocr.service.ocr.get_engine") as mock_get_engine,
-        patch("app_ocr.service.ocr.yomitoku_ocr") as mock_yomitoku_ocr,
-    ):
-        mock_ocr = object()
-        mock_get_engine.return_value = mock_ocr
-        mock_yomitoku_ocr.return_value = [
-            {
-                "points": [[1, 1], [20, 1], [20, 12], [1, 12]],
-                "content": "bbox text",
-                "direction": "horizontal",
-                "rec_score": 0.95,
-                "det_score": 0.85,
-            }
-        ]
-        file = uploaded_file_from_fixture_factory("table.jpg", "image/jpeg")
-        doc = Document.objects.create(
-            owner=owner,
-            file=file,
-            file_name="table.jpg",
-            file_type=FileType.JPG,
-            total_pages=1,
-        )
-        bbox = [1, 1, 20, 12]
-        result = run_ocr_for_bbox(document_id=doc.id, page_number=1, bbox=bbox)
-
-    # 保存されないため直接返り値をアサ―トする
-    assert result == [
-        {
-            "bbox": [[1, 1], [20, 1], [20, 12], [1, 12]],
-            "content": "bbox text",
-            "direction": Direction.HORIZONTAL,
-            "rec_score": 0.95,
-            "det_score": 0.85,
-        }
-    ]
-    mock_yomitoku_ocr.assert_called_once()
-    kwargs = mock_yomitoku_ocr.call_args.kwargs
-
-    assert kwargs["ocr_instance"] is mock_ocr
-    assert kwargs["bbox"] == bbox
-    assert isinstance(kwargs["img_bytes"], bytes)
-    assert len(kwargs["img_bytes"]) > 0
-
-    assert Page.objects.count() == 0
-    assert Word.objects.count() == 0
-
-
-class TestYomitokuAdapter:
-    def test_init_engine_creates_ocr_with_auto_device(self):
-        with patch("app_ocr.etc.yomitoku_adapter.OCR") as mock_ocr:
-            init_engine()
-        mock_ocr.assert_called_once_with(visualize=False, device="auto")
-
-    def test_get_engine_uses_cached_engine(self):
-        get_engine.cache_clear()
-        with patch("app_ocr.etc.yomitoku_adapter.init_engine") as mock_init_engine:
-            mock_init_engine.return_value = object()
-
-            first = get_engine()
-            second = get_engine()
-
-        assert first is second
-        mock_init_engine.assert_called_once()
-
-        get_engine.cache_clear()
-
-    def test_yomitoku_ocr_returns_word_dicts(self, uploaded_file_from_fixture_factory):
-        file = uploaded_file_from_fixture_factory("table.jpg", "image/jpeg")
-        img_bytes = file.read()
-        word = SimpleNamespace(
-            points=[[0, 0], [10, 0], [10, 10], [0, 10]],
-            content="test",
-            direction="horizontal",
-            det_score=0.8,
-            rec_score=0.9,
-        )
-        ocr_instance = Mock(
-            return_value=(
-                SimpleNamespace(words=[word]),
-                None,
+        preview_job_id = post_response.data["preview_job_id"]
+        assert preview_job_id
+        message = async_to_sync(channel_layer.receive)(channel_name)
+        # 後半:GET API
+        get_response = authenticated_client.get(
+            reverse(
+                "word-ocr-result",
+                kwargs={"preview_job_id": preview_job_id},
             )
         )
-        result = yomitoku_ocr(img_bytes=img_bytes, ocr_instance=ocr_instance)
-        assert result == [
-            {
-                "points": word.points,
-                "content": "test",
-                "direction": "horizontal",
-                "det_score": 0.8,
-                "rec_score": 0.9,
-            }
-        ]
-        ocr_instance.assert_called_once()
+        assert get_response.status_code == status.HTTP_200_OK
+    finally:
+        async_to_sync(channel_layer.group_discard)("broadcast", channel_name)
+        if preview_job_id:
+            # 後処理でresult backendの結果を消す
+            ocr_word_task.AsyncResult(preview_job_id).forget()
 
-    def test_yomitoku_ocr_rejects_invalid_image_bytes(self):
-        ocr_instance = Mock()
-        with pytest.raises(ValueError, match="Invalid image bytes"):
-            yomitoku_ocr(b"not image", ocr_instance)
+    assert message == {
+        "type": "preview_word_ocr_changed",
+        "preview_job_id": preview_job_id,
+        "state": State.SUCCESS,
+    }
+    assert get_response.data["state"] == State.SUCCESS
