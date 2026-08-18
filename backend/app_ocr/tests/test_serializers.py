@@ -6,22 +6,22 @@ from app_ocr.serializers import (
     DocumentUploadSerializer,
     UserCreateSerializer,
 )
-from app_ocr.tests.conftest import DEFAULT_EMAIL, DEFAULT_PASSWORD
+from app_ocr.tests.conftest import DEFAULT_USER_EMAIL, DEFAULT_USER_PASSWORD
 
 
 class TestUserCreateSerializer:
     @pytest.mark.django_db
     def test_rejects_duplicate_email(self):
         get_user_model().objects.create_user(
-            email=DEFAULT_EMAIL,
-            password=DEFAULT_PASSWORD,
+            email=DEFAULT_USER_EMAIL,
+            password=DEFAULT_USER_PASSWORD,
         )
 
         serializer = UserCreateSerializer(
             data={
                 "type": "registered",
-                "email": DEFAULT_EMAIL,
-                "password": DEFAULT_PASSWORD,
+                "email": DEFAULT_USER_EMAIL,
+                "password": DEFAULT_USER_PASSWORD,
             }
         )
 

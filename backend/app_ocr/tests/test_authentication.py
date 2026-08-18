@@ -5,7 +5,11 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from app_ocr.tests.conftest import DEFAULT_EMAIL, DEFAULT_NEW_PASSWORD, DEFAULT_PASSWORD
+from app_ocr.tests.conftest import (
+    DEFAULT_NEW_PASSWORD,
+    DEFAULT_USER_EMAIL,
+    DEFAULT_USER_PASSWORD,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -20,12 +24,12 @@ def api_client():
     return APIClient()
 
 
-def create_user(email=DEFAULT_EMAIL, password=DEFAULT_PASSWORD):
+def create_user(email=DEFAULT_USER_EMAIL, password=DEFAULT_USER_PASSWORD):
     user_model = get_user_model()
     return user_model.objects.create_user(email=email, password=password)
 
 
-def login_user(api_client, user, password=DEFAULT_PASSWORD):
+def login_user(api_client, user, password=DEFAULT_USER_PASSWORD):
     return api_client.post(
         LOGIN_URL,
         {
@@ -53,14 +57,14 @@ def test_create_guest_user_returns_success_and_logs_in(api_client):
 
 
 def test_create_registered_user_returns_success_and_logs_in(api_client):
-    email = DEFAULT_EMAIL
+    email = DEFAULT_USER_EMAIL
 
     response = api_client.post(
         reverse("user-list"),
         {
             "type": "registered",
             "email": email,
-            "password": DEFAULT_PASSWORD,
+            "password": DEFAULT_USER_PASSWORD,
         },
         format="json",
     )
@@ -71,7 +75,7 @@ def test_create_registered_user_returns_success_and_logs_in(api_client):
         "id": user.id,
         "email": email,
     }
-    assert user.check_password(DEFAULT_PASSWORD)
+    assert user.check_password(DEFAULT_USER_PASSWORD)
     assert list(user.groups.all()) == []
     assert api_client.session["_auth_user_id"] == str(user.id)
 
@@ -83,14 +87,14 @@ def test_create_registered_user_rejects_duplicate_email(api_client):
         reverse("user-list"),
         {
             "type": "registered",
-            "email": DEFAULT_EMAIL,
-            "password": DEFAULT_PASSWORD,
+            "email": DEFAULT_USER_EMAIL,
+            "password": DEFAULT_USER_PASSWORD,
         },
         format="json",
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert get_user_model().objects.filter(email=DEFAULT_EMAIL).count() == 1
+    assert get_user_model().objects.filter(email=DEFAULT_USER_EMAIL).count() == 1
     assert "_auth_user_id" not in api_client.session
 
 
@@ -141,7 +145,7 @@ def test_change_password_updates_password_and_keeps_session(api_client):
     response = api_client.post(
         PASSWORD_URL,
         {
-            "current_password": DEFAULT_PASSWORD,
+            "current_password": DEFAULT_USER_PASSWORD,
             "new_password": DEFAULT_NEW_PASSWORD,
             "new_password_confirmation": DEFAULT_NEW_PASSWORD,
         },
@@ -181,7 +185,7 @@ def test_change_password_rejects_wrong_current_password(api_client):
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "current_password" in response.data
-    assert user.check_password(DEFAULT_PASSWORD)
+    assert user.check_password(DEFAULT_USER_PASSWORD)
 
 
 @pytest.mark.parametrize(
