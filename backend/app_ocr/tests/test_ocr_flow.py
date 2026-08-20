@@ -188,7 +188,8 @@ def test_document_ocr_success_notifies_channel(
     )
     channel_layer = get_channel_layer()
     channel_name = async_to_sync(channel_layer.new_channel)("test")
-    async_to_sync(channel_layer.group_add)("broadcast", channel_name)
+    group_name = f"ocr_progress_user_{authenticated_client.user.pk}"
+    async_to_sync(channel_layer.group_add)(group_name, channel_name)
 
     try:
         response = authenticated_client.post(
@@ -203,7 +204,7 @@ def test_document_ocr_success_notifies_channel(
             async_to_sync(channel_layer.receive)(channel_name) for _ in range(3)
         ]
     finally:
-        async_to_sync(channel_layer.group_discard)("broadcast", channel_name)
+        async_to_sync(channel_layer.group_discard)(group_name, channel_name)
 
     document = Document.objects.get(pk=response.data["document"]["id"])
     pages = list(document.pages.order_by("page_number"))
@@ -240,7 +241,8 @@ def test_word_ocr_success_notifies_channel_and_result_can_be_retrieved(
     )
     channel_layer = get_channel_layer()
     channel_name = async_to_sync(channel_layer.new_channel)("test")
-    async_to_sync(channel_layer.group_add)("broadcast", channel_name)
+    group_name = f"ocr_progress_user_{authenticated_client.user.pk}"
+    async_to_sync(channel_layer.group_add)(group_name, channel_name)
     preview_job_id = None
 
     try:
@@ -267,7 +269,7 @@ def test_word_ocr_success_notifies_channel_and_result_can_be_retrieved(
         )
         assert get_response.status_code == status.HTTP_200_OK
     finally:
-        async_to_sync(channel_layer.group_discard)("broadcast", channel_name)
+        async_to_sync(channel_layer.group_discard)(group_name, channel_name)
         if preview_job_id:
             # 後処理でresult backendの結果を消す
             ocr_word_task.AsyncResult(preview_job_id).forget()

@@ -3,12 +3,15 @@ import json
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 
+from app_ocr.channel_groups import get_ocr_progress_group_name
+
 
 class OcrProgressConsumer(WebsocketConsumer):
     def connect(self):
-        self.accept()
-        self.group_name = "broadcast"
+        user = self.scope["user"]
+        self.group_name = get_ocr_progress_group_name(user.pk)
         async_to_sync(self.channel_layer.group_add)(self.group_name, self.channel_name)
+        self.accept()
 
     # close_codeが未使用だが、
     # disconnectはChannels側からdisconnect(self, close_code)の形で呼ばれるので必須

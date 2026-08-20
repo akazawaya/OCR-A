@@ -90,10 +90,19 @@ def test_word_ocr_ensures_gpu_worker_before_dispatching_task(
     assert response.status_code == 202
     mock_ensure_gpu_worker_running.assert_called_once_with("worker_preview_word")
     mock_apply_async.assert_called_once_with(
-        kwargs=request_payload,
+        kwargs={
+            **request_payload,
+            "notification_user_id": authenticated_client.user.pk,
+        },
         queue="ocr_word_queue",
     )
     assert call_order.mock_calls == [
         call.ensure("worker_preview_word"),
-        call.dispatch(kwargs=request_payload, queue="ocr_word_queue"),
+        call.dispatch(
+            kwargs={
+                **request_payload,
+                "notification_user_id": authenticated_client.user.pk,
+            },
+            queue="ocr_word_queue",
+        ),
     ]

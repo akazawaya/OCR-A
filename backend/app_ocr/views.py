@@ -1,3 +1,5 @@
+from functools import partial
+
 from celery import states as celery_states
 from django.conf import settings
 from django.contrib.auth import (
@@ -201,7 +203,10 @@ class DocumentViewSet(viewsets.ModelViewSet):
                 create_pages_from_document_file(document)
                 document.state = State.SUCCESS
                 document.save(update_fields=["state"])
-                transaction.on_commit(notify_document_changed)
+                notify_document_changed_callback = partial(
+                    notify_document_changed, document.owner_id
+                )
+                transaction.on_commit(notify_document_changed_callback)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         # Djangoのトランザクションのロールバックにfileは含まれないため、
@@ -225,13 +230,12 @@ class DocumentViewSet(viewsets.ModelViewSet):
         try:
             with transaction.atomic():
                 document = serializer.save(owner=self.request.user)
-                document_id = document.pk
 
                 def enqueue_document_ocr():
-                    notify_document_changed()
+                    notify_document_changed(document.owner_id)
                     if settings.ENABLE_GPU_WORKER_AUTOSTART:
                         ensure_gpu_worker_running("worker_document")
-                    dispatch_ocr_pages_task.delay(document_id)
+                    dispatch_ocr_pages_task.delay(document.pk)
 
                 transaction.on_commit(enqueue_document_ocr)
             return Response(
@@ -278,8 +282,12 @@ class WordViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         if settings.ENABLE_GPU_WORKER_AUTOSTART:
             ensure_gpu_worker_running("worker_preview_word")
+        task_kwargs = {
+            **serializer.validated_data,
+            "notification_user_id": request.user.pk,
+        }
         task_result = ocr_word_task.apply_async(
-            kwargs=serializer.validated_data,
+            kwargs=task_kwargs,
             queue="ocr_word_queue",
         )
         return Response(
