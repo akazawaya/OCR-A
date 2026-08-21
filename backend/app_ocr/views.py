@@ -56,8 +56,7 @@ CELERY_TO_OCR_STATE = {
 }
 
 
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
+class UserViewSet(viewsets.GenericViewSet):
     serializer_class = UserSerializer
 
     def get_permissions(self):
@@ -157,7 +156,6 @@ class AuthViewSet(viewsets.ViewSet):
 
 
 class DocumentViewSet(viewsets.ModelViewSet):
-    queryset = Document.objects.all()
     serializer_class = DocumentSerializer
     parser_classes = [MultiPartParser, FormParser]
     filter_backends = [DjangoFilterBackend, OrderingFilter]
@@ -251,7 +249,6 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
 
 class PageViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Page.objects.all()
     serializer_class = PageSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["doc"]
@@ -262,7 +259,6 @@ class PageViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class WordViewSet(viewsets.ModelViewSet):
-    queryset = Word.objects.all()
     serializer_class = WordSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["page", "page__doc"]
