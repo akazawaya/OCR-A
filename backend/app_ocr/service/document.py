@@ -19,7 +19,10 @@ def create_pages_from_document_file(document):
                 "doc": document.pk,
                 "image": ContentFile(img_bytes, name=f"{page_number}.png"),
                 "page_number": page_number,
-            }
+            },
+            # UserScopedPrimaryKeyRelatedFieldで所有者検証するため、
+            # document.ownerをcontextへ渡す
+            context={"user": document.owner},
         )
         page_serializer.is_valid(raise_exception=True)
         page_serializer.save()

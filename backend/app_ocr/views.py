@@ -274,7 +274,12 @@ class WordViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated, DjangoModelPermissions],
     )
     def ocr(self, request):
-        serializer = PreviewWordOcrRequestSerializer(data=request.data)
+        serializer = PreviewWordOcrRequestSerializer(
+            data=request.data,
+            # UserScopedPrimaryKeyRelatedFieldで所有者検証するため、
+            # request.userを含むcontextを渡す
+            context=self.get_serializer_context(),
+        )
         serializer.is_valid(raise_exception=True)
         if settings.ENABLE_GPU_WORKER_AUTOSTART:
             ensure_gpu_worker_running("worker_preview_word")

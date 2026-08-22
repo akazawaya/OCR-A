@@ -15,6 +15,32 @@ from app_ocr.input_constraints import (
 from app_ocr.models import Document, Page, State, Word
 
 
+# 各種models用serializerのフィールド宣言時、
+# デシリアライズ用のqueryをuserでfilerする為のオーバーライドFieldを定義
+class UserScopedPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
+    # PrimaryKeyRelatedFieldが独自の設定値user_lookupを受取れるようにするため、
+    # __init__をオーバーライドする
+    # user_lookupには、対象モデルから所有ユーザーまでの
+    # Django ORMルックアップを指定する
+    def __init__(self, *args, user_lookup, **kwargs):
+        self.user_lookup = user_lookup
+        super().__init__(*args, **kwargs)
+
+    # get_querysetをオーバーライドして、querySetを、
+    # 現在のユーザーが所有するオブジェクトだけに制限する
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # HTTPではrequest.user、内部処理ではcontextのuserを使用する
+        request = self.context.get("request")
+        user = getattr(request, "user", self.context.get("user"))
+
+        # userがない場合や未認証の場合は、関連先の指定をすべて拒否する
+        if user is None or not user.is_authenticated:
+            return queryset.none()
+        return queryset.filter(**{self.user_lookup: user})
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
@@ -139,7 +165,10 @@ class DocumentUploadSerializer(serializers.Serializer):
 
 
 class PageSerializer(serializers.ModelSerializer):
-    doc = serializers.PrimaryKeyRelatedField(queryset=Document.objects.all())
+    doc = UserScopedPrimaryKeyRelatedField(
+        queryset=Document.objects.all(),
+        user_lookup="owner",
+    )
 
     class Meta:
         model = Page
@@ -155,7 +184,10 @@ class PageSerializer(serializers.ModelSerializer):
 
 
 class WordSerializer(serializers.ModelSerializer):
-    page = serializers.PrimaryKeyRelatedField(queryset=Page.objects.all())
+    page = UserScopedPrimaryKeyRelatedField(
+        queryset=Page.objects.all(),
+        user_lookup="doc__owner",
+    )
     page__page_number = serializers.IntegerField(
         source="page.page_number", read_only=True
     )
@@ -177,11 +209,22 @@ class WordSerializer(serializers.ModelSerializer):
 
 
 class PreviewWordOcrRequestSerializer(serializers.Serializer):
+    doc = UserScopedPrimaryKeyRelatedField(
+        queryset=Document.objects.all(),
+        user_lookup="owner",
+    )
     mode = serializers.ChoiceField(choices=["replace_words", "rewrite_content"])
     preview_id = serializers.CharField()
-    doc = serializers.IntegerField()
     page_number = serializers.IntegerField(min_value=1)
     bbox = serializers.ListField()
+
+    # PrimaryKeyRelatedFieldによって、入力されたdocの主キーは
+    # 検証時にDocumentインスタンスへ変換される。
+    # 一方、ocr_word_taskのdoc引数は整数の主キーを受け取るため、
+    # docを主キーへ戻してvalidated_dataに格納する必要がある。
+    # validate_<フィールド名>は、DRFが自動実行するフィールド単位の検証フック
+    def validate_doc(self, document):
+        return document.pk
 
 
 class PreviewWordOcrJobResultSerializer(serializers.Serializer):

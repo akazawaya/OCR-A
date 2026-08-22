@@ -32,7 +32,10 @@ def run_ocr_for_page(document_id, page_number):
                 "doc": doc.pk,
                 "image": img_file,
                 "page_number": page_number,
-            }
+            },
+            # UserScopedPrimaryKeyRelatedFieldで所有者検証するため、
+            # doc.ownerをcontextへ渡す
+            context={"user": doc.owner},
         )
         page_serializer.is_valid(raise_exception=True)
         page_instance = page_serializer.save()
@@ -45,7 +48,10 @@ def run_ocr_for_page(document_id, page_number):
                     "direction": Direction.label_to_value(w["direction"]),
                     "rec_score": w["rec_score"],
                     "det_score": w["det_score"],
-                }
+                },
+                # UserScopedPrimaryKeyRelatedFieldで所有者検証するため、
+                # doc.ownerをcontextへ渡す
+                context={"user": doc.owner},
             )
             word_serializer.is_valid(raise_exception=True)
             word_serializer.save()
