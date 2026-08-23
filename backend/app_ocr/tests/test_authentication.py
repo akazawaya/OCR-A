@@ -205,7 +205,7 @@ def test_change_password_rejects_wrong_current_password(api_client):
             "word-ocr",
             "preview_word_ocr",
             "json",
-            "app_ocr.views.ocr_word_task.apply_async",
+            "app_ocr.views.ocr_word_task.delay",
         ),
     ],
 )

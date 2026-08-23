@@ -287,10 +287,7 @@ class WordViewSet(viewsets.ModelViewSet):
             **serializer.validated_data,
             "notification_user_id": request.user.pk,
         }
-        task_result = ocr_word_task.apply_async(
-            kwargs=task_kwargs,
-            queue="ocr_word_queue",
-        )
+        task_result = ocr_word_task.delay(**task_kwargs)
         return Response(
             {"preview_job_id": task_result.id},
             status=status.HTTP_202_ACCEPTED,

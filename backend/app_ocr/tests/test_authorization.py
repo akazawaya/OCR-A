@@ -77,7 +77,7 @@ def test_authorization_limits_lists_to_own_resources(
             "word-ocr",
             None,
             [
-                "app_ocr.views.ocr_word_task.apply_async",
+                "app_ocr.views.ocr_word_task.delay",
             ],
             "without-word-permission",
             False,
@@ -103,7 +103,7 @@ def test_authorization_limits_lists_to_own_resources(
             "word-ocr",
             None,
             [
-                "app_ocr.views.ocr_word_task.apply_async",
+                "app_ocr.views.ocr_word_task.delay",
             ],
             "with-word-permission",
             False,
@@ -129,7 +129,7 @@ def test_authorization_limits_lists_to_own_resources(
             "word-ocr",
             None,
             [
-                "app_ocr.views.ocr_word_task.apply_async",
+                "app_ocr.views.ocr_word_task.delay",
             ],
             "word-admin",
             True,
@@ -192,7 +192,7 @@ def test_group_model_permissions_control_ocr_access(
                 )
             else:
                 mock = stack.enter_context(patch(target))
-                if target == "app_ocr.views.ocr_word_task.apply_async":
+                if target == "app_ocr.views.ocr_word_task.delay":
                     mock.return_value.id = "preview-job-1"
                 mocks.append(mock)
         response = client.post(

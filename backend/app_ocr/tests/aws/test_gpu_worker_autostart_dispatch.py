@@ -71,9 +71,9 @@ def test_word_ocr_ensures_gpu_worker_before_dispatching_task(
             create=True,
         ) as mock_ensure_gpu_worker_running,
         patch(
-            "app_ocr.views.ocr_word_task.apply_async",
+            "app_ocr.views.ocr_word_task.delay",
             side_effect=dispatch,
-        ) as mock_apply_async,
+        ) as mock_delay,
     ):
         document = document_factory(
             owner=authenticated_client.user,
@@ -89,20 +89,14 @@ def test_word_ocr_ensures_gpu_worker_before_dispatching_task(
 
     assert response.status_code == 202
     mock_ensure_gpu_worker_running.assert_called_once_with("worker_preview_word")
-    mock_apply_async.assert_called_once_with(
-        kwargs={
-            **request_payload,
-            "notification_user_id": authenticated_client.user.pk,
-        },
-        queue="ocr_word_queue",
+    mock_delay.assert_called_once_with(
+        **request_payload,
+        notification_user_id=authenticated_client.user.pk,
     )
     assert call_order.mock_calls == [
         call.ensure("worker_preview_word"),
         call.dispatch(
-            kwargs={
-                **request_payload,
-                "notification_user_id": authenticated_client.user.pk,
-            },
-            queue="ocr_word_queue",
+            **request_payload,
+            notification_user_id=authenticated_client.user.pk,
         ),
     ]
