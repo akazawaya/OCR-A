@@ -156,8 +156,13 @@ const DocumentsPage = () => {
 
   useEffect(() => {
     const ws = new WebSocket(OCR_WS_URL);
-    ws.onmessage = () =>
-      queryClient.invalidateQueries({ queryKey: [collectionUrl] });
+    ws.onmessage = (event) => {
+      const payload = JSON.parse(event.data);
+      if (payload.type !== "document_changed") return;
+      queryClient.invalidateQueries({
+        queryKey: [collectionUrl],
+      });
+    };
     return () => ws.close();
   }, [queryClient, collectionUrl]);
 
