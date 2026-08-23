@@ -8,7 +8,11 @@ from app_ocr.channel_groups import get_ocr_progress_group_name
 
 class OcrProgressConsumer(WebsocketConsumer):
     def connect(self):
+        self.group_name = None
         user = self.scope["user"]
+        if not user.is_authenticated:
+            self.close()
+            return
         self.group_name = get_ocr_progress_group_name(user.pk)
         async_to_sync(self.channel_layer.group_add)(self.group_name, self.channel_name)
         self.accept()
@@ -16,6 +20,8 @@ class OcrProgressConsumer(WebsocketConsumer):
     # close_codeが未使用だが、
     # disconnectはChannels側からdisconnect(self, close_code)の形で呼ばれるので必須
     def disconnect(self, close_code):
+        if self.group_name is None:
+            return
         async_to_sync(self.channel_layer.group_discard)(
             self.group_name, self.channel_name
         )
