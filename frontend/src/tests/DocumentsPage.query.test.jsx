@@ -8,128 +8,138 @@ import "@testing-library/jest-dom/vitest";
 import { renderDocumentsPage } from "./DocumentsPage.test-utils";
 
 describe("DocumentsPage query", () => {
-  test("searchQuery:検索条件の絞り込みにより該当データのみDocumentTableに残る", async () => {
-    renderDocumentsPage();
+  describe("searchQuery", () => {
+    test("検索条件の絞り込みにより該当データのみDocumentTableに残る", async () => {
+      renderDocumentsPage();
 
-    const keywordInput = screen.getByRole("textbox");
-    const user = userEvent.setup();
-    await user.type(keywordInput, "beta");
-    await user.click(screen.getByRole("button", { name: "検索" }));
+      const keywordInput = screen.getByRole("textbox");
+      const user = userEvent.setup();
+      await user.type(keywordInput, "beta");
+      await user.click(screen.getByRole("button", { name: "検索" }));
 
-    expect(
-      await screen.findByRole("cell", { name: "beta-report.pdf" }),
-    ).toBeVisible();
-    expect(screen.queryByRole("cell", { name: "alpha-report.pdf" })).toBeNull();
-    expect(screen.queryByRole("cell", { name: "gamma-alpha.pdf" })).toBeNull();
-  });
-
-  test("searchQuery:検索後にリセットすると入力値が初期値に戻る", async () => {
-    renderDocumentsPage();
-
-    const user = userEvent.setup();
-    const keywordInput = screen.getByRole("textbox");
-
-    await user.type(keywordInput, "beta");
-    await user.click(screen.getByLabelText("ファイル名"));
-    await user.click(screen.getByLabelText("完全一致"));
-    await user.click(screen.getByLabelText("AND"));
-    await user.click(screen.getByRole("button", { name: "検索" }));
-
-    expect(screen.getByDisplayValue("beta")).toBeVisible();
-
-    await user.click(screen.getByRole("button", { name: "リセット" }));
-
-    expect(screen.getByRole("textbox")).toHaveValue("");
-    expect(screen.getByLabelText("両方")).toBeChecked();
-    expect(screen.getByLabelText("部分一致")).toBeChecked();
-    expect(screen.getByLabelText("OR")).toBeChecked();
-  });
-
-  test("sortQuery:並び替えがDocumentTableで機能する", async () => {
-    renderDocumentsPage();
-
-    expect(
-      await screen.findByRole("cell", { name: "alpha-report.pdf" }),
-    ).toBeVisible();
-
-    const user = userEvent.setup();
-    await user.click(screen.getByRole("columnheader", { name: /^名前/ }));
-
-    const rows = screen.getAllByRole("row").slice(1);
-    const orderedFileNames = rows.map(
-      (row) => within(row).getAllByRole("cell")[1].textContent,
-    );
-    expect(orderedFileNames).toEqual([
-      "alpha-report.pdf",
-      "beta-report.pdf",
-      "gamma-alpha.pdf",
-    ]);
-
-    await user.click(screen.getByRole("columnheader", { name: /^名前/ }));
-
-    const rowsAfterDesc = screen.getAllByRole("row").slice(1);
-    const descOrderedFileNames = rowsAfterDesc.map(
-      (row) => within(row).getAllByRole("cell")[1].textContent,
-    );
-    expect(descOrderedFileNames).toEqual([
-      "gamma-alpha.pdf",
-      "beta-report.pdf",
-      "alpha-report.pdf",
-    ]);
-  });
-
-  test("sortQuery:同じ列をクリックすると昇順→降順→解除となる", async () => {
-    renderDocumentsPage({
-      initialEntry: "/documents?ordering=created",
+      expect(
+        await screen.findByRole("cell", { name: "beta-report.pdf" }),
+      ).toBeVisible();
+      expect(
+        screen.queryByRole("cell", { name: "alpha-report.pdf" }),
+      ).toBeNull();
+      expect(
+        screen.queryByRole("cell", { name: "gamma-alpha.pdf" }),
+      ).toBeNull();
     });
 
-    expect(
-      await screen.findByRole("cell", { name: "alpha-report.pdf" }),
-    ).toBeVisible();
+    test("検索後にリセットすると入力値が初期値に戻る", async () => {
+      renderDocumentsPage();
 
-    const user = userEvent.setup();
-    await user.click(screen.getByRole("columnheader", { name: /^名前/ }));
+      const user = userEvent.setup();
+      const keywordInput = screen.getByRole("textbox");
 
-    expect(screen.getByTestId("location-display")).toHaveTextContent(
-      "/documents?ordering=file_name",
-    );
+      await user.type(keywordInput, "beta");
+      await user.click(screen.getByLabelText("ファイル名"));
+      await user.click(screen.getByLabelText("完全一致"));
+      await user.click(screen.getByLabelText("AND"));
+      await user.click(screen.getByRole("button", { name: "検索" }));
 
-    await user.click(screen.getByRole("columnheader", { name: /^名前/ }));
-    expect(screen.getByTestId("location-display")).toHaveTextContent(
-      "/documents?ordering=-file_name",
-    );
+      expect(screen.getByDisplayValue("beta")).toBeVisible();
 
-    await user.click(screen.getByRole("columnheader", { name: /^名前/ }));
-    expect(screen.getByTestId("location-display")).toHaveTextContent(
-      "/documents",
-    );
+      await user.click(screen.getByRole("button", { name: "リセット" }));
+
+      expect(screen.getByRole("textbox")).toHaveValue("");
+      expect(screen.getByLabelText("両方")).toBeChecked();
+      expect(screen.getByLabelText("部分一致")).toBeChecked();
+      expect(screen.getByLabelText("OR")).toBeChecked();
+    });
   });
 
-  test("routingQuery:完了したDocumentの行クリックでviewerへページ遷移する", async () => {
-    renderDocumentsPage();
+  describe("sortQuery", () => {
+    test("並び替えがDocumentTableで機能する", async () => {
+      renderDocumentsPage();
 
-    const targetCell = await screen.findByRole("cell", {
-      name: "alpha-report.pdf",
+      expect(
+        await screen.findByRole("cell", { name: "alpha-report.pdf" }),
+      ).toBeVisible();
+
+      const user = userEvent.setup();
+      await user.click(screen.getByRole("columnheader", { name: /^名前/ }));
+
+      const rows = screen.getAllByRole("row").slice(1);
+      const orderedFileNames = rows.map(
+        (row) => within(row).getAllByRole("cell")[1].textContent,
+      );
+      expect(orderedFileNames).toEqual([
+        "alpha-report.pdf",
+        "beta-report.pdf",
+        "gamma-alpha.pdf",
+      ]);
+
+      await user.click(screen.getByRole("columnheader", { name: /^名前/ }));
+
+      const rowsAfterDesc = screen.getAllByRole("row").slice(1);
+      const descOrderedFileNames = rowsAfterDesc.map(
+        (row) => within(row).getAllByRole("cell")[1].textContent,
+      );
+      expect(descOrderedFileNames).toEqual([
+        "gamma-alpha.pdf",
+        "beta-report.pdf",
+        "alpha-report.pdf",
+      ]);
     });
-    const user = userEvent.setup();
-    await user.click(targetCell);
 
-    expect(screen.getByTestId("location-display")).toHaveTextContent(
-      "/documents/1/viewer",
-    );
+    test("同じ列をクリックすると昇順→降順→解除となる", async () => {
+      renderDocumentsPage({
+        initialEntry: "/documents?ordering=created",
+      });
+
+      expect(
+        await screen.findByRole("cell", { name: "alpha-report.pdf" }),
+      ).toBeVisible();
+
+      const user = userEvent.setup();
+      await user.click(screen.getByRole("columnheader", { name: /^名前/ }));
+
+      expect(screen.getByTestId("location-display")).toHaveTextContent(
+        "/documents?ordering=file_name",
+      );
+
+      await user.click(screen.getByRole("columnheader", { name: /^名前/ }));
+      expect(screen.getByTestId("location-display")).toHaveTextContent(
+        "/documents?ordering=-file_name",
+      );
+
+      await user.click(screen.getByRole("columnheader", { name: /^名前/ }));
+      expect(screen.getByTestId("location-display")).toHaveTextContent(
+        "/documents",
+      );
+    });
   });
 
-  test("routingQuery:完了していないDocumentの行クリックではviewerへ遷移しない", async () => {
-    renderDocumentsPage();
+  describe("routingQuery", () => {
+    test("完了したDocumentの行クリックでviewerへページ遷移する", async () => {
+      renderDocumentsPage();
 
-    const targetCell = await screen.findByRole("cell", {
-      name: "beta-report.pdf",
+      const targetCell = await screen.findByRole("cell", {
+        name: "alpha-report.pdf",
+      });
+      const user = userEvent.setup();
+      await user.click(targetCell);
+
+      expect(screen.getByTestId("location-display")).toHaveTextContent(
+        "/documents/1/viewer",
+      );
     });
-    const user = userEvent.setup();
-    await user.click(targetCell);
 
-    expect(screen.getByTestId("location-display")).toHaveTextContent(
-      "/documents",
-    );
+    test("完了していないDocumentの行クリックではviewerへ遷移しない", async () => {
+      renderDocumentsPage();
+
+      const targetCell = await screen.findByRole("cell", {
+        name: "beta-report.pdf",
+      });
+      const user = userEvent.setup();
+      await user.click(targetCell);
+
+      expect(screen.getByTestId("location-display")).toHaveTextContent(
+        "/documents",
+      );
+    });
   });
 });
