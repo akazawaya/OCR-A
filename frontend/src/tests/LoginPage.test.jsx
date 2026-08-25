@@ -1,5 +1,4 @@
 // @vitest-environment jsdom
-
 import "@testing-library/jest-dom/vitest";
 
 import { describe, expect, test } from "vitest";
@@ -11,7 +10,10 @@ import { Toaster } from "sonner";
 
 import LoginPage from "../pages/LoginPage";
 
-import { getCreatedUsers } from "./msw/authApiHandlers";
+import {
+  getReceivedCreateUserRequestBody,
+  getReceivedLoginRequestBody,
+} from "./msw/authApiHandlers";
 import { defaultMockAuthUser } from "./msw/fixture";
 
 const LOGIN_PATH = "/login";
@@ -19,7 +21,6 @@ const DOCUMENTS_PATH = "/documents";
 
 const LocationProbe = () => {
   const location = useLocation();
-
   return <div data-testid="location-display">{location.pathname}</div>;
 };
 
@@ -53,7 +54,7 @@ const renderLoginPage = () => {
 };
 
 describe("LoginPage", () => {
-  test("ゲストユーザーでログインをクリックするとuserが追加され、DocumentsPageへ遷移する", async () => {
+  test("ゲストユーザーでログインをクリックするとDocumentsPageへ遷移する", async () => {
     renderLoginPage();
 
     const user = userEvent.setup();
@@ -62,11 +63,16 @@ describe("LoginPage", () => {
     );
 
     await waitFor(() => {
-      expect(getCreatedUsers()).toHaveLength(1);
+      expect(getReceivedCreateUserRequestBody()).toEqual({
+        type: "guest",
+      });
     });
-    expect(await screen.findByTestId("location-display")).toHaveTextContent(
-      DOCUMENTS_PATH,
-    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("location-display")).toHaveTextContent(
+        DOCUMENTS_PATH,
+      );
+    });
   });
 
   test("ログイン成功時はDocumentsPageへ遷移する", async () => {
@@ -83,9 +89,18 @@ describe("LoginPage", () => {
     );
     await user.click(screen.getByRole("button", { name: "ログイン" }));
 
-    expect(await screen.findByTestId("location-display")).toHaveTextContent(
-      DOCUMENTS_PATH,
-    );
+    await waitFor(() => {
+      expect(getReceivedLoginRequestBody()).toEqual({
+        email: defaultMockAuthUser.email,
+        password: defaultMockAuthUser.password,
+      });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("location-display")).toHaveTextContent(
+        DOCUMENTS_PATH,
+      );
+    });
   });
 
   test("ログイン失敗時は遷移せず失敗メッセージを表示する", async () => {
@@ -93,7 +108,7 @@ describe("LoginPage", () => {
 
     const user = userEvent.setup();
     await user.type(screen.getByLabelText("メールアドレス"), "unknown");
-    await user.type(screen.getByLabelText("パスワード"), "wrong-password");
+    await user.type(screen.getByLabelText("パスワード"), "different-pass");
     await user.click(screen.getByRole("button", { name: "ログイン" }));
 
     expect(await screen.findByText("ログインに失敗しました")).toBeVisible();

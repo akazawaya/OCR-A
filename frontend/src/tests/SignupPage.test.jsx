@@ -12,10 +12,7 @@ import { Toaster } from "sonner";
 import LoginPage from "../pages/LoginPage";
 import SignupPage from "../pages/SignupPage";
 
-import {
-  getCreatedUsers,
-  getReceivedCreateUserRequestBody,
-} from "./msw/authApiHandlers";
+import { getReceivedCreateUserRequestBody } from "./msw/authApiHandlers";
 import { defaultMockAuthUser } from "./msw/fixture";
 
 const SIGNUP_PATH = "/signup";
@@ -67,7 +64,7 @@ const renderSignupPage = () => {
 };
 
 describe("SignupPage", () => {
-  test("アカウント作成に成功するとuserが追加され、DocumentsPageへ遷移する", async () => {
+  test("パスワード確認が一致するとアカウント作成リクエストを送信し、成功時にDocumentsPageへ遷移する", async () => {
     renderSignupPage();
 
     const user = userEvent.setup();
@@ -86,19 +83,20 @@ describe("SignupPage", () => {
     await user.click(screen.getByRole("button", { name: "アカウント作成" }));
 
     await waitFor(() => {
-      expect(getCreatedUsers()).toHaveLength(1);
+      expect(getReceivedCreateUserRequestBody()).toEqual({
+        type: "registered",
+        email: defaultMockAuthUser.email,
+        password: defaultMockAuthUser.password,
+      });
     });
-    expect(getReceivedCreateUserRequestBody()).toEqual({
-      type: "registered",
-      email: defaultMockAuthUser.email,
-      password: defaultMockAuthUser.password,
+    await waitFor(() => {
+      expect(screen.getByTestId("location-display")).toHaveTextContent(
+        DOCUMENTS_PATH,
+      );
     });
-    expect(await screen.findByTestId("location-display")).toHaveTextContent(
-      DOCUMENTS_PATH,
-    );
   });
 
-  test("パスワード確認が一致しない場合はuserを追加しない", async () => {
+  test("パスワード確認が一致しない場合はアカウント作成リクエストを送信せず、エラーを表示する", async () => {
     renderSignupPage();
 
     const user = userEvent.setup();
@@ -111,11 +109,16 @@ describe("SignupPage", () => {
       defaultMockAuthUser.password,
     );
     await user.type(screen.getByLabelText("パスワード確認"), "different-pass");
-    await user.click(screen.getByRole("button", { name: "アカウント作成" }));
+    await user.click(
+      screen.getByRole("button", {
+        name: "アカウント作成",
+      }),
+    );
 
     expect(await screen.findByText("パスワードが一致しません")).toBeVisible();
-    expect(getCreatedUsers()).toHaveLength(0);
+
     expect(getReceivedCreateUserRequestBody()).toBeNull();
+
     expect(screen.getByTestId("location-display")).toHaveTextContent(
       SIGNUP_PATH,
     );

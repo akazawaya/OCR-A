@@ -8,7 +8,6 @@ let user = structuredClone(defaultMockAuthUser);
 let receivedLoginRequestBody = null;
 let receivedCreateUserRequestBody = null;
 let receivedPasswordChangeRequestBody = null;
-let createdUsers = [];
 
 export const resetMockUser = () => {
   isAuthenticated = false;
@@ -16,7 +15,6 @@ export const resetMockUser = () => {
   receivedLoginRequestBody = null;
   receivedCreateUserRequestBody = null;
   receivedPasswordChangeRequestBody = null;
-  createdUsers = [];
 };
 export const loginMockUser = () => {
   isAuthenticated = true;
@@ -26,9 +24,6 @@ export const getReceivedLoginRequestBody = () => {
 };
 export const getReceivedCreateUserRequestBody = () => {
   return receivedCreateUserRequestBody;
-};
-export const getCreatedUsers = () => {
-  return createdUsers;
 };
 export const getReceivedPasswordChangeRequestBody = () => {
   return receivedPasswordChangeRequestBody;
@@ -59,7 +54,6 @@ export const authApiHandlers = [
         email: body.email,
         password: body.password,
       };
-      createdUsers = [...createdUsers, structuredClone(user)];
       isAuthenticated = true;
 
       return HttpResponse.json(
@@ -72,7 +66,6 @@ export const authApiHandlers = [
     }
 
     user = structuredClone(defaultMockAuthUser);
-    createdUsers = [...createdUsers, structuredClone(user)];
     isAuthenticated = true;
 
     return HttpResponse.json(
