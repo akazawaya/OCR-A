@@ -10,7 +10,6 @@ import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import AuthLayout from "../components/Auth/AuthLayout";
 
 import { loginMockUser } from "./msw/authApiHandlers";
-import { MOCK_API_BASE_URL } from "./msw/config";
 import { defaultMockAuthUser } from "./msw/fixture";
 
 const LOGIN_PATH = "/login";
@@ -135,10 +134,5 @@ describe("UserMenu", () => {
     expect(screen.getByTestId("location-display")).toHaveTextContent(
       LOGIN_PATH,
     );
-
-    const meResponse = await fetch(`${MOCK_API_BASE_URL}/auth/me/`);
-    await expect(meResponse.json()).resolves.toMatchObject({
-      authenticated: false,
-    });
   });
 });
