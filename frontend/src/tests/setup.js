@@ -3,7 +3,10 @@ import { cleanup } from "@testing-library/react";
 import { setupServer } from "msw/node";
 
 import { authApiHandlers, resetMockUser } from "./msw/authApiHandlers";
-import { documentsApiHandlers } from "./msw/documentsApiHandlers";
+import {
+  documentsApiHandlers,
+  resetMockDocuments,
+} from "./msw/documentsApiHandlers";
 import { MOCK_API_BASE_URL } from "./msw/config";
 import { pagesApiHandlers } from "./msw/pagesApiHandlers";
 import { wordsApiHandlers } from "./msw/wordsApiHandlers";
@@ -27,6 +30,7 @@ beforeAll(() => {
 beforeEach(() => {
   vi.clearAllMocks();
   resetMockUser();
+  resetMockDocuments();
 });
 
 afterEach(() => {
