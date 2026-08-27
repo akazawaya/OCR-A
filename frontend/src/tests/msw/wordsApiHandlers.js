@@ -120,24 +120,6 @@ export const wordsApiHandlers = [
     return HttpResponse.json(createdWord, { status: 201 });
   }),
 
-  http.patch(`${MOCK_API_BASE_URL}/words/:id/`, async ({ params, request }) => {
-    const id = Number(params.id);
-    const body = await request.json();
-    patchedWordRequests.push({ id, body: structuredClone(body) });
-    const index = words.findIndex((word) => Number(word.id) === id);
-
-    if (index === -1) {
-      return HttpResponse.json({ detail: "Not found." }, { status: 404 });
-    }
-
-    words[index] = {
-      ...words[index],
-      ...body,
-    };
-
-    return HttpResponse.json(words[index]);
-  }),
-
   http.delete(`${MOCK_API_BASE_URL}/words/:id/`, ({ params }) => {
     const id = Number(params.id);
     deletedWordIds.push(id);

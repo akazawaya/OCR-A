@@ -42,30 +42,17 @@ export const authApiHandlers = [
 
     // email重複のバリデーションチェックのテストはここでは行わない。backendで担う。
     if (body.type === "registered") {
-      if (!body.email || !body.password) {
-        return HttpResponse.json(
-          { detail: "email and password are required" },
-          { status: 400 },
-        );
-      }
-
       user = {
         id: defaultMockAuthUser.id,
         email: body.email,
         password: body.password,
       };
-      isAuthenticated = true;
-
-      return HttpResponse.json(
-        {
-          id: user.id,
-          email: user.email,
-        },
-        { status: 201 },
-      );
+    } else if (body.type === "guest") {
+      user = structuredClone(defaultMockAuthUser);
+    } else {
+      throw new Error(`Unexpected user type: ${body.type}`);
     }
 
-    user = structuredClone(defaultMockAuthUser);
     isAuthenticated = true;
 
     return HttpResponse.json(

@@ -35,7 +35,6 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
-  server.resetHandlers();
 });
 
 afterAll(() => {
