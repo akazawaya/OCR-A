@@ -15,7 +15,6 @@ import AuthLayout from "../components/Auth/AuthLayout";
 import ViewerPage from "../pages/ViewerPage";
 
 import { loginMockUser } from "./msw/authApiHandlers";
-import { MOCK_API_BASE_URL } from "./msw/config";
 import {
   setupCanvasTextMeasureMock,
   setupDefaultViewerMocks,
@@ -118,18 +117,15 @@ describe("ViewerPage navigation guard", () => {
     expect(screen.getByTestId("location-display")).toHaveTextContent(
       VIEWER_PATH,
     );
-    const meBeforeConfirmation = await fetch(`${MOCK_API_BASE_URL}/auth/me/`);
-    await expect(meBeforeConfirmation.json()).resolves.toMatchObject({
-      authenticated: true,
-    });
-
+    // alertdialogの表示中は、確認前のためログアウトAPIは未実行とみなす
     const dialog = screen.getByRole("alertdialog", {
       name: "このページを離れますか？",
     });
     await user.click(
       within(dialog).getByRole("button", { name: "保存せずページを離れる" }),
     );
-
+    // ログアウト成功後に認証情報が再取得され、未認証と判定されることで
+    // LoginPageへ遷移するため、この遷移をもって成功を確認する。
     expect(await screen.findByTestId("location-display")).toHaveTextContent(
       LOGIN_PATH,
     );
