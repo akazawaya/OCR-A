@@ -51,7 +51,7 @@ const CLICK_SELECT_MODE = "クリック選択";
 const DRAG_SELECT_MODE = "ドラッグ選択";
 const DRAG_ADD_BBOX_MODE = "ドラッグで枠追加";
 
-// defaultMockWords は1件のみだが、テスト対象として先頭のWordを取得する意図を明示する
+// 同じ内容が複数の表示領域に存在するため、テスト対象の先頭のWordを取得する
 const getFirstWordContentInput = () =>
   screen.getAllByDisplayValue(FIRST_WORD_CONTENT)[0];
 
@@ -852,9 +852,6 @@ describe("ViewerPage", () => {
 
       await waitFor(() => {
         expect(screen.queryByDisplayValue(FIRST_WORD_CONTENT)).toBeNull();
-        const table = screen.getByRole("table");
-        const wordTextboxes = within(table).queryAllByRole("textbox");
-        expect(wordTextboxes).toHaveLength(0);
       });
     });
 

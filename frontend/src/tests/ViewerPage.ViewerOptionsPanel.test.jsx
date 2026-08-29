@@ -43,7 +43,13 @@ describe("ViewerPage.ViewerOptionsPanel", () => {
       expect(
         screen.getByRole("columnheader", { name: "検出信頼度" }),
       ).toBeVisible();
-      expect(screen.getByRole("cell", { name: "80%" })).toBeVisible();
+      const detectionScoreCells = screen.getAllByRole("cell", {
+        name: "80%",
+      });
+      expect(detectionScoreCells).toHaveLength(defaultMockWords.length);
+      detectionScoreCells.forEach((cell) => {
+        expect(cell).toBeVisible();
+      });
     });
 
     await user.click(detectionScoreCheckbox);

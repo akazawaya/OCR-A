@@ -48,6 +48,22 @@ export const defaultMockWords = [
     det_score: 0.8,
     rec_score: 0.9,
   },
+  {
+    id: 2,
+    page: 2,
+    page__page_number: 2,
+    page__doc: "1",
+    bbox: [
+      [100, 100],
+      [200, 100],
+      [200, 150],
+      [100, 150],
+    ],
+    content: "2ページ目の語",
+    direction: 1,
+    det_score: 0.8,
+    rec_score: 0.9,
+  },
 ];
 
 export const dragModeMockWords = [
