@@ -42,8 +42,23 @@ const getLastMockPageNumber = () =>
   Math.max(...defaultMockPages.map((page) => page.page_number));
 
 describe("ViewerPage", () => {
-  test("次ページボタンを押すと対象ページへスクロールする", async () => {
+  // jsdomは実ブラウザのレイアウトとスクロールを再現しないため、
+  // 対象要素がviewport内に入ることは検証できない。
+  // 代わりに、画像と表の対象要素にscrollIntoViewが呼ばれることを確認する。
+  test("次ページボタンを押すと画像と表の対象ページに対してscrollIntoViewを呼ぶ", async () => {
     renderViewerPage();
+    const page2ScrollTargets = await waitFor(() => {
+      const image = document.querySelector('div[data-scroll-target-page="2"]');
+      const table = document.querySelector('tr[data-scroll-target-page="2"]');
+      expect(image).not.toBeNull();
+      expect(table).not.toBeNull();
+      return { image, table };
+    });
+    const mockPage2ImageScrollIntoView = vi.fn();
+    const mockPage2TableScrollIntoView = vi.fn();
+    page2ScrollTargets.image.scrollIntoView = mockPage2ImageScrollIntoView;
+    page2ScrollTargets.table.scrollIntoView = mockPage2TableScrollIntoView;
+
     const nextButton = screen.getByRole("button", {
       name: "次のページ",
     });
@@ -51,13 +66,9 @@ describe("ViewerPage", () => {
     await user.click(nextButton);
 
     await waitFor(() => {
-      expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
+      expect(mockPage2ImageScrollIntoView).toHaveBeenCalled();
+      expect(mockPage2TableScrollIntoView).toHaveBeenCalled();
     });
-    const page2 = await screen.findByRole("group", {
-      name: "画像表示エリア 2ページ目",
-    });
-
-    expect(page2).toBeVisible();
   });
 
   test("拡大・縮小ボタンを押すと画像サイズが更新される", async () => {
@@ -105,11 +116,20 @@ describe("ViewerPage", () => {
     );
   });
 
-  test("ページ番号を入力してEnterを押すと対象ページへスクロールする", async () => {
+  test("ページ番号を入力してEnterを押すと画像と表の対象ページに対してscrollIntoViewを呼ぶ", async () => {
     renderViewerPage();
-    await screen.findByRole("group", {
-      name: "画像表示エリア 2ページ目",
+    const page2ScrollTargets = await waitFor(() => {
+      const image = document.querySelector('div[data-scroll-target-page="2"]');
+      const table = document.querySelector('tr[data-scroll-target-page="2"]');
+      expect(image).not.toBeNull();
+      expect(table).not.toBeNull();
+      return { image, table };
     });
+    const mockPage2ImageScrollIntoView = vi.fn();
+    const mockPage2TableScrollIntoView = vi.fn();
+    page2ScrollTargets.image.scrollIntoView = mockPage2ImageScrollIntoView;
+    page2ScrollTargets.table.scrollIntoView = mockPage2TableScrollIntoView;
+
     const pageInput = screen.getByRole("textbox", { name: "page" });
     const user = userEvent.setup();
 
@@ -117,7 +137,8 @@ describe("ViewerPage", () => {
     await user.type(pageInput, "2{Enter}");
 
     await waitFor(() => {
-      expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
+      expect(mockPage2ImageScrollIntoView).toHaveBeenCalled();
+      expect(mockPage2TableScrollIntoView).toHaveBeenCalled();
     });
   });
 
@@ -160,12 +181,21 @@ describe("ViewerPage", () => {
     expect(imageTransform.style.getPropertyValue("--rotate")).toBe("90deg");
   });
 
-  test("ページ番号を入力してblurすると対象ページへスクロールする", async () => {
+  test("ページ番号を入力してblurすると画像と表の対象ページに対してscrollIntoViewを呼ぶ", async () => {
     renderViewerPage();
 
-    await screen.findByRole("group", {
-      name: "画像表示エリア 2ページ目",
+    const page2ScrollTargets = await waitFor(() => {
+      const image = document.querySelector('div[data-scroll-target-page="2"]');
+      const table = document.querySelector('tr[data-scroll-target-page="2"]');
+      expect(image).not.toBeNull();
+      expect(table).not.toBeNull();
+      return { image, table };
     });
+    const mockPage2ImageScrollIntoView = vi.fn();
+    const mockPage2TableScrollIntoView = vi.fn();
+    page2ScrollTargets.image.scrollIntoView = mockPage2ImageScrollIntoView;
+    page2ScrollTargets.table.scrollIntoView = mockPage2TableScrollIntoView;
+
     const pageInput = screen.getByRole("textbox", { name: "page" });
     const user = userEvent.setup();
     await user.clear(pageInput);
@@ -173,13 +203,14 @@ describe("ViewerPage", () => {
     fireEvent.blur(pageInput);
 
     await waitFor(() => {
-      expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
+      expect(mockPage2ImageScrollIntoView).toHaveBeenCalled();
+      expect(mockPage2TableScrollIntoView).toHaveBeenCalled();
     });
   });
 
   // WordOverlay では zoom による描画更新のみを確認する。
-  // PageScroll は既存の scrollIntoView テストでカバーできているため、ここでは確認しない。
-  // --rotate は viewer-image-transform-* が img と WordOverlay をまとめて回転させるため、ViewerImage 側の確認で十分とする。
+  // useScroll は既存の scrollIntoView テストでカバーできているため、ここでは確認しない。
+  // --rotate は ViewerImage の変形コンテナが img と WordOverlay をまとめて回転させるため、ViewerImage 側の確認で十分とする。
   // また、commitZoom による zoom 更新経路も ViewerImage 側でカバーできているため、ここでは setZoom のみを対象とする。
   test("拡大ボタンを押すとOCR結果の文字サイズが更新される", async () => {
     renderViewerPage();
