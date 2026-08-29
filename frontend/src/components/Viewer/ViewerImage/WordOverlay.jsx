@@ -135,7 +135,7 @@ const WordOverlay = ({
                       ? "fill-red-500/20 stroke-red-500 stroke-4"
                       : "fill-transparent stroke-red-500 stroke-4"
               }`}
-              data-word={w.id}
+              data-scroll-target-word={w.id}
               {...w.rect}
             />
           );
@@ -154,7 +154,7 @@ const WordOverlay = ({
                 ? "[text-orientation:upright] [writing-mode:vertical-rl]"
                 : ""
             } ${isHover ? "text-white [text-shadow:0_0_2px_black,0_0_4px_black]" : "text-transparent"}`}
-            data-word={w.id}
+            data-scroll-target-word={w.id}
             role="button"
             style={{
               ...w.span.style,

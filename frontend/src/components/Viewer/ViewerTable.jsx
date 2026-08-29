@@ -75,12 +75,16 @@ const ViewerTable = ({
 
   const rootRef = useRef(null);
   // page変更に追随してスクロールする
-  useScroll({ rootRef, targetAttrName: "data-page", targetAttrValue: page });
+  useScroll({
+    rootRef,
+    targetAttrName: "data-scroll-target-page",
+    targetAttrValue: page,
+  });
   // viewerTable起点のwordの選択時、viewerImage側を追随スクロールする
   const shouldScroll = selectedBy === "image";
   useScroll({
     rootRef,
-    targetAttrName: "data-word",
+    targetAttrName: "data-scroll-target-word",
     targetAttrValue: scrollTargetId,
     shouldScroll,
   });
@@ -117,8 +121,8 @@ const ViewerTable = ({
                     ? "bg-red-500/20"
                     : "bg-transparent"
               }`}
-              data-page={r.page__page_number}
-              data-word={r.id}
+              data-scroll-target-page={r.page__page_number}
+              data-scroll-target-word={r.id}
               onClick={(event) => {
                 const withCtrlOrMeta = event.ctrlKey || event.metaKey;
                 if (event.shiftKey) {

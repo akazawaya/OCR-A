@@ -22,14 +22,18 @@ const ViewerImage = ({
   const localRef = useRef(null);
   const rootRef = contentRef ?? localRef;
   // page変更に追随してスクロールする
-  useScroll({ rootRef, targetAttrName: "data-page", targetAttrValue: page });
+  useScroll({
+    rootRef,
+    targetAttrName: "data-scroll-target-page",
+    targetAttrValue: page,
+  });
   const { clientSizePx } = useClientSizePx(rootRef);
   const limitW = clientSizePx.w;
   // viewerImage起点のwordの選択時、viewerTable側を追随スクロールする
   const shouldScroll = selectedBy === "table";
   useScroll({
     rootRef,
-    targetAttrName: "data-word",
+    targetAttrName: "data-scroll-target-word",
     targetAttrValue: selectedId,
     shouldScroll,
   });
@@ -67,8 +71,8 @@ const ViewerImage = ({
           <div
             key={p.id}
             className={containerClass}
-            data-page={p.page_number}
             data-print-page={isPrintMode ? "true" : undefined}
+            data-scroll-target-page={p.page_number}
             style={containerStyle}
           >
             <div
