@@ -6,7 +6,6 @@ import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
 
 import { defaultMockWords } from "./msw/fixture";
-import { setMockWords } from "./msw/wordsApiHandlers";
 import {
   renderViewerPage,
   setupCanvasTextMeasureMock,
@@ -20,7 +19,6 @@ beforeEach(() => {
 
 describe("ViewerPage.ViewerOptionsPanel", () => {
   test("ViewerTopBarからViewerOptionsPanelを開き、検出信頼度の列を即時に追加・削除できる", async () => {
-    setMockWords(defaultMockWords);
     renderViewerPage();
     const user = userEvent.setup();
 
