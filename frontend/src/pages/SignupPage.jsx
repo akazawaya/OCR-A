@@ -75,7 +75,7 @@ const SignupPage = () => {
 
         <Button type="submit">アカウント作成</Button>
       </form>
-      <div className="mt-8 flex flex-col items-center">
+      <div className="flex flex-col items-center">
         <p>すでにアカウントをお持ちの方は</p>
         <Button
           color="gray"
