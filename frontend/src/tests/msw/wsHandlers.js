@@ -5,6 +5,14 @@ export const ocrWsMock = ws.link("ws://test.dummy/ocr/");
 // テスト全体で使う WebSocket接続受付ハンドラ
 export const wsHandlers = [ocrWsMock.addEventListener("connection", () => {})];
 
+export const sendDocumentChanged = () => {
+  ocrWsMock.broadcast(
+    JSON.stringify({
+      type: "document_changed",
+    }),
+  );
+};
+
 // テスト中に任意のタイミングで WSメッセージを送る関数
 export const sendPreviewWordOcrChanged = ({ previewJobId, state }) => {
   ocrWsMock.broadcast(
