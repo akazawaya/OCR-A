@@ -1,34 +1,57 @@
 // @vitest-environment jsdom
 
-import { beforeEach, describe, expect, test } from "vitest";
-import { screen, within } from "@testing-library/react";
+import { beforeEach, describe, expect, test, vi } from "vitest";
+import { waitFor } from "@testing-library/react";
 
-import "@testing-library/jest-dom/vitest";
+import { getCollection as mockGetCollection } from "../api/clients/collectionClient";
+import { pageAccessSpec, wordSpec } from "../appConfig";
 
-import { setMockPages } from "./msw/pagesApiHandlers";
-import { setMockWords } from "./msw/wordsApiHandlers";
-import { queryRoutingMockPages, queryRoutingMockWords } from "./msw/fixture";
 import {
   renderViewerPage,
   setupDefaultViewerMocks,
 } from "./ViewerPage.test-utils";
 
+// getCollectionのMockでroutingQueryの組み立てとqueryFnのcall()をアサートする
+vi.mock("../api/clients/collectionClient", async (importOriginal) => ({
+  ...(await importOriginal()),
+  getCollection: vi.fn(),
+}));
+
 beforeEach(() => {
   setupDefaultViewerMocks();
-  setMockPages(queryRoutingMockPages);
-  setMockWords(queryRoutingMockWords);
+  mockGetCollection.mockReset();
+  mockGetCollection.mockResolvedValue([]);
 });
 
+// collectionUrlごとにgetCollectionの呼び出しを取得する
+// queryStringはオブジェクトへ変換し、クエリパラメータの並び順に依存せず比較する
+const expectCollectionQuery = async ({ collectionUrl, expectedQuery }) => {
+  await waitFor(() => {
+    expect(mockGetCollection).toHaveBeenCalled();
+
+    const matchedCall = mockGetCollection.mock.calls.find(
+      ([callArgs]) => callArgs.collectionUrl === collectionUrl,
+    );
+    expect(matchedCall).toBeDefined();
+
+    const [{ queryString }] = matchedCall;
+    expect(Object.fromEntries(new URLSearchParams(queryString))).toEqual(
+      expectedQuery,
+    );
+  });
+};
+
 describe("ViewerPage routing query", () => {
-  test("routingQuery: 遷移先のprimaryKeyにより表示データの絞り込みが発生する", async () => {
+  test("遷移先のprimaryKeyをPageとWordのqueryStringに反映する", async () => {
     renderViewerPage();
 
-    // 絞り込みの確認は ViewerTableの<tr>を想定する
-    const table = await screen.findByRole("table");
-    expect(
-      await within(table).findByRole("row", { name: /alpha word/i }),
-    ).toBeVisible();
-
-    expect(within(table).queryByRole("row", { name: /beta word/i })).toBeNull();
+    await expectCollectionQuery({
+      collectionUrl: pageAccessSpec.collectionUrl,
+      expectedQuery: { doc: "1" },
+    });
+    await expectCollectionQuery({
+      collectionUrl: wordSpec.collectionUrl,
+      expectedQuery: { page__doc: "1" },
+    });
   });
 });

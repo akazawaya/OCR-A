@@ -13,17 +13,7 @@ export const setMockPages = (anotherFixture) => {
 };
 
 export const pagesApiHandlers = [
-  http.get(`${MOCK_API_BASE_URL}/pages/`, ({ request }) => {
-    const url = new URL(request.url);
-    const params = url.searchParams;
-    const doc = params.get("doc");
-
-    const result = doc
-      ? pages.filter((page) => String(page.doc) === doc)
-      : pages;
-
-    return HttpResponse.json(result);
-  }),
+  http.get(`${MOCK_API_BASE_URL}/pages/`, () => HttpResponse.json(pages)),
 
   http.get(`${MOCK_API_BASE_URL}/pages/:id/`, ({ params }) => {
     const id = Number(params.id);

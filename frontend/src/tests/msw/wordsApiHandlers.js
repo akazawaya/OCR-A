@@ -66,16 +66,7 @@ const buildPreviewJobResult = ({ body, rawResult }) => {
 };
 
 export const wordsApiHandlers = [
-  http.get(`${MOCK_API_BASE_URL}/words/`, ({ request }) => {
-    const url = new URL(request.url);
-    const pageDoc = url.searchParams.get("page__doc");
-
-    const filteredWords = pageDoc
-      ? words.filter((word) => String(word.page__doc) === pageDoc)
-      : words;
-
-    return HttpResponse.json(filteredWords);
-  }),
+  http.get(`${MOCK_API_BASE_URL}/words/`, () => HttpResponse.json(words)),
 
   http.get(`${MOCK_API_BASE_URL}/words/:id/`, ({ params }) => {
     const id = Number(params.id);

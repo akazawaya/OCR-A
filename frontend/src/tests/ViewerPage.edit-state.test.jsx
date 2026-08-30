@@ -498,7 +498,7 @@ describe("ViewerPage", () => {
       const user = await enterEditMode();
       await switchSelectionMode(user, DRAG_ADD_BBOX_MODE);
       const svg = getFirstSelectionArea();
-      // SelectionAreaはfixtureのqueryRoutingMockPagesのwhが(1000,800)であることに対して1/10
+      // SelectionAreaはfixtureのdefaultMockPagesのwhが(1000,800)であることに対して1/10
       // dragSelectionAreaは(20,10)の横長となるよう配置
       // client座標は画像座標へ10倍換算されるため、(200,100)のrectとなる
       mockSelectionAreaRect(svg, { width: 100, height: 80 });
