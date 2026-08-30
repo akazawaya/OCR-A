@@ -10,7 +10,6 @@ let previewJobId = ocrJobMock.previewJobId;
 let ocrResultByPreviewJobId = new Map([
   [ocrJobMock.previewJobId, structuredClone(ocrJobMock.result)],
 ]);
-let ocrWaitPromise = null;
 let deletedWordIds = [];
 let postedWordBodies = [];
 let patchedWordRequests = [];
@@ -21,16 +20,12 @@ export const resetMockWords = () => {
   ocrResultByPreviewJobId = new Map([
     [ocrJobMock.previewJobId, structuredClone(ocrJobMock.result)],
   ]);
-  ocrWaitPromise = null;
   deletedWordIds = [];
   postedWordBodies = [];
   patchedWordRequests = [];
 };
 export const setMockWords = (anotherFixtute) => {
   words = structuredClone(anotherFixtute);
-};
-export const setMockOcr = (anotherFixture) => {
-  ocrResultByPreviewJobId.set(previewJobId, structuredClone(anotherFixture));
 };
 export const setMockOcrJob = ({
   previewJobId: nextPreviewJobId = ocrJobMock.previewJobId,
@@ -67,12 +62,6 @@ const buildPreviewJobResult = ({ body, rawResult }) => {
 
 export const wordsApiHandlers = [
   http.get(`${MOCK_API_BASE_URL}/words/`, () => HttpResponse.json(words)),
-
-  http.get(`${MOCK_API_BASE_URL}/words/:id/`, ({ params }) => {
-    const id = Number(params.id);
-    const word = words.find((w) => w.id === id);
-    return HttpResponse.json(word);
-  }),
 
   http.patch(`${MOCK_API_BASE_URL}/words/:id/`, ({ params, request }) => {
     const id = Number(params.id);
@@ -134,17 +123,11 @@ export const wordsApiHandlers = [
   }),
 
   // wordのocr結果は、返り値の差し替えをfixture形式からimport可能にする
-  http.get(
-    `${MOCK_API_BASE_URL}/words/ocr/:previewJobId/`,
-    async ({ params }) => {
-      if (ocrWaitPromise) {
-        await ocrWaitPromise;
-      }
-      const response = ocrResultByPreviewJobId.get(params.previewJobId);
-      if (!response) {
-        return HttpResponse.json(null, { status: 404 });
-      }
-      return HttpResponse.json(structuredClone(response));
-    },
-  ),
+  http.get(`${MOCK_API_BASE_URL}/words/ocr/:previewJobId/`, ({ params }) => {
+    const response = ocrResultByPreviewJobId.get(params.previewJobId);
+    if (!response) {
+      return HttpResponse.json(null, { status: 404 });
+    }
+    return HttpResponse.json(structuredClone(response));
+  }),
 ];
