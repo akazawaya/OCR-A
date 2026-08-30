@@ -64,12 +64,15 @@ const LoginPage = () => {
         </label>
         <Button>ログイン</Button>
       </form>
-      <Button color="gray" onClick={() => createUserMutation()}>
-        ゲストユーザーでログイン
-      </Button>
-
       <p>アカウントをお持ちでない方は</p>
-      <Button onClick={() => navigate(routePaths.signup.to())}>新規登録</Button>
+      <div className="flex items-center gap-2">
+        <Button onClick={() => navigate(routePaths.signup.to())}>
+          新規登録
+        </Button>
+        <Button color="gray" onClick={() => createUserMutation()}>
+          ゲストユーザーでログイン
+        </Button>
+      </div>
     </div>
   );
 };
