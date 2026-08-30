@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { createUser } from "../api/clients/mutationClient";
 import { routePaths } from "../appConfig";
+import AuthLogo from "../components/Auth/AuthLogo";
 import Button from "../components/ui/Button";
 import TextInput from "../components/ui/TextInput";
 import { authClassNames, formClassNames } from "../components/ui/classNames";
@@ -44,6 +45,7 @@ const SignupPage = () => {
 
   return (
     <div className={authClassNames.panel}>
+      <AuthLogo />
       <form className={formClassNames.inputPanel} onSubmit={handleSubmit}>
         <label className={formClassNames.fieldLabel}>
           メールアドレス

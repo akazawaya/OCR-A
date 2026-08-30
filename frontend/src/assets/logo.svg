@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 100">
+
+  <!-- 本体 -->
+  <path fill="#79B942" d="
+    M10 60
+    C40 50 70 50 120 40
+    C190 30 260 30 300 30
+    C320 40 340 40 350 40
+    L370 40
+    L370 60
+    L300 70
+    C260 80 190 80 120 70
+    C70 60 40 50 10 60
+    Z
+  "/>
+
+  <!-- 下側の影 -->
+  <path fill="#3E762F" d="
+    M10 60
+    C50 60 90 60 120 60
+    C190 60 250 60 330 50
+    L350 40
+    L370 40
+    L370 60
+    L300 70
+    C260 80 190 80 120 70
+    C70 60 40 50 10 60
+    Z
+  "/>
+
+  <!-- へた -->
+  <path fill="#3E762F" d="
+    M300 30
+    C320 40 340 40 350 40
+    L370 40
+    L370 60
+    L300 70
+    L330 50
+    L300 30
+    Z
+  "/>
+
+  
+  <!-- ロゴ文字 -->
+  <text
+    x="210"
+    y="58"
+    fill="#FFFFFF"
+    font-family="Medium"
+    font-size="40"
+    font-weight="800"
+    letter-spacing="4"
+    text-anchor="middle"
+    dominant-baseline="middle"
+  >
+    OCR-A
+  </text>
+</svg>
