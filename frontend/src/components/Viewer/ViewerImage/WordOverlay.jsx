@@ -145,7 +145,7 @@ const WordOverlay = ({
       {wordLayout.map((w) => {
         const isHover = w.id === hoveredWordId;
         return (
-          <span
+          <button
             key={w.id}
             className={`absolute flex items-center justify-center leading-none ${
               canClickWord ? "" : "pointer-events-none"
@@ -155,12 +155,10 @@ const WordOverlay = ({
                 : ""
             } ${isHover ? "text-white [text-shadow:0_0_2px_black,0_0_4px_black]" : "text-transparent"}`}
             data-scroll-target-word={w.id}
-            role="button"
             style={{
               ...w.span.style,
               fontSize: `${w.span.fontPx}px`,
             }}
-            tabIndex={0}
             onClick={
               canClickWord
                 ? (event) => {
@@ -186,17 +184,11 @@ const WordOverlay = ({
                   }
                 : undefined
             }
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                replaceSelection(w.id, "image");
-              } // 現状意味がないので強化検討対象
-            }}
             onMouseEnter={() => hover(w.id)}
             onMouseLeave={clearHovered}
           >
             {w.span.text}
-          </span>
+          </button>
         );
       })}
     </div>
