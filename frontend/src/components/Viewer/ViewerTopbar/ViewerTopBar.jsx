@@ -18,6 +18,7 @@ import {
   VIEWER_ZOOM,
   VIEWER_ROTATE_STEP,
 } from "../../../logic/viewer/viewerPageConstants";
+import { usePointerDownOutside } from "../../../logic/layout/usePointerDownOutside";
 
 import { ViewerEditToolbar } from "./ViewerEditToolbar";
 import { ViewerIconButton } from "./ViewerIconButton";
@@ -74,6 +75,7 @@ const ViewerTopBar = ({
     setZoom,
     setRotate,
     toggleOptionsPanel,
+    closeOptionsPanel,
     commitPage,
     commitZoom,
     commitRotate,
@@ -88,6 +90,10 @@ const ViewerTopBar = ({
   const pageRef = useRef(null);
   const zoomRef = useRef(null);
   const rotateRef = useRef(null);
+  const optionsMenuRef = usePointerDownOutside({
+    enable: isOptionsPanelOpen,
+    onPointerDownOutside: closeOptionsPanel,
+  });
 
   useEffect(() => {
     // 外部更新との連動にはinputRef.current.valueの書き換えが必要
@@ -146,12 +152,20 @@ const ViewerTopBar = ({
             isBaseDisabled,
           )}
         </div>
-        <ViewerIconButton
-          disabled={isBaseDisabled}
-          icon={Settings}
-          label="表示設定"
-          onClick={toggleOptionsPanel}
-        />
+        <div ref={optionsMenuRef} className="flex">
+          <ViewerIconButton
+            disabled={isBaseDisabled}
+            icon={Settings}
+            label="表示設定"
+            onClick={toggleOptionsPanel}
+          />
+          {isOptionsPanelOpen && (
+            <ViewerOptionsPanel
+              actions={viewerOptionsPanelActions}
+              data={viewerOptionsPanelData}
+            />
+          )}
+        </div>
         {!isEditMode ? (
           <ViewerIconButton
             disabled={isBaseDisabled}
@@ -211,12 +225,6 @@ const ViewerTopBar = ({
         <ViewerEditToolbar
           actions={viewerEditToolbarActions}
           data={{ ...viewerEditToolbarData, isOcring }}
-        />
-      )}
-      {isOptionsPanelOpen && (
-        <ViewerOptionsPanel
-          actions={viewerOptionsPanelActions}
-          data={viewerOptionsPanelData}
         />
       )}
     </div>

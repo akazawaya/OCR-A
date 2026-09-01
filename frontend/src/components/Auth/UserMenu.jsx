@@ -1,14 +1,21 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { User } from "lucide-react";
 
 import { routePaths } from "../../appConfig";
+import { usePointerDownOutside } from "../../logic/layout/usePointerDownOutside";
 
 const UserMenu = ({ data: { email }, actions: { logoutCurrentUser } }) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const closeMenu = useCallback(() => setIsOpen(false), []);
+  const menuRef = usePointerDownOutside({
+    enable: isOpen,
+    onPointerDownOutside: closeMenu,
+  });
+
   return (
-    <div>
+    <div ref={menuRef}>
       <div className="flex w-60 items-center gap-1">
         <button
           aria-label={"ユーザーメニュー開閉ボタン"}

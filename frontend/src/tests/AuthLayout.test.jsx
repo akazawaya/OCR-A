@@ -89,6 +89,23 @@ describe("AuthLayout", () => {
 });
 
 describe("UserMenu", () => {
+  test("メニューを開いた直後に外側を押すと閉じる", async () => {
+    loginMockUser();
+    renderAuthLayout();
+    const user = userEvent.setup();
+
+    await user.click(
+      await screen.findByRole("button", { name: "ユーザーメニュー開閉ボタン" }),
+    );
+    expect(screen.getByRole("button", { name: "トップページ" })).toBeVisible();
+
+    await user.click(screen.getByTestId("location-display"));
+
+    expect(
+      screen.queryByRole("button", { name: "トップページ" }),
+    ).not.toBeInTheDocument();
+  });
+
   test("メールアドレスが反映され、表示される", async () => {
     loginMockUser();
     renderAuthLayout();

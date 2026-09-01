@@ -18,6 +18,22 @@ beforeEach(() => {
 });
 
 describe("ViewerPage.ViewerOptionsPanel", () => {
+  test("パネルを開いた直後に外側を押すと閉じる", async () => {
+    renderViewerPage();
+    const user = userEvent.setup();
+
+    await screen.findByRole("cell", { name: "テスト語" });
+    await user.click(screen.getByRole("button", { name: "表示設定" }));
+
+    expect(screen.getByRole("checkbox", { name: "検出信頼度" })).toBeVisible();
+
+    await user.click(screen.getByRole("cell", { name: "テスト語" }));
+
+    expect(
+      screen.queryByRole("checkbox", { name: "検出信頼度" }),
+    ).not.toBeInTheDocument();
+  });
+
   test("ViewerTopBarからViewerOptionsPanelを開き、検出信頼度の列を即時に追加・削除できる", async () => {
     renderViewerPage();
     const user = userEvent.setup();

@@ -302,9 +302,12 @@ const ViewerPage = () => {
     pageNumberByPageId,
     previewJob,
   });
-  const toggleOptionsPanel = () => {
+  const toggleOptionsPanel = useCallback(() => {
     setIsOptionsPanelOpen((isOpen) => !isOpen);
-  };
+  }, []);
+  const closeOptionsPanel = useCallback(() => {
+    setIsOptionsPanelOpen(false);
+  }, []);
   const deleteSelectedWords = (wordIds) => {
     editState.addPendingDeleteByIds(wordIds);
   };
@@ -395,6 +398,7 @@ const ViewerPage = () => {
               commitZoom: pageState.commitZoom,
               commitRotate: pageState.commitRotate,
               toggleOptionsPanel,
+              closeOptionsPanel,
             }}
             data={{
               maxPage: pages.length,
