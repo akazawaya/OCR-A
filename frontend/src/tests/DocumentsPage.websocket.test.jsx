@@ -8,7 +8,7 @@ import { screen, waitFor } from "@testing-library/react";
 import { getCollection as mockGetCollection } from "../api/clients/collectionClient";
 
 import { renderDocumentsPage } from "./DocumentsPage.test-utils";
-import { defaultMockDocuments } from "./msw/fixture";
+import { defaultMockPaginatedDocumentsResponse } from "./msw/fixture";
 import { sendDocumentChanged } from "./msw/wsHandlers";
 
 vi.mock("../api/clients/collectionClient", () => ({
@@ -17,7 +17,7 @@ vi.mock("../api/clients/collectionClient", () => ({
 
 beforeEach(() => {
   mockGetCollection.mockReset();
-  mockGetCollection.mockResolvedValue(defaultMockDocuments);
+  mockGetCollection.mockResolvedValue(defaultMockPaginatedDocumentsResponse);
 });
 // Document OCRのfrontend責務は再取得の発火だけだが、
 // WSイベントとquery invalidationの連携を保証するため、明示的にテストする。

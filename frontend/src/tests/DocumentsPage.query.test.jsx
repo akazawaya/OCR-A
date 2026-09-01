@@ -9,7 +9,14 @@ import { getCollection as mockGetCollection } from "../api/clients/collectionCli
 import { documentSpec } from "../appConfig";
 
 import { renderDocumentsPage } from "./DocumentsPage.test-utils";
-import { defaultMockDocuments } from "./msw/fixture";
+import {
+  buildPaginatedDocumentsResponse,
+  MOCK_DOCUMENTS_PER_PAGE,
+} from "./msw/documentsApiHandlers";
+import {
+  defaultMockPaginatedDocumentsResponse,
+  paginationMockDocuments,
+} from "./msw/fixture";
 
 // getCollectionのMockでurlQueryの組み立てとqueryFnのcall()をアサートする
 vi.mock("../api/clients/collectionClient", () => ({
@@ -18,7 +25,7 @@ vi.mock("../api/clients/collectionClient", () => ({
 
 beforeEach(() => {
   mockGetCollection.mockReset();
-  mockGetCollection.mockResolvedValue(defaultMockDocuments);
+  mockGetCollection.mockResolvedValue(defaultMockPaginatedDocumentsResponse);
 });
 
 // getCollectionの呼び出しと、最後の呼び出しに渡された引数を検証する関数
@@ -32,6 +39,24 @@ const expectLastCollectionQuery = async (expectedQuery) => {
       mockGetCollection.mock.calls.at(-1);
 
     expect(collectionUrl).toBe(documentSpec.collectionUrl);
+    expect(Object.fromEntries(new URLSearchParams(queryString))).toEqual(
+      expectedQuery,
+    );
+  });
+};
+
+const paginationMockTotalPages = Math.ceil(
+  paginationMockDocuments.length / MOCK_DOCUMENTS_PER_PAGE,
+);
+const firstPageDocument = paginationMockDocuments[0];
+const lastPageDocument = paginationMockDocuments.at(-1);
+
+const expectLocationQuery = async (expectedQuery) => {
+  await waitFor(() => {
+    const locationText = screen.getByTestId("location-display").textContent;
+    const [pathname, queryString = ""] = locationText.split("?");
+
+    expect(pathname).toBe("/documents");
     expect(Object.fromEntries(new URLSearchParams(queryString))).toEqual(
       expectedQuery,
     );
@@ -104,6 +129,124 @@ describe("DocumentsPage query", () => {
 
       await user.click(screen.getByRole("columnheader", { name: /^名前/ }));
       await expectLastCollectionQuery({});
+    });
+  });
+
+  describe("paginationQuery", () => {
+    beforeEach(() => {
+      mockGetCollection.mockImplementation(({ queryString }) =>
+        Promise.resolve(
+          buildPaginatedDocumentsResponse({
+            documents: paginationMockDocuments,
+            queryString,
+            documentsPerPage: MOCK_DOCUMENTS_PER_PAGE,
+          }),
+        ),
+      );
+    });
+
+    test("ページネーションresponseの現在ページのDocumentだけを表示する", async () => {
+      renderDocumentsPage();
+
+      expect(
+        await screen.findByRole("cell", {
+          name: firstPageDocument.file_name,
+        }),
+      ).toBeVisible();
+      expect(
+        screen.queryByRole("cell", {
+          name: lastPageDocument.file_name,
+        }),
+      ).not.toBeInTheDocument();
+    });
+
+    test("ページ数が多くても最終ページボタンから表示ページを変更できる", async () => {
+      renderDocumentsPage();
+      const user = userEvent.setup();
+
+      expect(
+        await screen.findByRole("cell", {
+          name: firstPageDocument.file_name,
+        }),
+      ).toBeVisible();
+
+      const lastPageButton = screen.getByRole("button", {
+        name: String(paginationMockTotalPages),
+      });
+      expect(lastPageButton).toBeVisible();
+
+      await user.click(lastPageButton);
+
+      await expectLocationQuery({
+        page: String(paginationMockTotalPages),
+      });
+      await expectLastCollectionQuery({
+        page: String(paginationMockTotalPages),
+      });
+      expect(
+        await screen.findByRole("cell", {
+          name: lastPageDocument.file_name,
+        }),
+      ).toBeVisible();
+      expect(
+        screen.queryByRole("cell", {
+          name: firstPageDocument.file_name,
+        }),
+      ).not.toBeInTheDocument();
+    });
+
+    test("検索時に1ページ目へ戻る", async () => {
+      renderDocumentsPage({
+        initialEntry: `/documents?page=${paginationMockTotalPages}`,
+      });
+      const user = userEvent.setup();
+
+      expect(
+        await screen.findByRole("cell", {
+          name: lastPageDocument.file_name,
+        }),
+      ).toBeVisible();
+
+      await user.type(screen.getByRole("textbox"), "Document");
+      await user.click(screen.getByRole("button", { name: "検索" }));
+
+      const expectedQuery = {
+        keyword: "Document",
+        field_name: "both",
+        lookup_expr: "icontains",
+        keyword_operator: "or",
+      };
+      await expectLocationQuery(expectedQuery);
+      await expectLastCollectionQuery(expectedQuery);
+      expect(
+        await screen.findByRole("cell", {
+          name: firstPageDocument.file_name,
+        }),
+      ).toBeVisible();
+    });
+
+    test("ソート時に1ページ目へ戻る", async () => {
+      renderDocumentsPage({
+        initialEntry: `/documents?page=${paginationMockTotalPages}`,
+      });
+      const user = userEvent.setup();
+
+      expect(
+        await screen.findByRole("cell", {
+          name: lastPageDocument.file_name,
+        }),
+      ).toBeVisible();
+
+      await user.click(screen.getByRole("columnheader", { name: /^名前/ }));
+
+      const expectedQuery = { ordering: "file_name" };
+      await expectLocationQuery(expectedQuery);
+      await expectLastCollectionQuery(expectedQuery);
+      expect(
+        await screen.findByRole("cell", {
+          name: firstPageDocument.file_name,
+        }),
+      ).toBeVisible();
     });
   });
 

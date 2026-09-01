@@ -6,6 +6,25 @@ export const defaultMockDocuments = [
   { id: 3, file_name: "gamma-alpha.pdf", state: "失敗" },
 ];
 
+export const defaultMockPaginatedDocumentsResponse = {
+  current_page: 1,
+  pagination_total_pages: 1,
+  results: defaultMockDocuments,
+};
+
+export const paginationMockDocuments = Array.from(
+  { length: 100 },
+  (_, index) => {
+    const documentNumber = index + 1;
+
+    return {
+      id: documentNumber,
+      file_name: `Document_${String(documentNumber).padStart(3, "0")}.pdf`,
+      state: "完了",
+    };
+  },
+);
+
 export const defaultMockAuthUser = {
   id: 1,
   email: "testuser@example.invalid",
