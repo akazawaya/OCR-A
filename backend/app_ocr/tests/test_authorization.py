@@ -8,8 +8,8 @@ from rest_framework import status
 pytestmark = pytest.mark.django_db
 
 
-def list_ids(response):
-    return [item["id"] for item in response.data]
+def list_ids(data):
+    return [item["id"] for item in data]
 
 
 def test_authorization_limits_lists_to_own_resources(
@@ -45,12 +45,12 @@ def test_authorization_limits_lists_to_own_resources(
     assert bob_pages.status_code == status.HTTP_200_OK
     assert bob_words.status_code == status.HTTP_200_OK
 
-    assert list_ids(alice_documents) == [alice_document.id]
-    assert list_ids(bob_documents) == [bob_document.id]
-    assert set(list_ids(alice_pages)) == {alice_page.id}
-    assert set(list_ids(bob_pages)) == {bob_page.id}
-    assert list_ids(alice_words) == [alice_word_id]
-    assert list_ids(bob_words) == [bob_word_id]
+    assert list_ids(alice_documents.data["results"]) == [alice_document.id]
+    assert list_ids(bob_documents.data["results"]) == [bob_document.id]
+    assert set(list_ids(alice_pages.data)) == {alice_page.id}
+    assert set(list_ids(bob_pages.data)) == {bob_page.id}
+    assert list_ids(alice_words.data) == [alice_word_id]
+    assert list_ids(bob_words.data) == [bob_word_id]
 
 
 @pytest.mark.parametrize(

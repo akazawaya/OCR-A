@@ -4,6 +4,10 @@ from django.urls import reverse
 pytestmark = pytest.mark.django_db
 
 
+def list_ids(data):
+    return [item["id"] for item in data]
+
+
 @pytest.fixture
 def search_test_data(
     authenticated_client,
@@ -73,7 +77,7 @@ def test_search_distinct(authenticated_client, search_test_data):
 
     assert response.status_code == 200
 
-    result_ids = [item["id"] for item in response.data]
+    result_ids = list_ids(response.data["results"])
     expected_id = search_test_data["doc_apple_multiple_word_hits"]["document"].id
 
     assert result_ids.count(expected_id) == 1
@@ -115,7 +119,7 @@ def test_search_by_field_name(
 
     assert response.status_code == 200
 
-    result_ids = {item["id"] for item in response.data}
+    result_ids = set(list_ids(response.data["results"]))
     expected_ids = {search_test_data[key]["document"].id for key in expected_keys}
 
     assert result_ids == expected_ids
@@ -157,7 +161,7 @@ def test_search_by_lookup_expr(
 
     assert response.status_code == 200
 
-    result_ids = {item["id"] for item in response.data}
+    result_ids = set(list_ids(response.data["results"]))
     expected_ids = {search_test_data[key]["document"].id for key in expected_keys}
 
     assert result_ids == expected_ids
@@ -199,7 +203,7 @@ def test_search_by_keyword_operator(
 
     assert response.status_code == 200
 
-    result_ids = {item["id"] for item in response.data}
+    result_ids = set(list_ids(response.data["results"]))
     expected_ids = {search_test_data[key]["document"].id for key in expected_keys}
 
     assert result_ids == expected_ids
@@ -233,8 +237,8 @@ def test_search_allows_keyword_operator_with_single_keyword(
     assert base_response.status_code == 200
     assert response.status_code == 200
 
-    base_ids = {item["id"] for item in base_response.data}
-    result_ids = {item["id"] for item in response.data}
+    base_ids = set(list_ids(base_response.data["results"]))
+    result_ids = set(list_ids(response.data["results"]))
 
     assert result_ids == base_ids
 

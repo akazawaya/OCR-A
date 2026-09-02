@@ -15,6 +15,7 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny, DjangoModelPermissions, IsAuthenticated
 from rest_framework.response import Response
@@ -155,8 +156,22 @@ class AuthViewSet(viewsets.ViewSet):
         )
 
 
+class DocumentPagination(PageNumberPagination):
+    page_size = 10
+
+    def get_paginated_response(self, data):
+        return Response(
+            {
+                "current_page": self.page.number,
+                "pagination_total_pages": self.page.paginator.num_pages,
+                "results": data,
+            }
+        )
+
+
 class DocumentViewSet(viewsets.ModelViewSet):
     serializer_class = DocumentSerializer
+    pagination_class = DocumentPagination
     parser_classes = [MultiPartParser, FormParser]
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = DocumentFilterSet
