@@ -16,9 +16,11 @@ import {
   deleteCollectionItem,
 } from "../api/clients/mutationClient";
 import { buildCollectionQueryString } from "../logic/urlQuery/buildCollectionQueryString";
+import { buildPaginationQuery } from "../logic/urlQuery/paginationQuery";
 import { defaultSearchQuery } from "../logic/urlQuery/searchQueryUtils";
 import { toggleSortQuery } from "../logic/urlQuery/sortQueryUtils";
 import { useSearchQuery } from "../logic/urlQuery/useSearchQuery";
+import PaginationButtons from "../components/PaginationButtons";
 import DocumentToolbar from "../components/Document/DocumentToolbar";
 import DocumentTable from "../components/Document/DocumentTable";
 import AlertDialog from "../components/ui/AlertDialog";
@@ -55,6 +57,7 @@ const DocumentsPage = () => {
 
       const nextQueryString = buildCollectionQueryString({
         baseQueryString,
+        paginationQuery: buildPaginationQuery(1),
         searchQuery: appliedSearchQuery,
         sortQuery: nextAppliedSortQuery,
       });
@@ -69,6 +72,7 @@ const DocumentsPage = () => {
 
     const nextQueryString = buildCollectionQueryString({
       baseQueryString,
+      paginationQuery: buildPaginationQuery(1),
       searchQuery: draftSearchQuery,
       sortQuery: appliedSortQuery,
     });
@@ -83,6 +87,20 @@ const DocumentsPage = () => {
     navigate(routePaths.docs.to());
   };
 
+  const setPage = useCallback(
+    (page) => {
+      const nextQueryString = buildCollectionQueryString({
+        baseQueryString,
+        paginationQuery: buildPaginationQuery(page),
+        searchQuery: appliedSearchQuery,
+        sortQuery: appliedSortQuery,
+      });
+
+      navigate({ search: nextQueryString });
+    },
+    [appliedSearchQuery, appliedSortQuery, baseQueryString, navigate],
+  );
+
   const documentQueryString = useMemo(
     () =>
       buildCollectionQueryString({
@@ -94,7 +112,7 @@ const DocumentsPage = () => {
   );
 
   const {
-    data: rows,
+    data: paginatedDocumentsResponse,
     isPending,
     isError,
   } = useQuery({
@@ -103,6 +121,9 @@ const DocumentsPage = () => {
       getCollection({ collectionUrl, queryString: documentQueryString }),
     enabled: Boolean(collectionUrl),
   });
+  const rows = paginatedDocumentsResponse?.results ?? [];
+  const currentPage = paginatedDocumentsResponse?.current_page ?? 1;
+  const totalPages = paginatedDocumentsResponse?.pagination_total_pages ?? 1;
 
   const { mutate: deleteDocumentMutation } = useMutation({
     mutationFn: ({ id }) => deleteCollectionItem({ collectionUrl, id }),
@@ -183,18 +204,24 @@ const DocumentsPage = () => {
       ) : isError ? (
         <div>読み込みに失敗しました</div>
       ) : (
-        <DocumentTable
-          actions={{
-            columnsSort,
-            dataRouter,
-            deleteRow,
-          }}
-          data={{
-            columns: documentTableColumns,
-            rows,
-            ordering: appliedSortQuery.ordering,
-          }}
-        />
+        <>
+          <DocumentTable
+            actions={{
+              columnsSort,
+              dataRouter,
+              deleteRow,
+            }}
+            data={{
+              columns: documentTableColumns,
+              rows,
+              ordering: appliedSortQuery.ordering,
+            }}
+          />
+          <PaginationButtons
+            actions={{ setPage }}
+            data={{ currentPage, totalPages }}
+          />
+        </>
       )}
       <AlertDialog.Root
         open={documentToDelete !== null}

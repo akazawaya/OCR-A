@@ -24,6 +24,7 @@ const normalizeSearchQuery = (searchQuery = defaultSearchQuery) => {
 
 export const buildCollectionQueryString = ({
   baseQueryString = "",
+  paginationQuery = {},
   routingQuery = {},
   searchQuery = defaultSearchQuery,
   sortQuery = {},
@@ -31,6 +32,7 @@ export const buildCollectionQueryString = ({
   const params = new URLSearchParams(baseQueryString);
 
   applyKeyValueQuery(params, routingQuery);
+  applyKeyValueQuery(params, paginationQuery);
   applyKeyValueQuery(params, sortQuery);
 
   const normalizedSearchQuery = normalizeSearchQuery(searchQuery);
