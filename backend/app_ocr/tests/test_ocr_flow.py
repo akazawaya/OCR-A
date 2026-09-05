@@ -174,13 +174,14 @@ def mock_run_yomitoku_on_rendered_page(
         yield
 
 
-@pytest.mark.django_db(transaction=True)
+@pytest.mark.django_db
 def test_document_ocr_success_notifies_channel(
     authenticated_client,
     uploaded_file_from_fixture_factory,
     isolated_media_storage,
     mock_run_yomitoku_on_rendered_page,
     synchronous_celery_and_inmemory_channels,
+    django_capture_on_commit_callbacks,
 ):
     pdf_file = uploaded_file_from_fixture_factory(
         "sample.pdf",
@@ -192,11 +193,12 @@ def test_document_ocr_success_notifies_channel(
     async_to_sync(channel_layer.group_add)(group_name, channel_name)
 
     try:
-        response = authenticated_client.post(
-            reverse("document-ocr"),
-            data={"file": pdf_file},
-            format="multipart",
-        )
+        with django_capture_on_commit_callbacks(execute=True):
+            response = authenticated_client.post(
+                reverse("document-ocr"),
+                data={"file": pdf_file},
+                format="multipart",
+            )
         assert response.status_code == status.HTTP_202_ACCEPTED
 
         # 想定のws通知は３回 Document作成時/PROCESSINGへの更新時/DocumentのSUCCESS更新時
@@ -219,7 +221,7 @@ def test_document_ocr_success_notifies_channel(
     ]
 
 
-@pytest.mark.django_db(transaction=True)
+@pytest.mark.django_db
 def test_word_ocr_success_notifies_channel_and_result_can_be_retrieved(
     authenticated_client,
     document_factory,
