@@ -17,10 +17,6 @@ GENERATE_DEFAULT = object()  # 他の値と一致しない固有オブジェク�
 DEFAULT_USER_EMAIL = "testuser@example.invalid"
 DEFAULT_USER_PASSWORD = "testpass123"
 DEFAULT_USER_LAST_LOGIN = datetime(2026, 1, 1, tzinfo=UTC)
-DEFAULT_USER_IS_SUPERUSER = False
-DEFAULT_USER_IS_STAFF = False
-DEFAULT_USER_GROUPS = ()
-DEFAULT_USER_PERMISSIONS = ()
 
 # Documentモデルのデフォルト値
 DEFAULT_DOCUMENT_OWNER = GENERATE_DEFAULT
@@ -94,46 +90,34 @@ def isolated_media_storage(settings):
 
 
 @pytest.fixture
-def group_factory(db):
-    def make_group(*, name="test-group", permissions=()):
-        group = Group.objects.create(name=name)
-        if permissions:
-            group.permissions.add(
-                *Permission.objects.filter(
-                    content_type__app_label="app_ocr",
-                    codename__in=permissions,
-                )
-            )
-        return group
-
-    return make_group
-
-
-@pytest.fixture
 def user_factory(db):
     user_model = get_user_model()
 
     def make_user(
         *,
+        group_name,
         email=DEFAULT_USER_EMAIL,
         password=DEFAULT_USER_PASSWORD,
         last_login=DEFAULT_USER_LAST_LOGIN,
-        is_superuser=DEFAULT_USER_IS_SUPERUSER,
-        is_staff=DEFAULT_USER_IS_STAFF,
-        groups=DEFAULT_USER_GROUPS,
-        permissions=DEFAULT_USER_PERMISSIONS,
     ):
-        user = user_model.objects.create_user(
+        if group_name == "guest_group":
+            create_user = user_model.objects.create_guest_user
+        elif group_name == "standard_group":
+            create_user = user_model.objects.create_registered_user
+        elif group_name == "staff_group":
+            create_user = user_model.objects.create_superuser
+        else:
+            raise ValueError(f"未対応のGroupです: {group_name}")
+
+        user = create_user(
             email=email,
             password=password,
             last_login=last_login,
-            is_superuser=is_superuser,
-            is_staff=is_staff or is_superuser,
         )
-        if groups:
-            user.groups.add(*groups)
-        if permissions:
-            user.user_permissions.add(*permissions)
+
+        # Manager側の実装にかかわらず、fixture自身でも指定された1つのGroupだけに確定する
+        group = Group.objects.get(name=group_name)
+        user.groups.set([group])
         return user
 
     return make_user
@@ -143,22 +127,16 @@ def user_factory(db):
 def user_client_factory(user_factory):
     def make_user_client(
         *,
+        group_name,
         email=DEFAULT_USER_EMAIL,
         password=DEFAULT_USER_PASSWORD,
         last_login=DEFAULT_USER_LAST_LOGIN,
-        is_superuser=DEFAULT_USER_IS_SUPERUSER,
-        is_staff=DEFAULT_USER_IS_STAFF,
-        groups=DEFAULT_USER_GROUPS,
-        permissions=DEFAULT_USER_PERMISSIONS,
     ):
         user = user_factory(
+            group_name=group_name,
             email=email,
             password=password,
             last_login=last_login,
-            is_superuser=is_superuser,
-            is_staff=is_staff,
-            groups=groups,
-            permissions=permissions,
         )
         client = APIClient()
         client.force_login(user)
@@ -169,12 +147,15 @@ def user_client_factory(user_factory):
 
 
 @pytest.fixture
-def authenticated_client(user_client_factory, group_factory):
-    ocr_group = group_factory(
-        name="ocr-users",
-        permissions=("add_document", "add_word"),
+def authenticated_client(user_client_factory):
+    client, user = user_client_factory(group_name="standard_group")
+    group = user.groups.get()
+    group.permissions.add(
+        *Permission.objects.filter(
+            content_type__app_label="app_ocr",
+            codename__in=("add_document", "add_word"),
+        )
     )
-    client, _ = user_client_factory(groups=[ocr_group])
     return client
 
 
@@ -199,6 +180,7 @@ def document_factory(
 
         if owner is GENERATE_DEFAULT:
             owner = user_factory(
+                group_name="standard_group",
                 email=email,
                 password=password,
             )

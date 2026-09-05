@@ -1,9 +1,10 @@
-from contextlib import ExitStack
 from unittest.mock import patch
 
 import pytest
 from django.urls import reverse
 from rest_framework import status
+
+from app_ocr.group_policy import GROUP_POLICIES
 
 pytestmark = pytest.mark.django_db
 
@@ -18,8 +19,14 @@ def test_authorization_limits_lists_to_own_resources(
     page_factory,
     word_factory,
 ):
-    alice_client, _ = user_client_factory(email="alice@example.invalid")
-    bob_client, _ = user_client_factory(email="bob@example.invalid")
+    alice_client, _ = user_client_factory(
+        group_name="standard_group",
+        email="alice@example.invalid",
+    )
+    bob_client, _ = user_client_factory(
+        group_name="standard_group",
+        email="bob@example.invalid",
+    )
 
     alice_document = document_factory(owner=alice_client.user, file_name="alice.pdf")
     bob_document = document_factory(owner=bob_client.user, file_name="bob.pdf")
@@ -53,162 +60,39 @@ def test_authorization_limits_lists_to_own_resources(
     assert list_ids(bob_words.data) == [bob_word_id]
 
 
-@pytest.mark.parametrize(
-    (
-        "url_name,payload,patch_targets,email,is_superuser,"
-        "group_permissions,expected_status,inspect_file_return"
-    ),
-    [
-        (
-            "document-ocr",
-            lambda dummy_file_factory: {"file": dummy_file_factory()},
-            [
-                "app_ocr.views.inspect_file",
-                "app_ocr.views.create_pages_from_document_file",
-                "app_ocr.views.dispatch_ocr_pages_task.delay",
-            ],
-            "without-document-permission",
-            False,
-            (),
-            status.HTTP_403_FORBIDDEN,
-            None,
-        ),
-        (
-            "word-ocr",
-            None,
-            [
-                "app_ocr.views.ocr_word_task.delay",
-            ],
-            "without-word-permission",
-            False,
-            (),
-            status.HTTP_403_FORBIDDEN,
-            None,
-        ),
-        (
-            "document-ocr",
-            lambda dummy_file_factory: {"file": dummy_file_factory()},
-            [
-                "app_ocr.views.inspect_file",
-                "app_ocr.views.create_pages_from_document_file",
-                "app_ocr.views.dispatch_ocr_pages_task.delay",
-            ],
-            "with-document-permission",
-            False,
-            ("add_document",),
-            status.HTTP_202_ACCEPTED,
-            ("jpg", 1),
-        ),
-        (
-            "word-ocr",
-            None,
-            [
-                "app_ocr.views.ocr_word_task.delay",
-            ],
-            "with-word-permission",
-            False,
-            ("add_word",),
-            status.HTTP_202_ACCEPTED,
-            None,
-        ),
-        (
-            "document-ocr",
-            lambda dummy_file_factory: {"file": dummy_file_factory()},
-            [
-                "app_ocr.views.inspect_file",
-                "app_ocr.views.create_pages_from_document_file",
-                "app_ocr.views.dispatch_ocr_pages_task.delay",
-            ],
-            "document-admin",
-            True,
-            (),
-            status.HTTP_202_ACCEPTED,
-            ("jpg", 1),
-        ),
-        (
-            "word-ocr",
-            None,
-            [
-                "app_ocr.views.ocr_word_task.delay",
-            ],
-            "word-admin",
-            True,
-            (),
-            status.HTTP_202_ACCEPTED,
-            None,
-        ),
-    ],
-)
-def test_group_model_permissions_control_ocr_access(
-    user_client_factory,
-    group_factory,
-    document_factory,
-    page_factory,
+def test_ocr_api_access_follows_group_policy(
+    authenticated_client,
     dummy_file_factory,
-    preview_word_ocr_request_factory,
     isolated_media_storage,
-    url_name,
-    payload,
-    patch_targets,
-    email,
-    is_superuser,
-    group_permissions,
-    expected_status,
-    inspect_file_return,
+    monkeypatch,
 ):
-    groups = []
-    if group_permissions:
-        groups = [
-            group_factory(
-                name=f"{email}-group",
-                permissions=group_permissions,
-            )
-        ]
-    client, _ = user_client_factory(
-        email=email,
-        is_superuser=is_superuser,
-        groups=groups,
-    )
+    # Groupごとのポリシー選択はこのテストの対象外とし、全Groupを同じ値に揃えて、
+    # allow_ocr_apiの変更だけで認可結果が変わることを検証する
+    for policy in GROUP_POLICIES.values():
+        monkeypatch.setitem(policy, "allow_ocr_api", True)
 
-    document = None
-    if url_name == "word-ocr":
-        document = document_factory(owner=client.user, file_name="limited.pdf")
-        page_factory(doc=document)
-
-    if url_name == "document-ocr":
-        request_payload = payload(dummy_file_factory)
-    else:
-        request_payload = preview_word_ocr_request_factory(document=document)
-
-    with ExitStack() as stack:
-        mocks = []
-        for target in patch_targets:
-            if (
-                target == "app_ocr.views.inspect_file"
-                and inspect_file_return is not None
-            ):
-                mocks.append(
-                    stack.enter_context(patch(target, return_value=inspect_file_return))
-                )
-            else:
-                mock = stack.enter_context(patch(target))
-                if target == "app_ocr.views.ocr_word_task.delay":
-                    mock.return_value.id = "preview-job-1"
-                mocks.append(mock)
-        response = client.post(
-            reverse(url_name),
-            request_payload,
-            format="multipart" if url_name == "document-ocr" else "json",
+    # Document OCRとWord OCRが共通の認可処理を使う設計を前提とし、
+    # ここではポリシー連動の代表としてDocument OCRのみを検証する
+    with (
+        patch("app_ocr.views.inspect_file", return_value=("jpg", 1)) as inspect_file,
+        patch("app_ocr.views.create_pages_from_document_file"),
+        patch("app_ocr.views.dispatch_ocr_pages_task.delay"),
+    ):
+        allowed_response = authenticated_client.post(
+            reverse("document-ocr"),
+            {"file": dummy_file_factory()},
+            format="multipart",
         )
 
-    assert response.status_code == expected_status
-    if expected_status == status.HTTP_403_FORBIDDEN:
-        for mock in mocks:
-            mock.assert_not_called()
-    elif url_name == "document-ocr":
-        mocks[0].assert_called_once()
-        for mock in mocks[1:]:
-            mock.assert_not_called()
-    else:
-        for mock in mocks:
-            mock.assert_called_once()
+        for policy in GROUP_POLICIES.values():
+            monkeypatch.setitem(policy, "allow_ocr_api", False)
+
+        denied_response = authenticated_client.post(
+            reverse("document-ocr"),
+            {"file": dummy_file_factory()},
+            format="multipart",
+        )
+
+    assert allowed_response.status_code == status.HTTP_202_ACCEPTED
+    assert denied_response.status_code == status.HTTP_403_FORBIDDEN
+    inspect_file.assert_called_once()

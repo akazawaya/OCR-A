@@ -41,8 +41,6 @@ def login_user(api_client, user, password=DEFAULT_USER_PASSWORD):
 
 
 def test_create_guest_user_returns_success_and_logs_in(api_client):
-    guest_group = Group.objects.create(name="guest")
-
     response = api_client.post(
         reverse("user-list"),
         {"type": "guest"},
@@ -52,7 +50,6 @@ def test_create_guest_user_returns_success_and_logs_in(api_client):
     assert response.status_code == status.HTTP_201_CREATED
     user = get_user_model().objects.get(id=response.data["id"])
     assert user.has_usable_password()
-    assert list(user.groups.all()) == [guest_group]
     assert api_client.session["_auth_user_id"] == str(user.id)
 
 
@@ -76,8 +73,41 @@ def test_create_registered_user_returns_success_and_logs_in(api_client):
         "email": email,
     }
     assert user.check_password(DEFAULT_USER_PASSWORD)
-    assert list(user.groups.all()) == []
     assert api_client.session["_auth_user_id"] == str(user.id)
+
+
+class TestUserCreationPathsAssignExactlyOneGroup:
+    """各User作成経路で、Userが必ず1つのGroupだけに所属することを検証する。"""
+
+    def test_create_guest_user_assigns_only_guest_group(self):
+        guest_group = Group.objects.get(name="guest_group")
+
+        user = get_user_model().objects.create_guest_user(
+            email="guest@example.invalid",
+        )
+
+        assert list(user.groups.all()) == [guest_group]
+
+    def test_create_registered_user_assigns_exactly_one_group(self):
+        user = get_user_model().objects.create_registered_user(
+            email=DEFAULT_USER_EMAIL,
+            password=DEFAULT_USER_PASSWORD,
+        )
+
+        # 現在はstandard_groupのみだが、今後はプランに応じて
+        # 所属先の候補が増える可能性があるため、具体的なGroup名は固定せず、
+        # 作成時に1つだけ割り当てられることを検証する
+        assert user.groups.count() == 1
+
+    def test_create_superuser_assigns_only_staff_group(self):
+        staff_group = Group.objects.get(name="staff_group")
+
+        user = get_user_model().objects.create_superuser(
+            email="admin@example.invalid",
+            password=DEFAULT_USER_PASSWORD,
+        )
+
+        assert list(user.groups.all()) == [staff_group]
 
 
 def test_create_registered_user_rejects_duplicate_email(api_client):

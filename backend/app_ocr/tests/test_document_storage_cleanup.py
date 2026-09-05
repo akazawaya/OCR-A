@@ -33,7 +33,7 @@ def test_document_delete_api_deletes_stored_file(
     user_client_factory,
     document_factory,
 ):
-    client, user = user_client_factory(is_superuser=True)
+    client, user = user_client_factory(group_name="staff_group")
     document = document_factory(owner=user)
     document_id = document.id
     file_name = document.file.name
@@ -53,7 +53,7 @@ def test_user_delete_me_api_deletes_owned_document_files(
     word_factory,
     dummy_file_factory,
 ):
-    client, user = user_client_factory()
+    client, user = user_client_factory(group_name="standard_group")
     user_id = user.id
     document = document_factory(owner=user)
     page = page_factory(doc=document)
@@ -85,8 +85,8 @@ def test_document_admin_bulk_delete_deletes_stored_file(
     document_factory,
 ):
     client, user = user_client_factory(
+        group_name="staff_group",
         email="admin@example.invalid",
-        is_superuser=True,
     )
     document = document_factory(owner=user)
     document_id = document.id
@@ -116,8 +116,8 @@ def test_user_admin_bulk_delete_deletes_owned_document_files(
     document_factory,
 ):
     client, _ = user_client_factory(
+        group_name="staff_group",
         email="admin@example.invalid",
-        is_superuser=True,
     )
     user_model = get_user_model()
     target_user = user_model.objects.create_user(email="target@example.invalid")
