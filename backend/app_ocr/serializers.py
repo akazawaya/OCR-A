@@ -3,7 +3,6 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from django.contrib.auth import get_user_model, password_validation
-from django.contrib.auth.models import Group
 from rest_framework import serializers
 
 from app_ocr.input_constraints import (
@@ -76,15 +75,12 @@ class UserCreateSerializer(serializers.Serializer):
         user_model = get_user_model()
 
         if validated_data["type"] == "guest":
-            user = user_model.objects.create_user(
+            return user_model.objects.create_guest_user(
                 password=secrets.token_urlsafe(32),
                 email=f"guest_{uuid4().hex}@example.invalid",
             )
-            guest_group = Group.objects.get(name="guest")
-            user.groups.add(guest_group)
-            return user
 
-        return user_model.objects.create_user(
+        return user_model.objects.create_registered_user(
             password=validated_data["password"],
             email=validated_data["email"],
         )

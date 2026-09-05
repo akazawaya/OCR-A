@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
-from django.contrib.auth.models import PermissionsMixin
+from django.contrib.auth.models import Group, PermissionsMixin
 from django.core.validators import (
     FileExtensionValidator,
     MaxValueValidator,
@@ -77,7 +77,8 @@ class UserQuerySet(models.QuerySet):
 class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
     use_in_migrations = True
 
-    def create_user(self, email, password=None, **extra_fields):
+    def _create_user(self, email, password, group_name, **extra_fields):
+        group = Group.objects.using(self._db).get(name=group_name)
         email = self.normalize_email(email)
         user = self.model(
             email=email,
@@ -85,12 +86,41 @@ class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
         )
         user.set_password(password)
         user.save(using=self._db)
+        user.groups.add(group)
         return user
+
+    def create_registered_user(self, email, password=None, **extra_fields):
+        return self._create_user(
+            email,
+            password,
+            "standard_group",
+            **extra_fields,
+        )
+
+    # DjangoのカスタムUserManagerで推奨される標準インターフェースとして、
+    # create_userとcreate_superuserの定義の必要性がある。
+    # create_userは不要で、どこからも参照されないと思われるが公式に従い定義を残す。
+    # https://docs.djangoproject.com/en/5.2/topics/auth/customizing/#writing-a-manager-for-a-custom-user-model
+    def create_user(self, email, password=None, **extra_fields):
+        return self.create_registered_user(email, password, **extra_fields)
+
+    def create_guest_user(self, email, password=None, **extra_fields):
+        return self._create_user(
+            email,
+            password,
+            "guest_group",
+            **extra_fields,
+        )
 
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
-        return self.create_user(email, password, **extra_fields)
+        return self._create_user(
+            email,
+            password,
+            "staff_group",
+            **extra_fields,
+        )
 
 
 class User(AbstractBaseUser, PermissionsMixin):
