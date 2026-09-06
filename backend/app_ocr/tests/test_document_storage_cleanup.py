@@ -5,6 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from app_ocr.models import Document, Page, Word
+from app_ocr.tests.conftest import DEFAULT_USER_PASSWORD
 
 pytestmark = pytest.mark.django_db
 
@@ -120,7 +121,10 @@ def test_user_admin_bulk_delete_deletes_owned_document_files(
         email="admin@example.invalid",
     )
     user_model = get_user_model()
-    target_user = user_model.objects.create_user(email="target@example.invalid")
+    target_user = user_model.objects.create_user(
+        email="target@example.invalid",
+        password=DEFAULT_USER_PASSWORD,
+    )
     document = document_factory(owner=target_user)
     target_user_id = target_user.id
     document_id = document.id

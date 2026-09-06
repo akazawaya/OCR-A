@@ -101,19 +101,24 @@ def user_factory(db):
         last_login=DEFAULT_USER_LAST_LOGIN,
     ):
         if group_name == "guest_group":
-            create_user = user_model.objects.create_guest_user
+            user = user_model.objects.create_guest_user(
+                email=email,
+                last_login=last_login,
+            )
         elif group_name == "standard_group":
-            create_user = user_model.objects.create_registered_user
+            user = user_model.objects.create_registered_user(
+                email=email,
+                password=password,
+                last_login=last_login,
+            )
         elif group_name == "staff_group":
-            create_user = user_model.objects.create_superuser
+            user = user_model.objects.create_superuser(
+                email=email,
+                password=password,
+                last_login=last_login,
+            )
         else:
             raise ValueError(f"未対応のGroupです: {group_name}")
-
-        user = create_user(
-            email=email,
-            password=password,
-            last_login=last_login,
-        )
 
         # Manager側の実装にかかわらず、fixture自身でも指定された1つのGroupだけに確定する
         group = Group.objects.get(name=group_name)

@@ -1,4 +1,3 @@
-import secrets
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
@@ -76,7 +75,6 @@ class UserCreateSerializer(serializers.Serializer):
 
         if validated_data["type"] == "guest":
             return user_model.objects.create_guest_user(
-                password=secrets.token_urlsafe(32),
                 email=f"guest_{uuid4().hex}@example.invalid",
             )
 
