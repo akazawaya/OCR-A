@@ -1,10 +1,7 @@
-from unittest.mock import patch
-
 import pytest
+from django.contrib.auth.models import Permission
 from django.urls import reverse
 from rest_framework import status
-
-from app_ocr.group_policy import GROUP_POLICIES
 
 pytestmark = pytest.mark.django_db
 
@@ -60,39 +57,34 @@ def test_authorization_limits_lists_to_own_resources(
     assert list_ids(bob_words.data) == [bob_word_id]
 
 
-def test_ocr_api_access_follows_group_policy(
+def test_document_ocr_api_access_follows_group_permission(
     authenticated_client,
-    dummy_file_factory,
+    uploaded_file_from_fixture_factory,
     isolated_media_storage,
-    monkeypatch,
 ):
-    # Groupごとのポリシー選択はこのテストの対象外とし、全Groupを同じ値に揃えて、
-    # allow_ocr_apiの変更だけで認可結果が変わることを検証する
-    for policy in GROUP_POLICIES.values():
-        monkeypatch.setitem(policy, "allow_ocr_api", True)
+    ocr_permission = Permission.objects.get(
+        content_type__app_label="app_ocr",
+        content_type__model="document",
+        codename="run_ocr_document",
+    )
+    group = authenticated_client.user.group
 
     # Document OCRとWord OCRが共通の認可処理を使う設計を前提とし、
-    # ここではポリシー連動の代表としてDocument OCRのみを検証する
-    with (
-        patch("app_ocr.views.inspect_file", return_value=("jpg", 1)) as inspect_file,
-        patch("app_ocr.views.create_pages_from_document_file"),
-        patch("app_ocr.views.dispatch_ocr_pages_task.delay"),
-    ):
-        allowed_response = authenticated_client.post(
-            reverse("document-ocr"),
-            {"file": dummy_file_factory()},
-            format="multipart",
-        )
+    # ここではPermission連動の代表としてDocument OCRのみを検証する
+    # standard_groupの初期OCR Permissionを外すだけで認可結果が変わることを検証する
+    allowed_response = authenticated_client.post(
+        reverse("document-ocr"),
+        {"file": uploaded_file_from_fixture_factory()},
+        format="multipart",
+    )
 
-        for policy in GROUP_POLICIES.values():
-            monkeypatch.setitem(policy, "allow_ocr_api", False)
+    group.permissions.remove(ocr_permission)
 
-        denied_response = authenticated_client.post(
-            reverse("document-ocr"),
-            {"file": dummy_file_factory()},
-            format="multipart",
-        )
+    denied_response = authenticated_client.post(
+        reverse("document-ocr"),
+        {"file": uploaded_file_from_fixture_factory()},
+        format="multipart",
+    )
 
     assert allowed_response.status_code == status.HTTP_202_ACCEPTED
     assert denied_response.status_code == status.HTTP_403_FORBIDDEN
-    inspect_file.assert_called_once()

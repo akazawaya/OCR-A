@@ -4,7 +4,6 @@ from tempfile import TemporaryDirectory
 
 import pytest
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APIClient
 
@@ -149,13 +148,7 @@ def user_client_factory(user_factory):
 
 @pytest.fixture
 def authenticated_client(user_client_factory):
-    client, user = user_client_factory(group_name="standard_group")
-    user.group.permissions.add(
-        *Permission.objects.filter(
-            content_type__app_label="app_ocr",
-            codename__in=("add_document", "add_word"),
-        )
-    )
+    client, _ = user_client_factory(group_name="standard_group")
     return client
 
 

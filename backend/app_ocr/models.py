@@ -129,6 +129,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     # 1 User・1 Groupを非NULLのForeignKeyで保証する。
     # PermissionsMixinの標準M2Mフィールドは使用せず、Permissionはgroup経由でのみ取得。
     groups = None
+    user_permissions = None
 
     email = models.EmailField(unique=True)
     group = models.ForeignKey(
@@ -199,6 +200,9 @@ class Document(models.Model):
 
     class Meta:
         ordering = ["created"]
+        permissions = [
+            ("run_ocr_document", "Can run document OCR"),
+        ]
 
 
 class Page(models.Model):
@@ -238,3 +242,8 @@ class Word(models.Model):
         blank=True,
         validators=[MinValueValidator(0), MaxValueValidator(1)],
     )
+
+    class Meta:
+        permissions = [
+            ("run_ocr_word", "Can run word OCR"),
+        ]
