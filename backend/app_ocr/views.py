@@ -97,7 +97,7 @@ class UserViewSet(viewsets.GenericViewSet):
         url_path="me/password",
     )
     def password(self, request):
-        if request.user.groups.filter(name="guest_group").exists():
+        if request.user.group.name == "guest_group":
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         serializer = UserPasswordChangeSerializer(

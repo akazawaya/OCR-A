@@ -84,11 +84,11 @@ class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
         email = self.normalize_email(email)
         user = self.model(
             email=email,
+            group=group,
             **extra_fields,
         )
         user.set_password(password)
         user.save(using=self._db)
-        user.groups.add(group)
         return user
 
     def create_registered_user(self, email, password, **extra_fields):
@@ -126,7 +126,16 @@ class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
+    # 1 User・1 Groupを非NULLのForeignKeyで保証する。
+    # PermissionsMixinの標準M2Mフィールドは使用せず、Permissionはgroup経由でのみ取得。
+    groups = None
+
     email = models.EmailField(unique=True)
+    group = models.ForeignKey(
+        Group,
+        on_delete=models.PROTECT,
+        related_name="users",
+    )
     is_staff = models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"

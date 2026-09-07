@@ -86,7 +86,7 @@ class TestUserCreationPathsAssignExactlyOneGroup:
             email="guest@example.invalid",
         )
 
-        assert list(user.groups.all()) == [guest_group]
+        assert user.group == guest_group
 
     def test_create_registered_user_assigns_exactly_one_group(self):
         user = get_user_model().objects.create_registered_user(
@@ -94,10 +94,10 @@ class TestUserCreationPathsAssignExactlyOneGroup:
             password=DEFAULT_USER_PASSWORD,
         )
 
-        # 現在はstandard_groupのみだが、今後はプランに応じて
-        # 所属先の候補が増える可能性があるため、具体的なGroup名は固定せず、
-        # 作成時に1つだけ割り当てられることを検証する
-        assert user.groups.count() == 1
+        # 今後ユーザーのプランに応じて所属先の候補が増える可能性があるため、
+        # 具体的なGroup名は固定せず、Groupが割り当てられていることを検証する。
+        # 非NULL ForeignKeyなので、割り当てられていれば必ず1つだけとなる。
+        assert user.group_id is not None
 
     def test_create_superuser_assigns_only_staff_group(self):
         staff_group = Group.objects.get(name="staff_group")
@@ -107,7 +107,7 @@ class TestUserCreationPathsAssignExactlyOneGroup:
             password=DEFAULT_USER_PASSWORD,
         )
 
-        assert list(user.groups.all()) == [staff_group]
+        assert user.group == staff_group
 
 
 def test_create_registered_user_rejects_duplicate_email(api_client):

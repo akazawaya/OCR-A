@@ -4,7 +4,7 @@ from tempfile import TemporaryDirectory
 
 import pytest
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.models import Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APIClient
 
@@ -119,10 +119,6 @@ def user_factory(db):
             )
         else:
             raise ValueError(f"未対応のGroupです: {group_name}")
-
-        # Manager側の実装にかかわらず、fixture自身でも指定された1つのGroupだけに確定する
-        group = Group.objects.get(name=group_name)
-        user.groups.set([group])
         return user
 
     return make_user
@@ -154,8 +150,7 @@ def user_client_factory(user_factory):
 @pytest.fixture
 def authenticated_client(user_client_factory):
     client, user = user_client_factory(group_name="standard_group")
-    group = user.groups.get()
-    group.permissions.add(
+    user.group.permissions.add(
         *Permission.objects.filter(
             content_type__app_label="app_ocr",
             codename__in=("add_document", "add_word"),

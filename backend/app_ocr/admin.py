@@ -14,7 +14,7 @@ def all_fields(model):
 class UserAdmin(admin.ModelAdmin):
     list_display = all_fields(User)
     search_fields = ("email",)
-    list_filter = ("is_staff", "is_superuser", "groups")
+    list_filter = ("is_staff", "is_superuser", "group")
 
 
 @admin.register(Document)
