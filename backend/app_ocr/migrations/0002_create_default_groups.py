@@ -1,11 +1,9 @@
 from django.db import migrations
 
+# APP定義の初期設定用　migrationFile
+# staff_groupの認可はUser単位でのis_superuserを設定する前提であるため、一切付けない。（閲覧用)
 DEFAULT_GROUP_NAMES = (
     "guest_group",
-    "standard_group",
-    "staff_group",
-)
-OCR_ALLOWED_GROUP_NAMES = (
     "standard_group",
     "staff_group",
 )
@@ -34,7 +32,7 @@ def create_default_groups(apps, _schema_editor):
 
     for name in DEFAULT_GROUP_NAMES:
         group = Group.objects.create(name=name)
-        if name in OCR_ALLOWED_GROUP_NAMES:
+        if name == "standard_group":
             group.permissions.add(*ocr_permissions)
 
 
