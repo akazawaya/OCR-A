@@ -2,7 +2,7 @@ from rest_framework.permissions import BasePermission
 
 
 class GroupPermission(BasePermission):
-    # 所属Groupに指定したPermissionがあるUserだけを許可する。
+    # SingleGroupModelBackendを介し、所属GroupにPermissionがあるUserだけを許可する。
 
     app_label = "app_ocr"
     model = None
@@ -12,13 +12,7 @@ class GroupPermission(BasePermission):
         user = request.user
         if not user.is_authenticated:
             return False
-        if user.is_superuser:
-            return True
-        return user.group.permissions.filter(
-            content_type__app_label=self.app_label,
-            content_type__model=self.model,
-            codename=self.codename,
-        ).exists()
+        return user.has_perm(f"{self.app_label}.{self.codename}")
 
 
 class CanRunDocumentOcr(GroupPermission):

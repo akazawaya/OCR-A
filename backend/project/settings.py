@@ -164,6 +164,13 @@ INSTALLED_APPS = [
 
 AUTH_USER_MODEL = "app_ocr.User"
 
+# Django標準のM2MフィールドUser.groupsを
+# 単一Groupを指すForeignKeyのUser.groupへ変更したため、
+# 標準ModelBackendを単一Group対応のバックエンドへ差し替える。
+AUTHENTICATION_BACKENDS = [
+    "app_ocr.backends.SingleGroupModelBackend",
+]
+
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],

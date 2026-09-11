@@ -1,7 +1,11 @@
+from unittest.mock import patch
+
 import pytest
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Group
 from django.urls import reverse
 from rest_framework import status
+
+from app_ocr.backends import SingleGroupModelBackend
 
 pytestmark = pytest.mark.django_db
 
@@ -57,28 +61,20 @@ def test_authorization_limits_lists_to_own_resources(
     assert list_ids(bob_words.data) == [bob_word_id]
 
 
-def test_document_ocr_api_access_follows_group_permission(
+def test_document_ocr_api_access_follows_users_group(
     authenticated_client,
     uploaded_file_from_fixture_factory,
     isolated_media_storage,
 ):
-    ocr_permission = Permission.objects.get(
-        content_type__app_label="app_ocr",
-        content_type__model="document",
-        codename="run_ocr_document",
-    )
-    group = authenticated_client.user.group
-
-    # Document OCRとWord OCRが共通の認可処理を使う設計を前提とし、
-    # ここではPermission連動の代表としてDocument OCRのみを検証する
-    # standard_groupの初期OCR Permissionを外すだけで認可結果が変わることを検証する
     allowed_response = authenticated_client.post(
         reverse("document-ocr"),
         {"file": uploaded_file_from_fixture_factory()},
         format="multipart",
     )
 
-    group.permissions.remove(ocr_permission)
+    user = authenticated_client.user
+    user.group = Group.objects.get(name="guest_group")
+    user.save(update_fields=["group"])
 
     denied_response = authenticated_client.post(
         reverse("document-ocr"),
@@ -88,3 +84,52 @@ def test_document_ocr_api_access_follows_group_permission(
 
     assert allowed_response.status_code == status.HTTP_202_ACCEPTED
     assert denied_response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_word_ocr_api_access_follows_users_group(
+    authenticated_client,
+    document_factory,
+    page_factory,
+    preview_word_ocr_request_factory,
+):
+    document = document_factory(owner=authenticated_client.user)
+    page_factory(doc=document)
+    request_data = preview_word_ocr_request_factory(document=document)
+
+    with patch("app_ocr.views.ocr_word_task.delay") as delay:
+        delay.return_value.id = "preview-job-id"
+        allowed_response = authenticated_client.post(
+            reverse("word-ocr"),
+            request_data,
+            format="json",
+        )
+
+        user = authenticated_client.user
+        user.group = Group.objects.get(name="guest_group")
+        user.save(update_fields=["group"])
+
+        denied_response = authenticated_client.post(
+            reverse("word-ocr"),
+            request_data,
+            format="json",
+        )
+
+    assert allowed_response.status_code == status.HTTP_202_ACCEPTED
+    assert denied_response.status_code == status.HTTP_403_FORBIDDEN
+    delay.assert_called_once()
+
+
+def test_with_perm_finds_users_through_single_group(user_factory):
+    permitted_user = user_factory(group_name="standard_group")
+    denied_user = user_factory(
+        group_name="guest_group",
+        email="guest@example.invalid",
+    )
+
+    users = SingleGroupModelBackend().with_perm(
+        "app_ocr.run_ocr_document",
+        include_superusers=False,
+    )
+
+    assert permitted_user in users
+    assert denied_user not in users
