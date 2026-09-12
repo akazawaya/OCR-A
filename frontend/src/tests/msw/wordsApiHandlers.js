@@ -5,8 +5,14 @@ import { PREVIEW_WORD_OCR_STATE } from "../../logic/viewer/previewWordOcrContrac
 import { MOCK_API_BASE_URL } from "./config";
 import { defaultMockWords, ocrJobMock } from "./fixture";
 
+// Word OCRはPOSTで得るpreview_job_idとWebSocket通知の連携をViewer成功系で検証するため、
+// POSTの成功レスポンスと403レスポンスをテストごとに切り替える必要がある。
+// Authモック全体へ認可状態を持たせず、このハンドラーに必要なGroup Permissionだけを切り替える。
+const WORD_OCR_PERMISSION = "app_ocr.run_ocr_word";
+
 let words = structuredClone(defaultMockWords);
 let previewJobId = ocrJobMock.previewJobId;
+let mockGroupPermissions = [WORD_OCR_PERMISSION];
 let ocrResultByPreviewJobId = new Map([
   [ocrJobMock.previewJobId, structuredClone(ocrJobMock.result)],
 ]);
@@ -17,12 +23,16 @@ let patchedWordRequests = [];
 export const resetMockWords = () => {
   words = structuredClone(defaultMockWords);
   previewJobId = ocrJobMock.previewJobId;
+  mockGroupPermissions = [WORD_OCR_PERMISSION];
   ocrResultByPreviewJobId = new Map([
     [ocrJobMock.previewJobId, structuredClone(ocrJobMock.result)],
   ]);
   deletedWordIds = [];
   postedWordBodies = [];
   patchedWordRequests = [];
+};
+export const setMockGroupPermissions = (permissions) => {
+  mockGroupPermissions = [...permissions];
 };
 export const setMockWords = (anotherFixtute) => {
   words = structuredClone(anotherFixtute);
@@ -108,6 +118,10 @@ export const wordsApiHandlers = [
   }),
 
   http.post(`${MOCK_API_BASE_URL}/words/ocr/`, async ({ request }) => {
+    if (!mockGroupPermissions.includes(WORD_OCR_PERMISSION)) {
+      return HttpResponse.json({}, { status: 403 });
+    }
+
     const body = await request.json();
     if (!["replace_words", "rewrite_content"].includes(body.mode)) {
       return new HttpResponse(null, { status: 400 });

@@ -3,6 +3,7 @@
 import { render } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
+import { Toaster } from "sonner";
 
 import DocumentsPage from "../pages/DocumentsPage";
 
@@ -41,6 +42,7 @@ export const renderDocumentsPage = ({ initialEntry = "/documents" } = {}) => {
           />
         </Routes>
       </MemoryRouter>
+      <Toaster />
     </QueryClientProvider>,
   );
 };

@@ -47,6 +47,12 @@ export const documentsApiHandlers = [
       }),
     );
   }),
+  // Document OCRのPOST成功レスポンスは画面更新には使用せず、
+  // WebSocketのdocument_changedを契機に行う。
+  // このハンドラーは、認可エラーToastの表示を検証するために403を返す。
+  http.post(`${MOCK_API_BASE_URL}/documents/ocr/`, () => {
+    return HttpResponse.json({}, { status: 403 });
+  }),
 
   http.delete(`${MOCK_API_BASE_URL}/documents/:id/`, ({ params }) => {
     const id = Number(params.id);

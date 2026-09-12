@@ -225,19 +225,27 @@ export const useViewerEditState = ({
   const rewritePreviewWordContentByOcr = async (previewWord) => {
     if (isOcring) return;
     setIsOcring(true);
-    await ocrPreviewWordMutation({
-      previewWord,
-      mode: "rewrite_content",
-    });
+    try {
+      await ocrPreviewWordMutation({
+        previewWord,
+        mode: "rewrite_content",
+      });
+    } catch {
+      setIsOcring(false);
+    }
   };
 
   const replacePreviewWordByOcr = async (previewWord) => {
     if (isOcring) return;
     setIsOcring(true);
-    await ocrPreviewWordMutation({
-      previewWord,
-      mode: "replace_words",
-    });
+    try {
+      await ocrPreviewWordMutation({
+        previewWord,
+        mode: "replace_words",
+      });
+    } catch {
+      setIsOcring(false);
+    }
   };
 
   useEffect(() => {

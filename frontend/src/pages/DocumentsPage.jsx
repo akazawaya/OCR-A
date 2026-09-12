@@ -149,6 +149,10 @@ const DocumentsPage = () => {
     mutationFn: ({ formData }) =>
       postFormData({ url: documentOcrActionUrl, formData }),
     onError: (error) => {
+      if (error.status === 403) {
+        toast.error("この操作を実行する権限がありません。", toastStyles.error);
+        return;
+      }
       toast.error(error.data.file[0], toastStyles.error);
     },
     // これはocrロジック内のws送信によりinvalidateQueries更新を実施する

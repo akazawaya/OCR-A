@@ -1,6 +1,7 @@
 import { render } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createMemoryRouter, Outlet, RouterProvider } from "react-router-dom";
+import { Toaster } from "sonner";
 import { vi } from "vitest";
 
 import ViewerPage from "../pages/ViewerPage";
@@ -38,6 +39,7 @@ export const renderViewerPage = ({
   return render(
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
+      <Toaster />
     </QueryClientProvider>,
   );
 };

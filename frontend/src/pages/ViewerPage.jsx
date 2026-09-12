@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   useBeforeUnload,
   useBlocker,
@@ -38,6 +39,7 @@ import ViewerImage from "../components/Viewer/ViewerImage/ViewerImage";
 import ViewerTable from "../components/Viewer/ViewerTable";
 import { ViewerEditHotkeys } from "../components/Viewer/ViewerEditHotkeys";
 import AlertDialog from "../components/ui/AlertDialog";
+import { toastStyles } from "../components/ui/toastStyles";
 
 const ALWAYS_VISIBLE_WORD_COLUMN_KEYS = Object.freeze(["content"]);
 
@@ -262,6 +264,11 @@ const ViewerPage = () => {
       }),
     onSuccess: (previewJobId) => {
       pendingPreviewJobIdsRef.current.add(previewJobId);
+    },
+    onError: (error) => {
+      if (error.status === 403) {
+        toast.error("この操作を実行する権限がありません。", toastStyles.error);
+      }
     },
   });
 
