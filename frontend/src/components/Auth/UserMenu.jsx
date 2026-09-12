@@ -16,7 +16,7 @@ const UserMenu = ({ data: { email }, actions: { logoutCurrentUser } }) => {
 
   return (
     <div ref={menuRef}>
-      <div className="flex w-60 items-center gap-1">
+      <div className="flex w-60 items-center gap-1 rounded-md bg-white p-1 shadow-md">
         <button
           aria-label={"ユーザーメニュー開閉ボタン"}
           className="flex size-12 shrink-0 items-center justify-center rounded-md bg-gray-200 hover:bg-gray-400"
