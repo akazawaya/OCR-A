@@ -1,5 +1,5 @@
 const actionButtonClassName =
-  "inline-flex h-8 w-5 items-center justify-center rounded-md border border-black bg-white cursor-pointer hover:bg-gray-100";
+  "inline-flex h-8 min-w-8 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md border border-black bg-white px-1.5 hover:bg-gray-100 aria-pressed:bg-gray-700 aria-pressed:text-white aria-pressed:hover:bg-gray-700";
 const actionButtonDisabledStateClassName =
   "disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 disabled:opacity-50 disabled:hover:bg-gray-100";
 const actionButtonWithDisabledClassName = `${actionButtonClassName} ${actionButtonDisabledStateClassName}`;
@@ -10,6 +10,7 @@ export const ViewerIconButton = ({
   icon: Icon,
   className = "",
   disabled = false,
+  shouldShowLabel = false,
   onClick,
   ...buttonProps
 }) => (
@@ -23,5 +24,6 @@ export const ViewerIconButton = ({
     onClick={onClick}
   >
     <Icon className={iconClassName} />
+    {shouldShowLabel && <span className="hidden sm:inline">{label}</span>}
   </button>
 );

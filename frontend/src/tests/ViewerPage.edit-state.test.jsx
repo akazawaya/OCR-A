@@ -66,8 +66,7 @@ const getEditToolbar = () =>
 const getEditToolbarButton = (name) =>
   within(getEditToolbar()).getByRole("button", { name });
 
-const getSelectionModeRadio = (name) =>
-  within(getEditToolbar()).getByRole("radio", { name });
+const getSelectionModeButton = (name) => getEditToolbarButton(name);
 
 const selectWordOnWordOverlay = async (user, content = FIRST_WORD_CONTENT) => {
   await user.click(await screen.findByRole("button", { name: content }));
@@ -99,7 +98,7 @@ const shiftAndCtrlClickWordOnViewerTable = async (user, content) => {
 };
 
 const switchSelectionMode = async (user, mode) => {
-  await user.click(getSelectionModeRadio(mode));
+  await user.click(getSelectionModeButton(mode));
 };
 
 // クリック選択のshiftを兼ねた押下
@@ -202,13 +201,13 @@ describe("ViewerPage", () => {
       const editToolbar = getEditToolbar();
       expect(editToolbar).toBeVisible();
       expect(
-        within(editToolbar).getByRole("radio", { name: CLICK_SELECT_MODE }),
+        within(editToolbar).getByRole("button", { name: CLICK_SELECT_MODE }),
       ).toBeVisible();
       expect(
-        within(editToolbar).getByRole("radio", { name: DRAG_SELECT_MODE }),
+        within(editToolbar).getByRole("button", { name: DRAG_SELECT_MODE }),
       ).toBeVisible();
       expect(
-        within(editToolbar).getByRole("radio", {
+        within(editToolbar).getByRole("button", {
           name: DRAG_ADD_BBOX_MODE,
         }),
       ).toBeVisible();
@@ -534,25 +533,25 @@ describe("ViewerPage", () => {
     test("デフォルトのクリック選択から各ドラッグモードへ切り替えられる", async () => {
       renderViewerPage();
       const user = await enterEditMode();
-      const clickSelectRadio = getSelectionModeRadio(CLICK_SELECT_MODE);
-      const dragSelectRadio = getSelectionModeRadio(DRAG_SELECT_MODE);
-      const dragAddBboxRadio = getSelectionModeRadio(DRAG_ADD_BBOX_MODE);
+      const clickSelectButton = getSelectionModeButton(CLICK_SELECT_MODE);
+      const dragSelectButton = getSelectionModeButton(DRAG_SELECT_MODE);
+      const dragAddBboxButton = getSelectionModeButton(DRAG_ADD_BBOX_MODE);
 
-      expect(clickSelectRadio).toBeChecked();
-      expect(dragSelectRadio).not.toBeChecked();
-      expect(dragAddBboxRadio).not.toBeChecked();
+      expect(clickSelectButton).toHaveAttribute("aria-pressed", "true");
+      expect(dragSelectButton).toHaveAttribute("aria-pressed", "false");
+      expect(dragAddBboxButton).toHaveAttribute("aria-pressed", "false");
 
-      await user.click(dragSelectRadio);
+      await user.click(dragSelectButton);
 
-      expect(clickSelectRadio).not.toBeChecked();
-      expect(dragSelectRadio).toBeChecked();
-      expect(dragAddBboxRadio).not.toBeChecked();
+      expect(clickSelectButton).toHaveAttribute("aria-pressed", "false");
+      expect(dragSelectButton).toHaveAttribute("aria-pressed", "true");
+      expect(dragAddBboxButton).toHaveAttribute("aria-pressed", "false");
 
-      await user.click(dragAddBboxRadio);
+      await user.click(dragAddBboxButton);
 
-      expect(clickSelectRadio).not.toBeChecked();
-      expect(dragSelectRadio).not.toBeChecked();
-      expect(dragAddBboxRadio).toBeChecked();
+      expect(clickSelectButton).toHaveAttribute("aria-pressed", "false");
+      expect(dragSelectButton).toHaveAttribute("aria-pressed", "false");
+      expect(dragAddBboxButton).toHaveAttribute("aria-pressed", "true");
     });
 
     describe("クリック選択モード", () => {

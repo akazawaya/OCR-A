@@ -27,10 +27,6 @@ const selectionButtons = [
   },
 ];
 
-const selectionModeLabelClassName =
-  "inline-flex h-8 w-5 cursor-pointer items-center justify-center rounded-md border border-black bg-white hover:bg-gray-100 has-checked:bg-gray-700 has-checked:text-white has-checked:hover:bg-gray-700";
-const selectionModeIconClassName = "h-4 w-4";
-
 export const ViewerEditToolbar = ({
   data: { selectedWords = [], selectionMode = "click", isOcring = false } = {},
   actions: {
@@ -67,26 +63,19 @@ export const ViewerEditToolbar = ({
   return (
     <div
       aria-label="編集ツールバー"
-      className="flex items-center justify-center gap-5 border-t bg-gray-200 px-2 py-1"
+      className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 rounded-md bg-gray-200 px-2 py-1"
       role="toolbar"
     >
       <div className="flex items-center gap-1">
-        {selectionButtons.map(({ mode, label, icon: Icon }) => (
-          <label
+        {selectionButtons.map(({ mode, label, icon }) => (
+          <ViewerIconButton
             key={mode}
-            className={selectionModeLabelClassName}
-            title={label}
-          >
-            <input
-              aria-label={label}
-              checked={selectionMode === mode}
-              className="sr-only"
-              name="viewer-selection-mode"
-              type="radio"
-              onChange={() => setSelectionMode(mode)}
-            />
-            <Icon className={selectionModeIconClassName} />
-          </label>
+            aria-pressed={selectionMode === mode}
+            icon={icon}
+            label={label}
+            shouldShowLabel
+            onClick={() => setSelectionMode(mode)}
+          />
         ))}
       </div>
 
@@ -97,6 +86,7 @@ export const ViewerEditToolbar = ({
             disabled={isOcring || disabled}
             icon={icon}
             label={label}
+            shouldShowLabel
             onClick={onClick}
           />
         ))}

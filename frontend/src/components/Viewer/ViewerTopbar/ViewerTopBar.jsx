@@ -29,7 +29,7 @@ const renderTextField = (foo, commitFoo, inputRef, ariaLabel, disabled) => (
   <input
     ref={inputRef}
     aria-label={ariaLabel}
-    className="w-[3ch] border border-double border-black bg-white text-center disabled:cursor-not-allowed disabled:opacity-50"
+    className="w-12 rounded-md border border-black bg-white px-1 text-center tabular-nums disabled:cursor-not-allowed disabled:opacity-50"
     defaultValue={foo}
     disabled={disabled}
     onBlur={(e) => {
@@ -104,9 +104,9 @@ const ViewerTopBar = ({
 
   const isBaseDisabled = isOcring || isPrintMode;
   return (
-    <div className="relative border bg-gray-200">
-      <div className="flex items-center justify-center gap-5 px-2 py-1">
-        <div className="flex items-center gap-0.5">
+    <div className="relative rounded-md bg-gray-200">
+      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 px-2 py-1">
+        <div className="flex shrink-0 items-center gap-0.5">
           <ViewerIconButton
             disabled={isBaseDisabled || !canGoPrevPage}
             icon={ChevronLeft}
@@ -122,7 +122,7 @@ const ViewerTopBar = ({
             onClick={() => setPage((a) => a + 1)}
           />
         </div>
-        <div className="flex items-center gap-0.5">
+        <div className="flex shrink-0 items-center gap-0.5">
           <ViewerIconButton
             disabled={isBaseDisabled || !canZoomOut}
             icon={ZoomOut}
@@ -137,7 +137,7 @@ const ViewerTopBar = ({
             onClick={() => setZoom((a) => a + VIEWER_ZOOM.STEP)}
           />
         </div>
-        <div className="flex items-center gap-0.5">
+        <div className="flex shrink-0 items-center gap-0.5">
           <ViewerIconButton
             disabled={isBaseDisabled}
             icon={RotateCw}
@@ -157,6 +157,7 @@ const ViewerTopBar = ({
             disabled={isBaseDisabled}
             icon={Settings}
             label="表示設定"
+            shouldShowLabel
             onClick={toggleOptionsPanel}
           />
           {isOptionsPanelOpen && (
@@ -171,6 +172,7 @@ const ViewerTopBar = ({
             disabled={isBaseDisabled}
             icon={Printer}
             label="出力"
+            shouldShowLabel
             onClick={openPrintDialog}
           />
         ) : (
@@ -181,6 +183,7 @@ const ViewerTopBar = ({
             disabled={isBaseDisabled}
             icon={Pencil}
             label="編集"
+            shouldShowLabel
             onClick={startEdit}
           />
         ) : (
@@ -190,12 +193,14 @@ const ViewerTopBar = ({
                 disabled={isBaseDisabled || !canUndo}
                 icon={Undo2}
                 label="元に戻す"
+                shouldShowLabel
                 onClick={undo}
               />
               <ViewerIconButton
                 disabled={isBaseDisabled || !canRedo}
                 icon={Redo2}
                 label="やり直す"
+                shouldShowLabel
                 onClick={redo}
               />
             </div>
@@ -204,12 +209,14 @@ const ViewerTopBar = ({
                 disabled={isBaseDisabled}
                 icon={Save}
                 label="保存"
+                shouldShowLabel
                 onClick={saveEdit}
               />
               <ViewerIconButton
                 disabled={isBaseDisabled}
                 icon={X}
                 label="中止"
+                shouldShowLabel
                 onClick={cancelEdit}
               />
             </div>
