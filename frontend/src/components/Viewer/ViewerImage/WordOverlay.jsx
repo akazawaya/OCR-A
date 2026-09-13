@@ -63,7 +63,8 @@ const WordOverlay = ({
     }
     if (isDragAddBboxMode) {
       // useDragRectStateで新たなbboxを作らせる
-      addPendingPostByBbox(pageId, bbox, direction);
+      const pendingPostId = addPendingPostByBbox(pageId, bbox, direction);
+      if (pendingPostId) replaceSelection(pendingPostId, "image");
     }
   };
 

@@ -170,6 +170,8 @@ export const useViewerEditState = ({
         addWords: [previewWord],
       },
     });
+
+    return previewWord.id; // ドラッグで枠追加のとき、追加した仮Wordを選択状態にするためのreturn
   };
 
   const changeContentDraftById = (wordId, nextContent, prevContent) => {

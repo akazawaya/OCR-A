@@ -258,11 +258,15 @@ describe("ViewerPage", () => {
   });
 
   describe("保存時のPOST, PATCH, DELETE対象となるWord操作", () => {
-    test("ドラッグで枠追加のとき、仮のWordが追加される", async () => {
+    test("ドラッグで枠追加のとき、追加した仮Wordが選択状態になる", async () => {
       renderViewerPage();
       const user = await enterEditMode();
 
       await addPreviewWordByDrag(user);
+
+      expect(getEditToolbarButton("削除")).toBeEnabled();
+      expect(getEditToolbarButton("OCR書換")).toBeEnabled();
+      expect(getEditToolbarButton("OCR置換")).toBeEnabled();
     });
 
     test("新規追加したWordは保存後に通常表示へ反映される", async () => {
@@ -680,9 +684,6 @@ describe("ViewerPage", () => {
       await waitFor(() => {
         expect(getViewerTableCells()).toHaveLength(cellCountBeforeDrag + 1);
       });
-      expect(getEditToolbarButton("削除")).toBeDisabled();
-      expect(getEditToolbarButton("OCR書換")).toBeDisabled();
-      expect(getEditToolbarButton("OCR置換")).toBeDisabled();
     });
   });
 
