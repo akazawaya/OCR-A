@@ -1,62 +1,65 @@
-import { useCallback, useRef } from "react";
+import { useRef } from "react";
 
-import { useViewerPageStateContext } from "../../../contexts/viewer/ViewerPageStateContext";
-import { useViewerWordStateContext } from "../../../contexts/viewer/ViewerWordStateContext";
 import { useScroll } from "../../../logic/layout/useScroll";
 import { useClientSizePx } from "../../../logic/layout/useClientSizePx";
 
-import WordOverlay from "./WordOverlay/WordOverlay";
+import WordOverlay from "./WordOverlay";
 
-export default function ViewerImage({
-  data: { pages = [] } = {},
-  printRef,
-  isPrintMode = false,
-}) {
-  const rootRef = useRef(null);
-  const setRefs = useCallback(
-    (node) => {
-      rootRef.current = node;
-      if (typeof printRef === "function") printRef(node);
-      else if (printRef) printRef.current = node;
-    },
-    [printRef],
-  );
-  const viewerPageState = useViewerPageStateContext();
-  const viewerWordState = useViewerWordStateContext();
-  const { data: { page, zoom, rotate } = {} } = viewerPageState;
-  const { data: { selectedBy, selectedWordId } = {} } = viewerWordState;
-
+const ViewerImage = ({
+  data: {
+    contentRef,
+    pages = [],
+    isPrintMode = false,
+    page,
+    zoom,
+    rotate,
+    selectedBy,
+    selectedId,
+  } = {},
+  wordOverlayData,
+  wordOverlayActions,
+}) => {
+  const localRef = useRef(null);
+  const rootRef = contentRef ?? localRef;
   // page変更に追随してスクロールする
-  useScroll({ rootRef, targetAttrName: "data-page", targetAttrValue: page });
+  useScroll({
+    rootRef,
+    targetAttrName: "data-scroll-target-page",
+    targetAttrValue: page,
+  });
   const { clientSizePx } = useClientSizePx(rootRef);
   const limitW = clientSizePx.w;
   // viewerImage起点のwordの選択時、viewerTable側を追随スクロールする
   const shouldScroll = selectedBy === "table";
   useScroll({
     rootRef,
-    targetAttrName: "data-word",
-    targetAttrValue: selectedWordId,
+    targetAttrName: "data-scroll-target-word",
+    targetAttrValue: selectedId,
     shouldScroll,
   });
 
   return (
-    <div ref={setRefs} data-print-root={isPrintMode ? "true" : undefined}>
+    <div ref={rootRef} data-print-root={isPrintMode ? "true" : undefined}>
       {pages.map((p) => {
-        const baseW = Number(p.width_px) || 0;
-        const baseH = Number(p.height_px) || 0;
+        const imageW = Number(p.width_px);
+        const imageH = Number(p.height_px);
         const safeRotate = isPrintMode ? 0 : rotate;
         const zoomScale = isPrintMode ? 1 : zoom / 100;
-        const baseScale = isPrintMode ? 1 : baseW ? limitW / baseW : 1;
+        const baseScale = isPrintMode ? 1 : limitW / imageW;
         const finalScale = baseScale * zoomScale;
 
-        const w = baseW * finalScale;
-        const h = baseH * finalScale;
+        const w = imageW * finalScale;
+        const h = imageH * finalScale;
         const containerW = safeRotate === 90 || safeRotate === 270 ? h : w;
         const containerH = safeRotate === 90 || safeRotate === 270 ? w : h;
         const containerClass = isPrintMode ? "relative" : "relative mx-auto";
+        // 回転時は軸を中心に据えるため、画像要素そのものを親コンテナ中央に配置する。
+        // top-1/2 left-1/2で要素の左上を親コンテナ中央へ置き、
+        // -translate-x/y-1/2で要素自身の半分だけ戻す。
+        // origin-centerにより、その中央位置を基準にrotateする。
         const imageClass = isPrintMode
           ? "relative"
-          : "absolute top-1/2 left-1/2 origin-center -translate-x-1/2 -translate-y-1/2 rotate-(--rotate)";
+          : "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 origin-center rotate-(--rotate)";
         const containerStyle = isPrintMode
           ? { width: containerW, height: containerH, margin: 0 }
           : { width: containerW, height: containerH };
@@ -67,18 +70,35 @@ export default function ViewerImage({
         return (
           <div
             key={p.id}
-            data-page={p.page_number}
-            data-print-page={isPrintMode ? "true" : undefined}
             className={containerClass}
+            data-print-page={isPrintMode ? "true" : undefined}
+            data-scroll-target-page={p.page_number}
             style={containerStyle}
           >
-            <div className={imageClass} style={imageStyle}>
-              <img alt="" src={p.image} width={w} height={h} />
-              <WordOverlay data={{ pageId: p.id, clientSizePx: { w, h } }} />
+            <div
+              aria-label={`画像表示エリア ${p.page_number}ページ目`}
+              className={imageClass}
+              role="group"
+              style={imageStyle}
+            >
+              <img alt="" height={h} src={p.image} width={w} />
+              <WordOverlay
+                actions={wordOverlayActions}
+                data={{
+                  ...wordOverlayData,
+                  pageId: p.id,
+                  rotate: safeRotate,
+                  clientSizePx: { w, h },
+                  imageSizePx: { w: imageW, h: imageH },
+                  isPrintMode,
+                }}
+              />
             </div>
           </div>
         );
       })}
     </div>
   );
-}
+};
+
+export default ViewerImage;

@@ -1,0 +1,375 @@
+import { PREVIEW_WORD_OCR_STATE } from "../../logic/viewer/previewWordOcrContract";
+
+export const defaultMockDocuments = [
+  { id: 1, file_name: "alpha-report.pdf", state: "完了" },
+  { id: 2, file_name: "beta-report.pdf", state: "待機中" },
+  { id: 3, file_name: "gamma-alpha.pdf", state: "失敗" },
+];
+
+export const defaultMockPaginatedDocumentsResponse = {
+  current_page: 1,
+  pagination_total_pages: 1,
+  results: defaultMockDocuments,
+};
+
+export const paginationMockDocuments = Array.from(
+  { length: 100 },
+  (_, index) => {
+    const documentNumber = index + 1;
+
+    return {
+      id: documentNumber,
+      file_name: `Document_${String(documentNumber).padStart(3, "0")}.pdf`,
+      state: "完了",
+    };
+  },
+);
+
+export const defaultMockAuthUser = {
+  id: 1,
+  email: "testuser@example.invalid",
+  password: "testpass123",
+};
+
+export const defaultMockPages = [
+  {
+    id: 1,
+    doc: "1",
+    page_number: 1,
+    image: "/test_1-1.png",
+    width_px: 1000,
+    height_px: 800,
+  },
+  {
+    id: 2,
+    doc: "1",
+    page_number: 2,
+    image: "/test_1-2.png",
+    width_px: 1000,
+    height_px: 800,
+  },
+];
+
+export const defaultMockWords = [
+  {
+    id: 1,
+    page: 1,
+    page__page_number: 1,
+    page__doc: "1",
+    bbox: [
+      [100, 100],
+      [200, 100],
+      [200, 150],
+      [100, 150],
+    ],
+    content: "テスト語",
+    direction: 1,
+    det_score: 0.8,
+    rec_score: 0.9,
+  },
+  {
+    id: 2,
+    page: 2,
+    page__page_number: 2,
+    page__doc: "1",
+    bbox: [
+      [100, 100],
+      [200, 100],
+      [200, 150],
+      [100, 150],
+    ],
+    content: "2ページ目の語",
+    direction: 1,
+    det_score: 0.8,
+    rec_score: 0.9,
+  },
+];
+
+export const dragModeMockWords = [
+  {
+    id: 1,
+    content: "範囲内A",
+    bbox: [
+      [100, 100],
+      [200, 100],
+      [200, 200],
+      [100, 200],
+    ],
+    page: 1,
+    page__page_number: 1,
+    page__doc: "1",
+    direction: 1,
+    rec_score: 0.9,
+    det_score: 0.8,
+  },
+  {
+    id: 2,
+    content: "範囲内B",
+    bbox: [
+      [300, 100],
+      [400, 100],
+      [400, 200],
+      [300, 200],
+    ],
+    page: 1,
+    page__page_number: 1,
+    page__doc: "1",
+    direction: 1,
+    rec_score: 0.7,
+    det_score: 0.6,
+  },
+  {
+    id: 3,
+    content: "範囲外",
+    bbox: [
+      [700, 500],
+      [800, 500],
+      [800, 600],
+      [700, 600],
+    ],
+    page: 1,
+    page__page_number: 1,
+    page__doc: "1",
+    direction: 1,
+    rec_score: 0.5,
+    det_score: 0.4,
+  },
+];
+
+// idに関わらずsortの順番が機能することを確認するためのpage, wordMock
+
+export const sortMockPages = [
+  {
+    id: 101,
+    doc: "1",
+    page_number: 1,
+    image: "/sort-page-1.png",
+    width_px: 1000,
+    height_px: 800,
+  },
+];
+
+// 想定:
+// horizontalVsVerticalでh1が優先
+// horizontalTopBottomでtopが優先
+// horizontalLeftRightでleftが優先
+// verticalRightLeftでvRightが優先
+export const sortMockWords = {
+  horizontalVsVertical: [
+    {
+      id: "z-h1",
+      page: 101,
+      page__page_number: 1,
+      page__doc: "1",
+      bbox: [
+        [100, 100],
+        [160, 100],
+        [160, 130],
+        [100, 130],
+      ],
+      content: "h1",
+      direction: 1,
+    },
+    {
+      id: "a-v1",
+      page: 101,
+      page__page_number: 1,
+      page__doc: "1",
+      bbox: [
+        [80, 80],
+        [110, 80],
+        [110, 180],
+        [80, 180],
+      ],
+      content: "v1",
+      direction: 2,
+    },
+  ],
+
+  horizontalTopBottom: [
+    {
+      id: "z-top",
+      page: 101,
+      page__page_number: 1,
+      page__doc: "1",
+      bbox: [
+        [100, 100],
+        [160, 100],
+        [160, 130],
+        [100, 130],
+      ],
+      content: "top",
+      direction: 1,
+    },
+    {
+      id: "a-bottom",
+      page: 101,
+      page__page_number: 1,
+      page__doc: "1",
+      bbox: [
+        [100, 200],
+        [160, 200],
+        [160, 230],
+        [100, 230],
+      ],
+      content: "bottom",
+      direction: 1,
+    },
+  ],
+
+  horizontalLeftRight: [
+    {
+      id: "z-left",
+      page: 101,
+      page__page_number: 1,
+      page__doc: "1",
+      bbox: [
+        [100, 100],
+        [160, 100],
+        [160, 130],
+        [100, 130],
+      ],
+      content: "left",
+      direction: 1,
+    },
+    {
+      id: "a-right",
+      page: 101,
+      page__page_number: 1,
+      page__doc: "1",
+      bbox: [
+        [200, 100],
+        [260, 100],
+        [260, 130],
+        [200, 130],
+      ],
+      content: "right",
+      direction: 1,
+    },
+  ],
+
+  verticalRightLeft: [
+    {
+      id: "z-vRight",
+      page: 101,
+      page__page_number: 1,
+      page__doc: "1",
+      bbox: [
+        [200, 100],
+        [230, 100],
+        [230, 220],
+        [200, 220],
+      ],
+      content: "vRight",
+      direction: 2,
+    },
+    {
+      id: "a-vLeft",
+      page: 101,
+      page__page_number: 1,
+      page__doc: "1",
+      bbox: [
+        [100, 100],
+        [130, 100],
+        [130, 220],
+        [100, 220],
+      ],
+      content: "vLeft",
+      direction: 2,
+    },
+  ],
+};
+
+export const viewerTableSortMockWords = [
+  {
+    id: "score-null",
+    page: 101,
+    page__page_number: 1,
+    page__doc: "1",
+    bbox: [
+      [100, 100],
+      [160, 100],
+      [160, 130],
+      [100, 130],
+    ],
+    content: "charlie",
+    direction: 1,
+    rec_score: null,
+    det_score: null,
+  },
+  {
+    id: "score-high",
+    page: 101,
+    page__page_number: 1,
+    page__doc: "1",
+    bbox: [
+      [200, 100],
+      [260, 100],
+      [260, 130],
+      [200, 130],
+    ],
+    content: "alpha",
+    direction: 1,
+    rec_score: 0.7,
+    det_score: 0.8,
+  },
+  {
+    id: "score-low",
+    page: 101,
+    page__page_number: 1,
+    page__doc: "1",
+    bbox: [
+      [300, 100],
+      [360, 100],
+      [360, 130],
+      [300, 130],
+    ],
+    content: "bravo",
+    direction: 1,
+    rec_score: 0.1,
+    det_score: 0.09,
+  },
+];
+
+// OCR preview fixture
+// 1. 結果が空のケース
+// 2. 結果が複数wordに分割されるケース
+export const ocrMockByCase = {
+  empty: {
+    state: PREVIEW_WORD_OCR_STATE.SUCCESS,
+    preview_id: "1",
+    words: [],
+    content: "",
+  },
+  splitWords: {
+    state: PREVIEW_WORD_OCR_STATE.SUCCESS,
+    preview_id: "1",
+    words: [
+      {
+        bbox: [
+          [110, 100],
+          [150, 100],
+          [150, 150],
+          [110, 150],
+        ],
+        content: "分割A",
+        direction: 1,
+      },
+      {
+        bbox: [
+          [150, 100],
+          [200, 100],
+          [200, 150],
+          [150, 150],
+        ],
+        content: "分割B",
+        direction: 1,
+      },
+    ],
+  },
+};
+
+export const ocrJobMock = {
+  previewJobId: "preview-job-1",
+  result: ocrMockByCase.empty,
+};

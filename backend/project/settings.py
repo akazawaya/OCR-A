@@ -10,23 +10,73 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
-from pathlib import Path
 import os
+from pathlib import Path
+
+
+# os.environは環境変数をすべて文字列として返すため、
+# true/falseを単に渡してもbooleanとして認識されない。
+# 以下は環境変数の値true/falseををboolenに変換するための関数
+def env_bool(name, default=False):
+    if name not in os.environ:
+        return default
+    value = os.environ[name]
+    if value == "":
+        return default
+    normalized = value.strip()
+    if normalized == "true":
+        return True
+    if normalized == "false":
+        return False
+    raise ValueError(f"{name} must be 'true' or 'false', got {value!r}")
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("SECRET_KEY")
+SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split()
+DEBUG = env_bool("DJANGO_DEBUG", False)
+ALLOWED_HOSTS = os.environ["DJANGO_ALLOWED_HOSTS"].split()
 
+# falseではlocalhostログインが可能となる
+SESSION_COOKIE_SECURE = not DEBUG
 
-CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL")
-CHANNEL_REDIS_URL = os.getenv("CHANNEL_REDIS_URL")  # compose 前提ならデフォルト不要
+# CSRF対策用のcsrftoken
+# falseならブラウザはcsrftoken CookieをHTTPS通信だけでなく、HTTPでも許容する
+CSRF_COOKIE_SECURE = not DEBUG
 
+# リクエストのX-Forwarded-Protoヘッダーがhttpsなら、元の通信をHTTPSとして扱う
+SECURE_PROXY_SSL_HEADER = (
+    "HTTP_X_FORWARDED_PROTO",  # どのヘッダーを見るか
+    "https",  # その値が何ならHTTPSと判断するか
+)
+
+CELERY_BROKER_URL = os.environ["CELERY_BROKER_URL"]
+CELERY_TASK_DEFAULT_QUEUE = "ocr_document_queue"
+CELERY_TASK_ROUTES = {
+    "app_ocr.tasks.dispatch_ocr_pages_task": {
+        "queue": "ocr_document_queue",
+    },
+    "app_ocr.tasks.ocr_page_task": {
+        "queue": "ocr_document_queue",
+    },
+    "app_ocr.tasks.ocr_word_task": {
+        "queue": "ocr_word_queue",
+    },
+    "app_ocr.tasks.check_gpu_worker_autostop_task": {
+        "queue": "gpu_control_queue",
+    },
+}
+
+# Celery Result Backend: タスクの状態と実行結果の保存
+CELERY_RESULT_BACKEND = os.environ["CELERY_RESULT_BACKEND"]
+CELERY_RESULT_EXPIRES = 60 * 10
+CELERY_TASK_TRACK_STARTED = True
+
+CHANNEL_REDIS_URL = os.environ["CHANNEL_REDIS_URL"]  # compose 前提ならデフォルト不要
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
@@ -35,6 +85,66 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": os.environ["CACHE_REDIS_URL"],
+    }
+}
+
+ENABLE_GPU_WORKER_AUTOSTART = env_bool("ENABLE_GPU_WORKER_AUTOSTART", False)
+ENABLE_GPU_WORKER_AUTOSTOP = env_bool("ENABLE_GPU_WORKER_AUTOSTOP", False)
+ENABLE_S3_STORAGE = env_bool("ENABLE_S3_STORAGE", False)
+
+if ENABLE_S3_STORAGE:
+    STORAGES = {
+        # Document.fileやPage.imageはS3へ保存する
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+        },
+        # Django AdminのCSS・JSはSTATIC_ROOTへ集約する
+        "staticfiles": {
+            "BACKEND": ("django.contrib.staticfiles.storage.StaticFilesStorage"),
+        },
+    }
+    AWS_STORAGE_BUCKET_NAME = os.environ["AWS_STORAGE_BUCKET_NAME"]
+    AWS_S3_REGION_NAME = os.environ["AWS_S3_REGION_NAME"]
+    # AWS_QUERYSTRING_AUTH S3ファイルURLに 署名付きクエリ文字列を付ける
+    # Trueだと 非公開S3オブジェクトURLを一時的に読める
+    AWS_QUERYSTRING_AUTH = True
+
+
+ENABLE_AWS_INFRASTRUCTURE = ENABLE_S3_STORAGE or ENABLE_GPU_WORKER_AUTOSTART
+if ENABLE_AWS_INFRASTRUCTURE:
+    AWS_ACCESS_KEY_ID = os.environ["AWS_ACCESS_KEY_ID"]
+    AWS_SECRET_ACCESS_KEY = os.environ["AWS_SECRET_ACCESS_KEY"]
+
+GPU_WORKER_QUEUES = {
+    "worker_document": "ocr_document_queue",
+    "worker_preview_word": "ocr_word_queue",
+}
+GPU_WORKER_INSTANCE_IDS = {}
+if ENABLE_GPU_WORKER_AUTOSTART:
+    AWS_EC2_REGION_NAME = os.environ["AWS_EC2_REGION_NAME"]
+    GPU_WORKER_INSTANCE_IDS = {
+        "worker_document": os.environ["GPU_WORKER_DOCUMENT_INSTANCE_ID"],
+        "worker_preview_word": os.environ["GPU_WORKER_PREVIEW_WORD_INSTANCE_ID"],
+    }
+
+CELERY_BEAT_SCHEDULE = {}
+if ENABLE_GPU_WORKER_AUTOSTOP:
+    GPU_WORKER_AUTOSTOP_IDLE_MINUTES = float(
+        os.environ["GPU_WORKER_AUTOSTOP_IDLE_MINUTES"],
+    )
+    GPU_WORKER_AUTOSTOP_CHECK_INTERVAL_SECONDS = float(
+        os.environ["GPU_WORKER_AUTOSTOP_CHECK_INTERVAL_SECONDS"],
+    )
+    CELERY_BEAT_SCHEDULE["check-gpu-worker-autostop"] = {
+        "task": "app_ocr.tasks.check_gpu_worker_autostop_task",
+        "schedule": GPU_WORKER_AUTOSTOP_CHECK_INTERVAL_SECONDS,
+    }
+
 # Application definition
 INSTALLED_APPS = [
     "channels",
@@ -49,17 +159,28 @@ INSTALLED_APPS = [
     "django_filters",
     "corsheaders",
     "app_ocr",
+    "storages",
+]
+
+AUTH_USER_MODEL = "app_ocr.User"
+
+# Django標準のM2MフィールドUser.groupsを
+# 単一Groupを指すForeignKeyのUser.groupへ変更したため、
+# 標準ModelBackendを単一Group対応のバックエンドへ差し替える。
+AUTHENTICATION_BACKENDS = [
+    "app_ocr.backends.SingleGroupModelBackend",
 ]
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
 }
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = os.environ["DJANGO_CORS_ALLOWED_ORIGINS"].split()
+CSRF_TRUSTED_ORIGINS = os.environ["DJANGO_CORS_ALLOWED_ORIGINS"].split()
 
 
 MIDDLEWARE = [
@@ -99,11 +220,11 @@ ASGI_APPLICATION = "project.asgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("POSTGRES_DB"),
-        "USER": os.environ.get("POSTGRES_USER"),
-        "PASSWORD": os.environ.get("POSTGRES_PASSWORD"),
-        "HOST": "db",
-        "PORT": 5432,
+        "NAME": os.environ["POSTGRES_DB"],
+        "USER": os.environ["POSTGRES_USER"],
+        "PASSWORD": os.environ["POSTGRES_PASSWORD"],
+        "HOST": os.environ["POSTGRES_HOST"],
+        "PORT": os.environ["POSTGRES_PORT"],
     }
 }
 
@@ -113,7 +234,9 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": (
+            "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+        ),
     },
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
@@ -138,13 +261,20 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = "static/"
 
-# Media files (user uploads)
+STATIC_ROOT = BASE_DIR / "static"
+# デプロイ時にcollectstaticがDjangoの静的ファイルを集約する出力先ディレクトリ
+# DEBUG=Trueの場合、project/urls.pyが代わりにDjango経由でstaticファイル、
+# （AdminのCSS/JSなど）を配信するため、STATIC_ROOTが無視される点に注意
+STATIC_URL = "/static/"
+# ブラウザ側のCSS・JS・画像要求先URL
+
+# mediaは運用中に増減するユーザーデータ
+# これはDEBUG=...ではなく、ENABLE_S3_STORAGE環境変数でコントロールする
+# S3有効時はFileField/ImageFieldがS3ストレージを使用するため、使用されない。
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 

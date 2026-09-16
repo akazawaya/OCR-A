@@ -1,21 +1,40 @@
 x-django-env: &django_env
-  SECRET_KEY: ${SECRET_KEY}
+  DJANGO_DEBUG: ${DJANGO_DEBUG}
+  DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
   DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
-  DB_HOST: db
+  DJANGO_CORS_ALLOWED_ORIGINS: ${DJANGO_CORS_ALLOWED_ORIGINS}
   POSTGRES_DB: ${POSTGRES_DB}
   POSTGRES_USER: ${POSTGRES_USER}
   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-  CELERY_BROKER_URL: redis://broker:6379/0
-  CHANNEL_REDIS_URL: redis://broker:6379/1
+  POSTGRES_HOST: ${POSTGRES_HOST}
+  POSTGRES_PORT: ${POSTGRES_PORT}
+  CELERY_BROKER_URL: ${CELERY_BROKER_URL}
+  CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
+  CHANNEL_REDIS_URL: ${CHANNEL_REDIS_URL}
+  CACHE_REDIS_URL: ${CACHE_REDIS_URL}
 
 x-media-volumes: &media_volumes
   - media_input:/app/media
 
+x-worker-common: &worker_common
+  build: ./backend
+  depends_on:
+    - db
+    - broker
+  working_dir: /app
+  environment:
+    <<: *django_env
+  volumes: *media_volumes
+
 services:
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      target: ${FRONTEND_BUILD_TARGET}
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
     ports:
-      - "5173:5173"
+      - "${FRONTEND_HOST_PORT}:${FRONTEND_CONTAINER_PORT}"
     develop:
       watch:
         - action: sync
@@ -30,9 +49,8 @@ services:
           path: ./frontend/package-lock.json
     environment:
       VITE_API_BASE_URL: ${VITE_API_BASE_URL}
-    command:
-      ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
-    
+    command: ${FRONTEND_COMMAND}
+  
   backend:
     build: ./backend
     depends_on:
@@ -57,18 +75,65 @@ services:
     command:
       ["/app/.venv/bin/python", "-m", "uvicorn", "project.asgi:application", "--host", "0.0.0.0", "--port", "8000"]
 
-  worker:
-    build: ./backend
-    depends_on:
-      - db
-      - broker
-    working_dir: /app
-    environment:
-      <<: *django_env
-    volumes: *media_volumes
-    command: 
-      ["/app/.venv/bin/python", "-m", "celery", "-A", "project.celery:app", "worker", "-l", "INFO", "--concurrency", "1"]
+  worker_ocr_shared:
+    <<: *worker_common
+    profiles:
+      - ocr-shared
+    command:
+      [
+        "/app/.venv/bin/python",
+        "-m",
+        "celery",
+        "-A",
+        "project.celery:app",
+        "worker",
+        "-l",
+        "INFO",
+        "-Q",
+        "ocr_document_queue,ocr_word_queue",
+        "--concurrency",
+        "1",
+      ]
 
+  worker_document:
+    <<: *worker_common
+    profiles:
+      - ocr-dedicated
+    command:
+      [
+        "/app/.venv/bin/python",
+        "-m",
+        "celery",
+        "-A",
+        "project.celery:app",
+        "worker",
+        "-l",
+        "INFO",
+        "-Q",
+        "ocr_document_queue",
+        "--concurrency",
+        "1",
+      ]
+
+  worker_preview_word:
+    <<: *worker_common
+    profiles:
+      - ocr-dedicated
+    command:
+      [
+        "/app/.venv/bin/python",
+        "-m",
+        "celery",
+        "-A",
+        "project.celery:app",
+        "worker",
+        "-l",
+        "INFO",
+        "-Q",
+        "ocr_word_queue",
+        "--concurrency",
+        "1",
+      ]
 
   broker:
     image: redis:8.4.0-bookworm

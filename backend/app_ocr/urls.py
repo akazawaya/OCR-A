@@ -1,15 +1,16 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from app_ocr import views
+from django.urls import include, path
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
     SpectacularSwaggerView,
 )
+from rest_framework.routers import DefaultRouter
 
+from app_ocr import views
 
 router = DefaultRouter()
 router.register(r"users", views.UserViewSet, basename="user")
+router.register(r"auth", views.AuthViewSet, basename="auth")
 router.register(r"documents", views.DocumentViewSet, basename="document")
 router.register(r"pages", views.PageViewSet, basename="page")
 router.register(r"words", views.WordViewSet, basename="word")

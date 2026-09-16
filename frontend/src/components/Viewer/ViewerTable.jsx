@@ -1,100 +1,167 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import { useViewerPageStateContext } from "../../contexts/viewer/ViewerPageStateContext";
-import { useViewerWordStateContext } from "../../contexts/viewer/ViewerWordStateContext";
-import { useViewerEditStateContext } from "../../contexts/viewer/ViewerEditStateContext";
+import { buildRangeSelectionIds } from "../../logic/layout/useSelection";
 import { useScroll } from "../../logic/layout/useScroll";
+import { SortIcon } from "../ui/SortIcon";
 
-export default function ViewerTable({
-  data: { columns = [], rows = [] } = {},
-  events: { onClickColumn } = {},
-}) {
+const ContentEditInput = ({
+  data: { wordId, content, inputSize } = {},
+  actions: { changeContentDraftById } = {},
+} = {}) => {
+  const [editingContent, setEditingContent] = useState(content);
+
+  useEffect(() => {
+    setEditingContent(content);
+  }, [content]);
+
+  const finalizeEdit = () => {
+    changeContentDraftById(wordId, editingContent, content);
+  };
+  return (
+    <input
+      className="border-0 outline-none"
+      size={inputSize}
+      value={editingContent}
+      onBlur={finalizeEdit}
+      onChange={(e) => setEditingContent(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.isComposing) return;
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        finalizeEdit();
+      }}
+    />
+  );
+};
+
+const formatCellValue = (row, column) => {
+  const value = row[column.key];
+  return column.format ? column.format(value) : value;
+};
+
+const ViewerTable = ({
+  data: {
+    columns = [],
+    rows = [],
+    page,
+    hoveredId,
+    selectedIds,
+    selectedBy,
+    shiftSelectionStartId,
+    scrollTargetId,
+    isEditMode,
+    wordSort,
+  } = {},
+  actions: {
+    changeContentDraftById,
+    toggleWordSort,
+    hover,
+    clearHovered,
+    replaceSelection,
+    toggleSelection,
+    replaceSelectionRange,
+    addSelectionRange,
+  } = {},
+}) => {
+  const ordering = wordSort
+    ? `${wordSort.order === "desc" ? "-" : ""}${wordSort.key}`
+    : "";
+
+  // edit中のinputの幅は事前に固定値を取る
+  const maxContentLength = Math.max(
+    20,
+    ...rows.map((row) => String(row.content ?? "").length),
+  );
+
   const rootRef = useRef(null);
-  const viewerPageState = useViewerPageStateContext();
-  const viewerWordState = useViewerWordStateContext();
-  const viewerEditState = useViewerEditStateContext();
-  const { data: { page } = {} } = viewerPageState;
-  const {
-    data: { hoveredWordId, selectedWordId, selectedBy } = {},
-    events: { onHoverWord, onHoverClearWord, onSelectWord } = {},
-  } = viewerWordState;
-
-  const {
-    data: { isEditing, contentDraftById, pendingDeleteIdSet } = {},
-    events: { onChangeContentDraft, onClickDeleteButton } = {},
-  } = viewerEditState;
-
   // page変更に追随してスクロールする
-  useScroll({ rootRef, targetAttrName: "data-page", targetAttrValue: page });
-
+  useScroll({
+    rootRef,
+    targetAttrName: "data-scroll-target-page",
+    targetAttrValue: page,
+  });
   // viewerTable起点のwordの選択時、viewerImage側を追随スクロールする
   const shouldScroll = selectedBy === "image";
   useScroll({
     rootRef,
-    targetAttrName: "data-word",
-    targetAttrValue: selectedWordId,
+    targetAttrName: "data-scroll-target-word",
+    targetAttrValue: scrollTargetId,
     shouldScroll,
   });
 
   return (
-    <table ref={rootRef}>
+    <table ref={rootRef} className="min-w-full">
       <thead>
         <tr>
-          {columns.map((c) => (
-            <th key={c.key} onClick={() => onClickColumn(c.key)}>
-              {c.label}
+          {columns.map((column) => (
+            <th
+              key={column.key}
+              className="cursor-pointer border border-gray-400 px-1 text-left hover:bg-gray-200"
+              onClick={() => toggleWordSort(column.key)}
+            >
+              <span className="flex items-center justify-between gap-1 whitespace-nowrap">
+                {column.label}
+                <SortIcon columnKey={column.key} ordering={ordering} />
+              </span>
             </th>
           ))}
         </tr>
       </thead>
       <tbody>
         {rows.map((r) => {
-          const isSelected = r.id === selectedWordId;
-          const isHover = r.id === hoveredWordId;
-          const isPendingDelete = pendingDeleteIdSet.has(r.id);
+          const isSelected = selectedIds.has(r.id);
+          const isHover = r.id === hoveredId;
           return (
             <tr
               key={r.id}
-              data-page={r.page__page_number}
-              data-word={r.id}
-              onMouseEnter={() => onHoverWord(r.id)}
-              onMouseLeave={onHoverClearWord}
-              onClick={() => onSelectWord(r.id, "table")}
-              className={
+              className={`cursor-pointer scroll-mt-30 border border-gray-400 ${
                 isSelected
                   ? "bg-red-500/30"
                   : isHover
                     ? "bg-red-500/20"
-                    : isPendingDelete
-                      ? "bg-gray-400/30"
-                      : "bg-transparent"
-              }
+                    : "bg-transparent"
+              }`}
+              data-scroll-target-page={r.page__page_number}
+              data-scroll-target-word={r.id}
+              onClick={(event) => {
+                const withCtrlOrMeta = event.ctrlKey || event.metaKey;
+                if (event.shiftKey) {
+                  const ids = buildRangeSelectionIds({
+                    orderedIds: rows.map((row) => row.id),
+                    startId: shiftSelectionStartId,
+                    endId: r.id,
+                  });
+                  if (withCtrlOrMeta) {
+                    addSelectionRange(ids);
+                  } else {
+                    replaceSelectionRange(ids);
+                  }
+                  return;
+                }
+                if (withCtrlOrMeta) {
+                  toggleSelection(r.id, "table");
+                  return;
+                }
+                replaceSelection(r.id, "table");
+              }}
+              onMouseEnter={() => hover(r.id)}
+              onMouseLeave={clearHovered}
             >
-              {isEditing && (
-                <td>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onClickDeleteButton(r.id);
-                    }}
-                  >
-                    {isPendingDelete ? "削除取消" : "削除予約"}
-                  </button>
-                </td>
-              )}
-
               {columns.map((c) => (
-                <td key={c.key}>
-                  {!isEditing || c.key !== "content" ? (
-                    r[c.key]
-                  ) : (
-                    <input
-                      className={isPendingDelete ? "line-through" : ""}
-                      value={contentDraftById[r.id] ?? r[c.key]}
-                      onChange={(e) =>
-                        onChangeContentDraft(r.id, e.target.value)
-                      }
+                <td key={c.key} className="px-1">
+                  {isEditMode && c.key === "content" ? (
+                    <ContentEditInput
+                      actions={{ changeContentDraftById }}
+                      data={{
+                        wordId: r.id,
+                        content: r[c.key],
+                        inputSize: maxContentLength,
+                      }}
                     />
+                  ) : (
+                    <span className="inline-block min-w-max">
+                      {formatCellValue(r, c)}
+                    </span>
                   )}
                 </td>
               ))}
@@ -104,4 +171,6 @@ export default function ViewerTable({
       </tbody>
     </table>
   );
-}
+};
+
+export default ViewerTable;

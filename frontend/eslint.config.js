@@ -32,13 +32,33 @@ export default defineConfig([
       },
     },
     rules: {
-      "react-refresh/only-export-components": "warn",
+      "import/no-cycle": "error",
+      "import/no-duplicates": "error",
+      "import/no-useless-path-segments": "error",
+      "import/newline-after-import": "error",
+      "import/order": ["error", { "newlines-between": "always" }],
+      "func-style": ["error", "expression"],
+      "prefer-arrow-callback": "error",
       "no-irregular-whitespace": ["error", { skipComments: true }],
       "no-unused-vars": ["error", { varsIgnorePattern: "^_" }],
       "react/jsx-uses-vars": "error",
-      "import/no-duplicates": "error",
-      "import/newline-after-import": "error",
-      "import/order": ["error", { "newlines-between": "always" }],
+      "react-hooks/exhaustive-deps": "error",
+      "react-hooks/rules-of-hooks": "error",
+      "react-refresh/only-export-components": "warn",
+      "jsx-a11y/label-has-associated-control": [
+        "error",
+        {
+          controlComponents: ["TextInput", "Button"],
+        },
+      ],
+      "react/jsx-sort-props": [
+        "warn",
+        {
+          callbacksLast: true,
+          shorthandLast: true,
+          reservedFirst: true,
+        },
+      ],
     },
   },
 ]);

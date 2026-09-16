@@ -1,0 +1,70 @@
+x-gpu-ec2-env: &gpu_ec2_env
+  ENABLE_GPU_WORKER_AUTOSTART: "true"
+  ENABLE_GPU_WORKER_AUTOSTOP: "true"
+  GPU_WORKER_AUTOSTOP_IDLE_MINUTES: ${GPU_WORKER_AUTOSTOP_IDLE_MINUTES}
+  GPU_WORKER_AUTOSTOP_CHECK_INTERVAL_SECONDS: ${GPU_WORKER_AUTOSTOP_CHECK_INTERVAL_SECONDS}
+  AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+  AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+  AWS_EC2_REGION_NAME: ${AWS_EC2_REGION_NAME}
+  GPU_WORKER_DOCUMENT_INSTANCE_ID: ${GPU_WORKER_DOCUMENT_INSTANCE_ID}
+  GPU_WORKER_PREVIEW_WORD_INSTANCE_ID: ${GPU_WORKER_PREVIEW_WORD_INSTANCE_ID}
+
+x-gpu-worker-common: &gpu_worker_common
+  build: ./backend
+  depends_on:
+    - db
+    - broker
+  working_dir: /app
+  environment:
+    DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+    DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
+    DJANGO_CORS_ALLOWED_ORIGINS: ${DJANGO_CORS_ALLOWED_ORIGINS}
+    POSTGRES_DB: ${POSTGRES_DB}
+    POSTGRES_USER: ${POSTGRES_USER}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    POSTGRES_HOST: ${POSTGRES_HOST}
+    POSTGRES_PORT: ${POSTGRES_PORT}
+    CELERY_BROKER_URL: ${CELERY_BROKER_URL}
+    CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
+    CHANNEL_REDIS_URL: ${CHANNEL_REDIS_URL}
+    CACHE_REDIS_URL: ${CACHE_REDIS_URL}
+    <<: *gpu_ec2_env
+  volumes:
+    - media_input:/app/media
+
+services:
+  backend:
+    environment:
+      <<: *gpu_ec2_env
+
+  worker_gpu_autostop:
+    <<: *gpu_worker_common
+    command:
+      [
+        "/app/.venv/bin/python",
+        "-m",
+        "celery",
+        "-A",
+        "project.celery:app",
+        "worker",
+        "-l",
+        "INFO",
+        "-Q",
+        "gpu_control_queue",
+        "--concurrency",
+        "1",
+      ]
+
+  celery_beat:
+    <<: *gpu_worker_common
+    command:
+      [
+        "/app/.venv/bin/python",
+        "-m",
+        "celery",
+        "-A",
+        "project.celery:app",
+        "beat",
+        "-l",
+        "INFO",
+      ]

@@ -1,13 +1,16 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-export const WS_BASE_URL = API_BASE_URL.replace("http", "ws");
+const apiBaseUrl = new URL(API_BASE_URL, window.location.origin);
+// window.location.originは相対API URLを、現在表示中のサイトを基準に絶対URLへ解決する引数(本番用)
+apiBaseUrl.protocol = apiBaseUrl.protocol === "https:" ? "wss:" : "ws:";
+export const OCR_WS_URL = new URL("/ocr/", apiBaseUrl).toString();
 export const OPENAPI_URL = API_BASE_URL + "schema/";
 // 目的
 // OpenAPI（components/schemas）から型情報（schema）を動的に参照できる様にして、
-// REST の collection endpointに対して操作を行うための情報をまとめる。
+// REST の endpointに対して操作を行うための情報をまとめる。
 
 // 変数の命名規則
 // schema: OpenAPI由来の設計図 (metadata)
-// collection: REST由来のcollection endpoint情報（data の入口）
+// collection: REST由来のendpoint情報（data の入口）
 // spec: specification（仕様・契約） 上記を包含するspecは双方どちらにも依った用語ではない
 
 // 関数の命名規則
@@ -27,9 +30,19 @@ const makeAccessSpec = ({ schemaKey, collection }) => {
   };
 };
 
+export const authActionSpec = {
+  meUrl: API_BASE_URL + "auth/me/",
+  loginUrl: API_BASE_URL + "auth/login/",
+  logoutUrl: API_BASE_URL + "auth/logout/",
+};
+
 export const documentAccessSpec = makeAccessSpec({
   schemaKey: "Document",
   collection: "documents",
+});
+export const userAccessSpec = makeAccessSpec({
+  schemaKey: "User",
+  collection: "users",
 });
 export const pageAccessSpec = makeAccessSpec({
   schemaKey: "Page",
@@ -39,22 +52,49 @@ export const wordAccessSpec = makeAccessSpec({
   schemaKey: "Word",
   collection: "words",
 });
-export const analyzeDocumentAccessSpec = {
-  analyzeUrl: API_BASE_URL + "documents/start_ocr/",
+export const documentOcrAccessSpec = {
+  actionUrl: API_BASE_URL + "documents/ocr/",
 };
 
-// 表示するフィールド/列を選ぶ（表示名の翻訳も兼ねる）
+export const wordOcrAccessSpec = {
+  actionUrl: API_BASE_URL + "words/ocr/",
+  resultUrl: (previewJobId) => API_BASE_URL + `words/ocr/${previewJobId}/`,
+};
+
+// 表示するフィールド/列を選ぶ（表示名の翻訳、整形も兼ねる）
+
 const documentUiSpec = Object.freeze({
   table: [
     { key: "created", label: "作成日時" },
     { key: "file_name", label: "名前" },
-    { key: "state", label: "状態" },
+    {
+      key: "state",
+      label: "状態",
+      format: (value) => (value === "完了" ? "閲覧可能" : value),
+    },
   ],
 });
+const formatScoreAsPercent = (value) => {
+  if (value == null) return "-";
+  return `${Math.round(Number(value) * 100)}%`;
+};
+
 const wordUiSpec = Object.freeze({
   table: [
-    { key: "page__page_number", label: "ページ" },
-    { key: "content", label: "本文" },
+    {
+      key: "content",
+      label: "本文",
+    },
+    {
+      key: "det_score",
+      label: "検出信頼度",
+      format: formatScoreAsPercent,
+    },
+    {
+      key: "rec_score",
+      label: "認識信頼度",
+      format: formatScoreAsPercent,
+    },
   ],
 });
 
@@ -76,6 +116,18 @@ export const wordSpec = attachResourceSpec(wordAccessSpec, wordUiSpec);
 // template:React Routerのdynamic paramsを用いた抽象URL。App.jsx の <Route path=...> に渡して定義に使う。
 // to: 遷移先URLを生成する関数。Link の to や navigate() に渡す具体URLを作る。
 export const routePaths = Object.freeze({
+  login: {
+    template: "/login",
+    to: () => "/login",
+  },
+  signup: {
+    template: "/signup",
+    to: () => "/signup",
+  },
+  setting: {
+    template: "/setting",
+    to: () => "/setting",
+  },
   docs: {
     template: "/documents",
     to: () => "/documents",

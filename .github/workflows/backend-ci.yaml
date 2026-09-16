@@ -1,0 +1,47 @@
+name: Backend CI
+
+on:
+  push:
+    paths:
+      - "backend/**"
+      - "compose.backend-ci.yaml"
+      - ".github/workflows/backend-ci.yaml"
+  pull_request:
+    paths:
+      - "backend/**"
+      - "compose.backend-ci.yaml"
+      - ".github/workflows/backend-ci.yaml"
+jobs:
+  backend-test:
+    runs-on: ubuntu-latest
+    env:
+      DJANGO_DEBUG: ${{ vars.DJANGO_DEBUG }}
+      DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+      DJANGO_ALLOWED_HOSTS: ${{ vars.DJANGO_ALLOWED_HOSTS }}
+      DJANGO_CORS_ALLOWED_ORIGINS: ${{ vars.DJANGO_CORS_ALLOWED_ORIGINS }}
+      POSTGRES_DB: ${{ vars.POSTGRES_DB }}
+      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      POSTGRES_HOST: ${{ vars.POSTGRES_HOST }}
+      POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
+      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+      
+      COMPOSE_PROFILES: ${{ vars.COMPOSE_PROFILES }}
+      CELERY_BROKER_URL: ${{ vars.CELERY_BROKER_URL }}
+      CELERY_RESULT_BACKEND: ${{ vars.CELERY_RESULT_BACKEND }}
+      CHANNEL_REDIS_URL: ${{ vars.CHANNEL_REDIS_URL }}
+      CACHE_REDIS_URL: ${{ vars.CACHE_REDIS_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Start containers
+        run: docker compose -f compose.backend-ci.yaml up -d --build
+
+      - name: Run pytest
+        run: docker compose -f compose.backend-ci.yaml exec -T backend uv run pytest -q --cov=app_ocr --cov-report=term-missing
+
+      - name: Stop containers
+        if: always()
+        run: docker compose -f compose.backend-ci.yaml down -v

@@ -1,22 +1,122 @@
-from rest_framework import serializers
-from app_ocr.models import Document, Page, Word
-from django.contrib.auth.models import User
+from uuid import uuid4
 from zoneinfo import ZoneInfo
 
+from django.contrib.auth import get_user_model, password_validation
+from rest_framework import serializers
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
+from app_ocr.input_constraints import (
+    ALLOWED_UPLOAD_FILE_EXTENSIONS,
+    MAX_UPLOAD_FILE_NAME_LENGTH,
+    MAX_UPLOAD_FILE_SIZE,
+    UPLOAD_FILE_EXTENSION_ALIASES,
+)
+from app_ocr.models import Document, Page, State, Word
+
+
+# 各種models用serializerのフィールド宣言時、
+# デシリアライズ用のqueryをuserでfilerする為のオーバーライドFieldを定義
+class UserScopedPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
+    # PrimaryKeyRelatedFieldが独自の設定値user_lookupを受取れるようにするため、
+    # __init__をオーバーライドする
+    # user_lookupには、対象モデルから所有ユーザーまでの
+    # Django ORMルックアップを指定する
+    def __init__(self, *args, user_lookup, **kwargs):
+        self.user_lookup = user_lookup
+        super().__init__(*args, **kwargs)
+
+    # get_querysetをオーバーライドして、querySetを、
+    # 現在のユーザーが所有するオブジェクトだけに制限する
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # HTTPではrequest.user、内部処理ではcontextのuserを使用する
+        request = self.context.get("request")
+        user = getattr(request, "user", self.context.get("user"))
+
+        # userがない場合や未認証の場合は、関連先の指定をすべて拒否する
+        if user is None or not user.is_authenticated:
+            return queryset.none()
+        return queryset.filter(**{self.user_lookup: user})
+
+
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ["id", "url", "username"]
+        model = get_user_model()
+        fields = ["id", "email"]
 
 
-class DocumentSerializer(serializers.HyperlinkedModelSerializer):
+class UserCreateSerializer(serializers.Serializer):
+    type = serializers.ChoiceField(choices=["guest", "registered"])
+    email = serializers.EmailField(required=False)
+    password = serializers.CharField(required=False, write_only=True)
+
+    def validate(self, attrs):
+        if attrs["type"] != "registered":
+            return attrs
+
+        email = attrs.get("email")
+        password = attrs.get("password")
+        user_model = get_user_model()
+
+        if not email:
+            raise serializers.ValidationError({"email": "この項目は必須です。"})
+        if not password:
+            raise serializers.ValidationError({"password": "この項目は必須です。"})
+        if user_model.objects.filter(email=email).exists():
+            raise serializers.ValidationError(
+                {"email": "このメールアドレスは既に使われています。"}
+            )
+
+        password_validation.validate_password(password)
+        return attrs
+
+    def create(self, validated_data):
+        user_model = get_user_model()
+
+        if validated_data["type"] == "guest":
+            return user_model.objects.create_guest_user(
+                email=f"guest_{uuid4().hex}@example.invalid",
+            )
+
+        return user_model.objects.create_registered_user(
+            password=validated_data["password"],
+            email=validated_data["email"],
+        )
+
+
+class UserPasswordChangeSerializer(serializers.Serializer):
+    current_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        user = self.context["request"].user
+        current_password = attrs.get("current_password")
+        new_password = attrs.get("new_password")
+
+        if not user.check_password(current_password):
+            raise serializers.ValidationError(
+                {"current_password": "現在のパスワードが一致しません。"}
+            )
+
+        password_validation.validate_password(new_password, user=user)
+        return attrs
+
+
+class DocumentSerializer(serializers.ModelSerializer):
     state = serializers.CharField(source="get_state_display", read_only=True)
     created = serializers.DateTimeField(
         format="%Y/%m/%d %H:%M:%S",
         default_timezone=ZoneInfo("Asia/Tokyo"),
         read_only=True,
     )
+
+    def create(self, validated_data):
+        # file の保存先を doc.id ベースとするため、
+        # 先に Document を保存して id を確定させてから file を保存する
+        uploaded_file = validated_data.pop("file")
+        document = Document.objects.create(**validated_data)
+        document.file.save(uploaded_file.name, uploaded_file, save=True)
+        return document
 
     class Meta:
         model = Document
@@ -31,8 +131,38 @@ class DocumentSerializer(serializers.HyperlinkedModelSerializer):
         ]
 
 
-class PageSerializer(serializers.HyperlinkedModelSerializer):
-    doc = serializers.PrimaryKeyRelatedField(queryset=Document.objects.all())
+class DocumentUploadSerializer(serializers.Serializer):
+    file = serializers.FileField(allow_empty_file=False)
+
+    # FileFieldはデフォルトのallow_empty_file=Falseにより
+    # サイズ0のファイルを検知してバリデーションエラーとして拒否できる
+    # 「添付ファイルの中身が空でした。」が返る
+    def validate_file(self, file):
+        ext = file.name.rsplit(".", 1)[-1].lower() if "." in file.name else ""
+        ext = UPLOAD_FILE_EXTENSION_ALIASES.get(ext, ext)
+        if ext not in ALLOWED_UPLOAD_FILE_EXTENSIONS:
+            raise serializers.ValidationError(
+                "拡張子が非対応です。",
+                code="unsupported_extension",
+            )
+        if file.size > MAX_UPLOAD_FILE_SIZE:
+            raise serializers.ValidationError(
+                "ファイルサイズが大きすぎます。",
+                code="file_too_large",
+            )
+        if len(file.name) > MAX_UPLOAD_FILE_NAME_LENGTH:
+            raise serializers.ValidationError(
+                "ファイル名が長すぎます。",
+                code="file_name_too_long",
+            )
+        return file
+
+
+class PageSerializer(serializers.ModelSerializer):
+    doc = UserScopedPrimaryKeyRelatedField(
+        queryset=Document.objects.all(),
+        user_lookup="owner",
+    )
 
     class Meta:
         model = Page
@@ -47,8 +177,11 @@ class PageSerializer(serializers.HyperlinkedModelSerializer):
         ]
 
 
-class WordSerializer(serializers.HyperlinkedModelSerializer):
-    page = serializers.PrimaryKeyRelatedField(queryset=Page.objects.all())
+class WordSerializer(serializers.ModelSerializer):
+    page = UserScopedPrimaryKeyRelatedField(
+        queryset=Page.objects.all(),
+        user_lookup="doc__owner",
+    )
     page__page_number = serializers.IntegerField(
         source="page.page_number", read_only=True
     )
@@ -67,3 +200,38 @@ class WordSerializer(serializers.HyperlinkedModelSerializer):
             "det_score",
             "page__page_number",
         ]
+
+
+class PreviewWordOcrRequestSerializer(serializers.Serializer):
+    doc = UserScopedPrimaryKeyRelatedField(
+        queryset=Document.objects.all(),
+        user_lookup="owner",
+    )
+    mode = serializers.ChoiceField(choices=["replace_words", "rewrite_content"])
+    preview_id = serializers.CharField()
+    page_number = serializers.IntegerField(min_value=1)
+    bbox = serializers.ListField()
+
+    # PrimaryKeyRelatedFieldによって、入力されたdocの主キーは
+    # 検証時にDocumentインスタンスへ変換される。
+    # 一方、ocr_word_taskのdoc引数は整数の主キーを受け取るため、
+    # docを主キーへ戻してvalidated_dataに格納する必要がある。
+    # validate_<フィールド名>は、DRFが自動実行するフィールド単位の検証フック
+    def validate_doc(self, document):
+        return document.pk
+
+
+class PreviewWordOcrJobResultSerializer(serializers.Serializer):
+    state = serializers.ChoiceField(choices=State.choices, default=State.QUEUED)
+    mode = serializers.ChoiceField(
+        choices=["replace_words", "rewrite_content"],
+        required=False,
+    )
+    preview_id = serializers.CharField(required=False)
+    words = serializers.ListField(required=False)
+    content = serializers.CharField(required=False)
+    error_message = serializers.CharField(required=False)
+    direction = serializers.CharField(required=False)
+    # words/contentのrequiredはmodeにより変動するが、
+    # 直でrequiredを変動することは不可能であるため、
+    # if文等で制限を設けたい場合はValidationErrorを追加定義することが有効。

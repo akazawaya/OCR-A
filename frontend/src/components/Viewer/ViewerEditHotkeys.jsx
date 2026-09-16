@@ -1,17 +1,11 @@
 import { useEffect } from "react";
 
-import { useViewerEditStateContext } from "../../contexts/viewer/ViewerEditStateContext";
-
-export const ViewerEditHotkeys = ({ viewerRootRef }) => {
-  const viewerEditState = useViewerEditStateContext();
-  const {
-    data: { isEditing },
-    events: { onKeyDownUndo, onKeyDownRedo },
-  } = viewerEditState;
-
+export const ViewerEditHotkeys = ({
+  data: { viewerRootRef } = {},
+  actions: { undo, redo } = {},
+}) => {
   useEffect(() => {
     const onWindowKeyDown = (e) => {
-      if (!isEditing) return;
       if (e.isComposing) return;
 
       const active = document.activeElement;
@@ -29,19 +23,19 @@ export const ViewerEditHotkeys = ({ viewerRootRef }) => {
 
       if (isMod && !e.shiftKey && key === "z") {
         e.preventDefault();
-        onKeyDownUndo();
+        undo();
         return;
       }
 
       if ((isMod && e.shiftKey && key === "z") || (e.ctrlKey && key === "y")) {
         e.preventDefault();
-        onKeyDownRedo();
+        redo();
       }
     };
 
     window.addEventListener("keydown", onWindowKeyDown);
     return () => window.removeEventListener("keydown", onWindowKeyDown);
-  }, [isEditing, onKeyDownUndo, onKeyDownRedo, viewerRootRef]);
+  }, [undo, redo, viewerRootRef]);
 
   return null;
 };

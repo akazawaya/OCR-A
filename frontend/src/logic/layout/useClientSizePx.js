@@ -3,22 +3,7 @@
  *
  * 責務:
  * - ref に紐付けたDOM要素(element)のclientサイズ（px）を監視し、{ w, h } を返す。
- *
- * @param {import("react").RefObject<HTMLElement>} elementRef
- * - 計測対象のDOM要素を指すref
- *
- * @returns {{ clientSizePx: { w: number, h: number } }}
- * - clientSizePx: { w, h } で、DOM要素のclientWidthとclientHeightを返す
- * 　※ Pxが2次元 {w,h}を持つならばFooSizePxという命名にする
- *
- * 特筆事項:
- * - 他の用途でも使えるようにhooks化しているが、img側のsvg→wordのマスクのsize追随用として導入した。
- * 　svgはdivにwidth/height:100%で追随している想定のため、divのsizeが分かれば十分である。
- *
- * - ro.disconnect() しないとメモリリークや不要なコールバックが発生する恐れがある
- *
  */
-
 import { useLayoutEffect, useState } from "react";
 
 export const useClientSizePx = (elementRef) => {
