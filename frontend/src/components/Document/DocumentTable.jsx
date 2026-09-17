@@ -40,8 +40,13 @@ const DocumentTable = ({
               onClick={isRowClickable ? () => dataRouter(r) : undefined}
             >
               {columns.map((c) => (
-                <td key={c.key} className="border border-gray-400 px-1">
-                  {c.format ? c.format(r[c.key]) : r[c.key]}
+                <td
+                  key={c.key}
+                  className="truncate border border-gray-400 px-1"
+                >
+                  <span className="block max-w-sm truncate">
+                    {c.format ? c.format(r[c.key]) : r[c.key]}
+                  </span>
                 </td>
               ))}
               {deleteRow && (
@@ -52,7 +57,7 @@ const DocumentTable = ({
                   }}
                 >
                   <button
-                    className="w-fit cursor-pointer bg-red-500 text-white hover:bg-red-600"
+                    className="w-fit cursor-pointer bg-red-500 whitespace-nowrap text-white hover:bg-red-600"
                     onClick={() => deleteRow(r)}
                   >
                     削除
