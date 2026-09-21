@@ -14,12 +14,23 @@ const DocumentToolbar = ({
   } = {},
 }) => {
   const [selectedFile, setSelectedFile] = useState(null);
+  const [isDraggingFile, setIsDraggingFile] = useState(false); // ドラッグ時の見た目反映用
   const fileInputRef = useRef(null);
 
   const postSelectedFile = (shouldStartOcr) => {
     postFormDataFile(selectedFile, { shouldStartOcr });
     setSelectedFile(null);
     fileInputRef.current.value = "";
+  };
+
+  const handleFileDrop = (event) => {
+    event.preventDefault();
+    setIsDraggingFile(false);
+
+    const [file] = event.dataTransfer.files;
+    if (file) {
+      setSelectedFile(file);
+    }
   };
 
   const findOptionLabel = (queryKey, value) =>
@@ -61,8 +72,22 @@ const DocumentToolbar = ({
           onChange={(e) => setSelectedFile(e.target.files[0])}
         />
         <label
-          className="flex min-h-18 min-w-64 cursor-pointer flex-col justify-center rounded-md border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-center hover:border-indigo-500 hover:bg-indigo-50"
+          className={`flex min-h-18 min-w-64 cursor-pointer flex-col justify-center rounded-md border-2 border-dashed px-4 py-3 text-center ${
+            isDraggingFile
+              ? "border-indigo-500 bg-indigo-50"
+              : "border-gray-300 bg-gray-50 hover:border-indigo-500 hover:bg-indigo-50"
+          }`}
           htmlFor="document-file-input"
+          onDragLeave={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) {
+              setIsDraggingFile(false);
+            }
+          }}
+          onDragOver={(event) => {
+            event.preventDefault();
+            setIsDraggingFile(true);
+          }}
+          onDrop={handleFileDrop}
         >
           {!selectedFile ? (
             <div className="flex h-full flex-col items-center justify-center">
