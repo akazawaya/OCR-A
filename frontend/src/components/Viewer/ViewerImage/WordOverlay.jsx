@@ -138,6 +138,8 @@ const WordOverlay = ({
               }`}
               data-scroll-target-word={w.id}
               {...w.rect}
+              onMouseEnter={() => hover(w.id)}
+              onMouseLeave={clearHovered}
             />
           );
         })}
