@@ -40,6 +40,12 @@ jobs:
       - name: Start containers
         run: docker compose -f compose.backend-ci.yaml up -d --build
 
+      - name: Check for missing migrations
+        run: docker compose -f compose.backend-ci.yaml exec -T backend /app/.venv/bin/python manage.py makemigrations --check --dry-run
+
+      - name: Run Django checks
+        run: docker compose -f compose.backend-ci.yaml exec -T backend /app/.venv/bin/python manage.py check
+
       - name: Run pytest
         run: docker compose -f compose.backend-ci.yaml exec -T backend uv run pytest -q --cov=app_ocr --cov-report=term-missing
 
