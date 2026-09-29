@@ -60,17 +60,19 @@ def check_gpu_worker_autostop_task():
         minutes=settings.GPU_WORKER_AUTOSTOP_IDLE_MINUTES,
     )
     now = timezone.now()
-    for worker_type in settings.GPU_WORKER_INSTANCE_IDS:
-        last_ensure_at = get_last_ensure_at(worker_type)
+    for gpu_worker in settings.GPU_WORKERS:
+        instance_id = gpu_worker["instance_id"]
+        queue_names = gpu_worker["queues"]
+        last_ensure_at = get_last_ensure_at(instance_id)
         if last_ensure_at is None:
             continue
         if now - last_ensure_at < idle_threshold:
             continue
-        if has_pending_gpu_worker_queue_tasks(worker_type):
+        if has_pending_gpu_worker_queue_tasks(queue_names):
             continue
-        if has_active_or_reserved_gpu_worker_tasks(worker_type):
+        if has_active_or_reserved_gpu_worker_tasks(queue_names):
             continue
-        stop_gpu_worker(worker_type)
+        stop_gpu_worker(instance_id)
 
 
 @shared_task

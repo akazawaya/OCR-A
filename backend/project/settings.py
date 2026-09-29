@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import json
 import os
 from pathlib import Path
 
@@ -120,18 +121,10 @@ if ENABLE_AWS_INFRASTRUCTURE:
     AWS_ACCESS_KEY_ID = os.environ["AWS_ACCESS_KEY_ID"]
     AWS_SECRET_ACCESS_KEY = os.environ["AWS_SECRET_ACCESS_KEY"]
 
-GPU_WORKER_QUEUES = {
-    "worker_document": "ocr_document_queue",
-    "worker_preview_word": "ocr_word_queue",
-}
-GPU_WORKER_INSTANCE_IDS = {}
+GPU_WORKERS = []
 if ENABLE_GPU_WORKER_AUTOSTART:
     AWS_EC2_REGION_NAME = os.environ["AWS_EC2_REGION_NAME"]
-    GPU_WORKER_INSTANCE_IDS = {
-        "worker_document": os.environ["GPU_WORKER_DOCUMENT_INSTANCE_ID"],
-        "worker_preview_word": os.environ["GPU_WORKER_PREVIEW_WORD_INSTANCE_ID"],
-    }
-
+    GPU_WORKERS = json.loads(os.environ["GPU_WORKERS"])
 CELERY_BEAT_SCHEDULE = {}
 if ENABLE_GPU_WORKER_AUTOSTOP:
     GPU_WORKER_AUTOSTOP_IDLE_MINUTES = float(

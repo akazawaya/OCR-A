@@ -17,32 +17,24 @@ from app_ocr.service.gpu_worker.heartbeat import (
 from app_ocr.tasks import check_gpu_worker_autostop_task
 from project.celery import app as celery_app
 
-# 共通層（下準備用）
-# DOCUMENT_WORKERをGPU Workerの代表として検証する。
-DOCUMENT_WORKER = "worker_document"
-
 # キューはbrokerのqueuedタスクと、
 # worker内Requestのactive・reserved用の再現用に新設する。
 QUEUED_QUEUE = "test_queued_task_queue"
 RESERVED_QUEUE = "test_reserved_task_queue"
 ACTIVE_QUEUE = "test_active_task_queue"
-TEST_QUEUE_NAMES = (QUEUED_QUEUE, ACTIVE_QUEUE, RESERVED_QUEUE)
+TEST_QUEUE_NAMES = (
+    QUEUED_QUEUE,
+    ACTIVE_QUEUE,
+    RESERVED_QUEUE,
+)
 
-# TODO(#23): worker_sharedを本実装へ追加するコミットで、
-# documentとwordが同じGPU EC2を共有する停止判定ケースを追加する。
-# この際instance_IDを共通用で新設する予定であるため、後で整合性を確認する。
-DOCUMENT_INSTANCE_ID = "i-document"
-GPU_WORKER_INSTANCE_IDS = {
-    DOCUMENT_WORKER: DOCUMENT_INSTANCE_ID,
-}
+INSTANCE_ID = "i-gpu"
 
 
 @pytest.fixture(autouse=True)
 def configure_gpu_autostop_settings(settings):
     settings.ENABLE_GPU_WORKER_AUTOSTOP = True
     settings.GPU_WORKER_AUTOSTOP_IDLE_MINUTES = 0.1
-    settings.AWS_EC2_REGION_NAME = "ap-northeast-1"
-    settings.GPU_WORKER_INSTANCE_IDS = GPU_WORKER_INSTANCE_IDS
 
 
 @pytest.fixture
@@ -54,9 +46,12 @@ def queue_name(settings, worker_task_state):
     else:
         queue_name = QUEUED_QUEUE
 
-    settings.GPU_WORKER_QUEUES = {
-        DOCUMENT_WORKER: queue_name,
-    }
+    settings.GPU_WORKERS = [
+        {
+            "queues": TEST_QUEUE_NAMES,
+            "instance_id": INSTANCE_ID,
+        },
+    ]
     return queue_name
 
 
@@ -92,10 +87,14 @@ def ec2_client():
         ],
     )
     client.describe_instances.return_value = make_describe_instances_response(
-        DOCUMENT_INSTANCE_ID,
+        INSTANCE_ID,
         state="running",
     )
-    return client
+    with patch(
+        "app_ocr.service.gpu_worker.worker_instance._get_ec2_client",
+        return_value=client,
+    ):
+        yield client
 
 
 # Redis
@@ -107,7 +106,7 @@ def ec2_client():
 def redis_state(settings):
     redis_client = Redis.from_url(settings.CELERY_BROKER_URL)
     heartbeat_keys = [
-        LAST_ENSURE_AT_CACHE_KEY.format(worker_type=DOCUMENT_WORKER),
+        LAST_ENSURE_AT_CACHE_KEY.format(instance_id=INSTANCE_ID),
     ]
     # テスト開始前の初期化
     redis_client.delete(*TEST_QUEUE_NAMES)
@@ -246,17 +245,13 @@ def test_gpu_worker_autostop(
         "app_ocr.service.gpu_worker.heartbeat.timezone.now",
         return_value=last_ensure_at,
     ):
-        mark_gpu_worker_ensured(DOCUMENT_WORKER)
+        mark_gpu_worker_ensured(INSTANCE_ID)
 
-    with patch(
-        "app_ocr.service.gpu_worker.worker_instance._get_ec2_client",
-        return_value=ec2_client,
-    ):
-        check_gpu_worker_autostop_task()
+    check_gpu_worker_autostop_task()
 
     if should_stop:
         ec2_client.stop_instances.assert_called_once_with(
-            InstanceIds=[DOCUMENT_INSTANCE_ID],
+            InstanceIds=[INSTANCE_ID],
         )
     else:
         ec2_client.stop_instances.assert_not_called()

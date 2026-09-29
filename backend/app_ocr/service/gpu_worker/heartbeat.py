@@ -6,22 +6,22 @@ from django.utils import timezone
 
 logger = getLogger(__name__)
 
-LAST_ENSURE_AT_CACHE_KEY = "gpu_worker:last_ensure_at:{worker_type}"
+LAST_ENSURE_AT_CACHE_KEY = "gpu_worker:last_ensure_at:{instance_id}"
 
 
-def _cache_key(worker_type):
-    return LAST_ENSURE_AT_CACHE_KEY.format(worker_type=worker_type)
+def _cache_key(instance_id):
+    return LAST_ENSURE_AT_CACHE_KEY.format(instance_id=instance_id)
 
 
-def mark_gpu_worker_ensured(worker_type):
+def mark_gpu_worker_ensured(instance_id):
     try:
-        cache.set(_cache_key(worker_type), timezone.now().timestamp(), timeout=None)
+        cache.set(_cache_key(instance_id), timezone.now().timestamp(), timeout=None)
     except Exception:
-        logger.exception("Failed to record GPU worker heartbeat: %s", worker_type)
+        logger.exception("Failed to record GPU worker heartbeat: %s", instance_id)
 
 
-def get_last_ensure_at(worker_type):
-    timestamp = cache.get(_cache_key(worker_type))
+def get_last_ensure_at(instance_id):
+    timestamp = cache.get(_cache_key(instance_id))
     if timestamp is None:
         return None
 
