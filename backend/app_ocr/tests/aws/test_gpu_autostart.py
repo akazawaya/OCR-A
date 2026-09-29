@@ -35,7 +35,6 @@ def make_describe_instances_response(instance_id, state):
 
 @pytest.fixture(autouse=True)
 def configure_gpu_worker_settings(settings):
-    settings.AWS_EC2_REGION_NAME = "ap-northeast-1"
     settings.GPU_WORKERS = GPU_WORKERS
     heartbeat_keys = [
         LAST_ENSURE_AT_CACHE_KEY.format(instance_id=INSTANCE_ID),

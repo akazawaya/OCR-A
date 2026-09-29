@@ -35,7 +35,6 @@ INSTANCE_ID = "i-gpu"
 def configure_gpu_autostop_settings(settings):
     settings.ENABLE_GPU_WORKER_AUTOSTOP = True
     settings.GPU_WORKER_AUTOSTOP_IDLE_MINUTES = 0.1
-    settings.AWS_EC2_REGION_NAME = "ap-northeast-1"
 
 
 @pytest.fixture
