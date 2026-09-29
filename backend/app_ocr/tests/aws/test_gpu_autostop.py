@@ -90,7 +90,11 @@ def ec2_client():
         INSTANCE_ID,
         state="running",
     )
-    return client
+    with patch(
+        "app_ocr.service.gpu_worker.worker_instance._get_ec2_client",
+        return_value=client,
+    ):
+        yield client
 
 
 # Redis
@@ -243,11 +247,7 @@ def test_gpu_worker_autostop(
     ):
         mark_gpu_worker_ensured(INSTANCE_ID)
 
-    with patch(
-        "app_ocr.service.gpu_worker.worker_instance._get_ec2_client",
-        return_value=ec2_client,
-    ):
-        check_gpu_worker_autostop_task()
+    check_gpu_worker_autostop_task()
 
     if should_stop:
         ec2_client.stop_instances.assert_called_once_with(

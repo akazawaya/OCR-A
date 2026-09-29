@@ -53,7 +53,11 @@ def ec2_client(instance_state):
         instance_id=INSTANCE_ID,
         state=instance_state,
     )
-    return client
+    with patch(
+        "app_ocr.service.gpu_worker.worker_instance._get_ec2_client",
+        return_value=client,
+    ):
+        yield client
 
 
 @pytest.mark.parametrize(
@@ -69,11 +73,7 @@ def test_gpu_worker_autostart(
     ec2_client,
     instance_state,
 ):
-    with patch(
-        "app_ocr.service.gpu_worker.worker_instance._get_ec2_client",
-        return_value=ec2_client,
-    ):
-        ensure_gpu_worker_running(TEST_QUEUE)
+    ensure_gpu_worker_running(TEST_QUEUE)
 
     if should_start:
         ec2_client.start_instances.assert_called_once_with(InstanceIds=[INSTANCE_ID])
