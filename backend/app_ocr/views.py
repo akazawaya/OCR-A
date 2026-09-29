@@ -248,7 +248,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
                 def enqueue_document_ocr():
                     notify_document_changed(document.owner_id)
                     if settings.ENABLE_GPU_WORKER_AUTOSTART:
-                        ensure_gpu_worker_running("worker_document")
+                        ensure_gpu_worker_running("ocr_document_queue")
                     dispatch_ocr_pages_task.delay(document.pk)
 
                 transaction.on_commit(enqueue_document_ocr)
@@ -298,7 +298,7 @@ class WordViewSet(viewsets.ModelViewSet):
         )
         serializer.is_valid(raise_exception=True)
         if settings.ENABLE_GPU_WORKER_AUTOSTART:
-            ensure_gpu_worker_running("worker_preview_word")
+            ensure_gpu_worker_running("ocr_word_queue")
         task_kwargs = {
             **serializer.validated_data,
             "notification_user_id": request.user.pk,
