@@ -17,7 +17,7 @@ services:
     volumes:
       # collectstaticの出力先。project/settings.pyのSTATIC_ROOTと一致させる。
       - django_static:/app/static
-    # 本番では外部RDS・ElastiCacheを使用
+    # 本番では外部RDSを使用
     depends_on: !reset []
 
   worker_ocr_shared:

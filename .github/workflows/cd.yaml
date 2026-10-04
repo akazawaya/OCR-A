@@ -57,8 +57,8 @@ jobs:
               ("cd " + ($project_dir | @sh)),
               "git fetch --prune origin",
               ("git checkout --detach " + ($deploy_commit | @sh)),
-              "COMPOSE_PROFILES= docker compose --env-file .env.prod -f compose.yaml -f compose.s3.yaml -f compose.gpu-ec2.yaml -f compose.elasticache.yaml -f compose.prod.yaml up -d --build",
-              "COMPOSE_PROFILES= docker compose --env-file .env.prod -f compose.yaml -f compose.s3.yaml -f compose.gpu-ec2.yaml -f compose.elasticache.yaml -f compose.prod.yaml exec -T backend /app/.venv/bin/python manage.py collectstatic --noinput"
+              "COMPOSE_PROFILES= docker compose --env-file .env.prod -f compose.yaml -f compose.s3.yaml -f compose.gpu-ec2.yaml -f compose.prod.yaml up -d --build",
+              "COMPOSE_PROFILES= docker compose --env-file .env.prod -f compose.yaml -f compose.s3.yaml -f compose.gpu-ec2.yaml -f compose.prod.yaml exec -T backend /app/.venv/bin/python manage.py collectstatic --noinput"
             ]
           }')
 
