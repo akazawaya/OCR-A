@@ -17,31 +17,33 @@ services:
     volumes:
       # collectstaticの出力先。project/settings.pyのSTATIC_ROOTと一致させる。
       - django_static:/app/static
-    # 本番では外部RDSを使用
-    depends_on: !reset []
+    # 本番ではDBだけ外部RDSへ切り替え、BrokerはCPU EC2内で起動する
+    depends_on: !override
+      - broker
 
   worker_ocr_shared:
-    depends_on: !reset []
+    depends_on: !override
+      - broker
 
   worker_document:
-    depends_on: !reset []
+    depends_on: !override
+      - broker
 
   worker_preview_word:
-    depends_on: !reset []
+    depends_on: !override
+      - broker
 
-  worker_gpu_autostop:
-    depends_on: !reset []
+  worker_maintenance:
+    depends_on: !override
+      - broker
 
   celery_beat:
-    depends_on: !reset []
+    depends_on: !override
+      - broker
 
-  # CD時の docker compose up でローカル用DB・Brokerを無視する。
+  # CD時の docker compose up でローカル用DBを無視する。
   # local-infrastructure プロファイルに所属させ、これを呼ばないことで無視する
   db:
-    profiles:
-      - local-infrastructure
-
-  broker:
     profiles:
       - local-infrastructure
 
