@@ -26,8 +26,6 @@ TEST_QUEUE_NAMES = (
 
 INSTANCE_ID = "i-gpu"
 
-pytestmark = pytest.mark.django_db
-
 
 @pytest.fixture(autouse=True)
 def configure_gpu_autostop_settings(settings):
@@ -203,6 +201,15 @@ def arranged_gpu_workload(
             release_task.set()
 
 
+# start_worker()がデフォルト挙動でpytest本体と異なるDB接続経路を使うため、
+# 今までのDB接続を閉じてしまう。よって後続のGpuWorkerLeaseのcreateが失敗する。
+# transaction=Trueで初期化方法を「rollback」から「flush」に切り替え、
+# テスト分離用トランザクションを消すことでworkerにテストケース内データが届くようにする。
+# またserialized_rollbackで、flush後に消えるデフォルトgroupデータを復元する。
+@pytest.mark.django_db(
+    transaction=True,
+    serialized_rollback=True,
+)
 @pytest.mark.parametrize(
     (
         "recently_used",

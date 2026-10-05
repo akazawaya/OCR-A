@@ -18,7 +18,7 @@ from project.celery import app as celery_app
 
 TEST_OCR_QUEUE = "test_document_ocr_timeout_queue"
 
-pytestmark = pytest.mark.django_db(transaction=True)
+pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
@@ -93,6 +93,19 @@ def test_document_ocr_sets_first_activity_once_and_updates_last_activity(
 
 
 # 失敗系
+# start_worker()がデフォルト挙動でpytest本体と異なるDB接続経路を使うため、
+# そのままではworkerがテストケース内のDBデータにアクセスできない。
+# transaction=Trueで初期化方法を「rollback」から「flush」に切り替え、
+# テスト分離用トランザクションを消すことでworkerにテストケース内データが届くようにする。
+# またserialized_rollbackで、flush後に消えるデフォルトgroupデータを復元する。
+
+
+# CELERY_TASK_ALWAYS_EAGERで同期実行する方針はworkerを経由しないため。
+# タスクがキューに残った状態を再現できず都合が悪い。
+@pytest.mark.django_db(
+    transaction=True,
+    serialized_rollback=True,
+)
 @pytest.mark.parametrize(
     "timeout_kind",
     ["total", "page"],
