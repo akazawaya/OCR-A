@@ -136,6 +136,38 @@ services:
         "1",
       ]
 
+  worker_maintenance:
+    <<: *worker_common
+    command:
+      [
+        "/app/.venv/bin/python",
+        "-m",
+        "celery",
+        "-A",
+        "project.celery:app",
+        "worker",
+        "-l",
+        "INFO",
+        "-Q",
+        "maintenance_queue",
+        "--concurrency",
+        "1",
+      ]
+
+  celery_beat:
+    <<: *worker_common
+    command:
+      [
+        "/app/.venv/bin/python",
+        "-m",
+        "celery",
+        "-A",
+        "project.celery:app",
+        "beat",
+        "-l",
+        "INFO",
+      ]
+
   broker:
     image: redis:8.4.0-bookworm
     
