@@ -42,12 +42,13 @@ jobs:
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
-      - name: Deploy and collect static files on EC2
+      - name: Deploy, collect static files, and migrate database on EC2
         run: |
           # parametersという変数に以下のコマンドをまとめる。
           # -EC2上のソースを、Workflowを実行したGitHubコミットへ更新する。
           #  originから最新のコミット情報をfetchし、Workflow起動時に確定したコミットSHAをcheckoutする。
-          #  そのソースを使用して本番用コンテナを再構築・起動し、Djangoのcollectstaticを実行する。
+          #  そのソースを使用して本番用コンテナを再構築・起動し、
+          #  Djangoのcollectstaticとデータベースマイグレーションを実行する。
           parameters=$(jq -n \
             --arg project_dir "$EC2_PROJECT_DIR" \
             --arg deploy_commit "$DEPLOY_COMMIT_SHA" \
@@ -58,7 +59,8 @@ jobs:
               "git fetch --prune origin",
               ("git checkout --detach " + ($deploy_commit | @sh)),
               "COMPOSE_PROFILES= docker compose --env-file .env.prod -f compose.yaml -f compose.s3.yaml -f compose.gpu-ec2.yaml -f compose.prod.yaml up -d --build",
-              "COMPOSE_PROFILES= docker compose --env-file .env.prod -f compose.yaml -f compose.s3.yaml -f compose.gpu-ec2.yaml -f compose.prod.yaml exec -T backend /app/.venv/bin/python manage.py collectstatic --noinput"
+              "COMPOSE_PROFILES= docker compose --env-file .env.prod -f compose.yaml -f compose.s3.yaml -f compose.gpu-ec2.yaml -f compose.prod.yaml exec -T backend /app/.venv/bin/python manage.py collectstatic --noinput",
+              "COMPOSE_PROFILES= docker compose --env-file .env.prod -f compose.yaml -f compose.s3.yaml -f compose.gpu-ec2.yaml -f compose.prod.yaml exec -T backend /app/.venv/bin/python manage.py migrate --noinput"
             ]
           }')
 
