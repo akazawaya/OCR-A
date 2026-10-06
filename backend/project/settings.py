@@ -68,7 +68,10 @@ CELERY_TASK_ROUTES = {
         "queue": "ocr_word_queue",
     },
     "app_ocr.tasks.check_gpu_worker_autostop_task": {
-        "queue": "gpu_control_queue",
+        "queue": "maintenance_queue",
+    },
+    "app_ocr.tasks.check_document_ocr_timeout_task": {
+        "queue": "maintenance_queue",
     },
 }
 
@@ -76,6 +79,13 @@ CELERY_TASK_ROUTES = {
 CELERY_RESULT_BACKEND = os.environ["CELERY_RESULT_BACKEND"]
 CELERY_RESULT_EXPIRES = 60 * 10
 CELERY_TASK_TRACK_STARTED = True
+
+DOCUMENT_OCR_TOTAL_TIMEOUT_MINUTES = float(
+    os.environ["DOCUMENT_OCR_TOTAL_TIMEOUT_MINUTES"],
+)
+DOCUMENT_OCR_PAGE_TIMEOUT_MINUTES = float(
+    os.environ["DOCUMENT_OCR_PAGE_TIMEOUT_MINUTES"],
+)
 
 CHANNEL_REDIS_URL = os.environ["CHANNEL_REDIS_URL"]  # compose 前提ならデフォルト不要
 CHANNEL_LAYERS = {
@@ -85,13 +95,6 @@ CHANNEL_LAYERS = {
             "hosts": [CHANNEL_REDIS_URL],
         },
     },
-}
-
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": os.environ["CACHE_REDIS_URL"],
-    }
 }
 
 ENABLE_GPU_WORKER_AUTOSTART = env_bool("ENABLE_GPU_WORKER_AUTOSTART", False)
@@ -125,7 +128,12 @@ GPU_WORKERS = []
 if ENABLE_GPU_WORKER_AUTOSTART:
     AWS_EC2_REGION_NAME = os.environ["AWS_EC2_REGION_NAME"]
     GPU_WORKERS = json.loads(os.environ["GPU_WORKERS"])
-CELERY_BEAT_SCHEDULE = {}
+CELERY_BEAT_SCHEDULE = {
+    "check-document-ocr-timeout": {
+        "task": "app_ocr.tasks.check_document_ocr_timeout_task",
+        "schedule": 60,
+    },
+}
 if ENABLE_GPU_WORKER_AUTOSTOP:
     GPU_WORKER_AUTOSTOP_IDLE_MINUTES = float(
         os.environ["GPU_WORKER_AUTOSTOP_IDLE_MINUTES"],

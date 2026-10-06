@@ -26,7 +26,8 @@ x-gpu-worker-common: &gpu_worker_common
     CELERY_BROKER_URL: ${CELERY_BROKER_URL}
     CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
     CHANNEL_REDIS_URL: ${CHANNEL_REDIS_URL}
-    CACHE_REDIS_URL: ${CACHE_REDIS_URL}
+    DOCUMENT_OCR_TOTAL_TIMEOUT_MINUTES: ${DOCUMENT_OCR_TOTAL_TIMEOUT_MINUTES}
+    DOCUMENT_OCR_PAGE_TIMEOUT_MINUTES: ${DOCUMENT_OCR_PAGE_TIMEOUT_MINUTES}
     <<: *gpu_ec2_env
   volumes:
     - media_input:/app/media
@@ -36,7 +37,7 @@ services:
     environment:
       <<: *gpu_ec2_env
 
-  worker_gpu_autostop:
+  worker_maintenance:
     <<: *gpu_worker_common
     command:
       [
@@ -49,7 +50,7 @@ services:
         "-l",
         "INFO",
         "-Q",
-        "gpu_control_queue",
+        "maintenance_queue",
         "--concurrency",
         "1",
       ]

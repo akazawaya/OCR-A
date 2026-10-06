@@ -1,11 +1,9 @@
 from unittest.mock import Mock, patch
 
 import pytest
-from django.core.cache import cache
+from django.utils import timezone
 
-from app_ocr.service.gpu_worker.heartbeat import (
-    LAST_ENSURE_AT_CACHE_KEY,
-)
+from app_ocr.models import GpuWorkerLease
 from app_ocr.service.gpu_worker.worker_instance import ensure_gpu_worker_running
 
 TEST_QUEUE = "test_gpu_queue"
@@ -16,6 +14,8 @@ GPU_WORKERS = [
         "instance_id": INSTANCE_ID,
     },
 ]
+
+pytestmark = pytest.mark.django_db
 
 
 def make_describe_instances_response(instance_id, state):
@@ -36,14 +36,7 @@ def make_describe_instances_response(instance_id, state):
 @pytest.fixture(autouse=True)
 def configure_gpu_worker_settings(settings):
     settings.GPU_WORKERS = GPU_WORKERS
-    heartbeat_keys = [
-        LAST_ENSURE_AT_CACHE_KEY.format(instance_id=INSTANCE_ID),
-    ]
-    cache.delete_many(heartbeat_keys)
-
-    yield
-
-    cache.delete_many(heartbeat_keys)
+    settings.GPU_WORKER_AUTOSTOP_IDLE_MINUTES = 0.1
 
 
 @pytest.fixture
@@ -74,6 +67,9 @@ def test_gpu_worker_autostart(
     instance_state,
 ):
     ensure_gpu_worker_running(TEST_QUEUE)
+
+    lease = GpuWorkerLease.objects.get(instance_id=INSTANCE_ID)
+    assert lease.keep_alive_until > timezone.now()
 
     if should_start:
         ec2_client.start_instances.assert_called_once_with(InstanceIds=[INSTANCE_ID])

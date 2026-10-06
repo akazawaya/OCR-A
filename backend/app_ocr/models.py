@@ -186,6 +186,8 @@ class Document(models.Model):
     state = models.PositiveSmallIntegerField(
         choices=State.choices, default=State.QUEUED
     )
+    ocr_first_activity_at = models.DateTimeField(null=True, blank=True)
+    ocr_last_activity_at = models.DateTimeField(null=True, blank=True)
     file = models.FileField(
         upload_to=document_file_upload_to,
         validators=[
@@ -203,6 +205,11 @@ class Document(models.Model):
         permissions = [
             ("run_ocr_document", "Can run document OCR"),
         ]
+
+
+class GpuWorkerLease(models.Model):
+    instance_id = models.CharField(max_length=19, primary_key=True)
+    keep_alive_until = models.DateTimeField()
 
 
 class Page(models.Model):

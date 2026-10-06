@@ -6,14 +6,10 @@ from unittest.mock import Mock, patch
 import pytest
 from celery import shared_task
 from celery.contrib.testing.worker import start_worker
-from django.core.cache import cache
 from django.utils import timezone
 from redis import Redis
 
-from app_ocr.service.gpu_worker.heartbeat import (
-    LAST_ENSURE_AT_CACHE_KEY,
-    mark_gpu_worker_ensured,
-)
+from app_ocr.models import GpuWorkerLease
 from app_ocr.tasks import check_gpu_worker_autostop_task
 from project.celery import app as celery_app
 
@@ -57,7 +53,7 @@ def queue_name(settings, worker_task_state):
 
 # テスト境界
 # Mock対象は、AWS APIへアクセスするec2_clientだけとする。
-# Redis BrokerとDjango cacheには読み書きし、Celery Workerはstart_worker()で起動する。
+# Redis BrokerとDBには読み書きし、Celery Workerはstart_worker()で起動する。
 
 # EC2
 # describe_instancesでState: runningを返し、stop_instancesの呼び出しとIDを検証する。
@@ -98,25 +94,19 @@ def ec2_client():
 
 
 # Redis
-# Celery brokerとしてのqueuedタスクと、Django cacheとしてのheartbeatを設定し、
-# 自動停止判定への入力状態を再現する。
+# Celery brokerとしてqueuedタスクを設定し、自動停止判定への入力状態を再現する。
 
 
 @pytest.fixture
 def redis_state(settings):
     redis_client = Redis.from_url(settings.CELERY_BROKER_URL)
-    heartbeat_keys = [
-        LAST_ENSURE_AT_CACHE_KEY.format(instance_id=INSTANCE_ID),
-    ]
     # テスト開始前の初期化
     redis_client.delete(*TEST_QUEUE_NAMES)
-    cache.delete_many(heartbeat_keys)
 
     yield redis_client
 
     # テスト終了後の後片付け
     redis_client.delete(*TEST_QUEUE_NAMES)
-    cache.delete_many(heartbeat_keys)
 
 
 # Celery
@@ -211,6 +201,15 @@ def arranged_gpu_workload(
             release_task.set()
 
 
+# start_worker()がデフォルト挙動でpytest本体と異なるDB接続経路を使うため、
+# 今までのDB接続を閉じてしまう。よって後続のGpuWorkerLeaseのcreateが失敗する。
+# transaction=Trueで初期化方法を「rollback」から「flush」に切り替え、
+# テスト分離用トランザクションを消すことでworkerにテストケース内データが届くようにする。
+# またserialized_rollbackで、flush後に消えるデフォルトgroupデータを復元する。
+@pytest.mark.django_db(
+    transaction=True,
+    serialized_rollback=True,
+)
 @pytest.mark.parametrize(
     (
         "recently_used",
@@ -227,25 +226,20 @@ def arranged_gpu_workload(
     ],
 )
 def test_gpu_worker_autostop(
-    settings,
     ec2_client,
     recently_used,
     arranged_gpu_workload,  # broker_has_queued_taskとworker_task_stateはここに統合
     should_stop,
 ):
-    # heartbeat登録処理でrecently_usedの状態を作成
-    idle_threshold = timedelta(
-        minutes=settings.GPU_WORKER_AUTOSTOP_IDLE_MINUTES,
-    )
-    last_ensure_at = timezone.now()
+    now = timezone.now()
+    keep_alive_until = now + timedelta(minutes=1)
     if not recently_used:
-        last_ensure_at -= idle_threshold + timedelta(seconds=1)
+        keep_alive_until = now - timedelta(seconds=1)
 
-    with patch(
-        "app_ocr.service.gpu_worker.heartbeat.timezone.now",
-        return_value=last_ensure_at,
-    ):
-        mark_gpu_worker_ensured(INSTANCE_ID)
+    GpuWorkerLease.objects.create(
+        instance_id=INSTANCE_ID,
+        keep_alive_until=keep_alive_until,
+    )
 
     check_gpu_worker_autostop_task()
 
