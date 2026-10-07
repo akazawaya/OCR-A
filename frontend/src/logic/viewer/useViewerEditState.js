@@ -402,7 +402,7 @@ export const useViewerEditState = ({
 
   const redo = () => {
     if (!isEditMode || isOcring) return;
-    const entry = historyState.future[0];
+    const entry = historyState.future.at(-1);
     if (!entry) return;
     applyRedoEntry(entry);
     historyDispatch({ type: "REDO" });
