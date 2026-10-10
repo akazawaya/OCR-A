@@ -35,8 +35,6 @@ services:
     depends_on:
       - db
       - broker
-    ports:
-      - "8000:8000"
     environment:
       <<: *django_env
     volumes: *media_volumes

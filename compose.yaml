@@ -31,11 +31,9 @@ services:
   frontend:
     build:
       context: ./frontend
-      target: ${FRONTEND_BUILD_TARGET}
-      args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+      target: development
     ports:
-      - "${FRONTEND_HOST_PORT}:${FRONTEND_CONTAINER_PORT}"
+      - "5173:5173"
     develop:
       watch:
         - action: sync
@@ -50,8 +48,8 @@ services:
           path: ./frontend/package-lock.json
     environment:
       VITE_API_BASE_URL: ${VITE_API_BASE_URL}
-    command: ${FRONTEND_COMMAND}
-  
+      # ビルドターゲットごとに起動プロセス（Vite/Nginx）が決まるため、
+      # commandはComposeではなくDockerfileの各ステージに定義する。
   backend:
     build: ./backend
     depends_on:
