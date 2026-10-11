@@ -53,7 +53,7 @@ services:
   worker_ocr_shared:
     <<: *worker_common
     profiles:
-      - ocr-shared
+      - development-shared
     command:
       [
         "/app/.venv/bin/python",
@@ -73,7 +73,7 @@ services:
   worker_document:
     <<: *worker_common
     profiles:
-      - ocr-dedicated
+      - development-dedicated
     command:
       [
         "/app/.venv/bin/python",
@@ -93,7 +93,7 @@ services:
   worker_preview_word:
     <<: *worker_common
     profiles:
-      - ocr-dedicated
+      - development-dedicated
     command:
       [
         "/app/.venv/bin/python",
