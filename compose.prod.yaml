@@ -31,12 +31,15 @@ services:
   worker_ocr_shared:
     # GPU EC2から外部のRDS・Redisへ接続するため、ローカルサービスには依存しない。
     depends_on: !reset []
+    gpus: all
 
   worker_document:
     depends_on: !reset []
+    gpus: all
 
   worker_preview_word:
     depends_on: !reset []
+    gpus: all
 
   worker_maintenance:
     depends_on: !override

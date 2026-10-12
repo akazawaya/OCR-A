@@ -67,6 +67,7 @@ jobs:
           parameters=$(jq -n \
             --arg project_dir "$EC2_PROJECT_DIR" \
             --arg deploy_commit "$GITHUB_SHA" \
+            --arg repository_ssh_url "git@github.com:${GITHUB_REPOSITORY}.git" \
             --arg deployment_profile "$DEPLOYMENT_PROFILE" \
             --arg parameter_store_path "$PARAMETER_STORE_PATH" \
             --arg aws_region "$AWS_REGION" \
@@ -82,7 +83,9 @@ jobs:
               commands: (
                 [
                   "set -eu",
+                  "if [ ! -d " + (($project_dir + "/.git") | @sh) + " ]; then test -f /root/.ssh/ocr_a_deploy_key; GIT_SSH_COMMAND=\"ssh -i /root/.ssh/ocr_a_deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes\" git clone " + ($repository_ssh_url | @sh) + " " + ($project_dir | @sh) + "; fi",
                   "cd " + ($project_dir | @sh),
+                  "if [ -f /root/.ssh/ocr_a_deploy_key ]; then export GIT_SSH_COMMAND=\"ssh -i /root/.ssh/ocr_a_deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes\"; fi",
                   "git fetch --prune origin",
                   "git checkout --detach " + ($deploy_commit | @sh),
                   "parameter_exports=$(bash .github/scripts/export-parameter-store-env.sh " + ($parameter_store_path | @sh) + " " + ($aws_region | @sh) + ")",
