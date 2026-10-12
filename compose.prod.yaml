@@ -28,6 +28,10 @@ services:
     depends_on: !override
       - broker
 
+  broker:
+    ports:
+      - "6379:6379"
+
   worker_ocr_shared:
     # GPU EC2から外部のRDS・Redisへ接続するため、ローカルサービスには依存しない。
     depends_on: !reset []
