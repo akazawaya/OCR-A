@@ -13,6 +13,8 @@ services:
       - django_static:/var/www/django-static:ro
 
   backend:
+    build:
+      target: production-cpu
     # NginxからCompose内部ネットワーク経由でのみ接続するため、
     # 元のcomposeのポートを上書きして閉じる
     ports: !reset []
@@ -33,23 +35,33 @@ services:
       - "6379:6379"
 
   worker_ocr_shared:
+    build:
+      target: production-gpu
     # GPU EC2から外部のRDS・Redisへ接続するため、ローカルサービスには依存しない。
     depends_on: !reset []
     gpus: all
 
   worker_document:
+    build:
+      target: production-gpu
     depends_on: !reset []
     gpus: all
 
   worker_preview_word:
+    build:
+      target: production-gpu
     depends_on: !reset []
     gpus: all
 
   worker_maintenance:
+    build:
+      target: production-cpu
     depends_on: !override
       - broker
 
   celery_beat:
+    build:
+      target: production-cpu
     depends_on: !override
       - broker
 

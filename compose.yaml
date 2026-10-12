@@ -19,7 +19,9 @@ x-media-volumes: &media_volumes
   - media_input:/app/media
 
 x-worker-common: &worker_common
-  build: ./backend
+  build:
+    context: ./backend
+    target: development
   depends_on:
     - db
     - broker
@@ -60,7 +62,9 @@ services:
       - development-shared
       - development-dedicated
       - production-cpu
-    build: ./backend
+    build:
+      context: ./backend
+      target: development
     depends_on:
       - db
       - broker

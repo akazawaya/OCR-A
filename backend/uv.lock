@@ -1683,8 +1683,16 @@ dependencies = [
     { name = "django-storages" },
     { name = "djangorestframework" },
     { name = "drf-spectacular" },
+    { name = "numpy" },
+    { name = "opencv-python" },
+    { name = "pillow" },
     { name = "psycopg", extra = ["binary"] },
+    { name = "pypdfium2" },
     { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.optional-dependencies]
+gpu = [
     { name = "yomitoku" },
 ]
 
@@ -1710,10 +1718,15 @@ requires-dist = [
     { name = "django-storages", specifier = ">=1.14.6" },
     { name = "djangorestframework", specifier = ">=3.16.1" },
     { name = "drf-spectacular", specifier = ">=0.28.0" },
+    { name = "numpy", specifier = ">=2.2.6" },
+    { name = "opencv-python", specifier = ">=4.12.0.88" },
+    { name = "pillow", specifier = ">=11.3.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.2" },
+    { name = "pypdfium2", specifier = ">=4.30.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.40.0" },
-    { name = "yomitoku", specifier = ">=0.10.3" },
+    { name = "yomitoku", marker = "extra == 'gpu'", specifier = ">=0.10.3" },
 ]
+provides-extras = ["gpu"]
 
 [package.metadata.requires-dev]
 dev = [
