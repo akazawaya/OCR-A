@@ -33,7 +33,6 @@ jobs:
       AWS_REGION: ${{ vars.AWS_REGION }}
       AWS_GITHUB_ACTIONS_ROLE_ARN: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
       EC2_TARGET_TAG_KEY: ${{ vars.EC2_TARGET_TAG_KEY }}
-      EC2_PROJECT_DIR: ${{ vars.EC2_PROJECT_DIR }}
       VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
       DEPLOYMENT_PROFILE: ${{ inputs.deployment_profile }}
       PARAMETER_STORE_PATH: ${{ inputs.parameter_store_path }}
@@ -46,7 +45,6 @@ jobs:
           : "${AWS_REGION:?AWS_REGION is required}"
           : "${AWS_GITHUB_ACTIONS_ROLE_ARN:?AWS_GITHUB_ACTIONS_ROLE_ARN is required}"
           : "${EC2_TARGET_TAG_KEY:?EC2_TARGET_TAG_KEY is required}"
-          : "${EC2_PROJECT_DIR:?EC2_PROJECT_DIR is required}"
           : "${VITE_API_BASE_URL:?VITE_API_BASE_URL is required}"
           : "${DEPLOYMENT_PROFILE:?DEPLOYMENT_PROFILE is required}"
           : "${PARAMETER_STORE_PATH:?PARAMETER_STORE_PATH is required}"
@@ -65,14 +63,14 @@ jobs:
           #  選択したプロファイルのコンテナを再構築・起動する。
           #  CPU EC2の場合のみ、Djangoのcollectstaticとデータベースマイグレーションを実行する。
           parameters=$(jq -n \
-            --arg project_dir "$EC2_PROJECT_DIR" \
             --arg deploy_commit "$GITHUB_SHA" \
             --arg repository_ssh_url "git@github.com:${GITHUB_REPOSITORY}.git" \
             --arg deployment_profile "$DEPLOYMENT_PROFILE" \
             --arg parameter_store_path "$PARAMETER_STORE_PATH" \
             --arg aws_region "$AWS_REGION" \
             --arg vite_api_base_url "$VITE_API_BASE_URL" \
-            '(
+            '"/opt/ocr-a" as $project_dir |
+            (
               "COMPOSE_DISABLE_ENV_FILE=1 COMPOSE_PROFILES=" +
               ($deployment_profile | @sh) +
               " docker compose -f compose.yaml -f compose.s3.yaml" +

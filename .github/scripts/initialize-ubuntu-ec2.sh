@@ -3,10 +3,10 @@
 set -euo pipefail
 
 host_type=$1
-project_dir=$2
-instance_id=$3
+instance_id=$2
 
 deploy_key=/root/.ssh/ocr_a_deploy_key
+project_dir=/opt/ocr-a
 
 export DEBIAN_FRONTEND=noninteractive
 

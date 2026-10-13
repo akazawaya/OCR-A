@@ -30,7 +30,6 @@ jobs:
     env:
       AWS_REGION: ${{ vars.AWS_REGION }}
       AWS_GITHUB_ACTIONS_ROLE_ARN: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
-      EC2_PROJECT_DIR: ${{ vars.EC2_PROJECT_DIR }}
       INSTANCE_ID: ${{ inputs.instance_id }}
       HOST_TYPE: ${{ inputs.host_type }}
 
@@ -40,7 +39,6 @@ jobs:
           set -eu
           : "${AWS_REGION:?AWS_REGION is required}"
           : "${AWS_GITHUB_ACTIONS_ROLE_ARN:?AWS_GITHUB_ACTIONS_ROLE_ARN is required}"
-          : "${EC2_PROJECT_DIR:?EC2_PROJECT_DIR is required}"
           : "${INSTANCE_ID:?INSTANCE_ID is required}"
           : "${HOST_TYPE:?HOST_TYPE is required}"
 
@@ -66,14 +64,13 @@ jobs:
           parameters=$(jq -n \
             --arg initialization_script "$initialization_script" \
             --arg host_type "$HOST_TYPE" \
-            --arg project_dir "$EC2_PROJECT_DIR" \
             --arg instance_id "$INSTANCE_ID" \
             '{
               commands: [
                 "set -eu",
                 "initialization_file=$(mktemp)",
                 "printf %s " + ($initialization_script | @sh) + " | base64 --decode > \"$initialization_file\"",
-                "bash \"$initialization_file\" " + ($host_type | @sh) + " " + ($project_dir | @sh) + " " + ($instance_id | @sh),
+                "bash \"$initialization_file\" " + ($host_type | @sh) + " " + ($instance_id | @sh),
                 "rm -f \"$initialization_file\""
               ]
             }')
