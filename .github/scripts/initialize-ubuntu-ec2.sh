@@ -24,6 +24,7 @@ printf '%s\n' \
 apt-get update -qq
 apt-get install -y -qq --no-install-recommends \
   docker-ce \
+  docker-buildx-plugin \
   docker-compose-plugin
 
 if ! command -v aws >/dev/null 2>&1; then
