@@ -1,0 +1,10 @@
+name: Initialize EC2
+
+on:
+  workflow_dispatch:
+
+jobs:
+  placeholder:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ":"
