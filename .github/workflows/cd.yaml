@@ -31,7 +31,7 @@ jobs:
     environment: production
     env:
       AWS_REGION: ${{ vars.AWS_REGION }}
-      AWS_DEPLOY_ROLE_ARN: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+      AWS_GITHUB_ACTIONS_ROLE_ARN: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
       EC2_TARGET_TAG_KEY: ${{ vars.EC2_TARGET_TAG_KEY }}
       EC2_PROJECT_DIR: ${{ vars.EC2_PROJECT_DIR }}
       VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
@@ -44,7 +44,7 @@ jobs:
         run: |
           set -eu
           : "${AWS_REGION:?AWS_REGION is required}"
-          : "${AWS_DEPLOY_ROLE_ARN:?AWS_DEPLOY_ROLE_ARN is required}"
+          : "${AWS_GITHUB_ACTIONS_ROLE_ARN:?AWS_GITHUB_ACTIONS_ROLE_ARN is required}"
           : "${EC2_TARGET_TAG_KEY:?EC2_TARGET_TAG_KEY is required}"
           : "${EC2_PROJECT_DIR:?EC2_PROJECT_DIR is required}"
           : "${VITE_API_BASE_URL:?VITE_API_BASE_URL is required}"
@@ -54,7 +54,7 @@ jobs:
       - name: Authenticate to AWS
         uses: aws-actions/configure-aws-credentials@v5
         with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          role-to-assume: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Deploy on EC2

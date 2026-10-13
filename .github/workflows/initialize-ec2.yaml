@@ -29,7 +29,7 @@ jobs:
     environment: production
     env:
       AWS_REGION: ${{ vars.AWS_REGION }}
-      AWS_DEPLOY_ROLE_ARN: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+      AWS_GITHUB_ACTIONS_ROLE_ARN: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
       EC2_PROJECT_DIR: ${{ vars.EC2_PROJECT_DIR }}
       INSTANCE_ID: ${{ inputs.instance_id }}
       HOST_TYPE: ${{ inputs.host_type }}
@@ -39,7 +39,7 @@ jobs:
         run: |
           set -eu
           : "${AWS_REGION:?AWS_REGION is required}"
-          : "${AWS_DEPLOY_ROLE_ARN:?AWS_DEPLOY_ROLE_ARN is required}"
+          : "${AWS_GITHUB_ACTIONS_ROLE_ARN:?AWS_GITHUB_ACTIONS_ROLE_ARN is required}"
           : "${EC2_PROJECT_DIR:?EC2_PROJECT_DIR is required}"
           : "${INSTANCE_ID:?INSTANCE_ID is required}"
           : "${HOST_TYPE:?HOST_TYPE is required}"
@@ -55,7 +55,7 @@ jobs:
       - name: Authenticate to AWS
         uses: aws-actions/configure-aws-credentials@v5
         with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          role-to-assume: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Initialize EC2 through SSM
