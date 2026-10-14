@@ -40,18 +40,21 @@ services:
     # GPU EC2から外部のRDS・Redisへ接続するため、ローカルサービスには依存しない。
     depends_on: !reset []
     gpus: all
+    restart: unless-stopped
 
   worker_document:
     build:
       target: production-gpu
     depends_on: !reset []
     gpus: all
+    restart: unless-stopped
 
   worker_preview_word:
     build:
       target: production-gpu
     depends_on: !reset []
     gpus: all
+    restart: unless-stopped
 
   worker_maintenance:
     build:
