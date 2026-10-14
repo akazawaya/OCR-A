@@ -61,7 +61,7 @@ jobs:
           # -EC2上のソースを、Workflowを実行したGitHubコミットへ更新する。
           #  originから最新のコミット情報をfetchし、Workflow起動時に確定したコミットSHAをcheckoutする。
           #  選択したプロファイルのコンテナを再構築・起動する。
-          #  CPU EC2の場合のみ、Djangoのcollectstaticとデータベースマイグレーションを実行する。
+          #  CPU EC2の場合のみ、データベース作成、マイグレーション、collectstaticを実行する。
           parameters=$(jq -n \
             --arg deploy_commit "$GITHUB_SHA" \
             --arg repository_ssh_url "git@github.com:${GITHUB_REPOSITORY}.git" \
@@ -89,17 +89,21 @@ jobs:
                   "parameter_exports=$(bash .github/scripts/export-parameter-store-env.sh " + ($parameter_store_path | @sh) + " " + ($aws_region | @sh) + ")",
                   "eval \"$parameter_exports\"",
                   "unset parameter_exports",
-                  "export VITE_API_BASE_URL=" + ($vite_api_base_url | @sh),
-                  $compose_command + " up -d --build"
+                  "export VITE_API_BASE_URL=" + ($vite_api_base_url | @sh)
                 ] +
                 (
                   if $deployment_profile == "production-cpu" then
                     [
-                      $compose_command + " exec -T backend /app/.venv/bin/python manage.py collectstatic --noinput",
-                      $compose_command + " exec -T backend /app/.venv/bin/python manage.py migrate --noinput"
+                      $compose_command + " build",
+                      $compose_command + " run --rm --no-deps -T backend /app/.venv/bin/python - < .github/scripts/ensure-postgres-database.py",
+                      $compose_command + " run --rm --no-deps backend /app/.venv/bin/python manage.py migrate --noinput",
+                      $compose_command + " run --rm --no-deps backend /app/.venv/bin/python manage.py collectstatic --noinput",
+                      $compose_command + " up -d"
                     ]
                   else
-                    []
+                    [
+                      $compose_command + " up -d --build"
+                    ]
                   end
                 )
               )
