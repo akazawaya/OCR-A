@@ -2,12 +2,15 @@ from django.core.files.base import ContentFile
 from django.db import transaction
 
 from app_ocr.etc.tools import render_page
-from app_ocr.etc.yomitoku_adapter import get_engine, yomitoku_ocr
 from app_ocr.models import Direction, Document, State
 from app_ocr.serializers import PageSerializer, WordSerializer
 
 
 def _run_yomitoku_on_rendered_page(document_id, page_number, bbox=None):
+    # CPU用コンテナでもDjango/Celeryがこのモジュールをimportできるよう、
+    # GPU用optional dependencyであるYomitokuは推論時にだけimportする。
+    from app_ocr.etc.yomitoku_adapter import get_engine, yomitoku_ocr
+
     doc = Document.objects.get(pk=document_id)
     ocr = get_engine()
     input_ext = doc.get_file_type_display()

@@ -24,14 +24,12 @@ jobs:
       POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
       POSTGRES_HOST: ${{ vars.POSTGRES_HOST }}
       POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
-      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
-      
-      COMPOSE_PROFILES: ${{ vars.COMPOSE_PROFILES }}
       CELERY_BROKER_URL: ${{ vars.CELERY_BROKER_URL }}
       CELERY_RESULT_BACKEND: ${{ vars.CELERY_RESULT_BACKEND }}
       CHANNEL_REDIS_URL: ${{ vars.CHANNEL_REDIS_URL }}
       DOCUMENT_OCR_TOTAL_TIMEOUT_MINUTES: ${{ vars.DOCUMENT_OCR_TOTAL_TIMEOUT_MINUTES }}
       DOCUMENT_OCR_PAGE_TIMEOUT_MINUTES: ${{ vars.DOCUMENT_OCR_PAGE_TIMEOUT_MINUTES }}
+      MAX_UPLOAD_FILE_SIZE_MB: ${{ vars.MAX_UPLOAD_FILE_SIZE_MB }}
 
     steps:
       - name: Checkout
@@ -39,6 +37,12 @@ jobs:
 
       - name: Start containers
         run: docker compose -f compose.backend-ci.yaml up -d --build
+
+      - name: Check for missing migrations
+        run: docker compose -f compose.backend-ci.yaml exec -T backend /app/.venv/bin/python manage.py makemigrations --check --dry-run
+
+      - name: Run Django checks
+        run: docker compose -f compose.backend-ci.yaml exec -T backend /app/.venv/bin/python manage.py check
 
       - name: Run pytest
         run: docker compose -f compose.backend-ci.yaml exec -T backend uv run pytest -q --cov=app_ocr --cov-report=term-missing

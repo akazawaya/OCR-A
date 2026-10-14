@@ -2,6 +2,19 @@ name: CD
 
 on:
   workflow_dispatch:
+    inputs:
+      deployment_profile:
+        description: 本番用Composeプロファイル（EC2_TARGET_TAG_KEYのタグ値と一致させる）
+        required: true
+        type: choice
+        options:
+          - production-cpu
+          - production-gpu-shared
+          - production-gpu-dedicated
+      parameter_store_path:
+        description: 対象EC2が読み込むParameter Storeのパス
+        required: true
+        type: string
 
 # 同じ環境へのデプロイを同時に実行しない。
 concurrency:
@@ -18,11 +31,11 @@ jobs:
     environment: production
     env:
       AWS_REGION: ${{ vars.AWS_REGION }}
-      AWS_DEPLOY_ROLE_ARN: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+      AWS_GITHUB_ACTIONS_ROLE_ARN: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
       EC2_TARGET_TAG_KEY: ${{ vars.EC2_TARGET_TAG_KEY }}
-      EC2_TARGET_TAG_VALUE: ${{ vars.EC2_TARGET_TAG_VALUE }}
-      EC2_PROJECT_DIR: ${{ vars.EC2_PROJECT_DIR }}
-      DEPLOY_COMMIT_SHA: ${{ github.sha }} # これはGitHub Actionsが自動で渡してくれる
+      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+      DEPLOYMENT_PROFILE: ${{ inputs.deployment_profile }}
+      PARAMETER_STORE_PATH: ${{ inputs.parameter_store_path }}
 
     steps:
       # 各種変数が渡されていない場合、空文字で通ってしまうため、明示的にエラーを出す。
@@ -30,43 +43,77 @@ jobs:
         run: |
           set -eu
           : "${AWS_REGION:?AWS_REGION is required}"
-          : "${AWS_DEPLOY_ROLE_ARN:?AWS_DEPLOY_ROLE_ARN is required}"
+          : "${AWS_GITHUB_ACTIONS_ROLE_ARN:?AWS_GITHUB_ACTIONS_ROLE_ARN is required}"
           : "${EC2_TARGET_TAG_KEY:?EC2_TARGET_TAG_KEY is required}"
-          : "${EC2_TARGET_TAG_VALUE:?EC2_TARGET_TAG_VALUE is required}"
-          : "${EC2_PROJECT_DIR:?EC2_PROJECT_DIR is required}"
-          : "${DEPLOY_COMMIT_SHA:?DEPLOY_COMMIT_SHA is required}"
+          : "${VITE_API_BASE_URL:?VITE_API_BASE_URL is required}"
+          : "${DEPLOYMENT_PROFILE:?DEPLOYMENT_PROFILE is required}"
+          : "${PARAMETER_STORE_PATH:?PARAMETER_STORE_PATH is required}"
 
       - name: Authenticate to AWS
         uses: aws-actions/configure-aws-credentials@v5
         with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          role-to-assume: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
-      - name: Deploy and collect static files on EC2
+      - name: Deploy on EC2
         run: |
           # parametersという変数に以下のコマンドをまとめる。
           # -EC2上のソースを、Workflowを実行したGitHubコミットへ更新する。
           #  originから最新のコミット情報をfetchし、Workflow起動時に確定したコミットSHAをcheckoutする。
-          #  そのソースを使用して本番用コンテナを再構築・起動し、Djangoのcollectstaticを実行する。
+          #  選択したプロファイルのコンテナを再構築・起動する。
+          #  CPU EC2の場合のみ、データベース作成、マイグレーション、collectstaticを実行する。
           parameters=$(jq -n \
-            --arg project_dir "$EC2_PROJECT_DIR" \
-            --arg deploy_commit "$DEPLOY_COMMIT_SHA" \
-            '{
-            commands: [
-              "set -eu",
-              ("cd " + ($project_dir | @sh)),
-              "git fetch --prune origin",
-              ("git checkout --detach " + ($deploy_commit | @sh)),
-              "COMPOSE_PROFILES= docker compose --env-file .env.prod -f compose.yaml -f compose.s3.yaml -f compose.gpu-ec2.yaml -f compose.prod.yaml up -d --build",
-              "COMPOSE_PROFILES= docker compose --env-file .env.prod -f compose.yaml -f compose.s3.yaml -f compose.gpu-ec2.yaml -f compose.prod.yaml exec -T backend /app/.venv/bin/python manage.py collectstatic --noinput"
-            ]
-          }')
+            --arg deploy_commit "$GITHUB_SHA" \
+            --arg repository_ssh_url "git@github.com:${GITHUB_REPOSITORY}.git" \
+            --arg deployment_profile "$DEPLOYMENT_PROFILE" \
+            --arg parameter_store_path "$PARAMETER_STORE_PATH" \
+            --arg aws_region "$AWS_REGION" \
+            --arg vite_api_base_url "$VITE_API_BASE_URL" \
+            '"/opt/ocr-a" as $project_dir |
+            (
+              "COMPOSE_DISABLE_ENV_FILE=1 COMPOSE_PROFILES=" +
+              ($deployment_profile | @sh) +
+              " docker compose -f compose.yaml -f compose.s3.yaml" +
+              (if $deployment_profile == "production-cpu" then " -f compose.gpu-ec2.yaml" else "" end) +
+              " -f compose.prod.yaml"
+            ) as $compose_command |
+            {
+              commands: (
+                [
+                  "set -eu",
+                  "if [ ! -d " + (($project_dir + "/.git") | @sh) + " ]; then test -f /root/.ssh/ocr_a_deploy_key; GIT_SSH_COMMAND=\"ssh -i /root/.ssh/ocr_a_deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes\" git clone " + ($repository_ssh_url | @sh) + " " + ($project_dir | @sh) + "; fi",
+                  "cd " + ($project_dir | @sh),
+                  "if [ -f /root/.ssh/ocr_a_deploy_key ]; then export GIT_SSH_COMMAND=\"ssh -i /root/.ssh/ocr_a_deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes\"; fi",
+                  "git fetch --prune origin",
+                  "git checkout --detach " + ($deploy_commit | @sh),
+                  "parameter_exports=$(bash .github/scripts/export-parameter-store-env.sh " + ($parameter_store_path | @sh) + " " + ($aws_region | @sh) + ")",
+                  "eval \"$parameter_exports\"",
+                  "unset parameter_exports",
+                  "export VITE_API_BASE_URL=" + ($vite_api_base_url | @sh)
+                ] +
+                (
+                  if $deployment_profile == "production-cpu" then
+                    [
+                      $compose_command + " build",
+                      $compose_command + " run --rm --no-deps -T backend /app/.venv/bin/python - < .github/scripts/ensure-postgres-database.py",
+                      $compose_command + " run --rm --no-deps backend /app/.venv/bin/python manage.py migrate --noinput",
+                      $compose_command + " run --rm --no-deps backend /app/.venv/bin/python manage.py collectstatic --noinput",
+                      $compose_command + " up -d"
+                    ]
+                  else
+                    [
+                      $compose_command + " up -d --build"
+                    ]
+                  end
+                )
+              )
+            }')
 
           # コマンド一覧を、SSM経由で対象EC2へ送信する。
           # 戻り値から今回の命令を追跡するCommand IDだけを取得する。
           command_id=$(aws ssm send-command \
             --region "$AWS_REGION" \
-            --targets "Key=tag:${EC2_TARGET_TAG_KEY},Values=${EC2_TARGET_TAG_VALUE}" \
+            --targets "Key=tag:${EC2_TARGET_TAG_KEY},Values=${DEPLOYMENT_PROFILE}" \
             --document-name "AWS-RunShellScript" \
             --comment "RestOCR deployment from GitHub Actions" \
             --timeout-seconds 3600 \

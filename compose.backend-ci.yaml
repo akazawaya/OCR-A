@@ -15,12 +15,15 @@ x-django-env: &django_env
   CHANNEL_REDIS_URL: ${CHANNEL_REDIS_URL}
   DOCUMENT_OCR_TOTAL_TIMEOUT_MINUTES: ${DOCUMENT_OCR_TOTAL_TIMEOUT_MINUTES}
   DOCUMENT_OCR_PAGE_TIMEOUT_MINUTES: ${DOCUMENT_OCR_PAGE_TIMEOUT_MINUTES}
+  MAX_UPLOAD_FILE_SIZE_MB: ${MAX_UPLOAD_FILE_SIZE_MB}
 
 x-media-volumes: &media_volumes
   - media_input:/app/media
 
 x-worker-common: &worker_common
-  build: ./backend
+  build:
+    context: ./backend
+    target: development
   depends_on:
     - db
     - broker
@@ -31,12 +34,12 @@ x-worker-common: &worker_common
 
 services:
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      target: development
     depends_on:
       - db
       - broker
-    ports:
-      - "8000:8000"
     environment:
       <<: *django_env
     volumes: *media_volumes
@@ -55,7 +58,7 @@ services:
   worker_ocr_shared:
     <<: *worker_common
     profiles:
-      - ocr-shared
+      - development-shared
     command:
       [
         "/app/.venv/bin/python",
@@ -75,7 +78,7 @@ services:
   worker_document:
     <<: *worker_common
     profiles:
-      - ocr-dedicated
+      - development-dedicated
     command:
       [
         "/app/.venv/bin/python",
@@ -95,7 +98,7 @@ services:
   worker_preview_word:
     <<: *worker_common
     profiles:
-      - ocr-dedicated
+      - development-dedicated
     command:
       [
         "/app/.venv/bin/python",

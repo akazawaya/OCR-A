@@ -1,7 +1,7 @@
-FROM python:3.13.11-slim-bookworm
+FROM python:3.13.11-slim-bookworm AS base
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
@@ -11,6 +11,20 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 COPY pyproject.toml uv.lock ./
 
-RUN uv sync --locked
+FROM base AS development
+
+RUN uv sync --locked --extra gpu --no-cache
+
+COPY . .
+
+FROM base AS production-cpu
+
+RUN uv sync --locked --no-dev --no-cache
+
+COPY . .
+
+FROM base AS production-gpu
+
+RUN uv sync --locked --no-dev --extra gpu --no-cache
 
 COPY . .
