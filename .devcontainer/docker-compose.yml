@@ -2,5 +2,5 @@ version: '3.8'
 services:
   backend:
     volumes:
-      - .:/workspace/RestOCR:cached
+      - .:/workspace/OCR-A:cached
     command: sleep infinity

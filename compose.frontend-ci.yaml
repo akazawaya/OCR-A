@@ -1,4 +1,4 @@
-name: restocr-frontend-ci
+name: ocr-a-frontend-ci
 
 services:
   frontend:

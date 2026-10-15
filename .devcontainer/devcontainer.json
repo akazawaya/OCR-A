@@ -1,12 +1,12 @@
 {
-  "name": "RestOCR",
+  "name": "OCR-A",
   "dockerComposeFile": [
     "../compose.yaml",
     "docker-compose.yml"
   ],
   "service": "backend",
   "runServices": ["backend", "db", "broker", "worker"],
-  "workspaceFolder": "/workspace/RestOCR",
+  "workspaceFolder": "/workspace/OCR-A",
   "remoteEnv": {
     "PATH": "/app/.venv/bin:${containerEnv:PATH}"
   },
