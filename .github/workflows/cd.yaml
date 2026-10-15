@@ -115,7 +115,7 @@ jobs:
             --region "$AWS_REGION" \
             --targets "Key=tag:${EC2_TARGET_TAG_KEY},Values=${DEPLOYMENT_PROFILE}" \
             --document-name "AWS-RunShellScript" \
-            --comment "RestOCR deployment from GitHub Actions" \
+            --comment "OCR-A deployment from GitHub Actions" \
             --timeout-seconds 3600 \
             --parameters "$parameters" \
             --query "Command.CommandId" \

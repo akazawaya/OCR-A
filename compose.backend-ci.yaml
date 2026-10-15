@@ -1,4 +1,4 @@
-name: restocr-backend-ci
+name: ocr-a-backend-ci
 
 x-django-env: &django_env
   DJANGO_DEBUG: ${DJANGO_DEBUG}

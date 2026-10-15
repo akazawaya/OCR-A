@@ -79,7 +79,7 @@ jobs:
             --region "$AWS_REGION" \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --comment "RestOCR EC2 initialization from GitHub Actions" \
+            --comment "OCR-A EC2 initialization from GitHub Actions" \
             --timeout-seconds 3600 \
             --parameters "$parameters" \
             --query "Command.CommandId" \
