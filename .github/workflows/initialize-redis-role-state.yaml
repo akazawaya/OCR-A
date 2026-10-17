@@ -1,0 +1,52 @@
+name: Initialize Redis Role State
+
+on:
+  workflow_dispatch:
+    inputs:
+      redis_active_instance_id:
+        description: Redisの初期active EC2インスタンスID
+        required: true
+        type: string
+      redis_standby_instance_id:
+        description: Redisの初期standby EC2インスタンスID
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  initialize:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      REDIS_ACTIVE_INSTANCE_ID: ${{ inputs.redis_active_instance_id }}
+      REDIS_STANDBY_INSTANCE_ID: ${{ inputs.redis_standby_instance_id }}
+
+    steps:
+      - name: Authenticate to AWS
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Initialize Redis role state
+        run: |
+          set -eu
+
+          role_parameter_name=/ocr-a/redis/roles
+          role_parameter_value=$(jq -cnS \
+            --arg active "$REDIS_ACTIVE_INSTANCE_ID" \
+            --arg standby "$REDIS_STANDBY_INSTANCE_ID" \
+            '{($active): "active", ($standby): "standby"}')
+
+          aws ssm put-parameter \
+            --region "$AWS_REGION" \
+            --name "$role_parameter_name" \
+            --type String \
+            --value "$role_parameter_value" \
+            --no-overwrite
+
+          echo "Initialized Redis role state: $role_parameter_value"
