@@ -21,6 +21,12 @@ def lambda_handler(_event, _context):
     if sorted(roles.values()) != ["active", "standby"]:
         raise RuntimeError("Failover requires active and standby")
 
+    # 接続先の設定不足は旧activeを停止する前に検出する。
+    redis_host = os.environ["REDIS_HOST"]
+    hosted_zone_id = os.environ["ROUTE53_HOSTED_ZONE_ID"]
+    if not redis_host or not hosted_zone_id:
+        raise ValueError("REDIS_HOST and ROUTE53_HOSTED_ZONE_ID must not be empty")
+
     old_active = next(key for key, value in roles.items() if value == "active")
     new_active = next(key for key, value in roles.items() if value == "standby")
     print(f"フェイルオーバーを開始: old_active={old_active}, new_active={new_active}")
@@ -43,7 +49,7 @@ def lambda_handler(_event, _context):
     print(f"旧activeの停止を確認: instance={old_active}")
 
     # 2. standby → active
-    # クライアント接続先をstandbyからactiveへ切替、完了まで待機
+    # 新activeのサービスを起動し、固定DNS名の参照先を切り替える。
     new_instance = ec2.describe_instances(InstanceIds=[new_active])["Reservations"][0][
         "Instances"
     ][0]
@@ -51,15 +57,14 @@ def lambda_handler(_event, _context):
         raise RuntimeError("Standby EC2 is not running")
     run_redis_instance_action(ssm, new_active, "active")
     print(f"standbyのactive化が完了: instance={new_active}")
-    # 3. Redis役割状態情報を更新
     change = route53.change_resource_record_sets(
-        HostedZoneId=os.environ["ROUTE53_HOSTED_ZONE_ID"],
+        HostedZoneId=hosted_zone_id,
         ChangeBatch={
             "Changes": [
                 {
                     "Action": "UPSERT",
                     "ResourceRecordSet": {
-                        "Name": os.environ["REDIS_DNS_NAME"],
+                        "Name": redis_host,
                         "Type": "A",
                         "TTL": 30,
                         "ResourceRecords": [
@@ -73,7 +78,8 @@ def lambda_handler(_event, _context):
     route53.get_waiter("resource_record_sets_changed").wait(
         Id=change["ChangeInfo"]["Id"],
     )
-    print(f"Redis接続先の切り替えが完了: instance={new_active}")
+    print(f"Redis DNSレコードの更新が完了: host={redis_host}, instance={new_active}")
+    # 3. DNS更新完了後にRedis役割状態情報を更新する。
     roles[old_active] = "fenced"
     roles[new_active] = "active"
     role_parameter_value = json.dumps(roles, sort_keys=True)
