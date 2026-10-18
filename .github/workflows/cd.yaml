@@ -178,7 +178,9 @@ jobs:
             --format=zip \
             --output="$lambda_package" \
             "$GITHUB_SHA" \
-            infra
+            infra/redis_failover_lambda.py \
+            infra/redis_recovery_lambda.py \
+            infra/redis_lambda_common.py
 
           aws lambda update-function-code \
             --region "$AWS_REGION" \
