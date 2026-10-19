@@ -6,7 +6,7 @@ import boto3
 from infra.redis_lambda_common import run_redis_instance_action
 
 
-def lambda_handler(_event, _context):
+def lambda_handler(event, _context):
     ec2 = boto3.client("ec2")
     ssm = boto3.client("ssm")
     route53 = boto3.client("route53")
@@ -29,6 +29,15 @@ def lambda_handler(_event, _context):
 
     old_active = next(key for key, value in roles.items() if value == "active")
     new_active = next(key for key, value in roles.items() if value == "standby")
+    old_instance = ec2.describe_instances(InstanceIds=[old_active])["Reservations"][0][
+        "Instances"
+    ][0]
+    metric = event["alarmData"]["configuration"]["metrics"][0]["metricStat"]["metric"]
+    alarm_az = metric["dimensions"]["AvailabilityZone"]
+    # standby側の発報では、activeを隔離・停止しない。
+    if alarm_az != old_instance["Placement"]["AvailabilityZone"]:
+        return {"result": "skipped standby alarm"}
+
     print(f"フェイルオーバーを開始: old_active={old_active}, new_active={new_active}")
 
     # 1. active → fenced
@@ -40,8 +49,7 @@ def lambda_handler(_event, _context):
     )
     print(f"通信隔離用SGを適用: instance={old_active}")
 
-    old_instance = ec2.describe_instances(InstanceIds=[old_active])
-    if old_instance["Reservations"][0]["Instances"][0]["State"]["Name"] != "stopped":
+    if old_instance["State"]["Name"] != "stopped":
         ec2.stop_instances(InstanceIds=[old_active])
         ec2.get_waiter("instance_stopped").wait(
             InstanceIds=[old_active],

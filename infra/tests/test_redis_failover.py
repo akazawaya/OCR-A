@@ -19,7 +19,18 @@ class RedisFailoverTests(unittest.TestCase):
             "Parameter": {"Value": json.dumps({"i-a": "active", "i-b": "standby"})}
         }
         ec2.describe_instances.side_effect = [
-            {"Reservations": [{"Instances": [{"State": {"Name": "running"}}]}]},
+            {
+                "Reservations": [
+                    {
+                        "Instances": [
+                            {
+                                "State": {"Name": "running"},
+                                "Placement": {"AvailabilityZone": "ap-northeast-1a"},
+                            }
+                        ]
+                    }
+                ]
+            },
             {
                 "Reservations": [
                     {
@@ -39,7 +50,7 @@ class RedisFailoverTests(unittest.TestCase):
         stopped_waiter = ec2.get_waiter.return_value
         dns_waiter = route53.get_waiter.return_value
 
-        self.enterContext(
+        self.run_action = self.enterContext(
             patch("infra.redis_failover_lambda.run_redis_instance_action")
         )
         self.operations = Mock()
@@ -61,8 +72,23 @@ class RedisFailoverTests(unittest.TestCase):
             )
         )
 
+    def alarm_event(self, az):
+        metric = {"dimensions": {"AvailabilityZone": az}}
+        return {
+            "alarmData": {
+                "configuration": {"metrics": [{"metricStat": {"metric": metric}}]}
+            }
+        }
+
+    def test_redis_failover_skips_standby_alarm(self):
+        # activeは1a Failover発報元はstandbyの1c
+        lambda_handler(self.alarm_event("ap-northeast-1c"), None)
+
+        self.assertEqual(self.operations.mock_calls, [])
+        self.run_action.assert_not_called()
+
     def test_redis_failover_promotes_standby_after_fencing_active(self):
-        lambda_handler({}, None)
+        lambda_handler(self.alarm_event("ap-northeast-1a"), None)
 
         # AのSGを通信隔離用SGへ変更する要求が呼ばれたことを確認
         self.ec2.modify_instance_attribute.assert_called_once_with(
