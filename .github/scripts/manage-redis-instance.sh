@@ -35,7 +35,9 @@ elif [[ $action == standby ]]; then
   done
 
   # health APIの200応答を確認
-  until curl -fsS http://127.0.0.1/api/health/ >/dev/null; do
+  until http_status=$(curl -sS -o /dev/null -w '%{http_code}' \
+      http://127.0.0.1/api/health/) &&
+      [[ $http_status == 200 ]]; do
     sleep 2
   done
 
