@@ -35,6 +35,7 @@ jobs:
       EC2_TARGET_TAG_KEY: ${{ vars.EC2_TARGET_TAG_KEY }}
       REDIS_FAILOVER_LAMBDA_FUNCTION_NAME: ${{ vars.REDIS_FAILOVER_LAMBDA_FUNCTION_NAME }}
       REDIS_RECOVERY_LAMBDA_FUNCTION_NAME: ${{ vars.REDIS_RECOVERY_LAMBDA_FUNCTION_NAME }}
+      REDIS_ROLE_STATE_PARAMETER_NAME: ${{ vars.REDIS_ROLE_STATE_PARAMETER_NAME }}
       VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
       DEPLOYMENT_PROFILE: ${{ inputs.deployment_profile }}
       PARAMETER_STORE_PATH: ${{ inputs.parameter_store_path }}
@@ -47,6 +48,7 @@ jobs:
           : "${AWS_REGION:?AWS_REGION is required}"
           : "${AWS_GITHUB_ACTIONS_ROLE_ARN:?AWS_GITHUB_ACTIONS_ROLE_ARN is required}"
           : "${EC2_TARGET_TAG_KEY:?EC2_TARGET_TAG_KEY is required}"
+          : "${REDIS_ROLE_STATE_PARAMETER_NAME:?REDIS_ROLE_STATE_PARAMETER_NAME is required}"
           : "${VITE_API_BASE_URL:?VITE_API_BASE_URL is required}"
           : "${DEPLOYMENT_PROFILE:?DEPLOYMENT_PROFILE is required}"
           : "${PARAMETER_STORE_PATH:?PARAMETER_STORE_PATH is required}"
@@ -73,16 +75,10 @@ jobs:
             --arg repository_ssh_url "git@github.com:${GITHUB_REPOSITORY}.git" \
             --arg deployment_profile "$DEPLOYMENT_PROFILE" \
             --arg parameter_store_path "$PARAMETER_STORE_PATH" \
+            --arg role_parameter_name "$REDIS_ROLE_STATE_PARAMETER_NAME" \
             --arg aws_region "$AWS_REGION" \
             --arg vite_api_base_url "$VITE_API_BASE_URL" \
             '"/opt/ocr-a" as $project_dir |
-            (
-              "COMPOSE_DISABLE_ENV_FILE=1 COMPOSE_PROFILES=" +
-              ($deployment_profile | @sh) +
-              " docker compose -f compose.yaml -f compose.s3.yaml" +
-              (if $deployment_profile == "production-cpu" then " -f compose.gpu-ec2.yaml" else "" end) +
-              " -f compose.prod.yaml"
-            ) as $compose_command |
             {
               commands: (
                 [
@@ -98,19 +94,12 @@ jobs:
                   "export VITE_API_BASE_URL=" + ($vite_api_base_url | @sh)
                 ] +
                 (
-                  if $deployment_profile == "production-cpu" then
-                    [
-                      $compose_command + " build",
-                      $compose_command + " run --rm --no-deps -T backend /app/.venv/bin/python - < .github/scripts/ensure-postgres-database.py",
-                      $compose_command + " run --rm --no-deps backend /app/.venv/bin/python manage.py migrate --noinput",
-                      $compose_command + " run --rm --no-deps backend /app/.venv/bin/python manage.py collectstatic --noinput",
-                      $compose_command + " up -d"
-                    ]
-                  else
-                    [
-                      $compose_command + " up -d --build"
-                    ]
-                  end
+                  [
+                    "bash .github/scripts/deploy.sh " +
+                    ($deployment_profile | @sh) + " " +
+                    ($aws_region | @sh) + " " +
+                    ($role_parameter_name | @sh)
+                  ]
                 )
               )
             }')
