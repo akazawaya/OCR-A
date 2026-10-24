@@ -1,5 +1,17 @@
 import { fetchBackend } from "../fetchBackend";
-import { wordOcrAccessSpec, authActionSpec } from "../../appConfig";
+import {
+  wordOcrAccessSpec,
+  authActionSpec,
+  SYSTEM_HEALTH_URL,
+} from "../../appConfig";
+
+export const getSystemHealth = async () => {
+  const { data } = await fetchBackend(SYSTEM_HEALTH_URL, {
+    throwOnError: true,
+  });
+
+  return data;
+};
 
 export const getCollectionItem = async ({ collectionUrl, id }) => {
   const { data } = await fetchBackend(`${collectionUrl}${id}/`);
