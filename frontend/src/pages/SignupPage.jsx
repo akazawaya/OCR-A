@@ -5,10 +5,10 @@ import { toast } from "sonner";
 
 import { createUser } from "../api/clients/mutationClient";
 import { routePaths } from "../appConfig";
-import AuthLogo from "../components/Auth/AuthLogo";
+import AppLogo from "../components/AppLogo";
 import Button from "../components/ui/Button";
 import TextInput from "../components/ui/TextInput";
-import { authClassNames, formClassNames } from "../components/ui/classNames";
+import { formClassNames, pageClassNames } from "../components/ui/classNames";
 import { toastStyles } from "../components/ui/toastStyles";
 
 const SignupPage = () => {
@@ -44,8 +44,8 @@ const SignupPage = () => {
   };
 
   return (
-    <div className={authClassNames.panel}>
-      <AuthLogo />
+    <div className={pageClassNames.panel}>
+      <AppLogo />
       <form className={formClassNames.inputPanel} onSubmit={handleSubmit}>
         <label className={formClassNames.fieldLabel}>
           メールアドレス

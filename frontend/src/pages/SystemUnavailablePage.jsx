@@ -1,9 +1,11 @@
 import { TriangleAlert } from "lucide-react";
 
-import { authClassNames } from "../components/ui/classNames";
+import AppLogo from "../components/AppLogo";
+import { pageClassNames } from "../components/ui/classNames";
 
 const SystemUnavailablePage = () => (
-  <div className={`${authClassNames.panel} text-center`}>
+  <div className={`${pageClassNames.panel} text-center`}>
+    <AppLogo />
     <TriangleAlert
       aria-hidden="true"
       className="mx-auto size-14 text-amber-400"
