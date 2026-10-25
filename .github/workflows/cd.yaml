@@ -65,6 +65,18 @@ jobs:
 
       - name: Deploy on EC2
         run: |
+          set -euo pipefail
+          case "$DEPLOYMENT_PROFILE" in
+            production-cpu)
+             expected_target_count=2
+            ;;
+            production-gpu-shared)
+              expected_target_count=1
+            ;;
+            production-gpu-dedicated)
+              expected_target_count=2
+            ;;
+          esac
           # parametersという変数に以下のコマンドをまとめる。
           # -EC2上のソースを、Workflowを実行したGitHubコミットへ更新する。
           #  originから最新のコミット情報をfetchし、Workflow起動時に確定したコミットSHAをcheckoutする。
@@ -128,10 +140,29 @@ jobs:
 
             case "$status" in
               Success)
-                aws ssm list-command-invocations \
+                invocations=$(aws ssm list-command-invocations \
                   --region "$AWS_REGION" \
                   --command-id "$command_id" \
-                  --details
+                  --details \
+                  --query "CommandInvocations" \
+                  --output json)
+                jq . <<< "$invocations"
+
+                invocation_count=$(jq 'length' <<< "$invocations")
+                if (( invocation_count == 0 )); then
+                  echo "SSM command succeeded without any invocation" >&2
+                  exit 1
+                fi
+                if (( invocation_count != expected_target_count )); then
+                  echo "Unexpected SSM invocation count: expected=$expected_target_count actual=$invocation_count" >&2
+                  exit 1
+                fi
+                if ! jq -e 'all(.[]; .StatusDetails == "Success")' \
+                  <<< "$invocations" > /dev/null; then
+                  echo "One or more SSM invocations did not succeed" >&2
+                  exit 1
+                fi
+                echo "All $invocation_count SSM invocations succeeded"
                 exit 0
                 ;;
               Failed|Cancelled|TimedOut|Cancelling)
