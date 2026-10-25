@@ -17,6 +17,8 @@ elif [[ $action == standby ]]; then
   # RedisとCeleryのコンテナを削除・再作成
   "${compose[@]}" rm -sf broker worker_maintenance celery_beat
   "${compose[@]}" up -d --no-deps broker backend frontend worker_maintenance
+
+  echo 'Redis PING待機'
   until "${compose[@]}" exec -T broker redis-cli ping 2>/dev/null | grep -qx PONG; do
     sleep 2
   done
@@ -28,6 +30,7 @@ elif [[ $action == standby ]]; then
   "${compose[@]}" exec -T broker redis-cli del "$key" | grep -qx 1
 
   # Celery Workerの起動とRedis接続を確認
+  echo 'Celery inspect ping待機'
   until celery_ping_output=$("${compose[@]}" exec -T worker_maintenance \
       /app/.venv/bin/python -m celery -A project.celery:app \
       inspect ping 2>/dev/null) &&
@@ -36,6 +39,7 @@ elif [[ $action == standby ]]; then
   done
 
   # health APIの200応答を確認
+  echo 'health API 200待機'
   until http_status=$(curl -sS -o /dev/null -w '%{http_code}' \
       http://127.0.0.1/api/health/) &&
       [[ $http_status == 200 ]]; do
