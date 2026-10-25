@@ -28,9 +28,10 @@ elif [[ $action == standby ]]; then
   "${compose[@]}" exec -T broker redis-cli del "$key" | grep -qx 1
 
   # Celery Workerの起動とRedis接続を確認
-  until "${compose[@]}" exec -T worker_maintenance \
+  until celery_ping_output=$("${compose[@]}" exec -T worker_maintenance \
       /app/.venv/bin/python -m celery -A project.celery:app \
-      inspect ping 2>/dev/null | grep -q pong; do
+      inspect ping 2>/dev/null) &&
+      grep -q pong <<<"$celery_ping_output"; do
     sleep 2
   done
 
