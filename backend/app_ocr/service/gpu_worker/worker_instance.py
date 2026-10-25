@@ -34,11 +34,17 @@ def ensure_gpu_worker_running(queue_name):
         ec2_client.start_instances(InstanceIds=[instance_id])
 
 
-def stop_gpu_worker(instance_id):
+def stop_gpu_worker(instance_id, *, launch_time_cutoff):
     ec2_client = _get_ec2_client()
 
     response = ec2_client.describe_instances(InstanceIds=[instance_id])
-    state = response["Reservations"][0]["Instances"][0]["State"]["Name"]
+    instance = response["Reservations"][0]["Instances"][0]
+    state = instance["State"]["Name"]
 
-    if state == "running":
-        ec2_client.stop_instances(InstanceIds=[instance_id])
+    if state != "running":
+        return
+    if instance["LaunchTime"] > launch_time_cutoff:
+        # 手動起動を含め、起動経路に関係なくEC2起動後の最低稼働時間を保証する。
+        return
+
+    ec2_client.stop_instances(InstanceIds=[instance_id])

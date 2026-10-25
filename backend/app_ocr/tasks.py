@@ -70,7 +70,11 @@ def check_gpu_worker_autostop_task():
             continue
         if has_active_or_reserved_gpu_worker_tasks(queue_names):
             continue
-        stop_gpu_worker(instance_id)
+        # 手動起動を含め、起動経路に関係なくEC2起動後の最低稼働時間を保証する。
+        launch_time_cutoff = now - timedelta(
+            minutes=settings.GPU_WORKER_AUTOSTOP_IDLE_MINUTES,
+        )
+        stop_gpu_worker(instance_id, launch_time_cutoff=launch_time_cutoff)
 
 
 @shared_task

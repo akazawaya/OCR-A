@@ -59,13 +59,21 @@ def queue_name(settings, worker_task_state):
 # describe_instancesでState: runningを返し、stop_instancesの呼び出しとIDを検証する。
 
 
-def make_describe_instances_response(instance_id, state="running"):
+def make_describe_instances_response(
+    instance_id,
+    state="running",
+    launch_time=None,
+):
+    if launch_time is None:
+        launch_time = timezone.now() - timedelta(minutes=1)
+
     return {
         "Reservations": [
             {
                 "Instances": [
                     {
                         "InstanceId": instance_id,
+                        "LaunchTime": launch_time,
                         "State": {"Name": state},
                     }
                 ],
@@ -213,25 +221,36 @@ def arranged_gpu_workload(
 @pytest.mark.parametrize(
     (
         "recently_used",
+        "recently_started",
         "broker_has_queued_task",
         "worker_task_state",
         "should_stop",
     ),
     [
-        (False, False, None, True),
-        (True, False, None, False),
-        (False, True, None, False),
-        (False, False, "active", False),
-        (False, False, "reserved", False),
+        (False, False, False, None, True),
+        (True, False, False, None, False),
+        (False, True, False, None, False),
+        (False, False, True, None, False),
+        (False, False, False, "active", False),
+        (False, False, False, "reserved", False),
     ],
 )
 def test_gpu_worker_autostop(
     ec2_client,
     recently_used,
+    recently_started,
     arranged_gpu_workload,  # broker_has_queued_taskとworker_task_stateはここに統合
     should_stop,
 ):
     now = timezone.now()
+    launch_time = now - timedelta(minutes=1)
+    if recently_started:
+        launch_time = now
+    ec2_client.describe_instances.return_value = make_describe_instances_response(
+        INSTANCE_ID,
+        launch_time=launch_time,
+    )
+
     keep_alive_until = now + timedelta(minutes=1)
     if not recently_used:
         keep_alive_until = now - timedelta(seconds=1)
