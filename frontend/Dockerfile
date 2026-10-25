@@ -1,5 +1,5 @@
 # 開発用ステージ
-FROM node:24.13.0-bookworm-slim AS development
+FROM node:24.22.1-bookworm-slim AS development
 
 WORKDIR /app
 
