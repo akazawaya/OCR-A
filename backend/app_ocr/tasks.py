@@ -13,7 +13,10 @@ from app_ocr.service.gpu_worker.task_checker import (
     has_active_or_reserved_gpu_worker_tasks,
     has_pending_gpu_worker_queue_tasks,
 )
-from app_ocr.service.gpu_worker.worker_instance import stop_gpu_worker
+from app_ocr.service.gpu_worker.worker_instance import (
+    ensure_gpu_worker_running,
+    stop_gpu_worker,
+)
 from app_ocr.service.ocr import run_ocr_for_bbox, run_ocr_for_page
 
 
@@ -49,6 +52,15 @@ class PreviewWordOcrTask(Task):
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         user_id = kwargs["notification_user_id"]
         notify_preview_word_ocr_changed(user_id, task_id, State.FAILED)
+
+
+@shared_task(bind=True, max_retries=None)
+def request_gpu_worker_start(self, queue_name):
+    state = ensure_gpu_worker_running(queue_name)
+    if state == "stopping":
+        raise self.retry(
+            countdown=settings.GPU_WORKER_AUTOSTART_RETRY_INTERVAL_SECONDS,
+        )
 
 
 @shared_task

@@ -72,6 +72,9 @@ CELERY_TASK_ROUTES = {
     "app_ocr.tasks.ocr_word_task": {
         "queue": "ocr_word_queue",
     },
+    "app_ocr.tasks.request_gpu_worker_start": {
+        "queue": "maintenance_queue",
+    },
     "app_ocr.tasks.check_gpu_worker_autostop_task": {
         "queue": "maintenance_queue",
     },
@@ -125,6 +128,9 @@ GPU_WORKERS = []
 if ENABLE_GPU_WORKER_AUTOSTART:
     AWS_EC2_REGION_NAME = os.environ["AWS_EC2_REGION_NAME"]
     GPU_WORKERS = json.loads(os.environ["GPU_WORKERS"])
+    GPU_WORKER_AUTOSTART_RETRY_INTERVAL_SECONDS = float(
+        os.environ["GPU_WORKER_AUTOSTART_RETRY_INTERVAL_SECONDS"],
+    )
 CELERY_BEAT_SCHEDULE = {
     "check-document-ocr-timeout": {
         "task": "app_ocr.tasks.check_document_ocr_timeout_task",

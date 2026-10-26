@@ -17,7 +17,6 @@ def ensure_gpu_worker_running(queue_name):
         for gpu_worker in settings.GPU_WORKERS
         if queue_name in gpu_worker["queues"]
     )
-
     keep_alive_until = timezone.now() + timedelta(
         minutes=settings.GPU_WORKER_AUTOSTOP_IDLE_MINUTES,
     )
@@ -32,6 +31,8 @@ def ensure_gpu_worker_running(queue_name):
 
     if state == "stopped":
         ec2_client.start_instances(InstanceIds=[instance_id])
+
+    return state
 
 
 def stop_gpu_worker(instance_id, *, launch_time_cutoff):
