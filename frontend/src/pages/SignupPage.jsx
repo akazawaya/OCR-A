@@ -10,6 +10,7 @@ import Button from "../components/ui/Button";
 import TextInput from "../components/ui/TextInput";
 import { formClassNames, pageClassNames } from "../components/ui/classNames";
 import { toastStyles } from "../components/ui/toastStyles";
+import { getResponseErrorMessage } from "../logic/error/getResponseErrorMessage";
 
 const SignupPage = () => {
   const [email, setEmail] = useState("");
@@ -27,8 +28,11 @@ const SignupPage = () => {
     onSuccess: () => {
       navigate(routePaths.docs.to());
     },
-    onError: () => {
-      toast.error("アカウント作成に失敗しました", toastStyles.error);
+    onError: (error) => {
+      toast.error(
+        getResponseErrorMessage(error.data, "アカウント作成に失敗しました"),
+        toastStyles.error,
+      );
     },
   });
 

@@ -13,6 +13,7 @@ import Button from "../components/ui/Button";
 import TextInput from "../components/ui/TextInput";
 import { formClassNames } from "../components/ui/classNames";
 import { toastStyles } from "../components/ui/toastStyles";
+import { getResponseErrorMessage } from "../logic/error/getResponseErrorMessage";
 
 const SettingPage = () => {
   const navigate = useNavigate();
@@ -34,8 +35,11 @@ const SettingPage = () => {
         setNewPasswordConfirmation("");
         toast.success("パスワードを変更しました");
       },
-      onError: () => {
-        toast.error("パスワードの変更に失敗しました", toastStyles.error);
+      onError: (error) => {
+        toast.error(
+          getResponseErrorMessage(error.data, "パスワードの変更に失敗しました"),
+          toastStyles.error,
+        );
       },
     });
 
