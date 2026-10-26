@@ -33,6 +33,9 @@ jobs:
       AWS_REGION: ${{ vars.AWS_REGION }}
       AWS_GITHUB_ACTIONS_ROLE_ARN: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
       EC2_TARGET_TAG_KEY: ${{ vars.EC2_TARGET_TAG_KEY }}
+      REDIS_FAILOVER_LAMBDA_FUNCTION_NAME: ${{ vars.REDIS_FAILOVER_LAMBDA_FUNCTION_NAME }}
+      REDIS_RECOVERY_LAMBDA_FUNCTION_NAME: ${{ vars.REDIS_RECOVERY_LAMBDA_FUNCTION_NAME }}
+      REDIS_ROLE_STATE_PARAMETER_NAME: ${{ vars.REDIS_ROLE_STATE_PARAMETER_NAME }}
       VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
       DEPLOYMENT_PROFILE: ${{ inputs.deployment_profile }}
       PARAMETER_STORE_PATH: ${{ inputs.parameter_store_path }}
@@ -45,18 +48,35 @@ jobs:
           : "${AWS_REGION:?AWS_REGION is required}"
           : "${AWS_GITHUB_ACTIONS_ROLE_ARN:?AWS_GITHUB_ACTIONS_ROLE_ARN is required}"
           : "${EC2_TARGET_TAG_KEY:?EC2_TARGET_TAG_KEY is required}"
+          : "${REDIS_ROLE_STATE_PARAMETER_NAME:?REDIS_ROLE_STATE_PARAMETER_NAME is required}"
           : "${VITE_API_BASE_URL:?VITE_API_BASE_URL is required}"
           : "${DEPLOYMENT_PROFILE:?DEPLOYMENT_PROFILE is required}"
           : "${PARAMETER_STORE_PATH:?PARAMETER_STORE_PATH is required}"
 
+      - name: Checkout Lambda source
+        if: inputs.deployment_profile == 'production-cpu'
+        uses: actions/checkout@v5
+
       - name: Authenticate to AWS
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Deploy on EC2
         run: |
+          set -euo pipefail
+          case "$DEPLOYMENT_PROFILE" in
+            production-cpu)
+             expected_target_count=2
+            ;;
+            production-gpu-shared)
+              expected_target_count=1
+            ;;
+            production-gpu-dedicated)
+              expected_target_count=2
+            ;;
+          esac
           # parametersという変数に以下のコマンドをまとめる。
           # -EC2上のソースを、Workflowを実行したGitHubコミットへ更新する。
           #  originから最新のコミット情報をfetchし、Workflow起動時に確定したコミットSHAをcheckoutする。
@@ -67,16 +87,10 @@ jobs:
             --arg repository_ssh_url "git@github.com:${GITHUB_REPOSITORY}.git" \
             --arg deployment_profile "$DEPLOYMENT_PROFILE" \
             --arg parameter_store_path "$PARAMETER_STORE_PATH" \
+            --arg role_parameter_name "$REDIS_ROLE_STATE_PARAMETER_NAME" \
             --arg aws_region "$AWS_REGION" \
             --arg vite_api_base_url "$VITE_API_BASE_URL" \
             '"/opt/ocr-a" as $project_dir |
-            (
-              "COMPOSE_DISABLE_ENV_FILE=1 COMPOSE_PROFILES=" +
-              ($deployment_profile | @sh) +
-              " docker compose -f compose.yaml -f compose.s3.yaml" +
-              (if $deployment_profile == "production-cpu" then " -f compose.gpu-ec2.yaml" else "" end) +
-              " -f compose.prod.yaml"
-            ) as $compose_command |
             {
               commands: (
                 [
@@ -92,19 +106,12 @@ jobs:
                   "export VITE_API_BASE_URL=" + ($vite_api_base_url | @sh)
                 ] +
                 (
-                  if $deployment_profile == "production-cpu" then
-                    [
-                      $compose_command + " build",
-                      $compose_command + " run --rm --no-deps -T backend /app/.venv/bin/python - < .github/scripts/ensure-postgres-database.py",
-                      $compose_command + " run --rm --no-deps backend /app/.venv/bin/python manage.py migrate --noinput",
-                      $compose_command + " run --rm --no-deps backend /app/.venv/bin/python manage.py collectstatic --noinput",
-                      $compose_command + " up -d"
-                    ]
-                  else
-                    [
-                      $compose_command + " up -d --build"
-                    ]
-                  end
+                  [
+                    "bash .github/scripts/deploy.sh " +
+                    ($deployment_profile | @sh) + " " +
+                    ($aws_region | @sh) + " " +
+                    ($role_parameter_name | @sh)
+                  ]
                 )
               )
             }')
@@ -133,10 +140,29 @@ jobs:
 
             case "$status" in
               Success)
-                aws ssm list-command-invocations \
+                invocations=$(aws ssm list-command-invocations \
                   --region "$AWS_REGION" \
                   --command-id "$command_id" \
-                  --details
+                  --details \
+                  --query "CommandInvocations" \
+                  --output json)
+                jq . <<< "$invocations"
+
+                invocation_count=$(jq 'length' <<< "$invocations")
+                if (( invocation_count == 0 )); then
+                  echo "SSM command succeeded without any invocation" >&2
+                  exit 1
+                fi
+                if (( invocation_count != expected_target_count )); then
+                  echo "Unexpected SSM invocation count: expected=$expected_target_count actual=$invocation_count" >&2
+                  exit 1
+                fi
+                if ! jq -e 'all(.[]; .StatusDetails == "Success")' \
+                  <<< "$invocations" > /dev/null; then
+                  echo "One or more SSM invocations did not succeed" >&2
+                  exit 1
+                fi
+                echo "All $invocation_count SSM invocations succeeded"
                 exit 0
                 ;;
               Failed|Cancelled|TimedOut|Cancelling)
@@ -158,3 +184,38 @@ jobs:
 
           echo "Timed out while waiting for SSM command: $command_id" >&2
           exit 1
+
+      - name: Deploy Redis Lambdas
+        if: inputs.deployment_profile == 'production-cpu'
+        run: |
+          set -eu
+
+          : "${REDIS_FAILOVER_LAMBDA_FUNCTION_NAME:?REDIS_FAILOVER_LAMBDA_FUNCTION_NAME is required}"
+          : "${REDIS_RECOVERY_LAMBDA_FUNCTION_NAME:?REDIS_RECOVERY_LAMBDA_FUNCTION_NAME is required}"
+
+          lambda_package="$RUNNER_TEMP/redis-lambda.zip"
+          git archive \
+            --format=zip \
+            --output="$lambda_package" \
+            "$GITHUB_SHA" \
+            infra/redis_failover_lambda.py \
+            infra/redis_recovery_lambda.py \
+            infra/redis_lambda_common.py
+
+          aws lambda update-function-code \
+            --region "$AWS_REGION" \
+            --function-name "$REDIS_FAILOVER_LAMBDA_FUNCTION_NAME" \
+            --zip-file "fileb://$lambda_package" > /dev/null
+          aws lambda wait function-updated \
+            --region "$AWS_REGION" \
+            --function-name "$REDIS_FAILOVER_LAMBDA_FUNCTION_NAME"
+
+          aws lambda update-function-code \
+            --region "$AWS_REGION" \
+            --function-name "$REDIS_RECOVERY_LAMBDA_FUNCTION_NAME" \
+            --zip-file "fileb://$lambda_package" > /dev/null
+          aws lambda wait function-updated \
+            --region "$AWS_REGION" \
+            --function-name "$REDIS_RECOVERY_LAMBDA_FUNCTION_NAME"
+
+          echo "Deployed Redis Lambda package to both functions"

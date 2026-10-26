@@ -1,9 +1,17 @@
+from django.conf import settings
 from django.http import JsonResponse
+from redis import Redis
+from redis.exceptions import RedisError
 
 
-def health_check(_request):
-    # ALBが各EC2のDjangoプロセスまで応答可能かを確認する。
-    # RedisやDB等のチェックはAWSの各リソースの監視に委ねる。
-    # 正常時はJsonResponseのデフォルトでHTTP 200を返す。
-    # 異常時は別の層で5xxが返り、接続拒否、タイムアウト等を基にALBが異常と判定する想定。
+def health_check(request):
+    try:
+        with Redis.from_url(settings.CELERY_BROKER_URL) as redis_client:
+            redis_client.ping()
+    except RedisError:
+        return JsonResponse(
+            {"status": "error", "redis": "unavailable"},
+            status=503,
+        )
+
     return JsonResponse({"status": "ok"})

@@ -55,7 +55,12 @@ SECURE_PROXY_SSL_HEADER = (
     "https",  # その値が何ならHTTPSと判断するか
 )
 
-CELERY_BROKER_URL = os.environ["CELERY_BROKER_URL"]
+# 全用途で同じRedisを参照する。本番ではRoute 53の固定DNS名を指定する。
+REDIS_HOST = os.environ["REDIS_HOST"]
+CHANNEL_REDIS_URL = f"redis://{REDIS_HOST}:6379/0"
+CELERY_BROKER_URL = f"redis://{REDIS_HOST}:6379/1"
+CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:6379/2"
+
 CELERY_TASK_DEFAULT_QUEUE = "ocr_document_queue"
 CELERY_TASK_ROUTES = {
     "app_ocr.tasks.dispatch_ocr_pages_task": {
@@ -67,6 +72,9 @@ CELERY_TASK_ROUTES = {
     "app_ocr.tasks.ocr_word_task": {
         "queue": "ocr_word_queue",
     },
+    "app_ocr.tasks.request_gpu_worker_start": {
+        "queue": "maintenance_queue",
+    },
     "app_ocr.tasks.check_gpu_worker_autostop_task": {
         "queue": "maintenance_queue",
     },
@@ -76,7 +84,6 @@ CELERY_TASK_ROUTES = {
 }
 
 # Celery Result Backend: タスクの状態と実行結果の保存
-CELERY_RESULT_BACKEND = os.environ["CELERY_RESULT_BACKEND"]
 CELERY_RESULT_EXPIRES = 60 * 10
 CELERY_TASK_TRACK_STARTED = True
 
@@ -87,7 +94,6 @@ DOCUMENT_OCR_PAGE_TIMEOUT_MINUTES = float(
     os.environ["DOCUMENT_OCR_PAGE_TIMEOUT_MINUTES"],
 )
 
-CHANNEL_REDIS_URL = os.environ["CHANNEL_REDIS_URL"]  # compose 前提ならデフォルト不要
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
@@ -122,6 +128,9 @@ GPU_WORKERS = []
 if ENABLE_GPU_WORKER_AUTOSTART:
     AWS_EC2_REGION_NAME = os.environ["AWS_EC2_REGION_NAME"]
     GPU_WORKERS = json.loads(os.environ["GPU_WORKERS"])
+    GPU_WORKER_AUTOSTART_RETRY_INTERVAL_SECONDS = float(
+        os.environ["GPU_WORKER_AUTOSTART_RETRY_INTERVAL_SECONDS"],
+    )
 CELERY_BEAT_SCHEDULE = {
     "check-document-ocr-timeout": {
         "task": "app_ocr.tasks.check_document_ocr_timeout_task",

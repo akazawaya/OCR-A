@@ -8,12 +8,17 @@ import {
   resetMockDocuments,
 } from "./msw/documentsApiHandlers";
 import { MOCK_API_BASE_URL } from "./msw/config";
+import {
+  healthApiHandlers,
+  resetMockSystemHealth,
+} from "./msw/healthApiHandlers";
 import { pagesApiHandlers } from "./msw/pagesApiHandlers";
 import { wordsApiHandlers } from "./msw/wordsApiHandlers";
 import { wsHandlers } from "./msw/wsHandlers";
 
 const server = setupServer(
   ...authApiHandlers,
+  ...healthApiHandlers,
   ...documentsApiHandlers,
   ...pagesApiHandlers,
   ...wordsApiHandlers,
@@ -30,6 +35,7 @@ beforeAll(() => {
 beforeEach(() => {
   vi.clearAllMocks();
   resetMockUser();
+  resetMockSystemHealth();
   resetMockDocuments();
 });
 

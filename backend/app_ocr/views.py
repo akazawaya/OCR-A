@@ -36,7 +36,6 @@ from app_ocr.serializers import (
     WordSerializer,
 )
 from app_ocr.service.document import create_pages_from_document_file
-from app_ocr.service.gpu_worker.worker_instance import ensure_gpu_worker_running
 from app_ocr.storage import (
     build_document_storage_prefix,
     delete_document_files,
@@ -45,6 +44,7 @@ from app_ocr.tasks import (
     dispatch_ocr_pages_task,
     notify_document_changed,
     ocr_word_task,
+    request_gpu_worker_start,
 )
 
 User = get_user_model()
@@ -248,7 +248,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
                 def enqueue_document_ocr():
                     notify_document_changed(document.owner_id)
                     if settings.ENABLE_GPU_WORKER_AUTOSTART:
-                        ensure_gpu_worker_running("ocr_document_queue")
+                        request_gpu_worker_start.delay("ocr_document_queue")
                     dispatch_ocr_pages_task.delay(document.pk)
 
                 transaction.on_commit(enqueue_document_ocr)
@@ -298,7 +298,7 @@ class WordViewSet(viewsets.ModelViewSet):
         )
         serializer.is_valid(raise_exception=True)
         if settings.ENABLE_GPU_WORKER_AUTOSTART:
-            ensure_gpu_worker_running("ocr_word_queue")
+            request_gpu_worker_start.delay("ocr_word_queue")
         task_kwargs = {
             **serializer.validated_data,
             "notification_user_id": request.user.pk,

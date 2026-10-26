@@ -8,6 +8,7 @@ let user = structuredClone(defaultMockAuthUser);
 let receivedLoginRequestBody = null;
 let receivedCreateUserRequestBody = null;
 let receivedPasswordChangeRequestBody = null;
+let logoutRequestCount = 0;
 
 export const resetMockUser = () => {
   isAuthenticated = false;
@@ -15,6 +16,7 @@ export const resetMockUser = () => {
   receivedLoginRequestBody = null;
   receivedCreateUserRequestBody = null;
   receivedPasswordChangeRequestBody = null;
+  logoutRequestCount = 0;
 };
 export const loginMockUser = () => {
   isAuthenticated = true;
@@ -27,6 +29,9 @@ export const getReceivedCreateUserRequestBody = () => {
 };
 export const getReceivedPasswordChangeRequestBody = () => {
   return receivedPasswordChangeRequestBody;
+};
+export const getLogoutRequestCount = () => {
+  return logoutRequestCount;
 };
 export const authApiHandlers = [
   http.get(`${MOCK_API_BASE_URL}/auth/me/`, () => {
@@ -87,6 +92,7 @@ export const authApiHandlers = [
   }),
 
   http.post(`${MOCK_API_BASE_URL}/auth/logout/`, () => {
+    logoutRequestCount += 1;
     isAuthenticated = false;
     return new HttpResponse(null, { status: 204 });
   }),
