@@ -98,6 +98,10 @@ const SettingPage = () => {
           />
         </label>
 
+        <p className="w-full text-left text-sm text-gray-600">
+          新しいパスワードは8文字以上で入力してください。
+        </p>
+
         <Button disabled={isChangingPassword} type="submit">
           変更
         </Button>

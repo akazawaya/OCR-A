@@ -77,6 +77,10 @@ const SignupPage = () => {
           />
         </label>
 
+        <p className="w-full text-left text-sm text-gray-600">
+          パスワードは8文字以上で入力してください。
+        </p>
+
         <Button type="submit">アカウント作成</Button>
       </form>
       <div className="flex flex-col items-center">
