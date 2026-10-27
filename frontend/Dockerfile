@@ -18,6 +18,7 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
 FROM development AS build
 
 ARG VITE_API_BASE_URL
+ARG VITE_MAX_UPLOAD_FILE_SIZE_MB 
 
 RUN npm run build
 

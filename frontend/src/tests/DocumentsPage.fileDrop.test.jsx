@@ -7,6 +7,14 @@ import { expect, test } from "vitest";
 
 import { renderDocumentsPage } from "./DocumentsPage.test-utils";
 
+test("アップロード可能な最大ファイルサイズを表示する", () => {
+  renderDocumentsPage();
+
+  expect(
+    screen.getByText("アップロード可能なファイルサイズ: 最大10MB"),
+  ).toBeVisible();
+});
+
 test("ドロップしたファイルを選択し、OCR実行ボタンを有効にする", () => {
   renderDocumentsPage();
 

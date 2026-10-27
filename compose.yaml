@@ -53,6 +53,7 @@ services:
           path: ./frontend/package-lock.json
     environment:
       VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+      VITE_MAX_UPLOAD_FILE_SIZE_MB: ${MAX_UPLOAD_FILE_SIZE_MB}
       # ビルドターゲットごとに起動プロセス（Vite/Nginx）が決まるため、
       # commandはComposeではなくDockerfileの各ステージに定義する。
   backend:

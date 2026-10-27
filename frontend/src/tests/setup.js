@@ -27,6 +27,7 @@ const server = setupServer(
 
 // appConfigのimport時の初期化が通るように、ダミーの環境変数を設定
 vi.stubEnv("VITE_API_BASE_URL", `${MOCK_API_BASE_URL}/`);
+vi.stubEnv("VITE_MAX_UPLOAD_FILE_SIZE_MB", "10");
 
 beforeAll(() => {
   server.listen();

@@ -8,6 +8,7 @@ import {
   documentOcrAccessSpec,
   documentSpec,
   routePaths,
+  MAX_UPLOAD_FILE_SIZE_MB,
   OCR_WS_URL,
 } from "../appConfig";
 import { getCollection } from "../api/clients/collectionClient";
@@ -211,7 +212,11 @@ const DocumentsPage = () => {
           clearSearch,
           postFormDataFile,
         }}
-        data={{ draftSearchQuery, appliedSearchQuery }}
+        data={{
+          draftSearchQuery,
+          appliedSearchQuery,
+          maxUploadFileSizeMb: MAX_UPLOAD_FILE_SIZE_MB,
+        }}
       />
       {isPending ? (
         <div>Now Loading...</div>
