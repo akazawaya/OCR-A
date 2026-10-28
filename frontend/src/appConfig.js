@@ -1,4 +1,6 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+export const MAX_UPLOAD_FILE_SIZE_MB = import.meta.env
+  .VITE_MAX_UPLOAD_FILE_SIZE_MB;
 const apiBaseUrl = new URL(API_BASE_URL, window.location.origin);
 // window.location.originは相対API URLを、現在表示中のサイトを基準に絶対URLへ解決する引数(本番用)
 apiBaseUrl.protocol = apiBaseUrl.protocol === "https:" ? "wss:" : "ws:";

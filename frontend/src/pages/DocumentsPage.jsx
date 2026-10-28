@@ -8,6 +8,7 @@ import {
   documentOcrAccessSpec,
   documentSpec,
   routePaths,
+  MAX_UPLOAD_FILE_SIZE_MB,
   OCR_WS_URL,
 } from "../appConfig";
 import { getCollection } from "../api/clients/collectionClient";
@@ -15,6 +16,7 @@ import {
   postFormData,
   deleteCollectionItem,
 } from "../api/clients/mutationClient";
+import { getResponseErrorMessage } from "../logic/error/getResponseErrorMessage";
 import { buildCollectionQueryString } from "../logic/urlQuery/buildCollectionQueryString";
 import { buildPaginationQuery } from "../logic/urlQuery/paginationQuery";
 import { defaultSearchQuery } from "../logic/urlQuery/searchQueryUtils";
@@ -141,7 +143,13 @@ const DocumentsPage = () => {
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: [collectionUrl] }),
     onError: (error) => {
-      toast.error(error.data.file[0], toastStyles.error);
+      toast.error(
+        getResponseErrorMessage(
+          error.data,
+          "ファイルのアップロードに失敗しました。",
+        ),
+        toastStyles.error,
+      );
     },
   });
 
@@ -153,7 +161,10 @@ const DocumentsPage = () => {
         toast.error("この操作を実行する権限がありません。", toastStyles.error);
         return;
       }
-      toast.error(error.data.file[0], toastStyles.error);
+      toast.error(
+        getResponseErrorMessage(error.data, "OCRの開始要求に失敗しました。"),
+        toastStyles.error,
+      );
     },
     // これはocrロジック内のws送信によりinvalidateQueries更新を実施する
   });
@@ -201,7 +212,11 @@ const DocumentsPage = () => {
           clearSearch,
           postFormDataFile,
         }}
-        data={{ draftSearchQuery, appliedSearchQuery }}
+        data={{
+          draftSearchQuery,
+          appliedSearchQuery,
+          maxUploadFileSizeMb: MAX_UPLOAD_FILE_SIZE_MB,
+        }}
       />
       {isPending ? (
         <div>Now Loading...</div>

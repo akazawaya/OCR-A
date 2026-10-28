@@ -5,7 +5,7 @@ import { searchOptionDefs } from "../../logic/urlQuery/searchQueryUtils";
 import Button from "../ui/Button";
 
 const DocumentToolbar = ({
-  data: { draftSearchQuery, appliedSearchQuery },
+  data: { draftSearchQuery, appliedSearchQuery, maxUploadFileSizeMb },
   actions: {
     applySearch,
     updateSearchQuery,
@@ -119,6 +119,9 @@ const DocumentToolbar = ({
           </Button>
         </div>
       </div>
+      <p className="text-sm text-gray-600">
+        アップロード可能なファイルサイズ: 最大{maxUploadFileSizeMb}MB
+      </p>
       <div className="text-sm">
         保存のみの場合も、編集画面からOCRを実行できます。
       </div>

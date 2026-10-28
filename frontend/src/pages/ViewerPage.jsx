@@ -34,6 +34,7 @@ import { sortViewerWords } from "../logic/viewer/sortViewerWords";
 import { useSelection } from "../logic/layout/useSelection";
 import { useViewerEditState } from "../logic/viewer/useViewerEditState";
 import { normalizePreviewWordOcrJobResult } from "../logic/viewer/previewWordOcrContract";
+import { getResponseErrorMessage } from "../logic/error/getResponseErrorMessage";
 import ViewerTopBar from "../components/Viewer/ViewerTopbar/ViewerTopBar";
 import ViewerImage from "../components/Viewer/ViewerImage/ViewerImage";
 import ViewerTable from "../components/Viewer/ViewerTable";
@@ -268,7 +269,12 @@ const ViewerPage = () => {
     onError: (error) => {
       if (error.status === 403) {
         toast.error("この操作を実行する権限がありません。", toastStyles.error);
+        return;
       }
+      toast.error(
+        getResponseErrorMessage(error.data, "OCRの開始要求に失敗しました。"),
+        toastStyles.error,
+      );
     },
   });
 
