@@ -175,7 +175,7 @@ OCRの処理状態はファイル一覧へ自動反映され、完了後にビ�
 | バックエンド      | Django、Django REST framework、Django Channels（WebSocket）、drf-spectacular |
 | UI                | Tailwind CSS、Radix UI、Sonner                                               |
 | DB                | PostgreSQL                                                                   |
-| 非同期処理        | Celery、Redis/Amazon ElastiCache for Valkey                                 |
+| 非同期処理        | Celery、Redis                           |
 | パッケージ管理    | フロントエンド: npm<br>バックエンド: uv                                      |
 | インフラ（構想）  | Docker、AWS（VPC、EC2、RDS、S3、Route 53、ElastiCache）                      |
 | 静的解析・整形    | フロントエンド: ESLint、Prettier<br>バックエンド: Ruff                       |
