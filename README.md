@@ -190,7 +190,6 @@ OCRの処理状態はファイル一覧へ自動反映され、完了後にビ�
 ![ER図](docs/diagrams/er.drawio.svg)
 
 ### シーケンス図
-
 #### ファイル投下時のファイル単位OCR
 
 ![Document OCRのシーケンス図](docs/diagrams/sequence_DocumentOCR.drawio.svg)
@@ -201,7 +200,7 @@ OCRの処理状態はファイル一覧へ自動反映され、完了後にビ�
 
 ### AWSインフラ構成図
 
-保留
+![AWSインフラ構成図](docs/diagrams/infra.drawio.svg)
 
 ## 4.設計・実装の意図等
 
