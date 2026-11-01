@@ -167,19 +167,17 @@ OCRの処理状態はファイル一覧へ自動反映され、完了後にビ�
 
 ### 技術スタック
 
-インフラとCDはあくまで構想で、まだ構築を完了していません
-
 | 分類              | 技術スタック                                                                 |
 | ----------------- | ---------------------------------------------------------------------------- |
 | フロントエンド    | React、Vite、React Router、TanStack Query                                    |
 | バックエンド      | Django、Django REST framework、Django Channels（WebSocket）、drf-spectacular |
 | UI                | Tailwind CSS、Radix UI、Sonner                                               |
 | DB                | PostgreSQL                                                                   |
-| 非同期処理        | Celery、Redis                           |
+| 非同期処理        | Celery、Redis                                                                 |
 | パッケージ管理    | フロントエンド: npm<br>バックエンド: uv                                      |
-| インフラ（構想）  | Docker、AWS（VPC、EC2、RDS、S3、Route 53、ElastiCache）                      |
+| インフラ          | Docker、AWS（VPC、EC2、ALB、RDS、S3、Route53、ACM、Lambda、Systems Manager、EventBridge、CloudWatch） |
 | 静的解析・整形    | フロントエンド: ESLint、Prettier<br>バックエンド: Ruff                       |
-| テスト            | フロントエンド: Vitest、React Testing Library、MSW<br>バックエンド: pytest   |
+| テスト            | フロントエンド: Vitest、React Testing Library、MSW<br>バックエンド: unittest、pytest<br>Lambda関数(python): unittest   |
 | 印刷（PDF保存）   | react-to-print                                                               |
 | Git hooks         | Lefthook                                                                     |
 | OCRエンジン       | YomiToku                                                                     |
@@ -190,6 +188,7 @@ OCRの処理状態はファイル一覧へ自動反映され、完了後にビ�
 ![ER図](docs/diagrams/er.drawio.svg)
 
 ### シーケンス図
+
 #### ファイル投下時のファイル単位OCR
 
 ![Document OCRのシーケンス図](docs/diagrams/sequence_DocumentOCR.drawio.svg)
@@ -244,3 +243,98 @@ QiitaやZennで紹介されているポートフォリオを参考にする中�
 
 - クラウドサービス：AWS
   - AWS、Azure、Google Cloudの3択でした。他の選定技術とAWSを組み合わせた利用事例を目にする機会が多く、参考となる情報を得やすいと考えたため、AWSを選択しました。
+
+### AWSインフラの設計
+
+- **CPU用 EC2とGPU用 EC2を個別に導入**
+EC2は、常設稼働のCPU EC2と、OCR推論を行うときだけ起動するGPU EC2を個別に用意しています。
+CPU EC2がOCRリクエストを受け付け、処理状況に応じてGPU EC2の起動・停止を制御します。
+これにより、Webアプリケーションの可用性を維持しながら、GPU EC2の運用コストを抑えています。
+GPU EC2の停止条件は、およそ以下の通りです。
+  - Redis及びCeleryに待機中・処理中のタスクが存在しない。
+  - GPU EC2の起動から`GPU_WORKER_AUTOSTOP_IDLE_MINUTES`以上経過している。
+   実装では、現在時刻から同時間を引いた`launch_time_cutoff`を求め、
+   EC2の`LaunchTime`がその時刻以前であることを確認しています。
+  - GPU EC2の起動確認処理を最後に実行した時刻に`GPU_WORKER_AUTOSTOP_IDLE_MINUTES`を加算した、
+  `keep_alive_until`が、現在時刻以前になっている。
+
+   これらの条件により、処理中のタスクがGPU用 EC2の停止により強制終了するということはありません。
+ また`GPU_WORKER_AUTOSTOP_IDLE_MINUTES`の調整により、利用が活発である場合に備え、
+ GPU EC2の再起動の待ち時間の発生を抑制することが可能です。
+
+    時間経過によるGPU EC2の自動停止は、`keep_alive_until`によってビジネスロジック上の挙動をカバーできます。
+一方、CD作業ときにAWSのマネジメントコンソールからGPU EC2を起動すると`keep_alive_until`が更新されないため、
+すぐ自動停止する場合があります。そこで、運用操作によって起動した場合にも最低稼働時間を確保するため、
+EC2の`LaunchTime`と`launch_time_cutoff`による判定を導入しています。
+
+- **CPU EC2上で稼働するRedisを本番環境でも利用**
+  本ポートフォリオではRedisをWebSocket通知のチャンネルレイヤー、
+  Celeryのメッセージブローカー、および処理結果を取得するためのResult Backendとして使用しています。
+  本番環境では、異なるAvailability Zoneに配置したCPU EC2の構成を維持しながら、
+  各CPU EC2上のRedisのうち一つだけを正として扱います。
+  この構成には、Route 53のプライベートホストゾーン上に作成した固定DNS名、
+  Lambda、SSM Parameter Storeを使用しています。
+  ElastiCacheなどの別サービスを採用せず、既存のCPU EC2上でRedisを稼働させることで、
+  運用コストを抑えています。
+
+
+  - **Redis役割状態の定義**
+    - SSM Parameter Storeの`REDIS_ROLE_STATE_PARAMETER_NAME`には次のように
+    CPU EC2のインスタンスIDとRedisの役割状態の組を定義します。
+    ```json
+    {
+      "instanceId-a": "active",
+      "instanceId-b": "standby"
+    }
+    ```
+    - `active`  
+      Route 53の固定DNS名の接続先となり、正として利用されている状態。
+    - `fenced`  
+      通信隔離とEC2の停止によって、利用できない状態。
+    - `standby`  
+      正として利用されていないものの、必要に応じて`active`へ昇格できる状態。  
+      **障害発生時にはRedis内のキューや処理結果の破棄を許容するため、`active`とのデータ同期は行いません。**
+
+- **Redis役割状態の遷移**
+  Aをactive、Bをstandbyとし、Aに障害が発生した場合、次の手順でフェイルオーバーとリカバリーを行います。
+  1. A：`active` → `fenced`
+     - AのSecurity Groupを`FENCED_SECURITY_GROUP_ID`で指定した通信隔離用Security Groupへ切り替える
+     - AのEC2停止を要求し、その完了を確認する
+
+  2. B：`standby` → `active`
+     - B側のCelery Maintenance WorkerとCelery Beatを起動する
+        - Celery Beat：OCRタイムアウト確認とGPU自動停止判定を定期投入
+        - Maintenance Worker：GPU起動要求、GPU自動停止判定、OCRタイムアウト処理を実行
+     - Route 53の固定DNS名に対応するAレコードを、AからBのプライベートIPへ切り替え、完了まで待機する
+
+  3. Redis役割状態を更新する
+     - SSM Parameter Storeの`REDIS_ROLE_STATE_PARAMETER_NAME`を
+       A：`fenced`、B：`active`へ更新する
+
+  4. A：`fenced` → `standby`
+     - AのEC2を起動する
+     - RedisおよびCeleryのコンテナを削除・再作成する
+     - Redis、Celery Worker、Health APIの動作を確認する
+     - Security Groupを通常設定へ戻す
+     - `REDIS_ROLE_STATE_PARAMETER_NAME`を
+       A：`standby`、B：`active`へ更新する
+
+- **Lambdaの起動契機**
+  上記のRedis役割状態の遷移における、手順1～3を`Failover Lambda`、 手順4を`Recovery Lambda`で実装し、以下のように実行します。
+  1. 初期構築時に、以下を手動で設定
+     - SSM Parameter Storeの`REDIS_ROLE_STATE_PARAMETER_NAME`に、
+     　最初に`active`,`standby`となるインスタンスidの組を設定
+     - Route 53の固定DNS名に対応するAレコードに、最初に`active`となる
+     　CPU EC2のプライベートIPを設定
+
+  2. CloudWatch AlarmでHealth APIを監視し、
+     異常を検知した場合に`Failover Lambda`を起動する
+
+  3. EventBridge Schedulerから`Recovery Lambda`を定期実行する
+
+- **OCR進捗停止時の暫定的なタイムアウト処理**
+　Redisのデータ消失やWorkerの障害により、OCRの進捗が停止してもドキュメントがPROCESSING（処理中）のまま残る場合があります。
+　現時点では暫定的な対策として、OCRの活動時刻が記録されたPROCESSING状態のドキュメントを対象に、
+　`DOCUMENT_OCR_TOTAL_TIMEOUT_MINUTES`で処理開始後の総経過時間、`DOCUMENT_OCR_PAGE_TIMEOUT_MINUTES`で最後の進捗からの経過時間を判定し、上限を超えた場合はFAILED（失敗）へ遷移させます。
+　実行中のOCR処理は強制終了しませんが、FAILEDへの更新後に保存処理へ到達したOCR結果は保存しません。
+　QUEUED（待機中）状態のドキュメントや、活動時刻が記録されていないPROCESSING状態のドキュメントは、現状では未対応です。
