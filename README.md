@@ -338,3 +338,9 @@ EC2の`LaunchTime`と`launch_time_cutoff`による判定を導入しています
 　`DOCUMENT_OCR_TOTAL_TIMEOUT_MINUTES`で処理開始後の総経過時間、`DOCUMENT_OCR_PAGE_TIMEOUT_MINUTES`で最後の進捗からの経過時間を判定し、上限を超えた場合はFAILED（失敗）へ遷移させます。
 　実行中のOCR処理は強制終了しませんが、FAILEDへの更新後に保存処理へ到達したOCR結果は保存しません。
 　QUEUED（待機中）状態のドキュメントや、活動時刻が記録されていないPROCESSING状態のドキュメントは、現状では未対応です。
+
+## 5.ライセンス
+本アプリケーションは、OCRエンジンとしてYomiTokuを使用しています。
+本リポジトリのうち、第三者の著作物を除く独自コードは、MITライセンスの下で提供します。
+YomiTokuのソースコードおよびモデルの重みは、CC BY-NC-SA 4.0ライセンスの下で提供されています。
+利用条件の詳細は、[YomiTokuのライセンス情報](https://github.com/kotaro-kinoshita/yomitoku#license)をご確認ください。
