@@ -33,25 +33,25 @@ OCR-AはOCRの出力や、修正・再認識・PDF出力までを一貫して行
 
 PDF・JPEG・PNGを登録し、OCRを実行します。
 
-![ファイルの登録とOCR実行](docs/gifs/document-ocr-upload.gif)
+![ファイルの登録とOCR実行](docs/gifs/ocr-drag-drop-to-queued.gif)
 
 ### OCR完了通知・ビューアーへの移動
 
 OCRの処理状態はファイル一覧へ自動反映され、完了後にビューアーを開けます。
 
-![OCR完了通知とビューアーへの移動](docs/gifs/ocr-status-and-viewer.gif)
+![OCR完了通知とビューアーへの移動](docs/gifs/ocr-processing-to-viewer.gif)
 
 ### 画像ビューとテーブルビューの連動
 
 画像上の文字領域とOCR結果一覧は、ホバー・クリック操作に連動します。
 
-![画像ビューとテーブルビューの連動](docs/gifs/viewer-hover-sync.gif)
+![画像ビューとテーブルビューの連動](docs/gifs/image-table-sync.gif)
 
 ### 文字領域・本文の編集と領域指定OCR
 
 本文の編集、文字領域の追加・削除、選択範囲への再OCRを行えます。
 
-![文字領域と本文の編集](docs/gifs/word-edit-and-ocr.gif)
+![文字領域と本文の編集](docs/gifs/ocr-region-replace.gif)
 
 ## 3.技術仕様
 
