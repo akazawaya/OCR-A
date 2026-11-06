@@ -266,6 +266,27 @@ GPU EC2の停止条件は、およそ以下の通りです。
 一方、CD作業ときにAWSのマネジメントコンソールからGPU EC2を起動すると`keep_alive_until`が更新されないため、
 すぐ自動停止する場合があります。そこで、運用操作によって起動した場合にも最低稼働時間を確保するため、
 EC2の`LaunchTime`と`launch_time_cutoff`による判定を導入しています。
+  - EC2インスタンスタイプの選定について
+    - CPU EC2には`t3.small`を採用しています。
+      AWSの無料利用枠対象となるT3系のうち、`t3.micro`はメモリが1GiBしかなく、
+      Nginx、Django、RedisおよびCeleryをDocker上で同時に稼働させるには余裕がないと判断しました。
+      そのため、2GiBのメモリを持つ上位の`t3.small`を選択しました。
+
+    - GPU EC2には`g4dn.xlarge`を採用しています。
+      [YomiToku](https://github.com/kotaro-kinoshita/yomitoku#-概要)は、
+      通常モデルでGPUによる推論を推奨しており、VRAM 8GB以内で動作するとされています。
+      これを最低限満たすNVIDIA GPU搭載のインスタンスタイプとして、
+      16GiBのVRAMを持つ`g4dn.xlarge`選択しました。
+
+  - GPU推論環境の構築では、SageMakerでGPUを借りるといった選択肢もありえましたが、  
+  「未経験で実装するなら基本的なサービスのEC2で構築することが無難」と考えました。
+  一方で、CPU用EC2とGPU用EC2では必要な依存関係や起動するサービスが異なるため、
+   初期化処理とデプロイ処理を個別に構成する必要が生じました。
+   その結果、GitHub Actionsの`workflow_dispatch`、Docker Composeのプロファイル、
+   Parameter Storeのパスおよび環境変数をCPU・GPU用に分けることになり、
+   CDの構成と運用が複雑になりました。
+   この点まで含めて、SageMakerなどのマネージドな推論基盤と
+   比較できていなかったことは反省点です。
 
 - **CPU EC2上で稼働するRedisを本番環境でも利用**
   本ポートフォリオではRedisをWebSocket通知のチャンネルレイヤー、
