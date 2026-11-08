@@ -43,6 +43,11 @@ export const setMockSignupPasswordErrorData = (errorData) => {
   signupPasswordErrorData = structuredClone(errorData);
 };
 export const authApiHandlers = [
+  http.get(`${MOCK_API_BASE_URL}/auth/csrf/`, () => {
+    document.cookie = "csrftoken=mock-csrf-token; Path=/";
+    return new HttpResponse(null, { status: 204 });
+  }),
+
   http.get(`${MOCK_API_BASE_URL}/auth/me/`, () => {
     return HttpResponse.json({
       authenticated: isAuthenticated,

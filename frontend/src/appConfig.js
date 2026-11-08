@@ -34,6 +34,7 @@ const makeAccessSpec = ({ schemaKey, collection }) => {
 };
 
 export const authActionSpec = {
+  csrfUrl: API_BASE_URL + "auth/csrf/",
   meUrl: API_BASE_URL + "auth/me/",
   loginUrl: API_BASE_URL + "auth/login/",
   logoutUrl: API_BASE_URL + "auth/logout/",

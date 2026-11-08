@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import json
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 
 
 # os.environは環境変数をすべて文字列として返すため、
@@ -185,6 +186,7 @@ REST_FRAMEWORK = {
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = os.environ["DJANGO_CORS_ALLOWED_ORIGINS"].split()
 CSRF_TRUSTED_ORIGINS = os.environ["DJANGO_CORS_ALLOWED_ORIGINS"].split()
+CSRF_COOKIE_DOMAIN = None if DEBUG else urlparse(CORS_ALLOWED_ORIGINS[0]).hostname
 
 
 MIDDLEWARE = [
