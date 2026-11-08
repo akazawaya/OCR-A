@@ -10,6 +10,8 @@ from django.contrib.auth import (
     update_session_auth_hash,
 )
 from django.db import transaction
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -67,6 +69,7 @@ class UserViewSet(viewsets.GenericViewSet):
 
         return super().get_permissions()
 
+    @method_decorator(csrf_protect)
     def create(self, request):
         serializer = UserCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -118,6 +121,11 @@ class AuthViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
 
     @action(detail=False, methods=["get"])
+    @method_decorator(ensure_csrf_cookie)
+    def csrf(self, request):
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=["get"])
     def me(self, request):
         user = request.user
 
@@ -130,6 +138,7 @@ class AuthViewSet(viewsets.ViewSet):
         )
 
     @action(detail=False, methods=["post"])
+    @method_decorator(csrf_protect)
     def login(self, request):
         email = request.data.get("email")
         password = request.data.get("password")

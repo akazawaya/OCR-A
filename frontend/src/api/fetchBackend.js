@@ -1,3 +1,5 @@
+import { authActionSpec } from "../appConfig";
+
 const buildHttpError = ({ res, data, url }) => {
   const error = new Error(`HTTP Error:${res.status}`);
   error.name = "HttpError";
@@ -14,17 +16,30 @@ const getCsrfToken = () => {
     ?.split("=")[1];
 };
 
+const ensureCsrfToken = async () => {
+  let csrfToken = getCsrfToken();
+  if (csrfToken) return csrfToken;
+
+  await fetch(authActionSpec.csrfUrl, {
+    credentials: "include",
+  });
+
+  csrfToken = getCsrfToken();
+  if (!csrfToken) throw new Error("CSRF token cookie was not set.");
+  return csrfToken;
+};
+
 export const fetchBackend = async (url, options = {}) => {
   const { throwOnError = false, ...fetchOptions } = options;
-  const csrfToken = getCsrfToken();
-
-  const headers = {
-    Accept: "application/json",
-    ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
-    ...(fetchOptions.headers ?? {}),
-  };
 
   try {
+    const csrfToken = await ensureCsrfToken();
+    const headers = {
+      Accept: "application/json",
+      "X-CSRFToken": csrfToken,
+      ...(fetchOptions.headers ?? {}),
+    };
+
     const res = await fetch(url, {
       credentials: "include",
       ...fetchOptions,
