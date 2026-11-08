@@ -147,11 +147,11 @@ OCRの処理状態はファイル一覧へ自動反映され、完了後にビ�
 | パッケージ管理    | フロントエンド: npm<br>バックエンド: uv                                      |
 | インフラ          | Docker、AWS（VPC、EC2、ALB、RDS、S3、Route53、ACM、Lambda、Systems Manager、EventBridge、CloudWatch） |
 | 静的解析・整形    | フロントエンド: ESLint、Prettier<br>バックエンド: Ruff                       |
-| テスト            | フロントエンド: Vitest、React Testing Library、MSW<br>バックエンド: unittest、pytest<br>Lambda関数(python): unittest   |
+| テスト            | フロントエンド: Vitest、React Testing Library、MSW<br>バックエンド: unittest、pytest<br>Lambda関数（python）: unittest   |
 | 印刷（PDF保存）   | react-to-print                                                               |
 | Git hooks         | Lefthook                                                                     |
 | OCRエンジン       | YomiToku                                                                     |
-| CI/CD（CDは構想） | GitHub Actions                                                               |
+| CI/CD | GitHub Actions                                                               |
 
 ### ER図
 
