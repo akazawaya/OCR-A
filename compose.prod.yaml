@@ -1,11 +1,21 @@
 # 本番環境用の上書き設定
 services:
   frontend:
+    build:
+      target: production
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+        VITE_MAX_UPLOAD_FILE_SIZE_MB: ${MAX_UPLOAD_FILE_SIZE_MB}
+    ports: !override
+      - "80:80"
+    environment: !reset {}
     volumes:
       # NginxからDjango AdminのCSS/JSを読み取る。
       - django_static:/var/www/django-static:ro
 
   backend:
+    build:
+      target: production-cpu
     # NginxからCompose内部ネットワーク経由でのみ接続するため、
     # 元のcomposeのポートを上書きして閉じる
     ports: !reset []
@@ -17,33 +27,47 @@ services:
     volumes:
       # collectstaticの出力先。project/settings.pyのSTATIC_ROOTと一致させる。
       - django_static:/app/static
-    # 本番では外部RDS・ElastiCacheを使用
-    depends_on: !reset []
-
-  worker_ocr_shared:
-    depends_on: !reset []
-
-  worker_document:
-    depends_on: !reset []
-
-  worker_preview_word:
-    depends_on: !reset []
-
-  worker_gpu_autostop:
-    depends_on: !reset []
-
-  celery_beat:
-    depends_on: !reset []
-
-  # CD時の docker compose up でローカル用DB・Brokerを無視する。
-  # local-infrastructure プロファイルに所属させ、これを呼ばないことで無視する
-  db:
-    profiles:
-      - local-infrastructure
+    # 本番ではDBだけ外部RDSへ切り替え、BrokerはCPU EC2内で起動する
+    depends_on: !override
+      - broker
 
   broker:
-    profiles:
-      - local-infrastructure
+    ports:
+      - "6379:6379"
+
+  worker_ocr_shared:
+    build:
+      target: production-gpu
+    # GPU EC2から外部のRDS・Redisへ接続するため、ローカルサービスには依存しない。
+    depends_on: !reset []
+    gpus: all
+    restart: unless-stopped
+
+  worker_document:
+    build:
+      target: production-gpu
+    depends_on: !reset []
+    gpus: all
+    restart: unless-stopped
+
+  worker_preview_word:
+    build:
+      target: production-gpu
+    depends_on: !reset []
+    gpus: all
+    restart: unless-stopped
+
+  worker_maintenance:
+    build:
+      target: production-cpu
+    depends_on: !override
+      - broker
+
+  celery_beat:
+    build:
+      target: production-cpu
+    depends_on: !override
+      - broker
 
 volumes:
   django_static:

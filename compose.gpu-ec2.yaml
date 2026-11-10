@@ -1,13 +1,11 @@
 x-gpu-ec2-env: &gpu_ec2_env
   ENABLE_GPU_WORKER_AUTOSTART: "true"
   ENABLE_GPU_WORKER_AUTOSTOP: "true"
+  GPU_WORKER_AUTOSTART_RETRY_INTERVAL_SECONDS: ${GPU_WORKER_AUTOSTART_RETRY_INTERVAL_SECONDS}
   GPU_WORKER_AUTOSTOP_IDLE_MINUTES: ${GPU_WORKER_AUTOSTOP_IDLE_MINUTES}
   GPU_WORKER_AUTOSTOP_CHECK_INTERVAL_SECONDS: ${GPU_WORKER_AUTOSTOP_CHECK_INTERVAL_SECONDS}
-  AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-  AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
   AWS_EC2_REGION_NAME: ${AWS_EC2_REGION_NAME}
-  GPU_WORKER_DOCUMENT_INSTANCE_ID: ${GPU_WORKER_DOCUMENT_INSTANCE_ID}
-  GPU_WORKER_PREVIEW_WORD_INSTANCE_ID: ${GPU_WORKER_PREVIEW_WORD_INSTANCE_ID}
+  GPU_WORKERS: ${GPU_WORKERS}
 
 x-gpu-worker-common: &gpu_worker_common
   build: ./backend
@@ -24,10 +22,10 @@ x-gpu-worker-common: &gpu_worker_common
     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     POSTGRES_HOST: ${POSTGRES_HOST}
     POSTGRES_PORT: ${POSTGRES_PORT}
-    CELERY_BROKER_URL: ${CELERY_BROKER_URL}
-    CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
-    CHANNEL_REDIS_URL: ${CHANNEL_REDIS_URL}
-    CACHE_REDIS_URL: ${CACHE_REDIS_URL}
+    REDIS_HOST: ${REDIS_HOST}
+    DOCUMENT_OCR_TOTAL_TIMEOUT_MINUTES: ${DOCUMENT_OCR_TOTAL_TIMEOUT_MINUTES}
+    DOCUMENT_OCR_PAGE_TIMEOUT_MINUTES: ${DOCUMENT_OCR_PAGE_TIMEOUT_MINUTES}
+    MAX_UPLOAD_FILE_SIZE_MB: ${MAX_UPLOAD_FILE_SIZE_MB}
     <<: *gpu_ec2_env
   volumes:
     - media_input:/app/media
@@ -37,7 +35,7 @@ services:
     environment:
       <<: *gpu_ec2_env
 
-  worker_gpu_autostop:
+  worker_maintenance:
     <<: *gpu_worker_common
     command:
       [
@@ -50,7 +48,7 @@ services:
         "-l",
         "INFO",
         "-Q",
-        "gpu_control_queue",
+        "maintenance_queue",
         "--concurrency",
         "1",
       ]

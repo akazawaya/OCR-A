@@ -2,19 +2,27 @@ import { http, HttpResponse } from "msw";
 
 import { MOCK_API_BASE_URL } from "./config";
 import { defaultMockAuthUser } from "./fixture";
+// frontendのエラー表示用関数 getResponseErrorMessage のテストに以下を代表させる。
+const defaultSignupPasswordErrorData = {
+  password: ["このパスワードは短すぎます。最低 8 文字以上必要です。"],
+};
 
 let isAuthenticated = false;
 let user = structuredClone(defaultMockAuthUser);
+let signupPasswordErrorData = structuredClone(defaultSignupPasswordErrorData);
 let receivedLoginRequestBody = null;
 let receivedCreateUserRequestBody = null;
 let receivedPasswordChangeRequestBody = null;
+let logoutRequestCount = 0;
 
 export const resetMockUser = () => {
   isAuthenticated = false;
   user = structuredClone(defaultMockAuthUser);
+  signupPasswordErrorData = structuredClone(defaultSignupPasswordErrorData);
   receivedLoginRequestBody = null;
   receivedCreateUserRequestBody = null;
   receivedPasswordChangeRequestBody = null;
+  logoutRequestCount = 0;
 };
 export const loginMockUser = () => {
   isAuthenticated = true;
@@ -28,7 +36,18 @@ export const getReceivedCreateUserRequestBody = () => {
 export const getReceivedPasswordChangeRequestBody = () => {
   return receivedPasswordChangeRequestBody;
 };
+export const getLogoutRequestCount = () => {
+  return logoutRequestCount;
+};
+export const setMockSignupPasswordErrorData = (errorData) => {
+  signupPasswordErrorData = structuredClone(errorData);
+};
 export const authApiHandlers = [
+  http.get(`${MOCK_API_BASE_URL}/auth/csrf/`, () => {
+    document.cookie = "csrftoken=mock-csrf-token; Path=/";
+    return new HttpResponse(null, { status: 204 });
+  }),
+
   http.get(`${MOCK_API_BASE_URL}/auth/me/`, () => {
     return HttpResponse.json({
       authenticated: isAuthenticated,
@@ -42,6 +61,9 @@ export const authApiHandlers = [
 
     // email重複のバリデーションチェックのテストはここでは行わない。backendで担う。
     if (body.type === "registered") {
+      if (body.password.length < 8) {
+        return HttpResponse.json(signupPasswordErrorData, { status: 400 });
+      }
       user = {
         id: defaultMockAuthUser.id,
         email: body.email,
@@ -87,6 +109,7 @@ export const authApiHandlers = [
   }),
 
   http.post(`${MOCK_API_BASE_URL}/auth/logout/`, () => {
+    logoutRequestCount += 1;
     isAuthenticated = false;
     return new HttpResponse(null, { status: 204 });
   }),

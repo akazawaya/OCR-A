@@ -1,9 +1,12 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+export const MAX_UPLOAD_FILE_SIZE_MB = import.meta.env
+  .VITE_MAX_UPLOAD_FILE_SIZE_MB;
 const apiBaseUrl = new URL(API_BASE_URL, window.location.origin);
 // window.location.originは相対API URLを、現在表示中のサイトを基準に絶対URLへ解決する引数(本番用)
 apiBaseUrl.protocol = apiBaseUrl.protocol === "https:" ? "wss:" : "ws:";
 export const OCR_WS_URL = new URL("/ocr/", apiBaseUrl).toString();
 export const OPENAPI_URL = API_BASE_URL + "schema/";
+export const SYSTEM_HEALTH_URL = API_BASE_URL + "health/";
 // 目的
 // OpenAPI（components/schemas）から型情報（schema）を動的に参照できる様にして、
 // REST の endpointに対して操作を行うための情報をまとめる。
@@ -31,6 +34,7 @@ const makeAccessSpec = ({ schemaKey, collection }) => {
 };
 
 export const authActionSpec = {
+  csrfUrl: API_BASE_URL + "auth/csrf/",
   meUrl: API_BASE_URL + "auth/me/",
   loginUrl: API_BASE_URL + "auth/login/",
   logoutUrl: API_BASE_URL + "auth/logout/",
@@ -116,6 +120,10 @@ export const wordSpec = attachResourceSpec(wordAccessSpec, wordUiSpec);
 // template:React Routerのdynamic paramsを用いた抽象URL。App.jsx の <Route path=...> に渡して定義に使う。
 // to: 遷移先URLを生成する関数。Link の to や navigate() に渡す具体URLを作る。
 export const routePaths = Object.freeze({
+  systemUnavailable: {
+    template: "/system-unavailable",
+    to: () => "/system-unavailable",
+  },
   login: {
     template: "/login",
     to: () => "/login",

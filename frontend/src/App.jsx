@@ -10,36 +10,48 @@ import ViewerPage from "./pages/ViewerPage";
 import SettingPage from "./pages/SettingPage";
 import { routePaths } from "./appConfig";
 import AuthLayout from "./components/Auth/AuthLayout";
+import SystemAvailabilityLayout from "./components/System/SystemAvailabilityLayout";
 
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
   {
-    path: "/",
-    element: <LoginPage />,
-  },
-  {
-    path: routePaths.login.template,
-    element: <LoginPage />,
-  },
-  {
-    path: routePaths.signup.template,
-    element: <SignupPage />,
-  },
-  {
-    element: <AuthLayout />,
+    element: <SystemAvailabilityLayout />,
     children: [
       {
-        path: routePaths.docs.template,
-        element: <DocumentsPage />,
+        path: "/",
+        element: <LoginPage />,
       },
       {
-        path: routePaths.viewer.template,
-        element: <ViewerPage />,
+        path: routePaths.login.template,
+        element: <LoginPage />,
       },
       {
-        path: routePaths.setting.template,
-        element: <SettingPage />,
+        path: routePaths.signup.template,
+        element: <SignupPage />,
+      },
+      {
+        // 専用URLの受け口としてpathだけを登録する。
+        // 正常時にpathからSystemAvailabilityPageにはアクセス不能として、
+        // ページ表示と正常時のリダイレクトはSystemAvailabilityLayoutが制御する。
+        path: routePaths.systemUnavailable.template,
+      },
+      {
+        element: <AuthLayout />,
+        children: [
+          {
+            path: routePaths.docs.template,
+            element: <DocumentsPage />,
+          },
+          {
+            path: routePaths.viewer.template,
+            element: <ViewerPage />,
+          },
+          {
+            path: routePaths.setting.template,
+            element: <SettingPage />,
+          },
+        ],
       },
     ],
   },

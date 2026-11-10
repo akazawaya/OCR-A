@@ -493,6 +493,49 @@ describe("ViewerPage", () => {
       expect(screen.getByDisplayValue("範囲内B")).toBeVisible();
       expect(screen.getByRole("button", { name: "元に戻す" })).toBeDisabled();
     });
+
+    test("複数回のUndoとRedoで履歴順を維持する", async () => {
+      // Undo → Undo → Redo → Redo → Undo → Undo
+      setMockWords(dragModeMockWords);
+      renderViewerPage();
+      const user = await enterEditMode();
+      const undoButton = screen.getByRole("button", { name: "元に戻す" });
+      const redoButton = screen.getByRole("button", { name: "やり直す" });
+
+      await selectWordOnViewerTable(user, "範囲内A");
+      await user.click(getEditToolbarButton("削除"));
+      expect(screen.queryByDisplayValue("範囲内A")).toBeNull();
+      expect(screen.getByDisplayValue("範囲内B")).toBeVisible();
+
+      await selectWordOnViewerTable(user, "範囲内B");
+      await user.click(getEditToolbarButton("削除"));
+      expect(screen.queryByDisplayValue("範囲内A")).toBeNull();
+      expect(screen.queryByDisplayValue("範囲内B")).toBeNull();
+
+      await user.click(undoButton);
+      expect(screen.queryByDisplayValue("範囲内A")).toBeNull();
+      expect(screen.getByDisplayValue("範囲内B")).toBeVisible();
+
+      await user.click(undoButton);
+      expect(screen.getByDisplayValue("範囲内A")).toBeVisible();
+      expect(screen.getByDisplayValue("範囲内B")).toBeVisible();
+
+      await user.click(redoButton);
+      expect(screen.queryByDisplayValue("範囲内A")).toBeNull();
+      expect(screen.getByDisplayValue("範囲内B")).toBeVisible();
+
+      await user.click(redoButton);
+      expect(screen.queryByDisplayValue("範囲内A")).toBeNull();
+      expect(screen.queryByDisplayValue("範囲内B")).toBeNull();
+
+      await user.click(undoButton);
+      expect(screen.queryByDisplayValue("範囲内A")).toBeNull();
+      expect(screen.getByDisplayValue("範囲内B")).toBeVisible();
+
+      await user.click(undoButton);
+      expect(screen.getByDisplayValue("範囲内A")).toBeVisible();
+      expect(screen.getByDisplayValue("範囲内B")).toBeVisible();
+    });
   });
 
   describe("DragRectによる詳細なpostの座標追加の確認", () => {

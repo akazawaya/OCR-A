@@ -1,4 +1,4 @@
-export const authClassNames = Object.freeze({
+export const pageClassNames = Object.freeze({
   panel:
     "mx-auto max-w-sm  w-full mt-4 flex w-fit flex-col items-center rounded-md border border-gray-400 bg-white p-2 gap-1",
 });

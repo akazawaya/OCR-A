@@ -8,12 +8,17 @@ import {
   resetMockDocuments,
 } from "./msw/documentsApiHandlers";
 import { MOCK_API_BASE_URL } from "./msw/config";
+import {
+  healthApiHandlers,
+  resetMockSystemHealth,
+} from "./msw/healthApiHandlers";
 import { pagesApiHandlers } from "./msw/pagesApiHandlers";
 import { wordsApiHandlers } from "./msw/wordsApiHandlers";
 import { wsHandlers } from "./msw/wsHandlers";
 
 const server = setupServer(
   ...authApiHandlers,
+  ...healthApiHandlers,
   ...documentsApiHandlers,
   ...pagesApiHandlers,
   ...wordsApiHandlers,
@@ -22,6 +27,7 @@ const server = setupServer(
 
 // appConfigのimport時の初期化が通るように、ダミーの環境変数を設定
 vi.stubEnv("VITE_API_BASE_URL", `${MOCK_API_BASE_URL}/`);
+vi.stubEnv("VITE_MAX_UPLOAD_FILE_SIZE_MB", "10");
 
 beforeAll(() => {
   server.listen();
@@ -30,6 +36,7 @@ beforeAll(() => {
 beforeEach(() => {
   vi.clearAllMocks();
   resetMockUser();
+  resetMockSystemHealth();
   resetMockDocuments();
 });
 

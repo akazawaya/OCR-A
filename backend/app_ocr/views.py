@@ -10,6 +10,8 @@ from django.contrib.auth import (
     update_session_auth_hash,
 )
 from django.db import transaction
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -36,7 +38,6 @@ from app_ocr.serializers import (
     WordSerializer,
 )
 from app_ocr.service.document import create_pages_from_document_file
-from app_ocr.service.gpu_worker.worker_instance import ensure_gpu_worker_running
 from app_ocr.storage import (
     build_document_storage_prefix,
     delete_document_files,
@@ -45,6 +46,7 @@ from app_ocr.tasks import (
     dispatch_ocr_pages_task,
     notify_document_changed,
     ocr_word_task,
+    request_gpu_worker_start,
 )
 
 User = get_user_model()
@@ -67,6 +69,7 @@ class UserViewSet(viewsets.GenericViewSet):
 
         return super().get_permissions()
 
+    @method_decorator(csrf_protect)
     def create(self, request):
         serializer = UserCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -118,6 +121,11 @@ class AuthViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
 
     @action(detail=False, methods=["get"])
+    @method_decorator(ensure_csrf_cookie)
+    def csrf(self, request):
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=["get"])
     def me(self, request):
         user = request.user
 
@@ -130,6 +138,7 @@ class AuthViewSet(viewsets.ViewSet):
         )
 
     @action(detail=False, methods=["post"])
+    @method_decorator(csrf_protect)
     def login(self, request):
         email = request.data.get("email")
         password = request.data.get("password")
@@ -248,7 +257,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
                 def enqueue_document_ocr():
                     notify_document_changed(document.owner_id)
                     if settings.ENABLE_GPU_WORKER_AUTOSTART:
-                        ensure_gpu_worker_running("worker_document")
+                        request_gpu_worker_start.delay("ocr_document_queue")
                     dispatch_ocr_pages_task.delay(document.pk)
 
                 transaction.on_commit(enqueue_document_ocr)
@@ -298,7 +307,7 @@ class WordViewSet(viewsets.ModelViewSet):
         )
         serializer.is_valid(raise_exception=True)
         if settings.ENABLE_GPU_WORKER_AUTOSTART:
-            ensure_gpu_worker_running("worker_preview_word")
+            request_gpu_worker_start.delay("ocr_word_queue")
         task_kwargs = {
             **serializer.validated_data,
             "notification_user_id": request.user.pk,

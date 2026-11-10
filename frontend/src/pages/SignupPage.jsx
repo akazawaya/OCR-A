@@ -5,11 +5,12 @@ import { toast } from "sonner";
 
 import { createUser } from "../api/clients/mutationClient";
 import { routePaths } from "../appConfig";
-import AuthLogo from "../components/Auth/AuthLogo";
+import AppLogo from "../components/AppLogo";
 import Button from "../components/ui/Button";
 import TextInput from "../components/ui/TextInput";
-import { authClassNames, formClassNames } from "../components/ui/classNames";
+import { formClassNames, pageClassNames } from "../components/ui/classNames";
 import { toastStyles } from "../components/ui/toastStyles";
+import { getResponseErrorMessage } from "../logic/error/getResponseErrorMessage";
 
 const SignupPage = () => {
   const [email, setEmail] = useState("");
@@ -27,8 +28,11 @@ const SignupPage = () => {
     onSuccess: () => {
       navigate(routePaths.docs.to());
     },
-    onError: () => {
-      toast.error("アカウント作成に失敗しました", toastStyles.error);
+    onError: (error) => {
+      toast.error(
+        getResponseErrorMessage(error.data, "アカウント作成に失敗しました"),
+        toastStyles.error,
+      );
     },
   });
 
@@ -44,8 +48,8 @@ const SignupPage = () => {
   };
 
   return (
-    <div className={authClassNames.panel}>
-      <AuthLogo />
+    <div className={pageClassNames.panel}>
+      <AppLogo />
       <form className={formClassNames.inputPanel} onSubmit={handleSubmit}>
         <label className={formClassNames.fieldLabel}>
           メールアドレス
@@ -72,6 +76,10 @@ const SignupPage = () => {
             onChange={(event) => setPasswordConfirmation(event.target.value)}
           />
         </label>
+
+        <p className="w-full text-left text-sm text-gray-600">
+          パスワードは8文字以上で入力してください。
+        </p>
 
         <Button type="submit">アカウント作成</Button>
       </form>

@@ -2,9 +2,122 @@ name: Initialize EC2
 
 on:
   workflow_dispatch:
+    inputs:
+      instance_id:
+        description: 初期構築するEC2インスタンスID
+        required: true
+        type: string
+      host_type:
+        description: EC2の役割（GPUではNVIDIAドライバも導入する）
+        required: true
+        type: choice
+        options:
+          - cpu
+          - gpu
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: initialize-${{ inputs.instance_id }}
+  cancel-in-progress: false
 
 jobs:
-  placeholder:
+  initialize:
     runs-on: ubuntu-latest
+    environment: production
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      AWS_GITHUB_ACTIONS_ROLE_ARN: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
+      INSTANCE_ID: ${{ inputs.instance_id }}
+      HOST_TYPE: ${{ inputs.host_type }}
+
     steps:
-      - run: ":"
+      - name: Validate initialization variables
+        run: |
+          set -eu
+          : "${AWS_REGION:?AWS_REGION is required}"
+          : "${AWS_GITHUB_ACTIONS_ROLE_ARN:?AWS_GITHUB_ACTIONS_ROLE_ARN is required}"
+          : "${INSTANCE_ID:?INSTANCE_ID is required}"
+          : "${HOST_TYPE:?HOST_TYPE is required}"
+
+          if [[ ! "$INSTANCE_ID" =~ ^i-[0-9a-f]{8,17}$ ]]; then
+            echo "Invalid EC2 instance ID: $INSTANCE_ID" >&2
+            exit 1
+          fi
+
+      - name: Checkout initialization source
+        uses: actions/checkout@v5
+
+      - name: Authenticate to AWS
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Initialize EC2 through SSM
+        run: |
+          set -euo pipefail
+
+          initialization_script=$(base64 < .github/scripts/initialize-ubuntu-ec2.sh | tr -d '\n')
+          parameters=$(jq -n \
+            --arg initialization_script "$initialization_script" \
+            --arg host_type "$HOST_TYPE" \
+            --arg instance_id "$INSTANCE_ID" \
+            '{
+              commands: [
+                "set -eu",
+                "initialization_file=$(mktemp)",
+                "printf %s " + ($initialization_script | @sh) + " | base64 --decode > \"$initialization_file\"",
+                "bash \"$initialization_file\" " + ($host_type | @sh) + " " + ($instance_id | @sh),
+                "rm -f \"$initialization_file\""
+              ]
+            }')
+
+          command_id=$(aws ssm send-command \
+            --region "$AWS_REGION" \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --comment "OCR-A EC2 initialization from GitHub Actions" \
+            --timeout-seconds 3600 \
+            --parameters "$parameters" \
+            --query "Command.CommandId" \
+            --output text)
+
+          echo "SSM command ID: $command_id"
+
+          for _ in $(seq 1 360); do
+            status=$(aws ssm list-commands \
+              --region "$AWS_REGION" \
+              --command-id "$command_id" \
+              --query "Commands[0].Status" \
+              --output text)
+
+            case "$status" in
+              Success)
+                aws ssm list-command-invocations \
+                  --region "$AWS_REGION" \
+                  --command-id "$command_id" \
+                  --details
+                exit 0
+                ;;
+              Failed|Cancelled|TimedOut|Cancelling)
+                aws ssm list-command-invocations \
+                  --region "$AWS_REGION" \
+                  --command-id "$command_id" \
+                  --details
+                exit 1
+                ;;
+              Pending|InProgress|Delayed)
+                sleep 10
+                ;;
+              *)
+                echo "Unexpected SSM command status: $status" >&2
+                exit 1
+                ;;
+            esac
+          done
+
+          echo "Timed out while waiting for SSM command: $command_id" >&2
+          exit 1

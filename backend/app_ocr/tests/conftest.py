@@ -82,7 +82,7 @@ def uploaded_file_from_fixture_factory():
 # TemporaryDirectoryはwithを抜けるときにcleanup()を呼ぶため、自動で消える
 @pytest.fixture
 def isolated_media_storage(settings):
-    with TemporaryDirectory(prefix="restocr-test-media-") as directory:
+    with TemporaryDirectory(prefix="ocr-a-test-media-") as directory:
         media_root = Path(directory)
         settings.MEDIA_ROOT = media_root
         yield media_root

@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, test } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
   createMemoryRouter,
@@ -12,9 +12,12 @@ import {
 import "@testing-library/jest-dom/vitest";
 
 import AuthLayout from "../components/Auth/AuthLayout";
+import SystemAvailabilityLayout from "../components/System/SystemAvailabilityLayout";
+import { routePaths, SYSTEM_HEALTH_URL } from "../appConfig";
 import ViewerPage from "../pages/ViewerPage";
 
 import { loginMockUser } from "./msw/authApiHandlers";
+import { setMockSystemHealth } from "./msw/healthApiHandlers";
 import {
   setupCanvasTextMeasureMock,
   setupDefaultViewerMocks,
@@ -23,6 +26,7 @@ import {
 const DOCUMENTS_PATH = "/documents";
 const LOGIN_PATH = "/login";
 const VIEWER_PATH = "/documents/1/viewer";
+const REQUIRED_FAILURE_COUNT = 2;
 
 const LocationProbe = () => {
   const location = useLocation();
@@ -40,36 +44,57 @@ const renderViewerWithAuthLayout = () => {
   const router = createMemoryRouter(
     [
       {
-        element: <AuthLayout />,
+        element: <SystemAvailabilityLayout />,
         children: [
           {
-            path: "/documents/:primaryKey/viewer",
-            element: (
-              <>
-                <ViewerPage />
-                <LocationProbe />
-              </>
-            ),
+            element: <AuthLayout />,
+            children: [
+              {
+                path: "/documents/:primaryKey/viewer",
+                element: (
+                  <>
+                    <ViewerPage />
+                    <LocationProbe />
+                  </>
+                ),
+              },
+              {
+                path: DOCUMENTS_PATH,
+                element: <LocationProbe />,
+              },
+            ],
           },
           {
-            path: DOCUMENTS_PATH,
+            path: LOGIN_PATH,
             element: <LocationProbe />,
           },
+          {
+            path: routePaths.systemUnavailable.template,
+          },
         ],
-      },
-      {
-        path: LOGIN_PATH,
-        element: <LocationProbe />,
       },
     ],
     { initialEntries: [VIEWER_PATH] },
   );
 
-  return render(
+  const view = render(
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
     </QueryClientProvider>,
   );
+
+  return { ...view, queryClient, router };
+};
+
+const refetchSystemHealth = async (queryClient, count = 1) => {
+  for (let checkCount = 0; checkCount < count; checkCount += 1) {
+    await act(async () => {
+      await queryClient.refetchQueries({
+        queryKey: [SYSTEM_HEALTH_URL],
+      });
+      await new Promise((resolve) => window.setTimeout(resolve, 0));
+    });
+  }
 };
 
 beforeEach(() => {
@@ -145,5 +170,22 @@ describe("ViewerPage navigation guard", () => {
     const editingEvent = new Event("beforeunload", { cancelable: true });
     window.dispatchEvent(editingEvent);
     expect(editingEvent.defaultPrevented).toBe(true);
+  });
+
+  test("障害による停止では編集中の離脱確認を表示しない", async () => {
+    const { queryClient } = renderViewerWithAuthLayout();
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "編集" }));
+    setMockSystemHealth(false);
+
+    await refetchSystemHealth(queryClient, REQUIRED_FAILURE_COUNT);
+
+    expect(
+      await screen.findByText("現在サービスを利用できません"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("alertdialog", { name: "このページを離れますか？" }),
+    ).not.toBeInTheDocument();
   });
 });

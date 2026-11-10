@@ -14,12 +14,6 @@ on:
 jobs:
   frontend-test:
     runs-on: ubuntu-latest
-    env:
-      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
-      FRONTEND_BUILD_TARGET: ${{ vars.FRONTEND_BUILD_TARGET }}
-      FRONTEND_HOST_PORT: ${{ vars.FRONTEND_HOST_PORT }}
-      FRONTEND_CONTAINER_PORT: ${{ vars.FRONTEND_CONTAINER_PORT }}
-      FRONTEND_COMMAND: ${{ vars.FRONTEND_COMMAND }}
 
     steps:
       - name: Checkout

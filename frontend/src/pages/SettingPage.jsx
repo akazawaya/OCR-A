@@ -13,6 +13,7 @@ import Button from "../components/ui/Button";
 import TextInput from "../components/ui/TextInput";
 import { formClassNames } from "../components/ui/classNames";
 import { toastStyles } from "../components/ui/toastStyles";
+import { getResponseErrorMessage } from "../logic/error/getResponseErrorMessage";
 
 const SettingPage = () => {
   const navigate = useNavigate();
@@ -34,8 +35,11 @@ const SettingPage = () => {
         setNewPasswordConfirmation("");
         toast.success("パスワードを変更しました");
       },
-      onError: () => {
-        toast.error("パスワードの変更に失敗しました", toastStyles.error);
+      onError: (error) => {
+        toast.error(
+          getResponseErrorMessage(error.data, "パスワードの変更に失敗しました"),
+          toastStyles.error,
+        );
       },
     });
 
@@ -93,6 +97,10 @@ const SettingPage = () => {
             onChange={(event) => setNewPasswordConfirmation(event.target.value)}
           />
         </label>
+
+        <p className="w-full text-left text-sm text-gray-600">
+          新しいパスワードは8文字以上で入力してください。
+        </p>
 
         <Button disabled={isChangingPassword} type="submit">
           変更

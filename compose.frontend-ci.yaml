@@ -1,14 +1,7 @@
-name: restocr-frontend-ci
+name: ocr-a-frontend-ci
 
 services:
   frontend:
     build:
       context: ./frontend
-      target: ${FRONTEND_BUILD_TARGET}
-      args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
-    ports:
-      - "${FRONTEND_HOST_PORT}:${FRONTEND_CONTAINER_PORT}"
-    environment:
-      VITE_API_BASE_URL: ${VITE_API_BASE_URL}
-    command: ${FRONTEND_COMMAND}
+      target: development
