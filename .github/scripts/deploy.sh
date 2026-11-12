@@ -9,9 +9,33 @@ if [[ $deployment_profile == production-cpu ]]; then
   compose=(docker compose -f compose.yaml -f compose.s3.yaml \
     -f compose.gpu-ec2.yaml -f compose.prod.yaml)
 else
-  # gpuのデプロイの場合はこのブロックで完結。
   compose=(docker compose -f compose.yaml -f compose.s3.yaml \
     -f compose.prod.yaml)
+  # gpuのデプロイはgpu_workerが動いていない(OCRタスクが存在しない)ことを確認してから、
+  # 前回のイメージ等を削除し、容量を確保してから再度ビルドを実行する
+  mapfile -t gpu_container_ids < <("${compose[@]}" ps -q)
+
+  if (( ${#gpu_container_ids[@]} > 0 )); then
+    gpu_container_id=${gpu_container_ids[0]}
+    echo "Checking GPU OCR queues from container: $gpu_container_id"
+    if ! docker exec -i "$gpu_container_id" \
+      /app/.venv/bin/python manage.py shell \
+      < .github/scripts/assert-gpu-worker-idle.py; then
+      echo "GPU OCR work exists; cleanup was skipped and deployment was aborted." >&2
+      exit 1
+    fi
+
+    echo "Stopping GPU containers: ${gpu_container_ids[*]}"
+    docker stop --time 60 "${gpu_container_ids[@]}"
+  else
+    echo "No running GPU container found; proceeding with Docker cleanup."
+  fi
+
+  # volumeは消さず、停止中コンテナ、未使用イメージ、ビルドキャッシュを消す。
+  docker system prune --all --force
+  df -h /
+  docker system df
+
   "${compose[@]}" up -d --build
   exit 0
 fi
