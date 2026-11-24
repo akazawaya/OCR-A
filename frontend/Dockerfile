@@ -1,5 +1,5 @@
 # 開発用ステージ
-FROM node:24.22.1-bookworm-slim AS development
+FROM node:24.22.3-bookworm-slim AS development
 
 WORKDIR /app
 
@@ -25,7 +25,7 @@ RUN npm run build
 
 # 本番 配信用ステージ
 # 必要なdistのみ前ステージからコピーして本番
-FROM nginx:alpine AS production 
+FROM nginx:1.30.8-alpine AS production 
 
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
